@@ -1,0 +1,90 @@
+function UpdateNodes(destroyQueue, nodes) {
+    this.destroyQueue = destroyQueue;
+    this.nodes = nodes;
+}
+
+module.exports = UpdateNodes;
+
+UpdateNodes.prototype.build = function() {
+    var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 22) + (this.nodes.length * 22) + 4 + 2 + 4 + (this.nodes.length * 4));
+    var view = new DataView(buf);
+
+    view.setUint8(0, 16, true); // Packet ID
+    view.setUint16(1, this.destroyQueue.length, true); // Nodes to be destroyed
+
+    var offset = 3;
+    for (var i = 0; i < this.destroyQueue.length; i++) {
+        var node = this.destroyQueue[i];
+
+        if (typeof node == "undefined") {
+            continue;
+        }
+
+        view.setUint32(offset, node.nodeId, true); // Node ID
+        view.setFloat32(offset + 4, node.position.x, true); // X position
+        view.setFloat32(offset + 8, node.position.y, true); // Y position
+        view.setFloat32(offset + 12, node.size, true); // Size
+        view.setUint8(offset + 16, node.color.r, true); // Color (R)
+        view.setUint8(offset + 17, node.color.g, true); // Color (G)
+        view.setUint8(offset + 18, node.color.b, true); // Color (B)
+        view.setUint8(offset + 19, 0, true); // Flags
+        offset += 20;
+
+        if (node.name) {
+            for (var j = 0; j < node.name.length; j++) {
+                view.setUint16(offset, node.name.charCodeAt(j), true);
+                offset += 2;
+            }
+        }
+
+        view.setUint16(offset, 0, true); // Name
+        offset += 2;
+    }
+
+    for (var i = 0; i < this.nodes.length; i++) {
+        var node = this.nodes[i];
+
+        if (typeof node == "undefined") {
+            continue;
+        }
+
+        view.setUint32(offset, node.nodeId, true); // Node ID
+        view.setFloat32(offset + 4, node.position.x, true); // X position
+        view.setFloat32(offset + 8, node.position.y, true); // Y position
+        view.setFloat32(offset + 12, node.size, true); // Size
+        view.setUint8(offset + 16, node.color.r, true); // Color (R)
+        view.setUint8(offset + 17, node.color.g, true); // Color (G)
+        view.setUint8(offset + 18, node.color.b, true); // Color (B)
+        view.setUint8(offset + 19, 0, true); // Flags
+        offset += 20;
+
+        if (node.name) {
+            for (var j = 0; j < node.name.length; j++) {
+                view.setUint16(offset, node.name.charCodeAt(j), true);
+                offset += 2;
+            }
+        }
+
+        view.setUint16(offset, 0, true); // Name
+        offset += 2;
+    }
+
+    view.setUint32(offset, 0, true); // Terminate node data
+    view.setUint16(offset + 4, 0, true); // ?
+    view.setUint32(offset + 6, 1, true); // # of active nodes
+
+    offset += 10;
+    
+    for (var i = 0; i < this.nodes.length; i++) {
+        var node = this.nodes[i];
+
+        if (typeof node == "undefined") {
+            continue;
+        }
+
+        view.setUint32(offset, node.nodeId, true);
+        offset += 4;
+    }
+
+    return buf;
+}

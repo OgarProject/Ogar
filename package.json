@@ -1,0 +1,23 @@
+{
+  "name": "Ogar",
+  "version": "1.0.0",
+  "description": "Open source Agar.io server",
+  "main": "index.js",
+  "dependencies": {
+    "ws": "^0.7.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/forairan/Ogar"
+  },
+  "author": "Devin Ryan <devin@forairan.com> (http://devin.codes/)",
+  "license": "Apache License 2.0",
+  "bugs": {
+    "url": "https://github.com/forairan/Ogar/issues"
+  },
+  "homepage": "https://github.com/forairan/Ogar"
+}
