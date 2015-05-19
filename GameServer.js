@@ -40,7 +40,7 @@ GameServer.prototype.start = function() {
             }
 
             if (this.socket.playerTracker.cell) {
-                this.server.removeNode(cell);
+                this.server.removeNode(this.socket.playerTracker.cell);
             }
         }
 
