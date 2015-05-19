@@ -1,4 +1,4 @@
-var Packet = require('./Packet');
+var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
