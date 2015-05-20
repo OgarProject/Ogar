@@ -3,7 +3,7 @@ function Cell(nodeId, name, position, size) {
     this.name = name;
     this.color = {r: 0, g: 255, b: 0};
     this.position = position;
-    this.size = size;
+    this.size = size; //Size 32.0 = 10 in game size
     this.speed = 20; //Filler, will be changed later
 }
 

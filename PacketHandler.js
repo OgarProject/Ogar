@@ -29,15 +29,14 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 0:
             // Set Nickname
             var nick = "";
-            for (var i = 1; i < buffer.length; i += 2) {
+            for (var i = 1; i < view.byteLength; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
                     break;
                 }
 
-                nick += String.fromCharCode(i);
+                nick += String.fromCharCode(charCode);
             }
-
             this.setNickname(nick);
             break;
         case 16: //Mouse Move
@@ -67,7 +66,7 @@ PacketHandler.prototype.handleMessage = function(message) {
 
 PacketHandler.prototype.setNickname = function(newNick) {
     if (!this.socket.playerTracker.cell) {
-        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 10);
+        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 32.0);
         this.gameServer.addNode(this.socket.playerTracker.cell);
     } else {
         this.socket.playerTracker.cell.name = newNick;
