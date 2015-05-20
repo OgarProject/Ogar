@@ -1,4 +1,5 @@
 var Cell = require('./Cell');
+var Packet = require('./packet');
 
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
