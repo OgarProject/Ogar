@@ -6,20 +6,20 @@ function UpdateNodes(destroyQueue, nodes) {
 module.exports = UpdateNodes;
 
 UpdateNodes.prototype.build = function() {
-	
-	// Calculate nodes sub packet size before making the data view
-	var nodesLength = 0;
-	for (var i = 0; i < this.nodes.length; i++) {
+    
+    // Calculate nodes sub packet size before making the data view
+    var nodesLength = 0;
+    for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-		
-		if (typeof node == "undefined") {
+        
+        if (typeof node == "undefined") {
             continue;
         }
-		
-		nodesLength = nodesLength + 22 + (node.name.length * 2);
-	}
-	
-	
+        
+        nodesLength = nodesLength + 22 + (node.name.length * 2);
+    }
+    
+    
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 22) + nodesLength + 4 + 2 + 4 + (this.nodes.length * 4));
     var view = new DataView(buf);
 
@@ -43,8 +43,8 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 18, node.color.b, true); // Color (B)
         view.setUint8(offset + 19, 0, true); // Flags
         offset += 20;
-		
-		/*
+        
+        /*
         if (node.name) {
             for (var j = 0; j < node.name.length; j++) {
                 view.setUint16(offset, node.name.charCodeAt(j), true);
@@ -73,13 +73,13 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 18, node.color.b, true); // Color (B)
         view.setUint8(offset + 19, 0, true); // Flags
         offset += 20;
-		
+        
         if (node.name) {
             for (var j = 0; j < node.name.length; j++) {
-				var c = node.name.charCodeAt(j);
-				if (c){
-					view.setUint16(offset, c, true);
-				}
+                var c = node.name.charCodeAt(j);
+                if (c){
+                    view.setUint16(offset, c, true);
+                }
                 offset += 2;
             }
         }
