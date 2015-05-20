@@ -11,9 +11,9 @@ var Cell = require('./Cell');
 function GameServer(port) {
     this.border = {
         left: 0,
-        right: 10000,
-        top: 0,
-        bottom: 10000
+        right: 11180.3398875,
+        top: 11180.3398875,
+        bottom: 0
     };
     this.lastNodeId = 1;
     this.clients = [];

@@ -9,9 +9,10 @@ function PlayerTracker(gameServer, socket) {
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     this.cell = null;
-
-    this.clear();
-    this.setBorder();
+    
+    //Not needed
+    //this.clear();
+    //this.setBorder();
 }
 
 module.exports = PlayerTracker;
@@ -60,9 +61,9 @@ PlayerTracker.prototype.update = function() {
     // Update leaderboard
     this.socket.sendPacket(new Packet.UpdateLeaderboard(this.visibleNodes));
 
-    // Update position
-    var cell = this.cell;
-    if (cell) {
-        this.socket.sendPacket(new Packet.UpdatePosition(cell.position.x, cell.position.y, 1));
-    }
+    // No need to Update position when you already have the Update Nodes packet
+    //var cell = this.cell;
+    //if (cell) {
+    //    this.socket.sendPacket(new Packet.UpdatePosition(cell.position.x, cell.position.y, 1));
+    //}
 }
