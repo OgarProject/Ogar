@@ -41,25 +41,25 @@ PacketHandler.prototype.handleMessage = function(message) {
             this.setNickname(nick);
             break;
         case 16: //Mouse Move
-			//Mouse X
-			var mx = view.getFloat64(1,true);
-			//Mouse Y
-			var my = view.getFloat64(9,true);
+            //Mouse X
+            var mx = view.getFloat64(1,true);
+            //Mouse Y
+            var my = view.getFloat64(9,true);
 			
-			//console.log("<X: "+mx+" Y: "+my);
+            //console.log("<X: "+mx+" Y: "+my);
 			
-			var cell = this.socket.playerTracker.cell;
-    		if (cell) {
-				//Calculate the movement of the cell
-				cell.calcMove(mx,my);
-				//console.log(">X: "+cell.position.x+"Y: "+cell.position.y);
-    		}
-			break;
-		case 255: //On connection
-			//Send Set_Border packet first
-			var border = this.gameServer.border;
-    		this.socket.sendPacket(new Packet.SetBorder(border.left, border.right, border.top, border.bottom));
-			break;
+            var cell = this.socket.playerTracker.cell;
+            if (cell) {
+                //Calculate the movement of the cell
+                cell.calcMove(mx,my);
+                //console.log(">X: "+cell.position.x+"Y: "+cell.position.y);
+            }
+	    break;
+	case 255: //On connection
+	    //Send Set_Border packet first
+	    var border = this.gameServer.border;
+    	    this.socket.sendPacket(new Packet.SetBorder(border.left, border.right, border.top, border.bottom));
+	    break;
         default:
             break;
     }
