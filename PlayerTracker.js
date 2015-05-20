@@ -9,9 +9,10 @@ function PlayerTracker(gameServer, socket) {
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     this.cell = null;
-
-    this.clear();
-    this.setBorder();
+    
+    //Not needed
+    //this.clear();
+    //this.setBorder();
 }
 
 module.exports = PlayerTracker;
