@@ -56,7 +56,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     var n = list[i].nodeType;
                     if (n == 1) {
                         this.gameServer.currentFood--;
-                    } else (n == 2) {
+                    } else if (n == 2) {
                         this.gameServer.currentViruses--;
                     }
                 	
