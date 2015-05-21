@@ -44,15 +44,6 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 19, 0, true); // Flags
         offset += 20;
         
-        /*
-        if (node.name) {
-            for (var j = 0; j < node.name.length; j++) {
-                view.setUint16(offset, node.name.charCodeAt(j), true);
-                offset += 2;
-            }
-        }
-        */
-
         view.setUint16(offset, 0, true); // Name
         offset += 2;
     }

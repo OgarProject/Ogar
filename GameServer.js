@@ -12,9 +12,9 @@ function GameServer(port) {
     this.border = {
         left: 0,
         right: 11180.3398875,
-        top: 11180.3398875,
-        bottom: 0
-    };
+        top: 0,
+        bottom: 11180.3398875
+    }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
     this.clients = [];
     this.nodes = [];

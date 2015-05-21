@@ -9,8 +9,7 @@ function Cell(nodeId, name, position, size) {
 
 module.exports = Cell;
 
-Cell.prototype.calcMove = function(x2,y2) {
-    //Thank you google
+Cell.prototype.calcMove = function(x2, y2, border) {
     var x1 = this.position.x;
     var y1 = this.position.y;
     
@@ -32,9 +31,14 @@ Cell.prototype.calcMove = function(x2,y2) {
             err += dx;
             y1 += sy;
         }
-    dist--;
+        dist--;
     }
     
+    // Check to ensure we're not passing the world border
+    if (x1 < border.left || x1 > border.right || y1 < border.top || y1 > border.bottom) {
+        return;
+    }
+
     this.position.x = x1;
     this.position.y = y1;
 }
