@@ -48,6 +48,14 @@ PacketHandler.prototype.handleMessage = function(message) {
             if (cell) {
                 // Calculate the movement of the cell
                 cell.calcMove(mx, my, this.gameServer.border);
+                
+                // Check if food particles nearby (Still buggy)
+                var list = this.gameServer.getCellsInRange(cell);
+                for (var i = 0; i < list.length ; i++){
+                	this.gameServer.removeNode(list[i]);
+                	cell.size += 5;
+                }
+                
             }
             break;
         case 18: //Q Press (Debug)

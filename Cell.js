@@ -36,7 +36,8 @@ Cell.prototype.calcMove = function(x2, y2, border) {
     }
     
     // Check to ensure we're not passing the world border
-    if (x1 < border.left || x1 > border.right || y1 < border.top || y1 > border.bottom) {
+    
+    if (x1 < border.left || x1 > border.right || y1 > border.top || y1 < border.bottom) {
         return;
     }
 

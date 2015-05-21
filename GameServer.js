@@ -12,9 +12,9 @@ function GameServer(port) {
     this.border = {
         left: 0,
         //right: 11180.3398875,
-        right: 1000, 
-        top: 0,
-        bottom: 1000
+        right: 1000.0,
+        top: 1000.0,
+        bottom: 0
         //bottom: 11180.3398875
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
@@ -119,6 +119,53 @@ GameServer.prototype.spawnFood = function() {
 	    this.addNode(f);
         this.currentFood++;
 	}
+}
+
+GameServer.prototype.getCellsInRange = function(cell) {
+	var list = new Array();
+	var r = 25; //Get cell radius (Just a filler number at the moment)
+	
+	var topY = cell.position.y - r;
+	var bottomY = cell.position.y + r;
+	
+	var leftX = cell.position.x - r;
+	var rightX = cell.position.x + r;
+	
+	//Loop through all cells on the map
+	//There is probably a more efficient way of doing this but whatever
+	for (var i = 0;i < this.nodes.length;i++){
+		var check = this.nodes[i];
+		
+		if (typeof check === 'undefined'){
+			continue;
+		}
+		
+		//Can't eat itself
+		if (check.nodeId == cell.nodeId){
+			continue;
+		}
+		
+		//Calculations (does not need to be 100% accurate right now)
+		if (check.position.y > bottomY){
+			continue;
+		} if (check.position.y < topY){
+			continue;
+		} if (check.position.x > rightX){
+			continue;
+		} if (check.position.x < leftX){
+			continue;
+		} 
+	
+		//Make sure it is a food particle (This code will be changed later)
+		if (check.nodeType != 1){
+			continue;
+		}
+		
+		//Add to list of cells nearby
+		list.push(check);
+	}
+	
+	return list;
 }
 
 // Custom prototype functions
