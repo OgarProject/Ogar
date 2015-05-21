@@ -35,13 +35,9 @@ UpdateNodes.prototype.build = function() {
         if (typeof node == "undefined") {
             continue;
         }
-        
-        var v = 0; // Virus flag
-        if (node.nodeType == 2) {
-        	v = 1;
-        } 
 
         view.setUint32(offset, node.nodeId, true); // Node ID
+        /* This data is not needed when destroying nodes
         view.setFloat32(offset + 4, node.position.x, true); // X position
         view.setFloat32(offset + 8, node.position.y, true); // Y position
         view.setFloat32(offset + 12, node.size, true); // Size
@@ -50,9 +46,10 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 18, node.color.b, true); // Color (B)
         view.setUint8(offset + 19, v, true); // Flags
         offset += 20;
+        */
         
-        view.setUint16(offset, 0, true); // Name
-        offset += 2;
+        view.setUint32(offset + 4, 0, true); // (Required feild, but i dont know what needs to go here)
+        offset += 8;
     }
 
     for (var i = 0; i < this.nodes.length; i++) {
