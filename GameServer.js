@@ -129,7 +129,7 @@ GameServer.prototype.updateAll = function() {
 GameServer.prototype.spawnFood = function() {
     if (this.currentFood < this.config.foodMaxAmount) {
         var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.foodStartSize, 1);
-	this.addNode(f);
+        this.addNode(f);
         this.currentFood++;
     }
 }
@@ -137,7 +137,7 @@ GameServer.prototype.spawnFood = function() {
 GameServer.prototype.spawnVirus = function() {
     if (this.currentViruses < this.config.virusMaxAmount) {
         var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.virusStartSize, 2);
-	this.addNode(f);
+        this.addNode(f);
         this.currentViruses++;
     }
 }
@@ -157,7 +157,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         var check = this.nodes[i];
 		
         if (typeof check === 'undefined') {
-            continue;
+             continue;
         }
 		
         // Can't eat itself
@@ -177,9 +177,9 @@ GameServer.prototype.getCellsInRange = function(cell) {
             continue;
         } if (check.position.x > rightX) {
             continue;
-	} if (check.position.x < leftX) {
-	    continue;
-	} 
+        } if (check.position.x < leftX) {
+            continue;
+        } 
 	
 	// Make sure it is a food particle (This code will be changed later)
 	/*
