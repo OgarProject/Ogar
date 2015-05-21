@@ -53,16 +53,24 @@ PacketHandler.prototype.handleMessage = function(message) {
                 var list = this.gameServer.getCellsInRange(cell);
                 for (var i = 0; i < list.length ; i++) {
                     //Remove the cells
-                    var n = list[i].nodeType;
-                    if (n == 1) {
-                        this.gameServer.currentFood--;
-                    } else if (n == 2) {
-                        this.gameServer.currentViruses--;
+                    var n = list[i].getType();
+                    
+                    switch (n) {
+                        case 3: // Ejected Mass
+                        case 0: // Player Cell
+                            cell.size += n.size; // Placeholder until i get the proper formula
+                            break;
+                        case 1: // Food
+                            this.gameServer.currentFood--;
+                            cell.size += this.gameServer.config.foodMass;
+                            break;
+                        case 2: // Virus
+                            this.gameServer.currentViruses--;
+                            break;
+                        default:
+                            break;
                     }
-                	
-                    this.gameServer.removeNode(list[i]);
-                    //Add size
-                    cell.size += this.gameServer.config.foodMass;
+                    this.gameServer.removeNode(list[i]);       
                 }
             }
             break;
