@@ -144,7 +144,7 @@ GameServer.prototype.spawnVirus = function() {
 
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
-    var r = 25; // Get cell radius (Just a filler number at the moment)
+    var r = cell.size * .8; // Get cell radius (Cell size = radius)
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
@@ -157,19 +157,14 @@ GameServer.prototype.getCellsInRange = function(cell) {
         var check = this.nodes[i];
 		
         if (typeof check === 'undefined') {
-             continue;
+            continue;
         }
 		
         // Can't eat itself
         if (check.nodeId == cell.nodeId) {
             continue;
         }
-	    
-        // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
-        if (!cell.size > (check.size * 1.25)) {
-            continue;
-        }
-		
+        
         // Calculations (does not need to be 100% accurate right now)
         if (check.position.y > bottomY) {
             continue;
@@ -181,15 +176,20 @@ GameServer.prototype.getCellsInRange = function(cell) {
             continue;
         } 
 	
-	// Make sure it is a food particle (This code will be changed later)
-	/*
-	if (check.nodeType != 1){
-	    continue;
-	}
-	*/
+        // Make sure it is a food particle (This code will be changed later)
+        /*
+        if (check.nodeType != 1){
+            continue;
+        }
+        */
+	
+        // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
+        if (!cell.size > (check.size * 1.25)) {
+            continue;
+        }
 		
-	// Add to list of cells nearby
-	list.push(check);
+        // Add to list of cells nearby
+        list.push(check);
     }
     return list;
 }
