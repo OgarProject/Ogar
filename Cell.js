@@ -1,10 +1,11 @@
-function Cell(nodeId, name, position, size) {
+function Cell(nodeId, name, position, size, type) {
     this.nodeId = nodeId;
     this.name = name;
     this.color = {r: 0, g: 255, b: 0};
     this.position = position;
     this.size = size; //Size 32.0 = 10 in game size
     this.speed = 20; //Filler, will be changed later
+    this.cellType = type; //0 = Player Cell, 1 = Food, 2 = Virus
 }
 
 module.exports = Cell;
@@ -35,7 +36,8 @@ Cell.prototype.calcMove = function(x2, y2, border) {
     }
     
     // Check to ensure we're not passing the world border
-    if (x1 < border.left || x1 > border.right || y1 < border.top || y1 > border.bottom) {
+    
+    if (x1 < border.left || x1 > border.right || y1 > border.top || y1 < border.bottom) {
         return;
     }
 

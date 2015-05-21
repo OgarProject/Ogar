@@ -10,7 +10,8 @@ UpdateLeaderboard.prototype.build = function() {
     var bufferSize = 5;
     var validElements = 0;
     for (var i = 0; i < lb.length; i++) {
-        if (typeof lb[i] == "undefined") {
+    	//Filler code: Prevents food cells from showing up on leaderboard
+        if ((typeof lb[i] == "undefined") || (lb[i].cellType != 0)){
             continue;
         }
 
@@ -30,7 +31,8 @@ UpdateLeaderboard.prototype.build = function() {
 
     var offset = 5;
     for (var i = 0; i < lb.length; i++) {
-        if (typeof lb[i] == "undefined") {
+    	//Filler code
+        if ((typeof lb[i] == "undefined") || (lb[i].cellType != 0)) {
             continue;
         }
 

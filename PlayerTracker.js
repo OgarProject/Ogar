@@ -9,10 +9,6 @@ function PlayerTracker(gameServer, socket) {
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     this.cell = null;
-    
-    //Not needed
-    //this.clear();
-    //this.setBorder();
 }
 
 module.exports = PlayerTracker;
@@ -31,11 +27,13 @@ PlayerTracker.prototype.update = function() {
         this.nodeAdditionQueue = this.gameServer.nodes.slice(0);
         this.initialized = true;
     }
-
+    
     // Add nodes
     if (this.nodeAdditionQueue.length > 0) {
+    	/* This code was causing issues when multiple clients connected to the server
         var addQueueCopy = this.nodeAdditionQueue.slice(0);
         this.socket.sendPacket(new Packet.AddNodes(addQueueCopy));
+        */
 
         for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
             this.visibleNodes.push(this.nodeAdditionQueue[i]);
@@ -45,8 +43,6 @@ PlayerTracker.prototype.update = function() {
     }
 
     // Update and destroy nodes
-    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes));
-
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
@@ -55,15 +51,11 @@ PlayerTracker.prototype.update = function() {
             console.log("Warning: Node in destroy queue was never visible anyways!");
         }
     }
+    
+    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes));
 
     this.nodeDestroyQueue = [];
 
     // Update leaderboard
     this.socket.sendPacket(new Packet.UpdateLeaderboard(this.visibleNodes));
-
-    // No need to Update position when you already have the Update Nodes packet
-    //var cell = this.cell;
-    //if (cell) {
-    //    this.socket.sendPacket(new Packet.UpdatePosition(cell.position.x, cell.position.y, 1));
-    //}
 }

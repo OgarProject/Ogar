@@ -48,6 +48,34 @@ PacketHandler.prototype.handleMessage = function(message) {
             if (cell) {
                 // Calculate the movement of the cell
                 cell.calcMove(mx, my, this.gameServer.border);
+                
+                // Check if cells nearby (Still buggy)
+                var list = this.gameServer.getCellsInRange(cell);
+                for (var i = 0; i < list.length ; i++) {
+                    //Remove the cells
+                    var n = list[i].nodeType;
+                    if (n == 1) {
+                        this.gameServer.currentFood--;
+                    } else (n == 2) {
+                        this.gameServer.currentViruses--;
+                    }
+                	
+                    this.gameServer.removeNode(list[i]);
+                    //Add size
+                    cell.size += this.gameServer.config.foodMass;
+                }
+            }
+            break;
+        case 18: //Q Press (Debug)
+            var cell = this.socket.playerTracker.cell;
+            if (cell) {
+                cell.speed += 10;
+            }
+            break;
+        case 21: //W Press (Debug)
+            var cell = this.socket.playerTracker.cell;
+            if (cell) {
+                cell.size += 10;
             }
             break;
         case 255:
@@ -63,9 +91,11 @@ PacketHandler.prototype.handleMessage = function(message) {
 
 PacketHandler.prototype.setNickname = function(newNick) {
     if (!this.socket.playerTracker.cell) {
-        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 32.0);
+        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 32.0, 0);
         this.gameServer.addNode(this.socket.playerTracker.cell);
     } else {
         this.socket.playerTracker.cell.name = newNick;
     }
+    // Only add player controlled cells with this packet or it will bug the camera
+    this.socket.sendPacket(new Packet.AddNodes(this.socket.playerTracker.cell));
 }
