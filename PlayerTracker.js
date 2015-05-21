@@ -9,9 +9,28 @@ function PlayerTracker(gameServer, socket) {
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     this.cell = null;
+    
+    this.mouseX = 0;
+    this.mouseY = 0;
 }
 
 module.exports = PlayerTracker;
+
+PlayerTracker.prototype.getMouseX = function() {
+    return this.mouseX;
+}
+
+PlayerTracker.prototype.getMouseY = function() {
+    return this.mouseY;
+}
+
+PlayerTracker.prototype.setMouseX = function(n) {
+    this.mouseX = n;
+}
+
+PlayerTracker.prototype.setMouseY = function(n) {
+    this.mouseY = n;
+}
 
 PlayerTracker.prototype.clear = function() {
     this.socket.sendPacket(new Packet.ClearNodes());

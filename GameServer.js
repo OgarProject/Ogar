@@ -25,6 +25,7 @@ function GameServer(port) {
     
     this.currentFood = 0;
     this.currentViruses = 0;
+    this.movingCells = [];
     
     this.config = {
     	foodSpawnRate: 2000, // The interval between each food cell spawn in milliseconds (Placeholder number)
@@ -34,7 +35,10 @@ function GameServer(port) {
     	virusSpawnRate: 5000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 1, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
     	virusStartSize: 100.0, // Starting virus size
-    	virusExplodeSize: 198.0 // Viruses explode past this size
+    	virusExplodeSize: 198.0, // Viruses explode past this size
+    	ejectStartSize: 32, // Radius of ejected mass
+    	ejectMass: 16, //Amount of mass gained from consuming ejected cells (unused)
+    	ejectRequiredMass: 36 //Mass required to eject a cell (unused)
     };
 }
 
@@ -46,6 +50,7 @@ GameServer.prototype.start = function() {
         setInterval(this.updateAll.bind(this), 100);
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
         setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate);
+        setInterval(this.updateMovingCells.bind(this), 100);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -142,6 +147,39 @@ GameServer.prototype.spawnVirus = function() {
     }
 }
 
+GameServer.prototype.updateMovingCells = function() {
+    for (var i = 0; i < this.movingCells.length; i++) {
+        var check = this.movingCells[i];
+    	
+        // Cleanup unused nodes
+        while ((typeof check == "undefined") && (i < this.movingCells.length)) {
+            // Remove moving cells that are undefined
+            this.movingCells.splice(i, 1);
+            check = movingCells[i];
+        }
+    	
+        if (i >= this.movingCells.length) {
+            continue;
+        }
+        
+        if (check.getEnergy() > 0) {
+            // If the cell has enough energy, then move it
+            check.calcMovePhys();
+            check.decrementEnergy();
+        } else {
+            // Remove cell from list
+            var index = this.movingCells.indexOf(check);
+            if (index != -1) {
+                this.movingCells.splice(index, 1);
+            }
+        }
+    }
+}
+
+GameServer.prototype.addMovingCell = function(node) {
+	this.movingCells.push(node);
+}
+
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
     var r = cell.size * .8; // Get cell radius (Cell size = radius)
@@ -177,11 +215,9 @@ GameServer.prototype.getCellsInRange = function(cell) {
         } 
 	
         // Make sure it is a food particle (This code will be changed later)
-        /*
-        if (check.nodeType != 1){
+        if (check.getType() != 1){
             continue;
         }
-        */
 	
         // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
         if (!cell.size > (check.size * 1.25)) {

@@ -41,13 +41,14 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 16:
             // Mouse Move
-            var mx = view.getFloat64(1, true);
-            var my = view.getFloat64(9, true);
+            var client = this.socket.playerTracker;
+            client.setMouseX(view.getFloat64(1, true));
+            client.setMouseY(view.getFloat64(9, true));
             
             var cell = this.socket.playerTracker.cell;
             if (cell) {
                 // Calculate the movement of the cell
-                cell.calcMove(mx, my, this.gameServer.border);
+                cell.calcMove(client.getMouseX(), client.getMouseY(), this.gameServer.border);
                 
                 // Check if cells nearby (Still buggy)
                 var list = this.gameServer.getCellsInRange(cell);
@@ -80,10 +81,27 @@ PacketHandler.prototype.handleMessage = function(message) {
                 cell.speed += 10;
             }
             break;
-        case 21: //W Press (Debug)
+        case 21: //W Press
             var cell = this.socket.playerTracker.cell;
             if (cell) {
-                cell.size += 10;
+                var deltaY = this.socket.playerTracker.getMouseY() - cell.getPos().y;
+                var deltaX = this.socket.playerTracker.getMouseX() - cell.getPos().x;
+                var angle = Math.atan2(deltaX,deltaY);
+            	
+                // Get starting position
+                var startPos = {
+                    x: cell.getPos().x + ( (cell.size + this.gameServer.config.ejectStartSize) * Math.sin(angle) ), 
+                    y: cell.getPos().y + ( (cell.size + this.gameServer.config.ejectStartSize) * Math.cos(angle) )
+                };
+                // Create cell
+                ejected = new Cell(this.gameServer.getNextNodeId(), "", startPos, this.gameServer.config.ejectStartSize, 3);
+                ejected.setAngle(angle);
+                ejected.setEnergy(5);
+                ejected.setSpeed(50);
+            	
+                // Add to moving cells list
+                this.gameServer.addMovingCell(ejected);
+                this.gameServer.addNode(ejected);
             }
             break;
         case 255:
