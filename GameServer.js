@@ -23,7 +23,18 @@ function GameServer(port) {
     this.port = port;
     
     this.currentFood = 0;
-    this.maxFood = 100;
+    this.currentViruses = 0;
+    
+    this.config = {
+    	foodSpawnRate: 2000, // The interval between each food cell spawn in milliseconds
+    	foodMaxAmount: 100, // Maximum food cells on the map (Currently a placeholder number)
+    	foodStartSize: 10.0, // Starting food size
+    	foodMass: 2, // Amount of mass gained from consuming food
+    	virusSpawnRate: 1000, // The interval between each virus spawn in milliseconds
+    	virusMaxAmount: 1, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count
+    	virusStartSize: 100.0, // Starting virus size
+    	virusExplodeSize: 198.0 // Viruses explode past this size
+    };
 }
 
 module.exports = GameServer;
@@ -32,7 +43,8 @@ GameServer.prototype.start = function() {
     this.socketServer = new WebSocket.Server({ port: this.port }, function() {
         console.log("[Game] Listening on port %d", this.port);
         setInterval(this.updateAll.bind(this), 100);
-        setInterval(this.spawnFood.bind(this), 2000);
+        setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
+        setInterval(this.spawnVirus.bind(this), 100);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -114,16 +126,24 @@ GameServer.prototype.updateAll = function() {
 }
 
 GameServer.prototype.spawnFood = function() {
-	if (this.currentFood < this.maxFood){
-        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), 10.0, 1);
+	if (this.currentFood < this.config.foodMaxAmount){
+        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.foodStartSize, 1);
 	    this.addNode(f);
         this.currentFood++;
 	}
 }
 
+GameServer.prototype.spawnVirus = function() {
+	if (this.currentViruses < this.config.virusMaxAmount){
+        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.virusStartSize, 2);
+	    this.addNode(f);
+        this.currentViruses++;
+	}
+}
+
 GameServer.prototype.getCellsInRange = function(cell) {
 	var list = new Array();
-	var r = 25; //Get cell radius (Just a filler number at the moment)
+	var r = 25; // Get cell radius (Just a filler number at the moment)
 	
 	var topY = cell.position.y - r;
 	var bottomY = cell.position.y + r;
@@ -131,8 +151,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
 	var leftX = cell.position.x - r;
 	var rightX = cell.position.x + r;
 	
-	//Loop through all cells on the map
-	//There is probably a more efficient way of doing this but whatever
+	// Loop through all cells on the map. There is probably a more efficient way of doing this but whatever
 	for (var i = 0;i < this.nodes.length;i++){
 		var check = this.nodes[i];
 		
@@ -140,12 +159,12 @@ GameServer.prototype.getCellsInRange = function(cell) {
 			continue;
 		}
 		
-		//Can't eat itself
+		// Can't eat itself
 		if (check.nodeId == cell.nodeId){
 			continue;
 		}
 		
-		//Calculations (does not need to be 100% accurate right now)
+		// Calculations (does not need to be 100% accurate right now)
 		if (check.position.y > bottomY){
 			continue;
 		} if (check.position.y < topY){
@@ -156,12 +175,19 @@ GameServer.prototype.getCellsInRange = function(cell) {
 			continue;
 		} 
 	
-		//Make sure it is a food particle (This code will be changed later)
+		// Make sure it is a food particle (This code will be changed later)
+		/*
 		if (check.nodeType != 1){
 			continue;
 		}
+		*/
 		
-		//Add to list of cells nearby
+		// Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
+		if (!cell.size > (check.size * 1.25)) {
+			continue;
+		}
+		
+		// Add to list of cells nearby
 		list.push(check);
 	}
 	

@@ -49,13 +49,21 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Calculate the movement of the cell
                 cell.calcMove(mx, my, this.gameServer.border);
                 
-                // Check if food particles nearby (Still buggy)
+                // Check if cells nearby (Still buggy)
                 var list = this.gameServer.getCellsInRange(cell);
-                for (var i = 0; i < list.length ; i++){
-                	this.gameServer.removeNode(list[i]);
-                	cell.size += 5;
+                for (var i = 0; i < list.length ; i++) {
+                    //Remove the cells
+                    var n = list[i].nodeType;
+                    if (n == 1) {
+                        this.gameServer.currentFood--;
+                    } else (n == 2) {
+                        this.gameServer.currentViruses--;
+                    }
+                	
+                    this.gameServer.removeNode(list[i]);
+                    //Add size
+                    cell.size += this.gameServer.config.foodMass;
                 }
-                
             }
             break;
         case 18: //Q Press (Debug)
@@ -63,13 +71,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             if (cell) {
                 cell.speed += 10;
             }
-        break;
+            break;
         case 21: //W Press (Debug)
             var cell = this.socket.playerTracker.cell;
             if (cell) {
                 cell.size += 10;
             }
-        break;
+            break;
         case 255:
             // Connection
             // Send SetBorder packet first
@@ -88,6 +96,6 @@ PacketHandler.prototype.setNickname = function(newNick) {
     } else {
         this.socket.playerTracker.cell.name = newNick;
     }
-    // Allows multi client connection without bugging the camera
+    // Only add player controlled cells with this packet or it will bug the camera
     this.socket.sendPacket(new Packet.AddNodes(this.socket.playerTracker.cell));
 }

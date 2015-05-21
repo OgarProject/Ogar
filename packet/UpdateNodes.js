@@ -19,6 +19,8 @@ UpdateNodes.prototype.build = function() {
         nodesLength = nodesLength + 22 + (node.name.length * 2);
     }
     
+    // DEBUG
+    //console.log("Destroy: "+this.destroyQueue.length+" Alive: "+ this.nodes.length);
     
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 22) + nodesLength + 4 + 2 + 4 + (this.nodes.length * 4));
     var view = new DataView(buf);
@@ -33,6 +35,11 @@ UpdateNodes.prototype.build = function() {
         if (typeof node == "undefined") {
             continue;
         }
+        
+        var v = 0; // Virus flag
+        if (node.nodeType == 2) {
+        	v = 1;
+        } 
 
         view.setUint32(offset, node.nodeId, true); // Node ID
         view.setFloat32(offset + 4, node.position.x, true); // X position
@@ -41,7 +48,7 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 16, node.color.r, true); // Color (R)
         view.setUint8(offset + 17, node.color.g, true); // Color (G)
         view.setUint8(offset + 18, node.color.b, true); // Color (B)
-        view.setUint8(offset + 19, 0, true); // Flags
+        view.setUint8(offset + 19, v, true); // Flags
         offset += 20;
         
         view.setUint16(offset, 0, true); // Name
@@ -54,6 +61,11 @@ UpdateNodes.prototype.build = function() {
         if (typeof node == "undefined") {
             continue;
         }
+        
+        var v = 0; // Virus flag
+        if (node.nodeType == 2) {
+        	v = 1;
+        } 
 
         view.setUint32(offset, node.nodeId, true); // Node ID
         view.setFloat32(offset + 4, node.position.x, true); // X position
@@ -62,7 +74,7 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 16, node.color.r, true); // Color (R)
         view.setUint8(offset + 17, node.color.g, true); // Color (G)
         view.setUint8(offset + 18, node.color.b, true); // Color (B)
-        view.setUint8(offset + 19, 0, true); // Flags
+        view.setUint8(offset + 19, v, true); // Flags
         offset += 20;
         
         if (node.name) {
@@ -81,7 +93,7 @@ UpdateNodes.prototype.build = function() {
 
     view.setUint32(offset, 0, true); // Terminate node data
     view.setUint16(offset + 4, 0, true); // ?
-    view.setUint32(offset + 6, 1, true); // # of active nodes
+    view.setUint32(offset + 6, this.nodes.length, true); // # of active nodes
 
     offset += 10;
     
