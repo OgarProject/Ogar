@@ -11,14 +11,19 @@ var Cell = require('./Cell');
 function GameServer(port) {
     this.border = {
         left: 0,
-        right: 11180.3398875,
+        //right: 11180.3398875,
+        right: 1000, 
         top: 0,
-        bottom: 11180.3398875
+        bottom: 1000
+        //bottom: 11180.3398875
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
     this.clients = [];
     this.nodes = [];
     this.port = port;
+    
+    this.currentFood = 0;
+    this.maxFood = 100;
 }
 
 module.exports = GameServer;
@@ -27,6 +32,7 @@ GameServer.prototype.start = function() {
     this.socketServer = new WebSocket.Server({ port: this.port }, function() {
         console.log("[Game] Listening on port %d", this.port);
         setInterval(this.updateAll.bind(this), 100);
+        setInterval(this.spawnFood.bind(this), 2000);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -71,7 +77,8 @@ GameServer.prototype.getRandomPosition = function() {
 
 GameServer.prototype.addNode = function(node) {
     this.nodes[node.nodeId] = node;
-
+    
+    //For each client connected, add the node to their addition queue
     for (var i = 0; i < this.clients.length; i++) {
         if (typeof this.clients[i] == "undefined") {
             continue;
@@ -104,6 +111,14 @@ GameServer.prototype.updateAll = function() {
 
         this.clients[i].playerTracker.update();
     }
+}
+
+GameServer.prototype.spawnFood = function() {
+	if (this.currentFood < this.maxFood){
+        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), 10.0, 1);
+	    this.addNode(f);
+        this.currentFood++;
+	}
 }
 
 // Custom prototype functions

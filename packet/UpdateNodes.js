@@ -75,8 +75,8 @@ UpdateNodes.prototype.build = function() {
             }
         }
 
-        //view.setUint16(offset, 0, true); // Name
-        //offset += 2;
+        view.setUint16(offset, 0, true); // End of string
+        offset += 2;
     }
 
     view.setUint32(offset, 0, true); // Terminate node data

@@ -50,6 +50,18 @@ PacketHandler.prototype.handleMessage = function(message) {
                 cell.calcMove(mx, my, this.gameServer.border);
             }
             break;
+        case 18: //Q Press (Debug)
+            var cell = this.socket.playerTracker.cell;
+            if (cell) {
+                cell.speed += 10;
+            }
+        break;
+        case 21: //W Press (Debug)
+            var cell = this.socket.playerTracker.cell;
+            if (cell) {
+                cell.size += 10;
+            }
+        break;
         case 255:
             // Connection
             // Send SetBorder packet first
@@ -63,9 +75,11 @@ PacketHandler.prototype.handleMessage = function(message) {
 
 PacketHandler.prototype.setNickname = function(newNick) {
     if (!this.socket.playerTracker.cell) {
-        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 32.0);
+        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 32.0, 0);
         this.gameServer.addNode(this.socket.playerTracker.cell);
     } else {
         this.socket.playerTracker.cell.name = newNick;
     }
+    // Allows multi client connection without bugging the camera
+    this.socket.sendPacket(new Packet.AddNodes(this.socket.playerTracker.cell));
 }

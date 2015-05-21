@@ -1,10 +1,11 @@
-function Cell(nodeId, name, position, size) {
+function Cell(nodeId, name, position, size, type) {
     this.nodeId = nodeId;
     this.name = name;
     this.color = {r: 0, g: 255, b: 0};
     this.position = position;
     this.size = size; //Size 32.0 = 10 in game size
     this.speed = 20; //Filler, will be changed later
+    this.cellType = type; //0 = Player Cell, 1 = Food, 2 = Virus
 }
 
 module.exports = Cell;

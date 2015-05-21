@@ -9,10 +9,6 @@ function PlayerTracker(gameServer, socket) {
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     this.cell = null;
-    
-    //Not needed
-    //this.clear();
-    //this.setBorder();
 }
 
 module.exports = PlayerTracker;
@@ -32,10 +28,10 @@ PlayerTracker.prototype.update = function() {
         this.initialized = true;
     }
 
-    // Add nodes
+    // Add nodes (Only add player controlled cells or it will bug the camera)
     if (this.nodeAdditionQueue.length > 0) {
         var addQueueCopy = this.nodeAdditionQueue.slice(0);
-        this.socket.sendPacket(new Packet.AddNodes(addQueueCopy));
+        //this.socket.sendPacket(new Packet.AddNodes(addQueueCopy));
 
         for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
             this.visibleNodes.push(this.nodeAdditionQueue[i]);
@@ -60,10 +56,4 @@ PlayerTracker.prototype.update = function() {
 
     // Update leaderboard
     this.socket.sendPacket(new Packet.UpdateLeaderboard(this.visibleNodes));
-
-    // No need to Update position when you already have the Update Nodes packet
-    //var cell = this.cell;
-    //if (cell) {
-    //    this.socket.sendPacket(new Packet.UpdatePosition(cell.position.x, cell.position.y, 1));
-    //}
 }
