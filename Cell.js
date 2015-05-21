@@ -5,10 +5,14 @@ function Cell(nodeId, name, position, size, type) {
     this.position = position;
     this.size = size; //Size 32.0 = 10 in game size
     this.speed = 20; //Filler, will be changed later
-    this.cellType = type; //0 = Player Cell, 1 = Food, 2 = Virus
+    this.cellType = type; //0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
 }
 
 module.exports = Cell;
+
+Cell.prototype.getType = function() {
+    return this.cellType;
+}
 
 Cell.prototype.calcMove = function(x2, y2, border) {
     var x1 = this.position.x;
