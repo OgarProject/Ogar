@@ -30,11 +30,11 @@ function GameServer(port) {
     this.config = {
     	foodSpawnRate: 2000, // The interval between each food cell spawn in milliseconds (Placeholder number)
     	foodMaxAmount: 100, // Maximum food cells on the map (Placeholder number)
-    	foodStartSize: 10.0, // Starting food size
+    	foodStartSize: 1, // Starting food size (In mass)
     	foodMass: 2, // Amount of mass gained from consuming food
     	virusSpawnRate: 5000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 1, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
-    	virusStartSize: 100.0, // Starting virus size
+    	virusStartSize: 100.0, // Starting virus size (In mass)
     	virusExplodeSize: 198.0, // Viruses explode past this size
     	ejectStartSize: 32, // Radius of ejected mass
     	ejectMass: 16, //Amount of mass gained from consuming ejected cells (unused)
@@ -182,7 +182,7 @@ GameServer.prototype.addMovingCell = function(node) {
 
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
-    var r = cell.size * .8; // Get cell radius (Cell size = radius)
+    var r = cell.getSize() * .8; // Get cell radius (Cell size = radius)
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
@@ -220,7 +220,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 	
         // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
-        if (!cell.size > (check.size * 1.25)) {
+        if (!cell.getMass() > (check.getMass() * 1.25)) {
             continue;
         }
 		

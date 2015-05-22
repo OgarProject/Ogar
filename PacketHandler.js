@@ -117,7 +117,7 @@ PacketHandler.prototype.handleMessage = function(message) {
 
 PacketHandler.prototype.setNickname = function(newNick) {
     if (!this.socket.playerTracker.cell) {
-        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 32.0, 0);
+        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 10.5, 0);
         this.gameServer.addNode(this.socket.playerTracker.cell);
     } else {
         this.socket.playerTracker.cell.name = newNick;

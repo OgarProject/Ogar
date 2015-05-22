@@ -1,10 +1,10 @@
-function Cell(nodeId, name, position, size, type) {
+function Cell(nodeId, name, position, mass, type) {
     this.nodeId = nodeId;
     this.name = name;
     this.color = {r: 0, g: 255, b: 0};
     this.position = position;
-    this.size = size; // Radius of the cell
-    this.mass = 10; // Mass of the cell
+    this.size = 0; // Radius of the cell - Depreciated, use getSize() instead
+    this.mass = mass; // Mass of the cell
     this.speed = 20; // Filler, will be changed later
     this.cellType = type; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     
@@ -20,6 +20,14 @@ Cell.prototype.getType = function() {
 
 Cell.prototype.getPos = function() {
     return this.position;
+}
+
+Cell.prototype.getSize = function() {
+    return Math.sqrt(100 * this.mass);
+}
+
+Cell.prototype.getMass = function() {
+    return this.mass;
 }
 
 Cell.prototype.setAngle = function(radians) {
