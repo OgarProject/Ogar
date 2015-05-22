@@ -57,7 +57,7 @@ UpdateNodes.prototype.build = function() {
         }
         
         var v = 0; // Virus flag
-        if (node.nodeType == 2) {
+        if (node.getType() == 2) {
         	v = 1;
         } 
 
