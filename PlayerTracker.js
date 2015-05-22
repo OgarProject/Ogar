@@ -15,7 +15,7 @@ function PlayerTracker(gameServer, socket) {
 
     this.mouseX = 0;
     this.mouseY = 0;
-    this.updateLBTicks = 0; // 
+    this.tickLeaderboard = 0; // 
 }
 
 module.exports = PlayerTracker;
@@ -105,11 +105,11 @@ PlayerTracker.prototype.update = function() {
     this.nodeDestroyQueue = [];
 
     // Update leaderboard
-    if (this.updateLBTicks <= 0) {
+    if (this.tickLeaderboard <= 0) {
         this.socket.sendPacket(new Packet.UpdateLeaderboard(this.gameServer.leaderboard));
-        this.updateLBTicks = 20; //Updates every 2 seconds - Saves server resources
+        this.tickLeaderboard = 20; //Updates every 2 seconds - Saves server resources
     } else {
-        this.updateLBTicks--;
+        this.tickLeaderboard--;
     }
     
 }

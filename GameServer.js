@@ -212,7 +212,7 @@ GameServer.prototype.addMovingCell = function(node) {
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
     var r = cell.getSize() * .9; // Get cell radius (Cell size = radius)
-    var eatingRange = r * .6; // Distance between the 2 cells must be below this value for a cell to be eaten
+    var eatingRange = r * .75; // Distance between the 2 cells must be below this value for a cell to be eaten
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
@@ -290,7 +290,7 @@ GameServer.prototype.updateLeaderboard = function() {
             // Initial player
             this.leaderboard.push(player);
             continue;
-        } else if (this.leaderboard.length <= 10) {
+        } else if (this.leaderboard.length < 10) {
             this.leaderboardAddSort(player);
         } else {
             // 10 in leaderboard already
