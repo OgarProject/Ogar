@@ -110,7 +110,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Create cell
                 split = new Cell(this.gameServer.getNextNodeId(), client, startPos, newMass, 0);
                 split.setAngle(angle);
-                split.setMoveEngineData(50, 5);
+                split.setMoveEngineData(75, 5);
             	
                 // Add to moving cells list
                 this.gameServer.addMovingCell(split);
@@ -145,7 +145,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Create cell
                 ejected = new Cell(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass, 3);
                 ejected.setAngle(angle);
-                ejected.setMoveEngineData(75, 6);
+                ejected.setMoveEngineData(200, 10);
             	
                 // Add to moving cells list
                 this.gameServer.addMovingCell(ejected);

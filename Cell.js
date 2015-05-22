@@ -61,10 +61,6 @@ Cell.prototype.getMoveTicks = function() {
     return this.moveEngineTicks;
 }
 
-Cell.prototype.decrementMoveTicks = function() {
-    this.moveEngineTicks--;
-}
-
 // Functions
 
 Cell.prototype.calcMove = function(x2, y2, border) {
@@ -133,4 +129,8 @@ Cell.prototype.calcMovePhys = function() {
 	
     this.position.x = X;
     this.position.y = Y;
+    
+    //
+    this.moveEngineSpeed *= .8;
+    this.moveEngineTicks -= 1;
 }

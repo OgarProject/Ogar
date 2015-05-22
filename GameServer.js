@@ -189,7 +189,6 @@ GameServer.prototype.updateMoveEngine = function() {
         if (check.getMoveTicks() > 0) {
             // If the cell has enough Move Ticks, then move it
             check.calcMovePhys();
-            check.decrementMoveTicks();
         } else {
             // Remove cell from list
             var index = this.movingCells.indexOf(check);
