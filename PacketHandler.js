@@ -96,7 +96,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     continue;
                 }
                 
-                if (cell.mass < this.gameServer.config.playerMinSplitMass) {
+                if (cell.mass < this.gameServer.config.playerMinMassSplit) {
                     continue;
                 }
 				
@@ -148,7 +148,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     continue;
                 }
                 
-                if (cell.mass < this.gameServer.config.playerMinSplitMass) {
+                if (cell.mass < this.gameServer.config.playerMinMassEject) {
                     continue;
                 }
 				

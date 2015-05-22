@@ -35,6 +35,7 @@ function GameServer(port) {
     this.currentFood = 0;
     this.currentViruses = 0;
     this.movingCells = [];
+    this.leaderboard = [];
     
     this.config = {
     	foodSpawnRate: 2000, // The interval between each food cell spawn in milliseconds (Placeholder number)
@@ -47,8 +48,10 @@ function GameServer(port) {
     	ejectMass: 16, //Mass of ejected cells
     	ejectMassGain: 14.4, //Amount of mass gained from consuming ejected cells
     	playerStartMass: 100, // Starting mass of the player cell
-    	playerMinSplitMass: 36, //Mass required to eject/slpit a cell
-    	playerMaxCells: 16
+    	playerMinMassEject: 32, //Mass required to eject a cell
+    	playerMinMassSplit: 36, //Mass required to split
+    	playerMaxCells: 16, // Max cells the player is allowed to have
+    	leaderboardUpdateInterval: 2000 // Time between leaderboard updates, in milliseconds
     };
 }
 
@@ -61,6 +64,7 @@ GameServer.prototype.start = function() {
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
         setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate);
         setInterval(this.updateMoveEngine.bind(this), 100);
+        //setInterval(this.updateLeaderboard.bind(this), this.config.leaderboardUpdateInterval);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -207,7 +211,7 @@ GameServer.prototype.addMovingCell = function(node) {
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
     var r = cell.getSize() * .9; // Get cell radius (Cell size = radius)
-    var eatingRange = r * .7; // Distance between the 2 cells must be below this value for a cell to be eaten
+    var eatingRange = r * .6; // Distance between the 2 cells must be below this value for a cell to be eaten
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
@@ -266,6 +270,10 @@ GameServer.prototype.getCellsInRange = function(cell) {
         list.push(check);
     }
     return list;
+}
+
+GameServer.prototype.updateLeaderboard = function() {
+	
 }
 
 // Custom prototype functions
