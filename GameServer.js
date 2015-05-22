@@ -30,8 +30,7 @@ function GameServer(port) {
     this.config = {
     	foodSpawnRate: 2000, // The interval between each food cell spawn in milliseconds (Placeholder number)
     	foodMaxAmount: 100, // Maximum food cells on the map (Placeholder number)
-    	foodStartSize: 1, // Starting food size (In mass)
-    	foodMass: 2, // Amount of mass gained from consuming food
+    	foodMass: 1, // Starting food size (In mass)
     	virusSpawnRate: 5000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 1, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
     	virusStartSize: 100.0, // Starting virus size (In mass)
@@ -133,7 +132,7 @@ GameServer.prototype.updateAll = function() {
 
 GameServer.prototype.spawnFood = function() {
     if (this.currentFood < this.config.foodMaxAmount) {
-        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.foodStartSize, 1);
+        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.foodMass, 1);
         this.addNode(f);
         this.currentFood++;
     }

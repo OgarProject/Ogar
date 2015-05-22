@@ -59,11 +59,11 @@ PacketHandler.prototype.handleMessage = function(message) {
                     switch (n) {
                         case 3: // Ejected Mass
                         case 0: // Player Cell
-                            cell.size += n.size; // Placeholder until i get the proper formula
+                            cell.mass += n.mass; // Placeholder until i get the proper formula
                             break;
                         case 1: // Food
                             this.gameServer.currentFood--;
-                            cell.size += this.gameServer.config.foodMass;
+                            cell.mass += this.gameServer.config.foodMass;
                             break;
                         case 2: // Virus
                             this.gameServer.currentViruses--;
