@@ -11,15 +11,21 @@ function PlayerTracker(gameServer, socket) {
     this.visibleNodes = [];
     //this.cell = null; Depreciated, use this.cells instead
     this.cells = [];
+    this.score = 0;
 
     this.mouseX = 0;
     this.mouseY = 0;
+    this.updateLBTicks = 0; // 
 }
 
 module.exports = PlayerTracker;
 
 PlayerTracker.prototype.setName = function(name) {
     this.name = name;
+}
+
+PlayerTracker.prototype.getName = function() {
+    return this.name;
 }
 
 PlayerTracker.prototype.getMouseX = function() {
@@ -40,6 +46,17 @@ PlayerTracker.prototype.setMouseY = function(n) {
 
 PlayerTracker.prototype.addCell = function(node) {
     this.cells.push(node);
+}
+
+PlayerTracker.prototype.getScore = function(reCalcScore) {
+    if (reCalcScore) {
+        var s = 0;
+        for (var i = 0; i < this.cells.length; i++) {
+            s += this.cells[i].mass;
+            this.score = s;
+        }
+    }
+    return this.score;
 }
 
 // Functions
@@ -88,5 +105,11 @@ PlayerTracker.prototype.update = function() {
     this.nodeDestroyQueue = [];
 
     // Update leaderboard
-    this.socket.sendPacket(new Packet.UpdateLeaderboard(this.visibleNodes));
+    if (this.updateLBTicks <= 0) {
+        this.socket.sendPacket(new Packet.UpdateLeaderboard(this.gameServer.leaderboard));
+        this.updateLBTicks = 20; //Updates every 2 seconds - Saves server resources
+    } else {
+        this.updateLBTicks--;
+    }
+    
 }

@@ -36,6 +36,7 @@ function GameServer(port) {
     this.currentViruses = 0;
     this.movingCells = [];
     this.leaderboard = [];
+    this.leaderboardLowestScore = 0; // Lowest score in leaderboard
     
     this.config = {
     	foodSpawnRate: 2000, // The interval between each food cell spawn in milliseconds (Placeholder number)
@@ -64,7 +65,7 @@ GameServer.prototype.start = function() {
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
         setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate);
         setInterval(this.updateMoveEngine.bind(this), 100);
-        //setInterval(this.updateLeaderboard.bind(this), this.config.leaderboardUpdateInterval);
+        setInterval(this.updateLeaderboard.bind(this), this.config.leaderboardUpdateInterval);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -273,7 +274,51 @@ GameServer.prototype.getCellsInRange = function(cell) {
 }
 
 GameServer.prototype.updateLeaderboard = function() {
-	
+    this.leaderboard = []; // Clear the leaderboard first
+    for (var i = 0; i < this.clients.length; i++) {
+        if (typeof this.clients[i] == "undefined") {
+            continue;
+        }
+
+        var player = this.clients[i].playerTracker;
+        var playerScore = player.getScore(true);
+        if (player.cells.length <= 0) {
+            continue;
+        }
+        
+        if (this.leaderboard.length == 0) {
+            // Initial player
+            this.leaderboard.push(player);
+            continue;
+        } else if (this.leaderboard.length <= 10) {
+            this.leaderboardAddSort(player);
+        } else {
+            // 10 in leaderboard already
+            if (playerScore > this.leaderboard[9].getScore(false)) {
+                this.leaderboard.pop();
+                this.leaderboardAddSort(player);
+            }
+        }
+
+    }
+}
+
+GameServer.prototype.leaderboardAddSort = function(player) {
+    // Adds the player and sorts the leaderboard
+    var len = this.leaderboard.length - 1;
+    var loop = true;
+    while ((len >= 0) && (loop)) {
+        // Start from the bottom of the leaderboard
+        if (player.getScore(false) <= this.leaderboard[len].getScore(false)) {
+            this.leaderboard.splice(len + 1, 0, player);
+            loop = false; // End the loop if a spot is found
+        }
+        len--;
+    }
+    if (loop) {
+        // Add to top of the list because no spots were found
+        this.leaderboard.splice(0, 0,player);
+    }
 }
 
 // Custom prototype functions

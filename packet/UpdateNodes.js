@@ -56,10 +56,7 @@ UpdateNodes.prototype.build = function() {
             continue;
         }
         
-        var v = 0; // Virus flag
-        if (node.getType() == 2) {
-        	v = 1;
-        } 
+        var v = node.getType() == 2 ? 1: 0; // Virus flag
 
         view.setUint32(offset, node.nodeId, true); // Node ID
         view.setFloat32(offset + 4, node.position.x, true); // X position

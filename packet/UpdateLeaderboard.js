@@ -11,7 +11,7 @@ UpdateLeaderboard.prototype.build = function() {
     var validElements = 0;
     for (var i = 0; i < lb.length; i++) {
     	//Filler code: Prevents food cells from showing up on leaderboard
-        if ((typeof lb[i] == "undefined") || (lb[i].cellType != 0)){
+        if (typeof lb[i] == "undefined") {
             continue;
         }
 
@@ -32,7 +32,7 @@ UpdateLeaderboard.prototype.build = function() {
     var offset = 5;
     for (var i = 0; i < lb.length; i++) {
     	//Filler code
-        if ((typeof lb[i] == "undefined") || (lb[i].cellType != 0)) {
+        if (typeof lb[i] == "undefined") {
             continue;
         }
 
