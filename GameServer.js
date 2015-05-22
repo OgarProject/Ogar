@@ -131,7 +131,7 @@ GameServer.prototype.removeNode = function(node) {
         this.nodes.splice(index, 1);
     }
 	
-	if (node.getType == 0) {
+	if (node.getType() == 0) {
 	    // Remove from owning player's cell list
 	    var owner = node.owner;
 	    owner.cells.splice(owner.cells.indexOf(node), 1);
@@ -207,7 +207,7 @@ GameServer.prototype.addMovingCell = function(node) {
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
     var r = cell.getSize() * .9; // Get cell radius (Cell size = radius)
-    var eatingRange = r / 2; // Distance between the 2 cells must be below this value for a cell to be eaten
+    var eatingRange = r * .7; // Distance between the 2 cells must be below this value for a cell to be eaten
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
