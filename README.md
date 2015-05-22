@@ -7,8 +7,8 @@ The project is still in its very early stages. Here's a rough list of what's bee
 - [x] Master server basic implementation
 - [x] Game server basic implementation (clients can connect)
 - [x] Single-cell movement
-- [ ] Randomly generated cells and viruses
-- [ ] Ejecting mass
+- [x] Randomly generated cells and viruses
+- [x] Ejecting mass
 - [ ] Splitting
 - [ ] Multi-cell player movement
 
