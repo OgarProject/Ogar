@@ -46,6 +46,7 @@ function GameServer(port) {
     	virusExplodeMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
     	ejectMassGain: 14.4, //Amount of mass gained from consuming ejected cells
+    	playerStartMass: 100, // Starting mass of the player cell
     	playerMinSplitMass: 36, //Mass required to eject/slpit a cell
     	playerMaxCells: 16
     };

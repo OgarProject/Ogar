@@ -112,7 +112,6 @@ Cell.prototype.calcMove = function(x2, y2, border) {
                 
                 cell.position.x = cell.getPos().x + ( move * Math.sin(newAngle) );
                 cell.position.y = cell.getPos().y + ( move * Math.cos(newAngle) );
-                return;
             }
         }
     }
