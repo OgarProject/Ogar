@@ -11,7 +11,7 @@ function Cell(nodeId,owner, position, mass, type) {
     
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
-    this.direction = 0; // Angle of movement
+    this.angle = 0; // Angle of movement
 }
 
 module.exports = Cell;
@@ -40,7 +40,7 @@ Cell.prototype.getSize = function() {
 }
 
 Cell.prototype.setAngle = function(radians) {
-    this.direction = radians;
+    this.angle = radians;
 }
 
 Cell.prototype.setMoveEngineData = function(speed, ticks) {
@@ -84,44 +84,52 @@ Cell.prototype.calcMove = function(x2, y2, border) {
         return;
     }
 	
-	// Collision check for other cells (Broken)
-	/*
-	for (var i = 0; i < this.owner.cells.length;i++) {
-		var cell = this.owner.cells[i];
+    // Collision check for other cells (Work in progress)
+    for (var i = 0; i < this.owner.cells.length;i++) {
+        var cell = this.owner.cells[i];
 		
-		if (this.nodeId == cell.nodeId) {
-			continue;
-		}
+        if (this.nodeId == cell.nodeId) {
+            continue;
+        }
 		
 		if (cell.recombineTicks > 0) {
-			// Cannot recombine
-			var xs = Math.pow(cell.position.x - this.position.x, 2);
-			var ys = Math.pow(cell.position.y - this.position.y, 2);
-			var dist = Math.sqrt( xs + ys );
-			var collisionDist = cell.getSize() + this.getSize();
+            // Cannot recombine
+            var xs = Math.pow(cell.position.x - this.position.x, 2);
+            var ys = Math.pow(cell.position.y - this.position.y, 2);
+            var dist = Math.sqrt( xs + ys );
+            var collisionDist = cell.getSize() + this.getSize(); // Minimum distance between the 2 cells
 			
-			// Caculations
-			if (dist < collisionDist) {
-				// Collided
-				return;
-			}
-		}
-	}
-	*/
+            // Calculations
+            if (dist < collisionDist) {
+                // Collided
+				
+                // The moving cell pushes the colliding cell
+                var newDeltaY = cell.getPos().y - y1;
+                var newDeltaX = cell.getPos().x - x1;
+                var newAngle = Math.atan2(newDeltaX,newDeltaY);
+                
+                var move = collisionDist - dist + 5;
+                
+                cell.position.x = cell.getPos().x + ( move * Math.sin(newAngle) );
+                cell.position.y = cell.getPos().y + ( move * Math.cos(newAngle) );
+                return;
+            }
+        }
+    }
 
     this.position.x = x1;
     this.position.y = y1;
 }
 
 Cell.prototype.calcMovePhys = function() {
-	//Movement for ejected cells
-	var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.direction) );
-	var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.direction) );
+	// Movement for ejected cells
+	var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.angle) );
+	var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
 	
     this.position.x = X;
     this.position.y = Y;
     
-    //
+    // Movement engine
     this.moveEngineSpeed *= .8;
     this.moveEngineTicks -= 1;
 }

@@ -42,6 +42,8 @@ PlayerTracker.prototype.addCell = function(node) {
     this.cells.push(node);
 }
 
+// Functions
+
 PlayerTracker.prototype.clear = function() {
     this.socket.sendPacket(new Packet.ClearNodes());
 }

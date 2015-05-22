@@ -187,7 +187,7 @@ GameServer.prototype.updateMoveEngine = function() {
         }
         
         if (check.getMoveTicks() > 0) {
-            // If the cell has enough Move Ticks, then move it
+            // If the cell has enough move ticks, then move it
             check.calcMovePhys();
         } else {
             // Remove cell from list
