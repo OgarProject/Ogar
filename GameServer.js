@@ -132,7 +132,7 @@ GameServer.prototype.removeNode = function(node) {
 	
 	if (node.getType == 0) {
 	    // Remove from owning player's cell list
-	    var owner = node.getOwner();
+	    var owner = node.owner;
 	    owner.cells.splice(owner.cells.indexOf(node), 1);
 	}
 
@@ -249,7 +249,6 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 		
         // Add to list of cells nearby
-		
         list.push(check);
     }
     return list;

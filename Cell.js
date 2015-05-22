@@ -16,6 +16,8 @@ function Cell(nodeId,owner, position, mass, type) {
 
 module.exports = Cell;
 
+// Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
+
 Cell.prototype.getName = function() {
 	if (this.owner) {
 		return this.owner.name;
@@ -33,11 +35,8 @@ Cell.prototype.getPos = function() {
 }
 
 Cell.prototype.getSize = function() {
+	// Calculates radius based on cell mass
     return Math.sqrt(100 * this.mass) + .1;
-}
-
-Cell.prototype.getOwner = function() {
-    return this.owner;
 }
 
 Cell.prototype.setAngle = function(radians) {
