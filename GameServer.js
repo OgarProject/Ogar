@@ -11,12 +11,12 @@ var Cell = require('./Cell');
 function GameServer(port) {
     this.border = {
         left: 0,
+        right: 2000.0,
         //right: 11180.3398875,
-        //top 11180.3398875,
+        top: 0,
         // Debugging food/virus spawn
-        right: 1000.0,
-        top: 1000.0,
-        bottom: 0
+        bottom: 2000.0
+        //bottom: 11180.3398875
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
     this.clients = [];

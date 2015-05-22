@@ -13,9 +13,9 @@ SetBorder.prototype.build = function() {
 
     view.setUint8(0, 64, true);
     view.setFloat64(1, this.left, true);
-    view.setFloat64(9, this.bottom, true);
+    view.setFloat64(9, this.top, true);
     view.setFloat64(17, this.right, true);
-    view.setFloat64(25, this.top, true);
+    view.setFloat64(25, this.bottom, true);
 
     return buf;
 }
