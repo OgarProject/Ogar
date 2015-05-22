@@ -9,8 +9,8 @@ The project is still in its very early stages. Here's a rough list of what's bee
 - [x] Single-cell movement
 - [x] Randomly generated cells and viruses
 - [x] Ejecting mass
-- [ ] Splitting
-- [ ] Multi-cell player movement
+- [x] Splitting
+- [x] Multi-cell player movement
 
 ## Obtaining and Using
 As Ogar is written in Node.js, you must have Node installed to use it. You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org) (for Windows systems).
