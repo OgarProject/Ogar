@@ -207,6 +207,7 @@ GameServer.prototype.addMovingCell = function(node) {
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
     var r = cell.getSize() * .9; // Get cell radius (Cell size = radius)
+    var eatingRange = r / 2; // Distance between the 2 cells must be below this value for a cell to be eaten
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
@@ -246,6 +247,16 @@ GameServer.prototype.getCellsInRange = function(cell) {
             default: // Other
                 // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
                 if ((check.mass * 1.25) > cell.mass) {
+                    continue;
+                }
+            	
+                // Eating range
+                var xs = Math.pow(check.position.x - cell.position.x, 2);
+                var ys = Math.pow(check.position.y - cell.position.y, 2);
+                var dist = Math.sqrt( xs + ys );
+                
+                if (dist > eatingRange) {
+                    // Not in eating range
                     continue;
                 }
                 break;
