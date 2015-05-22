@@ -8,8 +8,9 @@ function PlayerTracker(gameServer, socket) {
     this.nodeAdditionQueue = [];
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
-    this.cell = null;
-    
+    //this.cell = null; Depreciated, use this.cells instead
+    this.cells = [];
+
     this.mouseX = 0;
     this.mouseY = 0;
 }
@@ -30,6 +31,10 @@ PlayerTracker.prototype.setMouseX = function(n) {
 
 PlayerTracker.prototype.setMouseY = function(n) {
     this.mouseY = n;
+}
+
+PlayerTracker.prototype.addCell = function(node) {
+    this.cells.push(node);
 }
 
 PlayerTracker.prototype.clear = function() {

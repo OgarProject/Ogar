@@ -7,6 +7,15 @@ var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
 var Cell = require('./Cell');
 
+//Library imports
+var WebSocket = require('ws');
+
+// Project imports
+var Packet = require('./packet');
+var PlayerTracker = require('./PlayerTracker');
+var PacketHandler = require('./PacketHandler');
+var Cell = require('./Cell');
+
 // GameServer implementation
 function GameServer(port) {
     this.border = {
@@ -33,11 +42,12 @@ function GameServer(port) {
     	foodMass: 1, // Starting food size (In mass)
     	virusSpawnRate: 5000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 1, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
-    	virusStartSize: 100.0, // Starting virus size (In mass)
-    	virusExplodeSize: 198.0, // Viruses explode past this size
-    	ejectStartSize: 32, // Radius of ejected mass
-    	ejectMass: 16, //Amount of mass gained from consuming ejected cells (unused)
-    	ejectRequiredMass: 36 //Mass required to eject a cell (unused)
+    	virusStartMass: 100.0, // Starting virus size (In mass)
+    	virusExplodeMass: 198.0, // Viruses explode past this size
+    	ejectMass: 16, //Mass of ejected cells
+    	ejectMassGain: 14.4, //Amount of mass gained from consuming ejected cells
+    	ejectRequiredMass: 36, //Mass required to eject a cell
+    	playerMaxCells: 16
     };
 }
 
@@ -49,7 +59,7 @@ GameServer.prototype.start = function() {
         setInterval(this.updateAll.bind(this), 100);
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
         setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate);
-        setInterval(this.updateMovingCells.bind(this), 100);
+        setInterval(this.updateMoveEngine.bind(this), 100);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -62,8 +72,17 @@ GameServer.prototype.start = function() {
                 this.server.clients.splice(index, 1);
             }
 
-            if (this.socket.playerTracker.cell) {
-                this.server.removeNode(this.socket.playerTracker.cell);
+            if (this.socket.playerTracker.cells.length > 0) {
+				var len = this.socket.playerTracker.cells.length;
+				for (var i = 0; i < len; i++) {
+					var cell = this.socket.playerTracker.cells[i];
+					
+					if (!cell) {
+						continue;
+					}
+					
+					this.server.removeNode(cell);
+				}
             }
         }
 
@@ -110,6 +129,12 @@ GameServer.prototype.removeNode = function(node) {
     if (index != -1) {
         this.nodes.splice(index, 1);
     }
+	
+	if (node.getType == 0) {
+	    // Remove from owning player's cell list
+	    var owner = node.getOwner();
+	    owner.cells.splice(owner.cells.indexOf(node), 1);
+	}
 
     for (var i = 0; i < this.clients.length; i++) {
         if (typeof this.clients[i] == "undefined") {
@@ -132,7 +157,7 @@ GameServer.prototype.updateAll = function() {
 
 GameServer.prototype.spawnFood = function() {
     if (this.currentFood < this.config.foodMaxAmount) {
-        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.foodMass, 1);
+        var f = new Cell(this.getNextNodeId(), null, "", this.getRandomPosition(), this.config.foodMass, 1);
         this.addNode(f);
         this.currentFood++;
     }
@@ -140,13 +165,14 @@ GameServer.prototype.spawnFood = function() {
 
 GameServer.prototype.spawnVirus = function() {
     if (this.currentViruses < this.config.virusMaxAmount) {
-        var f = new Cell(this.getNextNodeId(), "", this.getRandomPosition(), this.config.virusStartSize, 2);
+        var f = new Cell(this.getNextNodeId(), null, "", this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
         this.currentViruses++;
     }
 }
 
-GameServer.prototype.updateMovingCells = function() {
+GameServer.prototype.updateMoveEngine = function() {
+	// A system to move cells not controlled by players (ex. viruses, ejected mass)
     for (var i = 0; i < this.movingCells.length; i++) {
         var check = this.movingCells[i];
     	
@@ -156,15 +182,14 @@ GameServer.prototype.updateMovingCells = function() {
             this.movingCells.splice(i, 1);
             check = movingCells[i];
         }
-    	
         if (i >= this.movingCells.length) {
             continue;
         }
         
-        if (check.getEnergy() > 0) {
-            // If the cell has enough energy, then move it
+        if (check.getMoveTicks() > 0) {
+            // If the cell has enough Move Ticks, then move it
             check.calcMovePhys();
-            check.decrementEnergy();
+            check.decrementMoveTicks();
         } else {
             // Remove cell from list
             var index = this.movingCells.indexOf(check);
@@ -181,16 +206,17 @@ GameServer.prototype.addMovingCell = function(node) {
 
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
-    var r = cell.getSize() * .8; // Get cell radius (Cell size = radius)
+    var r = cell.getSize() * .9; // Get cell radius (Cell size = radius)
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
 	
     var leftX = cell.position.x - r;
     var rightX = cell.position.x + r;
-	
+
     // Loop through all cells on the map. There is probably a more efficient way of doing this but whatever
-    for (var i = 0;i < this.nodes.length;i++) {
+	var len = this.nodes.length;
+    for (var i = 0;i < len;i++) {
         var check = this.nodes[i];
 		
         if (typeof check === 'undefined') {
@@ -201,7 +227,12 @@ GameServer.prototype.getCellsInRange = function(cell) {
         if (check.nodeId == cell.nodeId) {
             continue;
         }
-        
+		
+		// Make sure it is a food particle (This code will be changed later)
+        if (check.getType() != 1){
+            continue;
+        }
+		
         // Calculations (does not need to be 100% accurate right now)
         if (check.position.y > bottomY) {
             continue;
@@ -213,17 +244,13 @@ GameServer.prototype.getCellsInRange = function(cell) {
             continue;
         } 
 	
-        // Make sure it is a food particle (This code will be changed later)
-        if (check.getType() != 1){
-            continue;
-        }
-	
         // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
         if (!cell.getMass() > (check.getMass() * 1.25)) {
             continue;
         }
 		
         // Add to list of cells nearby
+		
         list.push(check);
     }
     return list;

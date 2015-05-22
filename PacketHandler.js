@@ -44,22 +44,26 @@ PacketHandler.prototype.handleMessage = function(message) {
             var client = this.socket.playerTracker;
             client.setMouseX(view.getFloat64(1, true));
             client.setMouseY(view.getFloat64(9, true));
-            
-            var cell = this.socket.playerTracker.cell;
-            if (cell) {
-                // Calculate the movement of the cell
+			
+            for (var i = 0; i < client.cells.length; i++){
+                var cell = client.cells[i];
+				
+                if (!cell) {
+                    continue;
+                }
+				
                 cell.calcMove(client.getMouseX(), client.getMouseY(), this.gameServer.border);
                 
                 // Check if cells nearby (Still buggy)
                 var list = this.gameServer.getCellsInRange(cell);
-                for (var i = 0; i < list.length ; i++) {
+                for (var j = 0; j < list.length ; j++) {
                     //Remove the cells
-                    var n = list[i].getType();
+                    var n = list[j].getType();
                     
                     switch (n) {
                         case 3: // Ejected Mass
                         case 0: // Player Cell
-                            cell.mass += n.mass; // Placeholder until i get the proper formula
+                            //cell.mass += n.mass; Placeholder until i get the proper formula
                             break;
                         case 1: // Food
                             this.gameServer.currentFood--;
@@ -71,33 +75,77 @@ PacketHandler.prototype.handleMessage = function(message) {
                         default:
                             break;
                     }
-                    this.gameServer.removeNode(list[i]);       
+                    this.gameServer.removeNode(list[j]); 
                 }
             }
             break;
-        case 18: //Q Press (Debug)
-            var cell = this.socket.playerTracker.cell;
-            if (cell) {
-                cell.speed += 10;
-            }
-            break;
-        case 21: //W Press
-            var cell = this.socket.playerTracker.cell;
-            if (cell) {
-                var deltaY = this.socket.playerTracker.getMouseY() - cell.getPos().y;
-                var deltaX = this.socket.playerTracker.getMouseX() - cell.getPos().x;
+		case 17: // Space Press - Split cell
+            var client = this.socket.playerTracker;
+            var len = client.cells.length;
+            for (var i = 0; i < len; i++) {
+                var cell = client.cells[i];
+				
+                if (client.cells.length >= this.gameServer.config.playerMaxCells) {
+                    // Player cell limit
+                    continue;
+                }
+
+                if (!cell) {
+                    continue;
+                }
+				
+                var deltaY = client.getMouseY() - cell.getPos().y;
+                var deltaX = client.getMouseX() - cell.getPos().x;
                 var angle = Math.atan2(deltaX,deltaY);
             	
                 // Get starting position
+                var size = cell.getSize();
                 var startPos = {
-                    x: cell.getPos().x + ( (cell.size + this.gameServer.config.ejectStartSize) * Math.sin(angle) ), 
-                    y: cell.getPos().y + ( (cell.size + this.gameServer.config.ejectStartSize) * Math.cos(angle) )
+                    x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+                    y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
+                };
+                // Calculate mass of splitting cell
+                var newMass = cell.getMass() / 2;
+                cell.setMass(newMass);
+                // Create cell
+                split = new Cell(this.gameServer.getNextNodeId(), client, cell.name, startPos, newMass, 0);
+                split.setAngle(angle);
+                split.setMoveEngineData(50, 5);
+            	
+                // Add to moving cells list
+                this.gameServer.addMovingCell(split);
+                this.gameServer.addNode(split);
+				
+                // Add to player screen
+                this.socket.sendPacket(new Packet.AddNodes(split));
+                client.addCell(split);
+            }
+            break;
+        case 18: // Q Press (Debug)
+            break;
+        case 21: // W Press - Eject mass
+            var client = this.socket.playerTracker;
+            for (var i = 0; i < client.cells.length; i++) {
+                var cell = client.cells[i];
+				
+                if (!cell) {
+                    continue;
+                }
+				
+                var deltaY = client.getMouseY() - cell.getPos().y;
+                var deltaX = client.getMouseX() - cell.getPos().x;
+                var angle = Math.atan2(deltaX,deltaY);
+            	
+                // Get starting position
+                var size = cell.getSize();
+                var startPos = {
+                    x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+                    y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
                 };
                 // Create cell
-                ejected = new Cell(this.gameServer.getNextNodeId(), "", startPos, this.gameServer.config.ejectStartSize, 3);
+                ejected = new Cell(this.gameServer.getNextNodeId(), null, "", startPos, this.gameServer.config.ejectMass, 3);
                 ejected.setAngle(angle);
-                ejected.setEnergy(5);
-                ejected.setSpeed(50);
+                ejected.setMoveEngineData(75, 6);
             	
                 // Add to moving cells list
                 this.gameServer.addMovingCell(ejected);
@@ -116,12 +164,19 @@ PacketHandler.prototype.handleMessage = function(message) {
 }
 
 PacketHandler.prototype.setNickname = function(newNick) {
-    if (!this.socket.playerTracker.cell) {
-        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 10.5, 0);
-        this.gameServer.addNode(this.socket.playerTracker.cell);
+    var client = this.socket.playerTracker;
+    if (client.cells.length < 1) {
+        // If client has no cells...
+        var cell = new Cell(this.gameServer.getNextNodeId(), client, newNick, this.gameServer.getRandomPosition(), 10, 0);
+        client.addCell(cell);
+        this.gameServer.addNode(cell);
     } else {
-        this.socket.playerTracker.cell.name = newNick;
-    }
+        for (var i = 0; i < client.cells.length; i++){
+		    client.cells[i].setName(newNick);
+		}
+	}
     // Only add player controlled cells with this packet or it will bug the camera
-    this.socket.sendPacket(new Packet.AddNodes(this.socket.playerTracker.cell));
+    for (var i = 0; i < client.cells.length; i++){
+        this.socket.sendPacket(new Packet.AddNodes(client.cells[i]));
+    }
 }
