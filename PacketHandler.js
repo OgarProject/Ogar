@@ -62,8 +62,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                     
                     switch (n) {
                         case 3: // Ejected Mass
+                            cell.mass += this.gameServer.config.ejectMassGain;
+                            break;                      	
                         case 0: // Player Cell
-                            //cell.mass += n.mass; Placeholder until i get the proper formula
+                            cell.mass += list[j].mass;
                             break;
                         case 1: // Food
                             this.gameServer.currentFood--;

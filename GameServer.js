@@ -228,11 +228,6 @@ GameServer.prototype.getCellsInRange = function(cell) {
             continue;
         }
 		
-		// Make sure it is a food particle (This code will be changed later)
-        if (check.getType() != 1){
-            continue;
-        }
-		
         // Calculations (does not need to be 100% accurate right now)
         if (check.position.y > bottomY) {
             continue;
@@ -243,10 +238,17 @@ GameServer.prototype.getCellsInRange = function(cell) {
         } if (check.position.x < leftX) {
             continue;
         } 
-	
-        // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
-        if (!cell.mass > (check.mass * 1.25)) {
-            continue;
+        
+        // Cell type check
+        switch (check.getType()) {
+            case 1: // Food cell
+                break;
+            default: // Other
+                // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
+                if ((check.mass * 1.25) > cell.mass) {
+                    continue;
+                }
+                break;
         }
 		
         // Add to list of cells nearby
