@@ -108,7 +108,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 var newMass = cell.getMass() / 2;
                 cell.setMass(newMass);
                 // Create cell
-                split = new Cell(this.gameServer.getNextNodeId(), client, cell.name, startPos, newMass, 0);
+                split = new Cell(this.gameServer.getNextNodeId(), client, startPos, newMass, 0);
                 split.setAngle(angle);
                 split.setMoveEngineData(50, 5);
             	
@@ -143,7 +143,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
                 };
                 // Create cell
-                ejected = new Cell(this.gameServer.getNextNodeId(), null, "", startPos, this.gameServer.config.ejectMass, 3);
+                ejected = new Cell(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass, 3);
                 ejected.setAngle(angle);
                 ejected.setMoveEngineData(75, 6);
             	
@@ -167,14 +167,12 @@ PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // If client has no cells...
-        var cell = new Cell(this.gameServer.getNextNodeId(), client, newNick, this.gameServer.getRandomPosition(), 10, 0);
+        var cell = new Cell(this.gameServer.getNextNodeId(), client, this.gameServer.getRandomPosition(), 10, 0);
         client.addCell(cell);
         this.gameServer.addNode(cell);
-    } else {
-        for (var i = 0; i < client.cells.length; i++){
-		    client.cells[i].setName(newNick);
-		}
-	}
+    }
+	client.setName(newNick);
+
     // Only add player controlled cells with this packet or it will bug the camera
     for (var i = 0; i < client.cells.length; i++){
         this.socket.sendPacket(new Packet.AddNodes(client.cells[i]));

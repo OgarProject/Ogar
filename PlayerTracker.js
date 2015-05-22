@@ -3,6 +3,7 @@ var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
     this.initialized = false;
+    this.name = "";
     this.gameServer = gameServer;
     this.socket = socket;
     this.nodeAdditionQueue = [];
@@ -16,6 +17,10 @@ function PlayerTracker(gameServer, socket) {
 }
 
 module.exports = PlayerTracker;
+
+PlayerTracker.prototype.setName = function(name) {
+    this.name = name;
+}
 
 PlayerTracker.prototype.getMouseX = function() {
     return this.mouseX;

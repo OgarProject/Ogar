@@ -16,11 +16,8 @@ UpdateNodes.prototype.build = function() {
             continue;
         }
         
-        nodesLength = nodesLength + 22 + (node.name.length * 2);
+        nodesLength = nodesLength + 22 + (node.getName().length * 2);
     }
-    
-    // DEBUG
-    //console.log("Destroy: "+this.destroyQueue.length+" Alive: "+ this.nodes.length);
     
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 22) + nodesLength + 4 + 2 + 4 + (this.nodes.length * 4));
     var view = new DataView(buf);
@@ -74,9 +71,10 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 19, v, true); // Flags
         offset += 20;
         
-        if (node.name) {
-            for (var j = 0; j < node.name.length; j++) {
-                var c = node.name.charCodeAt(j);
+        var name = node.getName();
+        if (name) {
+            for (var j = 0; j < name.length; j++) {
+                var c = name.charCodeAt(j);
                 if (c){
                     view.setUint16(offset, c, true);
                 }

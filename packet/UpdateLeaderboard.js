@@ -17,7 +17,7 @@ UpdateLeaderboard.prototype.build = function() {
 
         var item = lb[i];
         bufferSize += 4; // Element ID
-        bufferSize += item.name ? item.name.length * 2 : 0; // Name
+        bufferSize += item.getName() ? item.getName().length * 2 : 0; // Name
         bufferSize += 2; // Name terminator
 
         validElements++;
@@ -40,7 +40,7 @@ UpdateLeaderboard.prototype.build = function() {
         view.setUint32(offset, item.nodeId, true);
         offset += 4;
 
-        var name = item.name;
+        var name = item.getName();
         if (name) {
             for (var j = 0; j < name.length; j++) {
                 view.setUint16(offset, name.charCodeAt(j), true);

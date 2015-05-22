@@ -157,7 +157,7 @@ GameServer.prototype.updateAll = function() {
 
 GameServer.prototype.spawnFood = function() {
     if (this.currentFood < this.config.foodMaxAmount) {
-        var f = new Cell(this.getNextNodeId(), null, "", this.getRandomPosition(), this.config.foodMass, 1);
+        var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMass, 1);
         this.addNode(f);
         this.currentFood++;
     }
@@ -165,7 +165,7 @@ GameServer.prototype.spawnFood = function() {
 
 GameServer.prototype.spawnVirus = function() {
     if (this.currentViruses < this.config.virusMaxAmount) {
-        var f = new Cell(this.getNextNodeId(), null, "", this.getRandomPosition(), this.config.virusStartMass, 2);
+        var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
         this.currentViruses++;
     }

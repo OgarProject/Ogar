@@ -1,6 +1,5 @@
-function Cell(nodeId,owner, name, position, mass, type) {
+function Cell(nodeId,owner, position, mass, type) {
     this.nodeId = nodeId;
-    this.name = name;
     this.owner = owner; // playerTracker that owns this cell
     this.color = {r: 0, g: 255, b: 0};
     this.position = position;
@@ -17,8 +16,12 @@ function Cell(nodeId,owner, name, position, mass, type) {
 
 module.exports = Cell;
 
-Cell.prototype.setName = function(name) {
-    this.name = name;
+Cell.prototype.getName = function() {
+	if (this.owner) {
+		return this.owner.name;
+	} else {
+		return "";
+	}
 }
 
 Cell.prototype.getType = function() {
