@@ -33,15 +33,7 @@ Cell.prototype.getPos = function() {
 }
 
 Cell.prototype.getSize = function() {
-    return Math.sqrt(100 * this.mass) + 1;
-}
-
-Cell.prototype.getMass = function() {
-    return this.mass;
-}
-
-Cell.prototype.setMass = function(n) {
-    this.mass = n;
+    return Math.sqrt(100 * this.mass) + .1;
 }
 
 Cell.prototype.getOwner = function() {

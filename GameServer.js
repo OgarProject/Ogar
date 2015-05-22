@@ -46,7 +46,7 @@ function GameServer(port) {
     	virusExplodeMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
     	ejectMassGain: 14.4, //Amount of mass gained from consuming ejected cells
-    	ejectRequiredMass: 36, //Mass required to eject a cell
+    	playerMinSplitMass: 36, //Mass required to eject/slpit a cell
     	playerMaxCells: 16
     };
 }
@@ -244,7 +244,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         } 
 	
         // Make sure the cell is big enough to be eaten. Cell must be at least 25% larger
-        if (!cell.getMass() > (check.getMass() * 1.25)) {
+        if (!cell.mass > (check.mass * 1.25)) {
             continue;
         }
 		

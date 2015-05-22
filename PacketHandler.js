@@ -93,6 +93,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                 if (!cell) {
                     continue;
                 }
+                
+                if (cell.mass < this.gameServer.config.playerMinSplitMass) {
+                    continue;
+                }
 				
                 var deltaY = client.getMouseY() - cell.getPos().y;
                 var deltaX = client.getMouseX() - cell.getPos().x;
@@ -105,8 +109,8 @@ PacketHandler.prototype.handleMessage = function(message) {
                     y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
                 };
                 // Calculate mass of splitting cell
-                var newMass = cell.getMass() / 2;
-                cell.setMass(newMass);
+                var newMass = cell.mass / 2;
+                cell.mass = newMass;
                 // Create cell
                 split = new Cell(this.gameServer.getNextNodeId(), client, startPos, newMass, 0);
                 split.setAngle(angle);
@@ -121,7 +125,17 @@ PacketHandler.prototype.handleMessage = function(message) {
                 client.addCell(split);
             }
             break;
-        case 18: // Q Press (Debug)
+        case 18: // Q Press (Adds mass for debugging ejecting/splitting)
+        	var client = this.socket.playerTracker;
+            for (var i = 0; i < client.cells.length; i++) {
+                var cell = client.cells[i];
+				
+                if (!cell) {
+                    continue;
+                }
+                
+                cell.mass += 10;
+            }                
             break;
         case 21: // W Press - Eject mass
             var client = this.socket.playerTracker;
@@ -129,6 +143,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                 var cell = client.cells[i];
 				
                 if (!cell) {
+                    continue;
+                }
+                
+                if (cell.mass < this.gameServer.config.playerMinSplitMass) {
                     continue;
                 }
 				
@@ -142,6 +160,8 @@ PacketHandler.prototype.handleMessage = function(message) {
                     x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
                     y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
                 };
+                // Remove mass from parent cell
+                cell.mass -= this.gameServer.config.ejectMass;
                 // Create cell
                 ejected = new Cell(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass, 3);
                 ejected.setAngle(angle);
