@@ -15,13 +15,14 @@ The project is still in its very early stages. Here's a rough list of what's bee
 - [x] Leaderboard
 - [ ] Team mode
 
-## Known issues
+## Known Issues
 - Cells do not recombine yet
 - Ejected cells ignore borders
+- Cells that have recently split have a chance to get stuck in the borders
 - Viruses do not grow from ejected cells
 - Viruses do not split player cells when eaten
 - The collision check for eating cells is off
-- Player see all nodes on the map instead of nodes near them
+- Players see all nodes on the map instead of nodes that are near them
 - Mass of cells do not decay
 - Cell speed is a fixed variable instead of being based on cell mass
 
