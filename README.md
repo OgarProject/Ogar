@@ -11,7 +11,7 @@ The project is still in its very early stages. Here's a rough list of what's bee
 - [x] Ejecting mass
 - [x] Splitting
 - [x] Multi-cell player movement
-- [ ] Cells eating other cells
+- [x] Cells eating other cells
 - [ ] Leaderboard
 - [ ] Team mode
 
