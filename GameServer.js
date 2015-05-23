@@ -56,7 +56,7 @@ function GameServer(port) {
     	playerMinMassSplit: 36, //Mass required to split
     	playerMaxCells: 16, // Max cells the player is allowed to have
     	playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
-    	playerMassDecayRate: .0005, // Amount of mass lost per tick (Multplier)(1 tick = 200 milliseconds)
+    	playerMassDecayRate: .0004, // Amount of mass lost per tick (Multplier)(1 tick = 200 milliseconds)
     	playerMinMassDecay: 100, // Minimum mass for decay to occur
     	leaderboardUpdateInterval: 2000 // Time between leaderboard updates, in milliseconds
     };
@@ -301,8 +301,7 @@ GameServer.prototype.virusBurst = function(parent) {
 
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
-    var r = cell.getSize() * .9; // Get cell radius (Cell size = radius)
-    var eatingRange = r * .75; // Distance between the 2 cells must be below this value for a cell to be eaten
+    var r = cell.getSize(); // Get cell radius (Cell size = radius)
 	
     var topY = cell.position.y - r;
     var bottomY = cell.position.y + r;
@@ -323,18 +322,11 @@ GameServer.prototype.getCellsInRange = function(cell) {
         if (check.nodeId == cell.nodeId) {
             continue;
         }
-		
-        // Calculations (does not need to be 100% accurate right now)
-        if (check.position.y > bottomY) {
-            continue;
-        } if (check.position.y < topY) {
-            continue;
-        } if (check.position.x > rightX) {
-            continue;
-        } if (check.position.x < leftX) {
-            continue;
-        } 
         
+        if (!check.collisionCheck(bottomY,topY,rightX,leftX)) {
+            continue;
+        }
+
         // Cell type check
         var multiplier = 1.25; // Cell must be bigger than this number times the mass of the cell being eaten
 		
@@ -359,6 +351,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
                 var ys = Math.pow(check.position.y - cell.position.y, 2);
                 var dist = Math.sqrt( xs + ys );
                 
+                var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 1/3 of the radius of the cell being eaten
                 if (dist > eatingRange) {
                     // Not in eating range
                     continue;
@@ -392,16 +385,9 @@ GameServer.prototype.getNearestVirus = function(cell) {
             continue;
         }
 		
-        // Calculations (does not need to be 100% accurate right now)
-        if (check.position.y > bottomY) {
+        if (!check.collisionCheck(bottomY,topY,rightX,leftX)) {
             continue;
-        } if (check.position.y < topY) {
-            continue;
-        } if (check.position.x > rightX) {
-            continue;
-        } if (check.position.x < leftX) {
-            continue;
-        } 
+        }
         		
         // Add to list of cells nearby
         virus = check;

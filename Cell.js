@@ -86,8 +86,30 @@ Cell.prototype.setCollisionOff = function(bool) {
     this.ignoreCollision = bool;
 }
 
+Cell.prototype.getEatingRange = function() {
+    if (this.nodeType == 3) { // Ejected cells have a smaller eating range
+        return 0;
+    } else { // Other cells
+        return this.getSize() * .35;
+    }
+}
+
 
 // Functions
+
+Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
+	// Collision checking
+	if (this.position.y > bottomY) {
+        return false;
+    } if (this.position.y < topY) {
+        return false;
+    } if (this.position.x > rightX) {
+        return false;
+    } if (this.position.x < leftX) {
+        return false;
+    } 
+    return true;
+}
 
 Cell.prototype.calcMove = function(x2, y2, border) {
     var x1 = this.position.x;
