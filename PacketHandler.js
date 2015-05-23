@@ -105,7 +105,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 var angle = Math.atan2(deltaX,deltaY);
             	
                 // Get starting position
-                var size = cell.getSize();
+                var size = cell.getSize() + 10;
                 var startPos = {
                     x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
                     y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
@@ -126,18 +126,6 @@ PacketHandler.prototype.handleMessage = function(message) {
                 this.socket.sendPacket(new Packet.AddNodes(split));
                 client.addCell(split);
             }
-            break;
-        case 18: // Q Press (Adds mass for debugging ejecting/splitting)
-        	var client = this.socket.playerTracker;
-            for (var i = 0; i < client.cells.length; i++) {
-                var cell = client.cells[i];
-				
-                if (!cell) {
-                    continue;
-                }
-                
-                cell.mass += 10;
-            }                
             break;
         case 21: // W Press - Eject mass
             var client = this.socket.playerTracker;
