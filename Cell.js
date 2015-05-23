@@ -58,7 +58,7 @@ Cell.prototype.getSize = function() {
 
 Cell.prototype.getSpeed = function() {
 	// Custom speed formula
-	var speed = 5 + (35 * (1 - (this.mass/(500+this.mass))));
+	var speed = 5 + (35 * (1 - (this.mass/(400+this.mass))));
 	return speed;
 }
 
@@ -89,6 +89,10 @@ Cell.prototype.setRecombineTicks = function(n) {
 
 Cell.prototype.setCollisionOff = function(bool) {
     this.ignoreCollision = bool;
+}
+
+Cell.prototype.getCollision = function() {
+    return this.ignoreCollision;
 }
 
 Cell.prototype.getEatingRange = function() {
@@ -195,8 +199,8 @@ Cell.prototype.calcMovePhys = function(border) {
     var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
 	
     // Movement engine
-    this.moveEngineSpeed *= .8; // Decaying speed
-    this.moveEngineTicks -= 1;
+    this.moveEngineSpeed *= .75; // Decaying speed
+    this.moveEngineTicks--;
 	 
     // Border check - Bouncy physics
     var radius = 40;

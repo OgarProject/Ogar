@@ -319,7 +319,12 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 		
         // Can't eat itself
-        if (check.nodeId == cell.nodeId) {
+        if (cell.nodeId == check.nodeId) {
+            continue;
+        }
+        
+        // Can't eat cells that have collision turned off
+        if ((cell.owner == check.owner) && (cell.getCollision())) {
             continue;
         }
         

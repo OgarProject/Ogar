@@ -73,16 +73,18 @@ PacketHandler.prototype.handleMessage = function(message) {
                             break;
                         case 2: // Virus - viruses do not give mass when eaten
                             this.gameServer.currentViruses--;
-                            // Split (Placeholder formula)
-                            var n = this.gameServer.config.playerMaxCells - client.cells.length; // Get amount of splits
-                            var angle = 0;
-                            var splitMass = 16; // Filler
+                            // Split formula
+                            var maxSplits = Math.floor(cell.mass/16) - 1; // Maximum amount of splits
+                            var numSplits = this.gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
+                            numSplits = Math.min(numSplits,maxSplits);
+                            var splitMass = Math.min(cell.mass/(numSplits + 1), 32); // Maximum size of new splits
+                            var angle = 0; // Starting angle
                             
-                            for (var k = 0; k < n; k++) {
-                                angle += 2/n; // Get directions of splitting cells
+                            for (var k = 0; k < numSplits; k++) {
+                                angle += 6/numSplits; // Get directions of splitting cells
                                 this.newCellVirused(client, cell, angle, splitMass);
+                                cell.mass -= splitMass; // Filler
                             }
-                            cell.mass = cell.mass / 2; // Filler
                             break;
                         default:
                             break;
@@ -127,7 +129,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Create cell
                 split = new Cell(this.gameServer.getNextNodeId(), client, startPos, newMass, 0);
                 split.setAngle(angle);
-                split.setMoveEngineData(140, 10);
+                split.setMoveEngineData(120 + cell.getSpeed(), 10);
                 split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
             	
                 // Add to moving cells list
@@ -214,7 +216,7 @@ PacketHandler.prototype.newCellVirused = function(client, parent, angle, mass) {
 	// Create cell
 	newCell = new Cell(this.gameServer.getNextNodeId(), client, startPos, mass, 0);
 	newCell.setAngle(angle);
-	newCell.setMoveEngineData(300, 5);
+	newCell.setMoveEngineData(300, 4);
 	newCell.setRecombineTicks(this.gameServer.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
