@@ -17,7 +17,6 @@ The project is still in its very early stages. Here's a rough list of what's bee
 
 ## Known Issues
 - Cells do not recombine yet
-- Ejected cells ignore borders
 - Cells that have recently split have a chance to get stuck in the borders
 - Viruses do not grow from ejected cells
 - Viruses do not split player cells when eaten

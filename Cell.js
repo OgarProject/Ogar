@@ -120,15 +120,39 @@ Cell.prototype.calcMove = function(x2, y2, border) {
     this.position.y = y1;
 }
 
-Cell.prototype.calcMovePhys = function() {
+Cell.prototype.calcMovePhys = function(border) {
 	// Movement for ejected cells
 	var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.angle) );
 	var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
 	
-    this.position.x = X;
-    this.position.y = Y;
-    
-    // Movement engine
-    this.moveEngineSpeed *= .8;
+	// Movement engine
+    this.moveEngineSpeed *= .8; // Decaying speed
     this.moveEngineTicks -= 1;
+	 
+    // Border check - Bouncy physics
+    var radius = 40;
+    if ((this.position.x - radius) < border.left) {
+        // Flip angle horizontally - Left side
+        this.angle = Math.abs(1 - this.angle);
+        X = border.left + radius;
+    }
+    if ((this.position.x + radius) > border.right) {
+        // Flip angle horizontally - Right side
+        this.angle = 1 - this.angle;
+        X = border.right - radius;
+    }
+    if ((this.position.y - radius) < border.top) {
+        // Flip angle vertically - Top side
+        this.angle = this.angle - 1;
+        Y = border.top + radius;
+    }
+    if ((this.position.y + radius) > border.bottom) {
+        // Flip angle vertically - Bottom side
+        this.angle = this.angle - 1;
+        Y = border.bottom - radius;
+    }
+    
+    // Set position
+    this.position.x = X;
+    this.position.y = Y;  
 }
