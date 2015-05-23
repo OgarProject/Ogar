@@ -48,7 +48,7 @@ function GameServer(port) {
     	virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 2, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
     	virusStartMass: 100.0, // Starting virus size (In mass)
-    	virusBurstMass: 198.0, // Viruses explode past this size
+    	shootVirusMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
     	ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
     	playerStartMass: 10, // Starting mass of the player cell
@@ -312,7 +312,7 @@ GameServer.prototype.updateMoveEngine = function() {
                     // Check if the virus is going to explode
                     if (v.mass >= this.config.virusBurstMass) {
                         v.mass = this.config.virusStartMass; // Reset mass
-                        this.virusBurst(v);
+                        this.shootVirus(v);
                     }
             		
                 }
@@ -352,7 +352,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
     this.setAsMovingNode(newCell);
 }
 
-GameServer.prototype.virusBurst = function(parent) {
+GameServer.prototype.shootVirus = function(parent) {
 	var parentPos = {
 		x: parent.position.x,
 		y: parent.position.y,
