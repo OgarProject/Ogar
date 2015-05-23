@@ -121,11 +121,11 @@ Cell.prototype.calcMove = function(x2, y2, border) {
 }
 
 Cell.prototype.calcMovePhys = function(border) {
-	// Movement for ejected cells
-	var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.angle) );
-	var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
+    // Movement for ejected cells
+    var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.angle) );
+    var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
 	
-	// Movement engine
+    // Movement engine
     this.moveEngineSpeed *= .8; // Decaying speed
     this.moveEngineTicks -= 1;
 	 
