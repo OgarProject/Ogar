@@ -123,8 +123,8 @@ PacketHandler.prototype.handleMessage = function(message) {
                 this.gameServer.addNode(split);
 				
                 // Add to player screen
-                this.socket.sendPacket(new Packet.AddNodes(split));
                 client.addCell(split);
+                this.socket.sendPacket(new Packet.AddNodes(split));
             }
             break;
         case 21: // W Press - Eject mass
@@ -158,8 +158,8 @@ PacketHandler.prototype.handleMessage = function(message) {
                 ejected.setMoveEngineData(200, 10);
             	
                 // Add to moving cells list
-                this.gameServer.addMovingCell(ejected);
                 this.gameServer.addNode(ejected);
+                this.gameServer.addMovingCell(ejected);
             }
             break;
         case 255:

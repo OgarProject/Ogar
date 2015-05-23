@@ -138,9 +138,16 @@ GameServer.prototype.addNode = function(node) {
 }
 
 GameServer.prototype.removeNode = function(node) {
+	// Remove from main nodes list
     var index = this.nodes.indexOf(node);
     if (index != -1) {
         this.nodes.splice(index, 1);
+    }
+    
+    // Remove from moving cells list
+    index = this.movingCells.indexOf(node);
+    if (index != -1) {
+    	this.movingCells.splice(index, 1);
     }
     
 	if (node.getType() == 0) {
@@ -247,8 +254,9 @@ GameServer.prototype.virusBurst = function(parent) {
     newVirus.setMoveEngineData(150, 10);
 	
     // Add to moving cells list
-    this.addMovingCell(newVirus);
     this.addNode(newVirus);
+    this.addMovingCell(newVirus);
+    this.currentViruses++;
 }
 
 GameServer.prototype.getCellsInRange = function(cell) {
