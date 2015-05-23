@@ -18,14 +18,11 @@ var Cell = require('./Cell');
 
 // GameServer implementation
 function GameServer(port) {
-    this.border = {
+    this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
         left: 0,
-        right: 2000.0,
-        //right: 11180.3398875,
+        right: 4000.0,
         top: 0,
-        // Debugging food/virus spawn
-        bottom: 2000.0
-        //bottom: 11180.3398875
+        bottom: 4000.0
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
     this.clients = [];
@@ -42,11 +39,11 @@ function GameServer(port) {
     
     this.config = {
     	foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
-    	foodSpawnAmount: 1, // The amount of food to spawn per interval
-    	foodMaxAmount: 100, // Maximum food cells on the map (Placeholder number)
+    	foodSpawnAmount: 2, // The amount of food to spawn per interval
+    	foodMaxAmount: 250, // Maximum food cells on the map (Placeholder number)
     	foodMass: 1, // Starting food size (In mass)
     	virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (Placeholder number)
-    	virusMaxAmount: 2, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
+    	virusMaxAmount: 10, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
     	virusStartMass: 100.0, // Starting virus size (In mass)
     	shootVirusMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
@@ -56,7 +53,7 @@ function GameServer(port) {
     	playerMinMassSplit: 36, //Mass required to split
     	playerMaxCells: 16, // Max cells the player is allowed to have
     	playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
-    	playerMassDecayRate: .0004, // Amount of mass lost per tick (Multplier)(1 tick = 200 milliseconds)
+    	playerMassDecayRate: .0003, // Amount of mass lost per tick (Multplier)(1 tick = 200 milliseconds)
     	playerMinMassDecay: 100, // Minimum mass for decay to occur
     	leaderboardUpdateInterval: 2000 // Time between leaderboard updates, in milliseconds
     };

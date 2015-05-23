@@ -139,18 +139,6 @@ PacketHandler.prototype.handleMessage = function(message) {
                 this.gameServer.addNode(split);
             }
             break;
-		case 18: // Q - Debug purposes
-            var client = this.socket.playerTracker;
-            for (var i = 0; i < client.cells.length; i++) {
-                var cell = client.cells[i];
-				
-                if (!cell) {
-                    continue;
-                }
-				
-                cell.mass += 100;
-            }
-            break;
         case 21: // W Press - Eject mass
             var client = this.socket.playerTracker;
             for (var i = 0; i < client.cells.length; i++) {
