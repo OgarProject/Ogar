@@ -16,7 +16,8 @@ The project is still in its very early stages. Here's a rough list of what's bee
 - [ ] Team mode
 
 ## Known Issues
-- The collision check for eating cells is off
+- Cells only split in 1 direction when they eat a virus
+- Cells splitting formula when eating a virus is off
 - Players see all nodes on the map instead of nodes that are near them
 - When disconnecting, some cells from splitting are left behind
 

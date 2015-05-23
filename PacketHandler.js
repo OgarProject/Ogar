@@ -116,7 +116,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 var angle = Math.atan2(deltaX,deltaY);
             	
                 // Get starting position
-                var size = cell.getSize() + 10;
+                var size = cell.getSize();
                 var startPos = {
                     x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
                     y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
@@ -165,7 +165,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 var angle = Math.atan2(deltaX,deltaY);
             	
                 // Get starting position
-                var size = cell.getSize();
+                var size = cell.getSize() + 5;
                 var startPos = {
                     x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
                     y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
@@ -176,6 +176,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 ejected = new Cell(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass, 3);
                 ejected.setAngle(angle);
                 ejected.setMoveEngineData(200, 10);
+                ejected.setColor(cell.getColor());
             	
                 // Add to moving cells list
                 this.gameServer.addNode(ejected);

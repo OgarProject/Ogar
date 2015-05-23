@@ -18,6 +18,7 @@ function Cell(nodeId, owner, position, mass, type) {
         this.setColor(this.owner.color);
         this.owner.cells.push(this); // Add to cells list of the owner 
     }
+    
 }
 
 module.exports = Cell;
@@ -36,6 +37,10 @@ Cell.prototype.setColor = function(color) {
     this.color.r = color.r;
     this.color.b = color.b;
     this.color.g = color.g;
+}
+
+Cell.prototype.getColor = function() {
+    return this.color;
 }
 
 Cell.prototype.getType = function() {
