@@ -17,13 +17,13 @@ The project is still in its very early stages. Here's a rough list of what's bee
 
 ## Known Issues
 - Cells do not recombine yet
-- Viruses do not split player cells when eaten
 - The collision check for eating cells is off
 - Players see all nodes on the map instead of nodes that are near them
 - Mass of cells do not decay
 - Cell speed is a fixed variable instead of being based on cell mass
 - Multi cell movement sometimes gets the cells stuck in the border
 - All cells are the same color
+- When disconnecting, some cells from splitting are left behind
 
 ## Obtaining and Using
 As Ogar is written in Node.js, you must have Node installed to use it. You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org) (for Windows systems).

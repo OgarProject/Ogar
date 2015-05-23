@@ -50,7 +50,7 @@ function GameServer(port) {
     	virusBurstMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
     	ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
-    	playerStartMass: 100, // Starting mass of the player cell
+    	playerStartMass: 200, // Starting mass of the player cell
     	playerMinMassEject: 32, //Mass required to eject a cell
     	playerMinMassSplit: 36, //Mass required to split
     	playerMaxCells: 16, // Max cells the player is allowed to have
@@ -230,6 +230,8 @@ GameServer.prototype.updateMoveEngine = function() {
                 }
             }
         } else {
+            // Set collision off
+            check.setCollisionOff(false);
             // Remove cell from list
             var index = this.movingNodes.indexOf(check);
             if (index != -1) {

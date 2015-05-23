@@ -8,6 +8,7 @@ function Cell(nodeId,owner, position, mass, type) {
     this.speed = 30; // Filler, will be changed later
     this.cellType = type; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     this.recombineTicks = 1; // Ticks until the cell can recombine with other cells 
+    this.ignoreCollision = false;
     
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
@@ -56,6 +57,11 @@ Cell.prototype.getMoveTicks = function() {
     return this.moveEngineTicks;
 }
 
+Cell.prototype.setCollisionOff = function(bool) {
+    this.ignoreCollision = bool;
+}
+
+
 // Functions
 
 Cell.prototype.calcMove = function(x2, y2, border) {
@@ -95,8 +101,9 @@ Cell.prototype.calcMove = function(x2, y2, border) {
         if (this.nodeId == cell.nodeId) {
             continue;
         }
-		
-		if (cell.recombineTicks > 0) {
+        
+        var coll = cell.ignoreCollision ? 0 : cell.recombineTicks; 
+        if (coll > 0) {
             // Cannot recombine
             var xs = Math.pow(cell.position.x - this.position.x, 2);
             var ys = Math.pow(cell.position.y - this.position.y, 2);

@@ -73,6 +73,16 @@ PacketHandler.prototype.handleMessage = function(message) {
                             break;
                         case 2: // Virus - viruses do not give mass when eaten
                             this.gameServer.currentViruses--;
+                            // Split (Placeholder formula)
+                            var n = this.gameServer.config.playerMaxCells - client.cells.length; // Get amount of splits
+                            var angle = 0;
+                            var splitMass = 16; // Filler
+                            
+                            for (var k = 0; k < n; k++) {
+                                angle += 2/n; // Get directions of splitting cells
+                                this.newCellVirused(client, cell, angle, splitMass);
+                            }
+                            cell.mass = cell.mass / 2; // Filler
                             break;
                         default:
                             break;
@@ -100,6 +110,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     continue;
                 }
 				
+                // Get angle
                 var deltaY = client.getMouseY() - cell.getPos().y;
                 var deltaX = client.getMouseX() - cell.getPos().x;
                 var angle = Math.atan2(deltaX,deltaY);
@@ -187,4 +198,26 @@ PacketHandler.prototype.setNickname = function(newNick) {
     for (var i = 0; i < client.cells.length; i++){
         this.socket.sendPacket(new Packet.AddNodes(client.cells[i]));
     }
+}
+
+PacketHandler.prototype.newCellVirused = function(client, parent, angle, mass) {
+    // Starting position
+	var startPos = {
+        x: parent.getPos().x, 
+        y: parent.getPos().y
+    };
+	
+	// Create cell
+	newCell = new Cell(this.gameServer.getNextNodeId(), client, startPos, mass, 0);
+	newCell.setAngle(angle);
+	newCell.setMoveEngineData(300, 5);
+	newCell.setCollisionOff(true); // Turn off collision
+	
+    // Add to moving cells list
+    this.gameServer.addNode(newCell);
+    this.gameServer.setAsMovingNode(newCell);
+    
+    // Add to player screen
+    client.addCell(newCell);
+    this.socket.sendPacket(new Packet.AddNodes(newCell));
 }
