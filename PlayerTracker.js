@@ -4,6 +4,7 @@ var GameServer = require('./GameServer');
 function PlayerTracker(gameServer, socket) {
     this.initialized = false;
     this.name = "";
+    this.color = {r: 0, g: 255, b: 0};
     this.gameServer = gameServer;
     this.socket = socket;
     this.nodeAdditionQueue = [];

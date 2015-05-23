@@ -127,7 +127,8 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Create cell
                 split = new Cell(this.gameServer.getNextNodeId(), client, startPos, newMass, 0);
                 split.setAngle(angle);
-                split.setMoveEngineData(75, 5);
+                split.setMoveEngineData(140, 10);
+                split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
             	
                 // Add to moving cells list
                 this.gameServer.setAsMovingNode(split);
@@ -136,6 +137,18 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Add to player screen
                 client.addCell(split);
                 this.socket.sendPacket(new Packet.AddNodes(split));
+            }
+            break;
+		case 18: // Q - Debug purposes
+            var client = this.socket.playerTracker;
+            for (var i = 0; i < client.cells.length; i++) {
+                var cell = client.cells[i];
+				
+                if (!cell) {
+                    continue;
+                }
+				
+                cell.mass += 100;
             }
             break;
         case 21: // W Press - Eject mass
@@ -211,6 +224,7 @@ PacketHandler.prototype.newCellVirused = function(client, parent, angle, mass) {
 	newCell = new Cell(this.gameServer.getNextNodeId(), client, startPos, mass, 0);
 	newCell.setAngle(angle);
 	newCell.setMoveEngineData(300, 5);
+	newCell.setRecombineTicks(this.gameServer.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
     // Add to moving cells list

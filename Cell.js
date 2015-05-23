@@ -1,4 +1,4 @@
-function Cell(nodeId,owner, position, mass, type) {
+function Cell(nodeId, owner, position, mass, type) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
     this.color = {r: 0, g: 255, b: 0};
@@ -7,7 +7,7 @@ function Cell(nodeId,owner, position, mass, type) {
     this.mass = mass; // Starting mass of the cell
     this.speed = 30; // Filler, will be changed later
     this.cellType = type; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
-    this.recombineTicks = 1; // Ticks until the cell can recombine with other cells 
+    this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
     this.ignoreCollision = false;
     
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
@@ -27,6 +27,12 @@ Cell.prototype.getName = function() {
 	}
 }
 
+Cell.prototype.setColor = function(color) {
+    this.color.r = color.r;
+    this.color.b = color.b;
+    this.color.g = color.g;
+}
+
 Cell.prototype.getType = function() {
     return this.cellType;
 }
@@ -38,6 +44,12 @@ Cell.prototype.getPos = function() {
 Cell.prototype.getSize = function() {
 	// Calculates radius based on cell mass
     return Math.sqrt(100 * this.mass) + .1;
+}
+
+Cell.prototype.getSpeed = function() {
+	// Custom speed formula
+	var speed = 5 + (35 * (1 - (this.mass/(500+this.mass))));
+	return speed;
 }
 
 Cell.prototype.setAngle = function(radians) {
@@ -57,6 +69,14 @@ Cell.prototype.getMoveTicks = function() {
     return this.moveEngineTicks;
 }
 
+Cell.prototype.getRecombineTicks = function() {
+    return this.recombineTicks;
+}
+
+Cell.prototype.setRecombineTicks = function(n) {
+    this.recombineTicks = n;
+}
+
 Cell.prototype.setCollisionOff = function(bool) {
     this.ignoreCollision = bool;
 }
@@ -74,7 +94,7 @@ Cell.prototype.calcMove = function(x2, y2, border) {
     var sx = (x1 < x2) ? 1 : -1;
     var sy = (y1 < y2) ? 1 : -1;
     var err = dx - dy;
-    var dist = this.speed;
+    var dist = this.getSpeed();
     
     while (!((x1 == x2) && (y1 == y2)) && (dist > 0)) {
         var e2 = err << 1;
@@ -90,20 +110,28 @@ Cell.prototype.calcMove = function(x2, y2, border) {
     }
     
     // Check to ensure we're not passing the world border
-    if (x1 < border.left || x1 > border.right || y1 < border.top || y1 > border.bottom) {
-        return;
+    if (this.position.x < border.left) {
+        x1 = border.left + 5;
+    }
+	if (this.position.x > border.right) {
+        x1 = border.right - 5;
+    }
+    if (this.position.y < border.top) {
+        y1 = border.top + 5;
+    }
+    if (this.position.y > border.bottom) {
+        y1 = border.bottom - 5;
     }
 	
     // Collision check for other cells (Work in progress)
     for (var i = 0; i < this.owner.cells.length;i++) {
         var cell = this.owner.cells[i];
 		
-        if (this.nodeId == cell.nodeId) {
+        if ((this.nodeId == cell.nodeId) || (this.ignoreCollision)) {
             continue;
         }
-        
-        var coll = cell.ignoreCollision ? 0 : cell.recombineTicks; 
-        if (coll > 0) {
+		
+        if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
             // Cannot recombine
             var xs = Math.pow(cell.position.x - this.position.x, 2);
             var ys = Math.pow(cell.position.y - this.position.y, 2);
@@ -111,9 +139,7 @@ Cell.prototype.calcMove = function(x2, y2, border) {
             var collisionDist = cell.getSize() + this.getSize(); // Minimum distance between the 2 cells
 			
             // Calculations
-            if (dist < collisionDist) {
-                // Collided
-				
+            if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
                 var newDeltaY = cell.getPos().y - y1;
                 var newDeltaX = cell.getPos().x - x1;

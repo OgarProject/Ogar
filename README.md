@@ -16,13 +16,8 @@ The project is still in its very early stages. Here's a rough list of what's bee
 - [ ] Team mode
 
 ## Known Issues
-- Cells do not recombine yet
 - The collision check for eating cells is off
 - Players see all nodes on the map instead of nodes that are near them
-- Mass of cells do not decay
-- Cell speed is a fixed variable instead of being based on cell mass
-- Multi cell movement sometimes gets the cells stuck in the border
-- All cells are the same color
 - When disconnecting, some cells from splitting are left behind
 
 ## Obtaining and Using
