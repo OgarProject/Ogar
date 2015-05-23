@@ -45,7 +45,7 @@ function GameServer(port) {
     	virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 10, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
     	virusStartMass: 100.0, // Starting virus size (In mass)
-    	shootVirusMass: 198.0, // Viruses explode past this size
+    	virusBurstMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
     	ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
     	playerStartMass: 10, // Starting mass of the player cell

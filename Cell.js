@@ -121,6 +121,11 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
 }
 
 Cell.prototype.calcMove = function(x2, y2, border) {
+	
+	if ((this.position.x == x2) && (this.position.y == y2)) {
+		return;
+	}
+	
     var x1 = this.position.x;
     var y1 = this.position.y;
     
@@ -147,16 +152,16 @@ Cell.prototype.calcMove = function(x2, y2, border) {
     
     // Check to ensure we're not passing the world border
     if (this.position.x < border.left) {
-        x1 = border.left + 5;
+        x1 = border.left + 1;
     }
 	if (this.position.x > border.right) {
-        x1 = border.right - 5;
+        x1 = border.right - 1;
     }
     if (this.position.y < border.top) {
-        y1 = border.top + 5;
+        y1 = border.top + 1;
     }
     if (this.position.y > border.bottom) {
-        y1 = border.bottom - 5;
+        y1 = border.bottom - 1;
     }
 	
     // Collision check for other cells (Work in progress)
