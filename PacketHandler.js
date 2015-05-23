@@ -133,10 +133,6 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Add to moving cells list
                 this.gameServer.setAsMovingNode(split);
                 this.gameServer.addNode(split);
-				
-                // Add to player screen
-                client.addCell(split);
-                this.socket.sendPacket(new Packet.AddNodes(split));
             }
             break;
 		case 18: // Q - Debug purposes
@@ -202,15 +198,9 @@ PacketHandler.prototype.setNickname = function(newNick) {
     if (client.cells.length < 1) {
         // If client has no cells...
         var cell = new Cell(this.gameServer.getNextNodeId(), client, this.gameServer.getRandomPosition(), this.gameServer.config.playerStartMass, 0);
-        client.addCell(cell);
         this.gameServer.addNode(cell);
     }
 	client.setName(newNick);
-
-    // Only add player controlled cells with this packet or it will bug the camera
-    for (var i = 0; i < client.cells.length; i++){
-        this.socket.sendPacket(new Packet.AddNodes(client.cells[i]));
-    }
 }
 
 PacketHandler.prototype.newCellVirused = function(client, parent, angle, mass) {
@@ -230,8 +220,4 @@ PacketHandler.prototype.newCellVirused = function(client, parent, angle, mass) {
     // Add to moving cells list
     this.gameServer.addNode(newCell);
     this.gameServer.setAsMovingNode(newCell);
-    
-    // Add to player screen
-    client.addCell(newCell);
-    this.socket.sendPacket(new Packet.AddNodes(newCell));
 }

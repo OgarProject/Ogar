@@ -158,6 +158,11 @@ GameServer.prototype.addNode = function(node) {
 
         this.clients[i].playerTracker.nodeAdditionQueue.push(node);
     }
+    
+    // Adds to the owning player's screen
+    if (node.owner){
+        node.owner.socket.sendPacket(new Packet.AddNodes(node));
+    }
 }
 
 GameServer.prototype.removeNode = function(node) {

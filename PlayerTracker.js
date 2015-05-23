@@ -45,10 +45,6 @@ PlayerTracker.prototype.setMouseY = function(n) {
     this.mouseY = n;
 }
 
-PlayerTracker.prototype.addCell = function(node) {
-    this.cells.push(node);
-}
-
 PlayerTracker.prototype.getScore = function(reCalcScore) {
     if (reCalcScore) {
         var s = 0;
