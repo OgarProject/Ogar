@@ -45,6 +45,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             client.setMouseX(view.getFloat64(1, true));
             client.setMouseY(view.getFloat64(9, true));
 			
+            /* Old movement system R.I.P
             for (var i = 0; i < client.cells.length; i++){
                 var cell = client.cells[i];
 				
@@ -92,6 +93,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     this.gameServer.removeNode(list[j]); 
                 }
             }
+            */
             break;
 		case 17: // Space Press - Split cell
             var client = this.socket.playerTracker;
@@ -200,27 +202,14 @@ PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // If client has no cells...
-        var cell = new Cell(this.gameServer.getNextNodeId(), client, this.gameServer.getRandomPosition(), this.gameServer.config.playerStartMass, 0);
+    	var pos = this.gameServer.getRandomPosition();
+        var cell = new Cell(this.gameServer.getNextNodeId(), client, pos, this.gameServer.config.playerStartMass, 0);
         this.gameServer.addNode(cell);
+        
+        // Set initial mouse coords
+        client.setMouseX(pos.x);
+        client.setMouseY(pos.y);
     }
 	client.setName(newNick);
 }
 
-PacketHandler.prototype.newCellVirused = function(client, parent, angle, mass) {
-    // Starting position
-	var startPos = {
-        x: parent.getPos().x, 
-        y: parent.getPos().y
-    };
-	
-	// Create cell
-	newCell = new Cell(this.gameServer.getNextNodeId(), client, startPos, mass, 0);
-	newCell.setAngle(angle);
-	newCell.setMoveEngineData(300, 4);
-	newCell.setRecombineTicks(this.gameServer.config.playerRecombineTime);
-	newCell.setCollisionOff(true); // Turn off collision
-	
-    // Add to moving cells list
-    this.gameServer.addNode(newCell);
-    this.gameServer.setAsMovingNode(newCell);
-}

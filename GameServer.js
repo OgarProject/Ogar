@@ -31,7 +31,7 @@ function GameServer(port) {
     this.clients = [];
     this.port = port;
     this.nodes = [];
-    this.nodesVirus = [];
+    this.nodesVirus = []; // Virus nodes
     this.nodesPlayer = []; // Nodes controlled by players
     
     this.currentFood = 0;
@@ -233,6 +233,56 @@ GameServer.prototype.spawnVirus = function() {
 }
 
 GameServer.prototype.updateMoveEngine = function() {
+	// Move player cells
+    for (var i = 0; i < this.nodesPlayer.length; i++) {
+        var cell = this.nodesPlayer[i];
+    		
+        // Do not move cells that have collision turned off
+        if ((!cell) || (cell.getCollision())){
+            continue;
+        }
+    		
+        var client = cell.owner;
+        cell.calcMove(client.getMouseX(), client.getMouseY(), this.border);
+            
+        // Check if cells nearby (Still buggy)
+        var list = this.getCellsInRange(cell);
+        for (var j = 0; j < list.length ; j++) {
+            //Remove the cells
+            var n = list[j].getType();
+                
+            switch (n) {
+                case 3: // Ejected Mass
+                    cell.mass += this.config.ejectMassGain;
+                    break;                      	
+                case 0: // Player Cell
+                    cell.mass += list[j].mass;
+                    break;
+                case 1: // Food
+                    this.currentFood--;
+                    cell.mass += this.config.foodMass;
+                    break;
+                case 2: // Virus - viruses do not give mass when eaten
+                    this.currentViruses--;
+                    // Split formula
+                    var maxSplits = Math.floor(cell.mass/16) - 1; // Maximum amount of splits
+                    var numSplits = this.config.playerMaxCells - client.cells.length; // Get number of splits
+                    numSplits = Math.min(numSplits,maxSplits);
+                    var splitMass = Math.min(cell.mass/(numSplits + 1), 32); // Maximum size of new splits
+                    var angle = 0; // Starting angle
+                        
+                    for (var k = 0; k < numSplits; k++) {
+                        angle += 6/numSplits; // Get directions of splitting cells
+                        this.newCellVirused(client, cell, angle, splitMass);
+                        cell.mass -= splitMass; // Filler
+                    }
+                    break;
+                default:
+                    break;
+            }
+            this.removeNode(list[j]); 
+        }
+    }
 	// A system to move cells not controlled by players (ex. viruses, ejected mass)
     for (var i = 0; i < this.movingNodes.length; i++) {
         var check = this.movingNodes[i];
@@ -281,6 +331,25 @@ GameServer.prototype.updateMoveEngine = function() {
 
 GameServer.prototype.setAsMovingNode = function(node) {
 	this.movingNodes.push(node);
+}
+
+GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
+    // Starting position
+	var startPos = {
+        x: parent.getPos().x, 
+        y: parent.getPos().y
+    };
+	
+	// Create cell
+	newCell = new Cell(this.getNextNodeId(), client, startPos, mass, 0);
+	newCell.setAngle(angle);
+	newCell.setMoveEngineData(300, 4);
+	newCell.setRecombineTicks(this.config.playerRecombineTime);
+	newCell.setCollisionOff(true); // Turn off collision
+	
+    // Add to moving cells list
+    this.addNode(newCell);
+    this.setAsMovingNode(newCell);
 }
 
 GameServer.prototype.virusBurst = function(parent) {
