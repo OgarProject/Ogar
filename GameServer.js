@@ -36,7 +36,7 @@ function GameServer(port) {
     
     this.currentFood = 0;
     this.currentViruses = 0;
-    this.movingCells = [];
+    this.movingNodes = [];
     this.leaderboard = [];
     this.leaderboardLowestScore = 0; // Lowest score in leaderboard
     
@@ -145,9 +145,9 @@ GameServer.prototype.removeNode = function(node) {
     }
     
     // Remove from moving cells list
-    index = this.movingCells.indexOf(node);
+    index = this.movingNodes.indexOf(node);
     if (index != -1) {
-    	this.movingCells.splice(index, 1);
+    	this.movingNodes.splice(index, 1);
     }
     
 	if (node.getType() == 0) {
@@ -196,16 +196,16 @@ GameServer.prototype.spawnVirus = function() {
 
 GameServer.prototype.updateMoveEngine = function() {
 	// A system to move cells not controlled by players (ex. viruses, ejected mass)
-    for (var i = 0; i < this.movingCells.length; i++) {
-        var check = this.movingCells[i];
+    for (var i = 0; i < this.movingNodes.length; i++) {
+        var check = this.movingNodes[i];
     	
         // Recycle unused nodes
-        while ((typeof check == "undefined") && (i < this.movingCells.length)) {
+        while ((typeof check == "undefined") && (i < this.movingNodes.length)) {
             // Remove moving cells that are undefined
-            this.movingCells.splice(i, 1);
-            check = movingCells[i];
+            this.movingNodes.splice(i, 1);
+            check = movingNodes[i];
         }
-        if (i >= this.movingCells.length) {
+        if (i >= this.movingNodes.length) {
             continue;
         }
         
@@ -231,16 +231,16 @@ GameServer.prototype.updateMoveEngine = function() {
             }
         } else {
             // Remove cell from list
-            var index = this.movingCells.indexOf(check);
+            var index = this.movingNodes.indexOf(check);
             if (index != -1) {
-                this.movingCells.splice(index, 1);
+                this.movingNodes.splice(index, 1);
             }
         }
     }
 }
 
-GameServer.prototype.addMovingCell = function(node) {
-	this.movingCells.push(node);
+GameServer.prototype.setAsMovingNode = function(node) {
+	this.movingNodes.push(node);
 }
 
 GameServer.prototype.virusBurst = function(parent) {
@@ -255,7 +255,7 @@ GameServer.prototype.virusBurst = function(parent) {
 	
     // Add to moving cells list
     this.addNode(newVirus);
-    this.addMovingCell(newVirus);
+    this.setAsMovingNode(newVirus);
     this.currentViruses++;
 }
 

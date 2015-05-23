@@ -71,7 +71,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                             this.gameServer.currentFood--;
                             cell.mass += this.gameServer.config.foodMass;
                             break;
-                        case 2: // Virus
+                        case 2: // Virus - viruses do not give mass when eaten
                             this.gameServer.currentViruses--;
                             break;
                         default:
@@ -119,7 +119,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 split.setMoveEngineData(75, 5);
             	
                 // Add to moving cells list
-                this.gameServer.addMovingCell(split);
+                this.gameServer.setAsMovingNode(split);
                 this.gameServer.addNode(split);
 				
                 // Add to player screen
@@ -159,7 +159,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             	
                 // Add to moving cells list
                 this.gameServer.addNode(ejected);
-                this.gameServer.addMovingCell(ejected);
+                this.gameServer.setAsMovingNode(ejected);
             }
             break;
         case 255:
