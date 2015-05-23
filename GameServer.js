@@ -29,8 +29,10 @@ function GameServer(port) {
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
     this.clients = [];
-    this.nodes = [];
     this.port = port;
+    this.nodes = [];
+    this.nodesVirus = [];
+    
     
     this.currentFood = 0;
     this.currentViruses = 0;
@@ -45,9 +47,9 @@ function GameServer(port) {
     	virusSpawnRate: 5000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 1, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
     	virusStartMass: 100.0, // Starting virus size (In mass)
-    	virusExplodeMass: 198.0, // Viruses explode past this size
+    	virusBurstMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
-    	ejectMassGain: 14.4, //Amount of mass gained from consuming ejected cells
+    	ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
     	playerStartMass: 100, // Starting mass of the player cell
     	playerMinMassEject: 32, //Mass required to eject a cell
     	playerMinMassSplit: 36, //Mass required to split
@@ -120,6 +122,11 @@ GameServer.prototype.getRandomPosition = function() {
 GameServer.prototype.addNode = function(node) {
     this.nodes[node.nodeId] = node;
     
+    if (node.getType() == 2) {
+        // Add to special virus node list
+        this.nodesVirus[node.nodeId] = node;
+    }
+    
     //For each client connected, add the node to their addition queue
     for (var i = 0; i < this.clients.length; i++) {
         if (typeof this.clients[i] == "undefined") {
@@ -135,12 +142,15 @@ GameServer.prototype.removeNode = function(node) {
     if (index != -1) {
         this.nodes.splice(index, 1);
     }
-	
+    
 	if (node.getType() == 0) {
 	    // Remove from owning player's cell list
 	    var owner = node.owner;
 	    owner.cells.splice(owner.cells.indexOf(node), 1);
-	}
+	} else if (node.getType() == 2) {
+        // Remove from special virus node list
+        this.nodesVirus.splice(this.nodesVirus.indexOf(node), 1);
+    }
 
     for (var i = 0; i < this.clients.length; i++) {
         if (typeof this.clients[i] == "undefined") {
@@ -182,7 +192,7 @@ GameServer.prototype.updateMoveEngine = function() {
     for (var i = 0; i < this.movingCells.length; i++) {
         var check = this.movingCells[i];
     	
-        // Cleanup unused nodes
+        // Recycle unused nodes
         while ((typeof check == "undefined") && (i < this.movingCells.length)) {
             // Remove moving cells that are undefined
             this.movingCells.splice(i, 1);
@@ -195,6 +205,23 @@ GameServer.prototype.updateMoveEngine = function() {
         if (check.getMoveTicks() > 0) {
             // If the cell has enough move ticks, then move it
             check.calcMovePhys(this.border);
+            if (check.getType() == 3) {
+                // Check for viruses
+                var v = this.getNearestVirus(check);
+                if (v) {
+                    // Feed the virus
+                    v.setAngle(check.getAngle()); // Set direction if the virus explodes
+                    v.mass += 14; // 7 cells to burst the virus
+                    this.removeNode(check);
+            		
+                    // Check if the virus is going to explode
+                    if (v.mass >= this.config.virusBurstMass) {
+                        v.mass = this.config.virusStartMass; // Reset mass
+                        this.virusBurst(v);
+                    }
+            		
+                }
+            }
         } else {
             // Remove cell from list
             var index = this.movingCells.indexOf(check);
@@ -207,6 +234,21 @@ GameServer.prototype.updateMoveEngine = function() {
 
 GameServer.prototype.addMovingCell = function(node) {
 	this.movingCells.push(node);
+}
+
+GameServer.prototype.virusBurst = function(parent) {
+	var parentPos = {
+		x: parent.position.x,
+		y: parent.position.y,
+	};
+	
+    var	newVirus = new Cell(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, 2);
+    newVirus.setAngle(parent.getAngle());
+    newVirus.setMoveEngineData(150, 10);
+	
+    // Add to moving cells list
+    this.addMovingCell(newVirus);
+    this.addNode(newVirus);
 }
 
 GameServer.prototype.getCellsInRange = function(cell) {
@@ -271,6 +313,43 @@ GameServer.prototype.getCellsInRange = function(cell) {
         list.push(check);
     }
     return list;
+}
+
+GameServer.prototype.getNearestVirus = function(cell) { 
+	// More like getNearbyVirus
+	var virus = null;
+    var r = 100; // Checking radius
+	
+    var topY = cell.position.y - r;
+    var bottomY = cell.position.y + r;
+	
+    var leftX = cell.position.x - r;
+    var rightX = cell.position.x + r;
+
+    // Loop through all viruses on the map. There is probably a more efficient way of doing this but whatever
+	var len = this.nodesVirus.length;
+    for (var i = 0;i < len;i++) {
+        var check = this.nodesVirus[i];
+		
+        if (typeof check === 'undefined') {
+            continue;
+        }
+		
+        // Calculations (does not need to be 100% accurate right now)
+        if (check.position.y > bottomY) {
+            continue;
+        } if (check.position.y < topY) {
+            continue;
+        } if (check.position.x > rightX) {
+            continue;
+        } if (check.position.x < leftX) {
+            continue;
+        } 
+        		
+        // Add to list of cells nearby
+        virus = check;
+    }
+    return virus;
 }
 
 GameServer.prototype.updateLeaderboard = function() {

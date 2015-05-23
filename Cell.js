@@ -43,6 +43,10 @@ Cell.prototype.setAngle = function(radians) {
     this.angle = radians;
 }
 
+Cell.prototype.getAngle = function() {
+	return this.angle;
+}
+
 Cell.prototype.setMoveEngineData = function(speed, ticks) {
     this.moveEngineSpeed = speed;
     this.moveEngineTicks = ticks;
