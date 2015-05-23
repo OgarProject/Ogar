@@ -4,7 +4,7 @@ var GameServer = require('./GameServer');
 function PlayerTracker(gameServer, socket) {
     this.initialized = false;
     this.name = "";
-    this.color = {r: 0, g: 255, b: 0};
+    this.color = gameServer.getRandomColor();
     this.gameServer = gameServer;
     this.socket = socket;
     this.nodeAdditionQueue = [];
@@ -58,6 +58,12 @@ PlayerTracker.prototype.getScore = function(reCalcScore) {
         }
     }
     return this.score;
+}
+
+PlayerTracker.prototype.setColor = function(color) {
+    this.color.r = color.r;
+    this.color.b = color.b;
+    this.color.g = color.g;
 }
 
 // Functions

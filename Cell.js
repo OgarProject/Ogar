@@ -13,6 +13,10 @@ function Cell(nodeId, owner, position, mass, type) {
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
     this.angle = 0; // Angle of movement
+    
+    if (this.owner) {
+        this.setColor(this.owner.color);
+    }
 }
 
 module.exports = Cell;
