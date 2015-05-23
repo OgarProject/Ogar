@@ -20,11 +20,11 @@ var Cell = require('./Cell');
 function GameServer(port) {
     this.border = {
         left: 0,
-        right: 5000.0,
+        right: 2000.0,
         //right: 11180.3398875,
         top: 0,
         // Debugging food/virus spawn
-        bottom: 5000.0
+        bottom: 2000.0
         //bottom: 11180.3398875
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
@@ -42,11 +42,11 @@ function GameServer(port) {
     
     this.config = {
     	foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
-    	foodSpawnAmount: 10, // The amount of food to spawn per interval
-    	foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
+    	foodSpawnAmount: 1, // The amount of food to spawn per interval
+    	foodMaxAmount: 100, // Maximum food cells on the map (Placeholder number)
     	foodMass: 1, // Starting food size (In mass)
     	virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (Placeholder number)
-    	virusMaxAmount: 5, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
+    	virusMaxAmount: 2, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
     	virusStartMass: 100.0, // Starting virus size (In mass)
     	virusBurstMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, //Mass of ejected cells
