@@ -20,9 +20,9 @@ var Cell = require('./Cell');
 function GameServer(port) {
     this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
         left: 0,
-        right: 4000.0,
+        right: 6000.0,
         top: 0,
-        bottom: 4000.0
+        bottom: 6000.0
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
     this.clients = [];
@@ -39,8 +39,8 @@ function GameServer(port) {
     
     this.config = {
     	foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
-    	foodSpawnAmount: 2, // The amount of food to spawn per interval
-    	foodMaxAmount: 250, // Maximum food cells on the map (Placeholder number)
+    	foodSpawnAmount: 5, // The amount of food to spawn per interval
+    	foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
     	foodMass: 1, // Starting food size (In mass)
     	virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (Placeholder number)
     	virusMaxAmount: 10, //Maximum amount of viruses that can spawn randomly. Player made viruses do not count (Placeholder number)
@@ -53,7 +53,7 @@ function GameServer(port) {
     	playerMinMassSplit: 36, //Mass required to split
     	playerMaxCells: 16, // Max cells the player is allowed to have
     	playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
-    	playerMassDecayRate: .0003, // Amount of mass lost per tick (Multplier)(1 tick = 200 milliseconds)
+    	playerMassDecayRate: .0002, // Amount of mass lost per tick (Multplier)(1 tick = 200 milliseconds)
     	playerMinMassDecay: 100, // Minimum mass for decay to occur
     	leaderboardUpdateInterval: 2000 // Time between leaderboard updates, in milliseconds
     };
@@ -65,13 +65,13 @@ module.exports = GameServer;
 
 GameServer.prototype.start = function() {
     this.socketServer = new WebSocket.Server({ port: this.port }, function() {
-        console.log("[Game] Listening on port %d", this.port);
         setInterval(this.updateAll.bind(this), 100);
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
         setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate);
         setInterval(this.updateMoveEngine.bind(this), 100);
         setInterval(this.updateLeaderboard.bind(this), this.config.leaderboardUpdateInterval);
         setInterval(this.updateCells.bind(this), 200);
+        console.log("[Game] Listening on port %d", this.port);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -147,15 +147,6 @@ GameServer.prototype.addNode = function(node) {
             break;
     }
     
-    //For each client connected, add the node to their addition queue
-    for (var i = 0; i < this.clients.length; i++) {
-        if (typeof this.clients[i] == "undefined") {
-            continue;
-        }
-
-        this.clients[i].playerTracker.nodeAdditionQueue.push(node);
-    }
-    
     // Adds to the owning player's screen
     if (node.owner){
         node.owner.socket.sendPacket(new Packet.AddNodes(node));
@@ -178,18 +169,21 @@ GameServer.prototype.removeNode = function(node) {
 	switch (node.getType()) {
         case 0: // Remove from owning player's cell list
             var owner = node.owner;
+            // Remove from player screen
             owner.cells.splice(owner.cells.indexOf(node), 1);
+            owner.visibleNodes.splice(owner.visibleNodes.indexOf(node), 1);
+            owner.nodeDestroyQueue.push(node); 
             // Remove from special player controlled node list
             this.nodesPlayer.splice(this.nodesPlayer.indexOf(node), 1);
             break;
 		case 2: // Remove from special virus node list
             this.nodesVirus.splice(this.nodesVirus.indexOf(node), 1);
-            break;
 		default:
+            // End the function
             break;
     }
 
-
+    /*
     for (var i = 0; i < this.clients.length; i++) {
         if (typeof this.clients[i] == "undefined") {
             continue;
@@ -197,6 +191,7 @@ GameServer.prototype.removeNode = function(node) {
 
         this.clients[i].playerTracker.nodeDestroyQueue.push(node);
     }
+    */
 }
 
 GameServer.prototype.updateAll = function() {
@@ -340,7 +335,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
 	// Create cell
 	newCell = new Cell(this.getNextNodeId(), client, startPos, mass, 0);
 	newCell.setAngle(angle);
-	newCell.setMoveEngineData(300, 4);
+	newCell.setMoveEngineData(250, 4);
 	newCell.setRecombineTicks(this.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
@@ -375,10 +370,10 @@ GameServer.prototype.getCellsInRange = function(cell) {
     var leftX = cell.position.x - r;
     var rightX = cell.position.x + r;
 
-    // Loop through all cells on the map. There is probably a more efficient way of doing this but whatever
-	var len = this.nodes.length;
+    // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
+	var len = cell.owner.visibleNodes.length;
     for (var i = 0;i < len;i++) {
-        var check = this.nodes[i];
+        var check = cell.owner.visibleNodes[i];
 		
         if (typeof check === 'undefined') {
             continue;

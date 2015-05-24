@@ -2,7 +2,7 @@
 An open source Agar.io server implementation, written in Node.js.
 
 ## Project Status
-The project is still in its very early stages. Here's a rough list of what's been done and what needs to be done:
+The project is nearly complete. Here's a rough list of what's been done and what needs to be done:
 
 - [x] Master server basic implementation
 - [x] Game server basic implementation (clients can connect)
@@ -16,7 +16,6 @@ The project is still in its very early stages. Here's a rough list of what's bee
 - [ ] Team mode
 
 ## Known Issues
-- Players see all nodes on the map instead of nodes that are near them
 - When disconnecting, some cells from splitting are left behind
 
 ## Obtaining and Using

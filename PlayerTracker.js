@@ -7,16 +7,28 @@ function PlayerTracker(gameServer, socket) {
     this.color = gameServer.getRandomColor();
     this.gameServer = gameServer;
     this.socket = socket;
-    this.nodeAdditionQueue = [];
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     //this.cell = null; Depreciated, use this.cells instead
     this.cells = [];
-    this.score = 0;
+    this.score = 0; // Needed for leaderboard
 
     this.mouseX = 0;
     this.mouseY = 0;
     this.tickLeaderboard = 0; // 
+    
+    // Viewing box
+    this.sightRange = 0;
+    this.centerPos = {
+        x: 0,
+        y: 0
+    }
+    this.viewBox = {
+        topY: 0,
+        bottomY: 0,
+        leftX: 0,
+        rightX: 0
+    }
 }
 
 module.exports = PlayerTracker;
@@ -79,33 +91,24 @@ PlayerTracker.prototype.update = function() {
         this.initialized = true;
     }
     
-    // Add nodes
-    if (this.nodeAdditionQueue.length > 0) {
-    	/* This code was causing issues when multiple clients connected to the server
-        var addQueueCopy = this.nodeAdditionQueue.slice(0);
-        this.socket.sendPacket(new Packet.AddNodes(addQueueCopy));
-        */
-
-        for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
-            this.visibleNodes.push(this.nodeAdditionQueue[i]);
-        }
-
-        this.nodeAdditionQueue = [];
-    }
-
-    // Update and destroy nodes
+    // Update and destroy nodes (Obsolete)
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
         } else {
-            console.log("Warning: Node in destroy queue was never visible anyways!");
+            this.nodeDestroyQueue.splice(i,1);
+            //console.log("Warning: Node in destroy queue was never visible anyways!");
         }
     }
     
+    // Get visible nodes
+    this.visibleNodes = this.calcViewBox();
+    
+    // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes));
 
-    this.nodeDestroyQueue = [];
+    this.nodeDestroyQueue = []; // Reset destroy queue
 
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
@@ -115,4 +118,73 @@ PlayerTracker.prototype.update = function() {
         this.tickLeaderboard--;
     }
     
+}
+
+// Viewing box
+
+PlayerTracker.prototype.updateSightRange = function() { // For view distance
+    var range = 750;
+    var len = this.cells.length;
+    
+    for (var i = 0; i < len;i++) {
+    	
+        if (!this.cells[i]) {
+            continue;
+        }
+    	
+        range += (this.cells[i].mass + 100);
+    }
+    this.sightRange = range;
+}
+
+PlayerTracker.prototype.updateCenter = function() { // Get center of cells
+	var len = this.cells.length;
+	
+    if (len <= 0) {
+        return; // End the function if no cells exsist
+    }
+    
+    var X = 0;
+    var Y = 0;
+    for (var i = 0; i < len ;i++) {
+    	
+        if (!this.cells[i]) {
+            continue;
+        }
+    	
+        X += this.cells[i].position.x;
+        Y += this.cells[i].position.y;
+    }
+    
+    this.centerPos.x = X / len;
+    this.centerPos.y = Y / len;
+}
+
+PlayerTracker.prototype.calcViewBox = function() {
+	this.updateSightRange();
+	this.updateCenter();
+	
+	// Box
+	this.viewBox.topY = this.centerPos.y - this.sightRange;
+	this.viewBox.bottomY = this.centerPos.y + this.sightRange;
+	
+	this.viewBox.leftX = this.centerPos.x - this.sightRange;
+	this.viewBox.rightX = this.centerPos.x + this.sightRange;
+	
+	var newVisible = [];
+	for (var i = 0; i < this.gameServer.nodes.length ;i++) {
+		node = this.gameServer.nodes[i];
+		
+		if (!node) {
+			continue;
+		}
+		
+		if (node.collisionCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
+			// Cell is in range of viewBox
+			newVisible.push(node);
+			
+			//
+		}
+    }
+	return newVisible;
 }
