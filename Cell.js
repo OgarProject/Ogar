@@ -161,7 +161,7 @@ Cell.prototype.calcMove = function(x2, y2, border) {
     var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
     var speed = Math.min(this.getSpeed(),dist);
     
-	var x1 = this.position.x + ( speed * Math.sin(angle) );
+    var x1 = this.position.x + ( speed * Math.sin(angle) );
     var y1 = this.position.y + ( speed * Math.cos(angle) );
     
     // Check to ensure we're not passing the world border
