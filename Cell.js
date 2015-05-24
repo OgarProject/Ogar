@@ -58,7 +58,7 @@ Cell.prototype.getSize = function() {
 
 Cell.prototype.getSpeed = function() {
 	// Custom speed formula
-	var speed = 5 + (35 * (1 - (this.mass/(400+this.mass))));
+	var speed = 5 + (35 * (1 - (this.mass/(200+this.mass))));
 	return speed;
 }
 
@@ -122,6 +122,7 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
 
 Cell.prototype.calcMove = function(x2, y2, border) {
 	
+	/* Old movement system R.I.P
 	if ((this.position.x == x2) && (this.position.y == y2)) {
 		return;
 	}
@@ -149,6 +150,19 @@ Cell.prototype.calcMove = function(x2, y2, border) {
         }
         dist--;
     }
+    */
+	
+    // Get angle
+    var deltaY = y2 - this.position.y;
+    var deltaX = x2 - this.position.x;
+    var angle = Math.atan2(deltaX,deltaY);
+    
+    // Distance between mouse pointer and cell
+    var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
+    var speed = Math.min(this.getSpeed(),dist);
+    
+	var x1 = this.position.x + ( speed * Math.sin(angle) );
+    var y1 = this.position.y + ( speed * Math.cos(angle) );
     
     // Check to ensure we're not passing the world border
     if (this.position.x < border.left) {
@@ -174,9 +188,7 @@ Cell.prototype.calcMove = function(x2, y2, border) {
 		
         if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
             // Cannot recombine
-            var xs = Math.pow(cell.position.x - this.position.x, 2);
-            var ys = Math.pow(cell.position.y - this.position.y, 2);
-            var dist = Math.sqrt( xs + ys );
+            var dist = Math.sqrt( Math.pow(cell.position.x - this.position.x, 2) +  Math.pow(cell.position.y - this.position.y, 2) );
             var collisionDist = cell.getSize() + this.getSize(); // Minimum distance between the 2 cells
 			
             // Calculations
