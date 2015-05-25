@@ -41,13 +41,88 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 16:
             // Mouse Move
-            var mx = view.getFloat64(1, true);
-            var my = view.getFloat64(9, true);
-            
-            var cell = this.socket.playerTracker.cell;
-            if (cell) {
-                // Calculate the movement of the cell
-                cell.calcMove(mx, my, this.gameServer.border);
+            var client = this.socket.playerTracker;
+            client.setMouseX(view.getFloat64(1, true));
+            client.setMouseY(view.getFloat64(9, true));
+            break;
+		case 17: // Space Press - Split cell
+            var client = this.socket.playerTracker;
+            var len = client.cells.length;
+            for (var i = 0; i < len; i++) {
+                var cell = client.cells[i];
+				
+                if (client.cells.length >= this.gameServer.config.playerMaxCells) {
+                    // Player cell limit
+                    continue;
+                }
+
+                if (!cell) {
+                    continue;
+                }
+                
+                if (cell.mass < this.gameServer.config.playerMinMassSplit) {
+                    continue;
+                }
+				
+                // Get angle
+                var deltaY = client.getMouseY() - cell.getPos().y;
+                var deltaX = client.getMouseX() - cell.getPos().x;
+                var angle = Math.atan2(deltaX,deltaY);
+            	
+                // Get starting position
+                var size = cell.getSize();
+                var startPos = {
+                    x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+                    y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
+                };
+                // Calculate mass of splitting cell
+                var newMass = cell.mass / 2;
+                cell.mass = newMass;
+                // Create cell
+                split = new Cell(this.gameServer.getNextNodeId(), client, startPos, newMass, 0);
+                split.setAngle(angle);
+                split.setMoveEngineData(120 + cell.getSpeed(), 10);
+                split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
+            	
+                // Add to moving cells list
+                this.gameServer.setAsMovingNode(split);
+                this.gameServer.addNode(split);
+            }
+            break;
+        case 21: // W Press - Eject mass
+            var client = this.socket.playerTracker;
+            for (var i = 0; i < client.cells.length; i++) {
+                var cell = client.cells[i];
+				
+                if (!cell) {
+                    continue;
+                }
+                
+                if (cell.mass < this.gameServer.config.playerMinMassEject) {
+                    continue;
+                }
+				
+                var deltaY = client.getMouseY() - cell.getPos().y;
+                var deltaX = client.getMouseX() - cell.getPos().x;
+                var angle = Math.atan2(deltaX,deltaY);
+            	
+                // Get starting position
+                var size = cell.getSize() + 5;
+                var startPos = {
+                    x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+                    y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
+                };
+                // Remove mass from parent cell
+                cell.mass -= this.gameServer.config.ejectMass;
+                // Create cell
+                ejected = new Cell(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass, 3);
+                ejected.setAngle(angle);
+                ejected.setMoveEngineData(this.gameServer.config.ejectSpeed, 10);
+                ejected.setColor(cell.getColor());
+            	
+                // Add to moving cells list
+                this.gameServer.addNode(ejected);
+                this.gameServer.setAsMovingNode(ejected);
             }
             break;
         case 255:
@@ -62,10 +137,17 @@ PacketHandler.prototype.handleMessage = function(message) {
 }
 
 PacketHandler.prototype.setNickname = function(newNick) {
-    if (!this.socket.playerTracker.cell) {
-        this.socket.playerTracker.cell = new Cell(this.gameServer.getNextNodeId(), newNick, this.gameServer.getRandomPosition(), 32.0);
-        this.gameServer.addNode(this.socket.playerTracker.cell);
-    } else {
-        this.socket.playerTracker.cell.name = newNick;
+    var client = this.socket.playerTracker;
+    if (client.cells.length < 1) {
+        // If client has no cells...
+    	var pos = this.gameServer.getRandomPosition();
+        var cell = new Cell(this.gameServer.getNextNodeId(), client, pos, this.gameServer.config.playerStartMass, 0);
+        this.gameServer.addNode(cell);
+        
+        // Set initial mouse coords
+        client.setMouseX(pos.x);
+        client.setMouseY(pos.y);
     }
+	client.setName(newNick);
 }
+

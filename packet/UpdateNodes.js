@@ -16,9 +16,8 @@ UpdateNodes.prototype.build = function() {
             continue;
         }
         
-        nodesLength = nodesLength + 22 + (node.name.length * 2);
+        nodesLength = nodesLength + 22 + (node.getName().length * 2);
     }
-    
     
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 22) + nodesLength + 4 + 2 + 4 + (this.nodes.length * 4));
     var view = new DataView(buf);
@@ -35,17 +34,19 @@ UpdateNodes.prototype.build = function() {
         }
 
         view.setUint32(offset, node.nodeId, true); // Node ID
+        /* This data is not needed when destroying nodes
         view.setFloat32(offset + 4, node.position.x, true); // X position
         view.setFloat32(offset + 8, node.position.y, true); // Y position
         view.setFloat32(offset + 12, node.size, true); // Size
         view.setUint8(offset + 16, node.color.r, true); // Color (R)
         view.setUint8(offset + 17, node.color.g, true); // Color (G)
         view.setUint8(offset + 18, node.color.b, true); // Color (B)
-        view.setUint8(offset + 19, 0, true); // Flags
+        view.setUint8(offset + 19, v, true); // Flags
         offset += 20;
+        */
         
-        view.setUint16(offset, 0, true); // Name
-        offset += 2;
+        view.setUint32(offset + 4, 0, true); // (Required feild, but i dont know what needs to go here)
+        offset += 8;
     }
 
     for (var i = 0; i < this.nodes.length; i++) {
@@ -54,20 +55,23 @@ UpdateNodes.prototype.build = function() {
         if (typeof node == "undefined") {
             continue;
         }
+        
+        var v = node.getType() == 2 ? 1: 0; // Virus flag
 
         view.setUint32(offset, node.nodeId, true); // Node ID
         view.setFloat32(offset + 4, node.position.x, true); // X position
         view.setFloat32(offset + 8, node.position.y, true); // Y position
-        view.setFloat32(offset + 12, node.size, true); // Size
+        view.setFloat32(offset + 12, node.getSize(), true); // Mass formula: Radius (size) = (mass * mass) / 100
         view.setUint8(offset + 16, node.color.r, true); // Color (R)
         view.setUint8(offset + 17, node.color.g, true); // Color (G)
         view.setUint8(offset + 18, node.color.b, true); // Color (B)
-        view.setUint8(offset + 19, 0, true); // Flags
+        view.setUint8(offset + 19, v, true); // Flags
         offset += 20;
         
-        if (node.name) {
-            for (var j = 0; j < node.name.length; j++) {
-                var c = node.name.charCodeAt(j);
+        var name = node.getName();
+        if (name) {
+            for (var j = 0; j < name.length; j++) {
+                var c = name.charCodeAt(j);
                 if (c){
                     view.setUint16(offset, c, true);
                 }
@@ -75,13 +79,13 @@ UpdateNodes.prototype.build = function() {
             }
         }
 
-        //view.setUint16(offset, 0, true); // Name
-        //offset += 2;
+        view.setUint16(offset, 0, true); // End of string
+        offset += 2;
     }
 
     view.setUint32(offset, 0, true); // Terminate node data
     view.setUint16(offset + 4, 0, true); // ?
-    view.setUint32(offset + 6, 1, true); // # of active nodes
+    view.setUint32(offset + 6, this.nodes.length, true); // # of active nodes
 
     offset += 10;
     
