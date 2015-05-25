@@ -163,20 +163,6 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
     
     var x1 = this.position.x + ( speed * Math.sin(angle) );
     var y1 = this.position.y + ( speed * Math.cos(angle) );
-    
-    // Check to ensure we're not passing the world border
-    if (this.position.x < border.left) {
-        x1 = border.left + 1;
-    }
-	if (this.position.x > border.right) {
-        x1 = border.right - 1;
-    }
-    if (this.position.y < border.top) {
-        y1 = border.top + 1;
-    }
-    if (this.position.y > border.bottom) {
-        y1 = border.bottom - 1;
-    }
 	
     // Collision check for other cells (Work in progress)
     for (var i = 0; i < this.owner.cells.length;i++) {
@@ -238,6 +224,20 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
                 }
             }
         }
+    }
+    
+    // Check to ensure we're not passing the world border
+    if (x1 < border.left) {
+        x1 = border.left;
+    }
+	if (x1 > border.right) {
+        x1 = border.right;
+    }
+    if (y1 < border.top) {
+        y1 = border.top;
+    }
+    if (y1 > border.bottom) {
+        y1 = border.bottom;
     }
 
     this.position.x = x1;
