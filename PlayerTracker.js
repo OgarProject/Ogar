@@ -17,6 +17,8 @@ function PlayerTracker(gameServer, socket) {
     this.mouseY = 0;
     this.tickLeaderboard = 0; // 
     
+    this.team = 0;
+    
     // Viewing box
     this.sightRange = 0;
     this.centerPos = {
@@ -28,6 +30,12 @@ function PlayerTracker(gameServer, socket) {
         bottomY: 0,
         leftX: 0,
         rightX: 0
+    }
+    
+    if (gameServer.getGameType() == 1) {
+        // Get random team
+        this.team = Math.floor(Math.random() * gameServer.config.teamAmount);
+        this.color = gameServer.getTeamColor(this.team);
     }
 }
 
@@ -74,6 +82,10 @@ PlayerTracker.prototype.setColor = function(color) {
     this.color.g = color.g;
 }
 
+PlayerTracker.prototype.getTeam = function() {
+    return this.team;
+}
+
 // Functions
 
 PlayerTracker.prototype.clear = function() {
@@ -112,8 +124,8 @@ PlayerTracker.prototype.update = function() {
 
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
-        this.socket.sendPacket(new Packet.UpdateLeaderboard(this.gameServer.leaderboard));
-        this.tickLeaderboard = 20; //Updates every 2 seconds - Saves server resources
+        this.socket.sendPacket(new Packet.UpdateLeaderboard(this.gameServer.leaderboard,this.gameServer.getGameType()));
+        this.tickLeaderboard = this.gameServer.config.leaderboardUpdateClient;
     } else {
         this.tickLeaderboard--;
     }

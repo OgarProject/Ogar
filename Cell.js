@@ -17,8 +17,7 @@ function Cell(nodeId, owner, position, mass, type) {
     if (this.owner) {
         this.setColor(this.owner.color);
         this.owner.cells.push(this); // Add to cells list of the owner 
-    }
-    
+    } 
 }
 
 module.exports = Cell;
@@ -120,7 +119,8 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
     return true;
 }
 
-Cell.prototype.calcMove = function(x2, y2, border) {
+Cell.prototype.calcMove = function(x2, y2, gameServer) {
+	var border = gameServer.border;
 	
 	/* Old movement system R.I.P
 	if ((this.position.x == x2) && (this.position.y == y2)) {
@@ -187,10 +187,10 @@ Cell.prototype.calcMove = function(x2, y2, border) {
         }
 		
         if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
-            // Cannot recombine
+            // Cannot recombine - Collision with your own cells
             var dist = Math.sqrt( Math.pow(cell.position.x - this.position.x, 2) +  Math.pow(cell.position.y - this.position.y, 2) );
             var collisionDist = cell.getSize() + this.getSize(); // Minimum distance between the 2 cells
-			
+        	
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
@@ -202,6 +202,40 @@ Cell.prototype.calcMove = function(x2, y2, border) {
                 
                 cell.position.x = cell.getPos().x + ( move * Math.sin(newAngle) );
                 cell.position.y = cell.getPos().y + ( move * Math.cos(newAngle) );
+            }
+        }
+    }
+    
+    // Team collision
+    if (gameServer.getGameType() == 1) {
+        var team = this.owner.getTeam();
+ 
+        // Find team
+        for (var i = 0; i < this.owner.visibleNodes.length;i++) {
+            // Only collide with player cells
+            var check = this.owner.visibleNodes[i];
+
+            if ((check.getType() != 0) || (this.owner == check.owner)){
+                continue;
+            }
+    		
+            if (check.owner.getTeam() == team) {
+                // Collision with teammates
+                var dist = Math.sqrt( Math.pow(check.position.x - this.position.x, 2) +  Math.pow(check.position.y - this.position.y, 2) );
+                var collisionDist = check.getSize() + this.getSize(); // Minimum distance between the 2 cells
+    			
+                // Calculations
+                if (dist < collisionDist) { // Collided
+                    // The moving cell pushes the colliding cell
+                    var newDeltaY = check.getPos().y - y1;
+                    var newDeltaX = check.getPos().x - x1;
+                    var newAngle = Math.atan2(newDeltaX,newDeltaY);
+                    
+                    var move = collisionDist - dist;
+                    
+                    check.position.x = check.getPos().x + ( move * Math.sin(newAngle) );
+                    check.position.y = check.getPos().y + ( move * Math.cos(newAngle) );
+                }
             }
         }
     }
@@ -246,3 +280,4 @@ Cell.prototype.calcMovePhys = function(border) {
     this.position.x = X;
     this.position.y = Y;  
 }
+

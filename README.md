@@ -13,7 +13,7 @@ The project is nearly complete. Here's a rough list of what's been done and what
 - [x] Multi-cell player movement
 - [x] Cells eating other cells
 - [x] Leaderboard
-- [ ] Team mode
+- [x] Team mode
 
 ## Known Issues
 - When disconnecting, some cells from splitting are left behind
