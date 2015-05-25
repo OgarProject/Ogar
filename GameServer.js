@@ -42,28 +42,29 @@ function GameServer(port,gameType) {
     this.gameTypeStrings = ["Free For All","Teams"];
     
     this.config = {
-    	foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
-    	foodSpawnAmount: 5, // The amount of food to spawn per interval
-    	foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
-    	foodMass: 1, // Starting food size (In mass)
-    	virusMinAmount: 10, // Minimum amount of viruses on the map. 
-    	virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
-    	virusStartMass: 100.0, // Starting virus size (In mass)
-    	virusBurstMass: 198.0, // Viruses explode past this size
-    	ejectMass: 16, // Mass of ejected cells
-    	ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
-    	ejectSpeed: 200, // Base speed of ejected cells
-    	playerStartMass: 10, // Starting mass of the player cell
-    	playerMinMassEject: 32, // Mass required to eject a cell
-    	playerMinMassSplit: 36, // Mass required to split
-    	playerMaxCells: 16, // Max cells the player is allowed to have
-    	playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
-    	playerMassDecayRate: .0002, // Amount of mass lost per tick (Multplier) (1 tick = 200 milliseconds)
-    	playerMinMassDecay: 9, // Minimum mass for decay to occur
-    	playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
-    	leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
-    	leaderboardUpdateClient: 20, // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
-    	teamAmount: 3, // Amount of teams for team mode. This has no effect on other modes. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue)
+        maxConnections: 64, // Maximum amount of connections to the server. 
+        foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
+        foodSpawnAmount: 5, // The amount of food to spawn per interval
+        foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
+        foodMass: 1, // Starting food size (In mass)
+        virusMinAmount: 10, // Minimum amount of viruses on the map. 
+        virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
+        virusStartMass: 100.0, // Starting virus size (In mass)
+        virusBurstMass: 198.0, // Viruses explode past this size
+        ejectMass: 16, // Mass of ejected cells
+        ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
+        ejectSpeed: 200, // Base speed of ejected cells
+        playerStartMass: 10, // Starting mass of the player cell
+        playerMinMassEject: 32, // Mass required to eject a cell
+        playerMinMassSplit: 36, // Mass required to split
+        playerMaxCells: 16, // Max cells the player is allowed to have
+        playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
+        playerMassDecayRate: .0002, // Amount of mass lost per tick (Multplier) (1 tick = 200 milliseconds)
+        playerMinMassDecay: 9, // Minimum mass for decay to occur
+        playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
+        leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
+        leaderboardUpdateClient: 20, // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
+        teamAmount: 3, // Amount of teams for team mode. This has no effect on other modes. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue)
         teamMassDecay: 1.5 // Multiplier for mass decay in team mode 
     };
 	
@@ -137,6 +138,12 @@ GameServer.prototype.start = function() {
         ws.on('error', close.bind(bindObject));
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
+        
+        if (this.clients.length > this.config.maxConnections) {
+            ws.close();
+            console.log("[Game] Client tried to connect, but server player limit has been reached!");
+            return;
+        }
     }
 }
 
