@@ -44,56 +44,6 @@ PacketHandler.prototype.handleMessage = function(message) {
             var client = this.socket.playerTracker;
             client.setMouseX(view.getFloat64(1, true));
             client.setMouseY(view.getFloat64(9, true));
-			
-            /* Old movement system R.I.P
-            for (var i = 0; i < client.cells.length; i++){
-                var cell = client.cells[i];
-				
-                if (!cell) {
-                    continue;
-                }
-				
-                cell.calcMove(client.getMouseX(), client.getMouseY(), this.gameServer.border);
-                
-                // Check if cells nearby (Still buggy)
-                var list = this.gameServer.getCellsInRange(cell);
-                for (var j = 0; j < list.length ; j++) {
-                    //Remove the cells
-                    var n = list[j].getType();
-                    
-                    switch (n) {
-                        case 3: // Ejected Mass
-                            cell.mass += this.gameServer.config.ejectMassGain;
-                            break;                      	
-                        case 0: // Player Cell
-                            cell.mass += list[j].mass;
-                            break;
-                        case 1: // Food
-                            this.gameServer.currentFood--;
-                            cell.mass += this.gameServer.config.foodMass;
-                            break;
-                        case 2: // Virus - viruses do not give mass when eaten
-                            this.gameServer.currentViruses--;
-                            // Split formula
-                            var maxSplits = Math.floor(cell.mass/16) - 1; // Maximum amount of splits
-                            var numSplits = this.gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
-                            numSplits = Math.min(numSplits,maxSplits);
-                            var splitMass = Math.min(cell.mass/(numSplits + 1), 32); // Maximum size of new splits
-                            var angle = 0; // Starting angle
-                            
-                            for (var k = 0; k < numSplits; k++) {
-                                angle += 6/numSplits; // Get directions of splitting cells
-                                this.newCellVirused(client, cell, angle, splitMass);
-                                cell.mass -= splitMass; // Filler
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                    this.gameServer.removeNode(list[j]); 
-                }
-            }
-            */
             break;
 		case 17: // Space Press - Split cell
             var client = this.socket.playerTracker;
@@ -167,7 +117,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Create cell
                 ejected = new Cell(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass, 3);
                 ejected.setAngle(angle);
-                ejected.setMoveEngineData(200, 10);
+                ejected.setMoveEngineData(this.gameServer.config.ejectSpeed, 10);
                 ejected.setColor(cell.getColor());
             	
                 // Add to moving cells list

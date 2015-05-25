@@ -58,6 +58,7 @@ Cell.prototype.getSize = function() {
 Cell.prototype.getSpeed = function() {
 	// Custom speed formula
 	var speed = 5 + (35 * (1 - (this.mass/(200+this.mass))));
+	speed *= this.owner.gameServer.config.playerSpeedMultiplier;
 	return speed;
 }
 
@@ -121,36 +122,6 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
 
 Cell.prototype.calcMove = function(x2, y2, gameServer) {
 	var border = gameServer.border;
-	
-	/* Old movement system R.I.P
-	if ((this.position.x == x2) && (this.position.y == y2)) {
-		return;
-	}
-	
-    var x1 = this.position.x;
-    var y1 = this.position.y;
-    
-    var dx = Math.abs(x2 - x1);
-    var dy = Math.abs(y2 - y1);
-    
-    var sx = (x1 < x2) ? 1 : -1;
-    var sy = (y1 < y2) ? 1 : -1;
-    var err = dx - dy;
-    var dist = this.getSpeed();
-    
-    while (!((x1 == x2) && (y1 == y2)) && (dist > 0)) {
-        var e2 = err << 1;
-        if (e2 > -dy){
-            err -= dy;
-            x1 += sx;
-        }
-        if (e2 < dx) {
-            err += dx;
-            y1 += sy;
-        }
-        dist--;
-    }
-    */
 	
     // Get angle
     var deltaY = y2 - this.position.y;
