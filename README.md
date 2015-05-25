@@ -19,7 +19,6 @@ The project is nearly complete. Here's a rough list of what's been done and what
 - [General] When disconnecting, some cells from splitting are left behind
 - [General] Formula for calculating speed is wrong
 - [General] Formula for calculating view distance is wrong
-- [General] Cells moving near the border have glitchy movement
 - [Team] Cells just block their team mates when colliding, instead of pushing them a little
 
 ## Obtaining and Using

@@ -35,9 +35,8 @@ function GameServer(port,gameType) {
     
     this.currentFood = 0;
     this.currentViruses = 0;
-    this.movingNodes = [];
+    this.movingNodes = []; // For move engine
     this.leaderboard = [];
-    this.leaderboardLowestScore = 0; // Lowest score in leaderboard
     
     this.gameType = gameType; // 0 = FFA, 1 = Teams
     this.gameTypeStrings = ["Free For All","Teams"];
@@ -59,7 +58,7 @@ function GameServer(port,gameType) {
     	playerMinMassSplit: 36, // Mass required to split
     	playerMaxCells: 16, // Max cells the player is allowed to have
     	playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
-    	playerMassDecayRate: .0002, // Amount of mass lost per tick (Multplier)(1 tick = 200 milliseconds)
+    	playerMassDecayRate: .0002, // Amount of mass lost per tick (Multplier) (1 tick = 200 milliseconds)
     	playerMinMassDecay: 9, // Minimum mass for decay to occur
     	playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
     	leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
@@ -69,7 +68,7 @@ function GameServer(port,gameType) {
     };
 	
 	this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
-    this.colorsTeam =  [{'r':245,'b':0,'g':0},{'r':0,'b':0,'g':245},{'r':0,'b':245,'g':0}]; // Make sure you add extra colors here if you wish to increase the team amount (Red, Green, Blue)
+    this.colorsTeam =  [{'r':245,'b':0,'g':0},{'r':0,'b':0,'g':245},{'r':0,'b':245,'g':0}]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     
     if (this.gameType == 1) {
         // Set up teams
@@ -444,37 +443,46 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // Cell type check - Cell must be bigger than this number times the mass of the cell being eaten
-        var multiplier = check.owner == cell.owner ? 1.00 : 1.25;
+        var multiplier = 1.25;
 		
         switch (check.getType()) {
             case 1: // Food cell
-                break;
+                list.push(check);
+                continue;
             case 2: // Virus
                 multiplier = 1.33;
-            default: // Other
+                break;
+            case 0: // Players
+                multiplier = check.owner == cell.owner ? 1.00 : multiplier;
                 // Can't eat team members
-                if ((this.gameType == 1) && (check.owner)){
+                if (this.gameType == 1) {
+                    if (!check.owner) { // Error check
+                        continue;
+                    }
+                	
                     if ((check.owner != cell.owner) && (check.owner.getTeam() == cell.owner.getTeam())) {
                         continue;
                     }
                 }
-            
-                // Make sure the cell is big enough to be eaten.
-                if ((check.mass * multiplier) > cell.mass) {
-                    continue;
-                }
-            	
-                // Eating range
-                var xs = Math.pow(check.position.x - cell.position.x, 2);
-                var ys = Math.pow(check.position.y - cell.position.y, 2);
-                var dist = Math.sqrt( xs + ys );
-                
-                var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 1/3 of the radius of the cell being eaten
-                if (dist > eatingRange) {
-                    // Not in eating range
-                    continue;
-                }
                 break;
+            default: 
+                break;
+        }
+        
+        // Make sure the cell is big enough to be eaten.
+        if ((check.mass * multiplier) > cell.mass) {
+            continue;
+        }
+            	
+        // Eating range
+        var xs = Math.pow(check.position.x - cell.position.x, 2);
+        var ys = Math.pow(check.position.y - cell.position.y, 2);
+        var dist = Math.sqrt( xs + ys );
+                
+        var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 1/3 of the radius of the cell being eaten
+        if (dist > eatingRange) {
+            // Not in eating range
+            continue;
         }
 		
         // Add to list of cells nearby
