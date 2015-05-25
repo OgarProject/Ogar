@@ -47,7 +47,7 @@ function GameServer(port,gameType) {
     	foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
     	foodMass: 1, // Starting food size (In mass)
     	virusMinAmount: 10, // Minimum amount of viruses on the map. 
-    	virusMaxAmount: 50, // Maximum amount of viruses on the map. If , then ejected cells will pass through viruses.
+    	virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
     	virusStartMass: 100.0, // Starting virus size (In mass)
     	virusBurstMass: 198.0, // Viruses explode past this size
     	ejectMass: 16, // Mass of ejected cells
@@ -310,12 +310,32 @@ GameServer.prototype.updateMoveEngine = function() {
                     var numSplits = this.config.playerMaxCells - client.cells.length; // Get number of splits
                     numSplits = Math.min(numSplits,maxSplits);
                     var splitMass = Math.min(cell.mass/(numSplits + 1), 32); // Maximum size of new splits
+                    
+                    // Big cells will split into cells larger than 32 mass (1/4 of their mass)
+                    var bigSplits = 0;
+                    var endMass = cell.mass - (numSplits * splitMass);
+                    if ((endMass > 300) && (numSplits > 0)) {
+                        bigSplits++;
+                        numSplits--;
+                    } 
+                    if ((endMass > 1200) && (numSplits > 0)) {
+                        bigSplits++;
+                        numSplits--;
+                    }
+                    
+                    // Splitting
                     var angle = 0; // Starting angle
-                        
                     for (var k = 0; k < numSplits; k++) {
                         angle += 6/numSplits; // Get directions of splitting cells
-                        this.newCellVirused(client, cell, angle, splitMass);
-                        cell.mass -= splitMass; // Filler
+                        this.newCellVirused(client, cell, angle, splitMass,250);
+                        cell.mass -= splitMass;
+                    }
+                    
+                    for (var k = 0; k < bigSplits; k++) {
+                        angle = Math.random() * 6.2; // Random directions
+                        splitMass = cell.mass / 4;
+                        this.newCellVirused(client, cell, angle, splitMass,25);
+                        cell.mass -= splitMass;
                     }
                     break;
                 default:
@@ -374,7 +394,7 @@ GameServer.prototype.setAsMovingNode = function(node) {
 	this.movingNodes.push(node);
 }
 
-GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
+GameServer.prototype.newCellVirused = function(client, parent, angle, mass, speed) {
     // Starting position
 	var startPos = {
         x: parent.getPos().x, 
@@ -384,7 +404,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
 	// Create cell
 	newCell = new Cell(this.getNextNodeId(), client, startPos, mass, 0);
 	newCell.setAngle(angle);
-	newCell.setMoveEngineData(250, 4);
+	newCell.setMoveEngineData(speed, 4);
 	newCell.setRecombineTicks(this.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
