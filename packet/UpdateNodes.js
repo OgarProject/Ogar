@@ -33,19 +33,9 @@ UpdateNodes.prototype.build = function() {
             continue;
         }
 
-        view.setUint32(offset, node.nodeId, true); // Node ID
-        /* This data is not needed when destroying nodes
-        view.setFloat32(offset + 4, node.position.x, true); // X position
-        view.setFloat32(offset + 8, node.position.y, true); // Y position
-        view.setFloat32(offset + 12, node.size, true); // Size
-        view.setUint8(offset + 16, node.color.r, true); // Color (R)
-        view.setUint8(offset + 17, node.color.g, true); // Color (G)
-        view.setUint8(offset + 18, node.color.b, true); // Color (B)
-        view.setUint8(offset + 19, v, true); // Flags
-        offset += 20;
-        */
+        view.setUint32(offset, node.getKiller().nodeId, true); // Killer ID
+        view.setUint32(offset + 4, node.nodeId, true); // Node ID
         
-        view.setUint32(offset + 4, 0, true); // (Required feild, but i dont know what needs to go here)
         offset += 8;
     }
 

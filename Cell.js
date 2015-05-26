@@ -7,6 +7,8 @@ function Cell(nodeId, owner, position, mass, type) {
     this.mass = mass; // Starting mass of the cell
     this.speed = 30; // Filler, will be changed later
     this.cellType = type; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
+    
+    this.killedBy; // Cell that ate this cell
     this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
     this.ignoreCollision = false;
     
@@ -53,6 +55,10 @@ Cell.prototype.getPos = function() {
 Cell.prototype.getSize = function() {
 	// Calculates radius based on cell mass
     return Math.sqrt(100 * this.mass) + .1;
+}
+
+Cell.prototype.addMass = function(n) {
+    this.mass = Math.min(this.mass + n,this.owner.gameServer.config.playerMaxMass);
 }
 
 Cell.prototype.getSpeed = function() {
@@ -103,6 +109,13 @@ Cell.prototype.getEatingRange = function() {
     }
 }
 
+Cell.prototype.getKiller = function() {
+    return this.killedBy;
+}
+
+Cell.prototype.setKiller = function(cell) {
+    this.killedBy = cell;
+}
 
 // Functions
 

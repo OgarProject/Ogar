@@ -24,7 +24,7 @@ function GameServer(port,gameType) {
         top: 0,
         bottom: 6000.0
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
-    this.lastNodeId = 0;
+    this.lastNodeId = 1;
     this.clients = [];
     this.port = port;
     this.nodes = [];
@@ -41,11 +41,13 @@ function GameServer(port,gameType) {
     this.gameTypeStrings = ["Free For All","Teams"];
     
     this.config = {
-        maxConnections: 64, // Maximum amount of connections to the server. 
-        foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
+        serverMaxConnections: 64, // Maximum amount of connections to the server. 
+        serverAllowMods: true, // Whether or not to allow clients with mods to connect
+        foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds
         foodSpawnAmount: 5, // The amount of food to spawn per interval
-        foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
+        foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
+        virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (viruses will spawn until virusMinAmount is reached)
         virusMinAmount: 10, // Minimum amount of viruses on the map. 
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100.0, // Starting virus size (In mass)
@@ -53,7 +55,8 @@ function GameServer(port,gameType) {
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
         ejectSpeed: 200, // Base speed of ejected cells
-        playerStartMass: 10, // Starting mass of the player cell
+        playerStartMass: 10, // Starting mass of the player cell. Large values may cause problens when clients connect.
+        playerMaxMass: 22500, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
@@ -67,7 +70,7 @@ function GameServer(port,gameType) {
         teamMassDecay: 1.5 // Multiplier for mass decay in team mode 
     };
 	
-	this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
+    this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
     this.colorsTeam =  [{'r':245,'b':0,'g':0},{'r':0,'b':0,'g':245},{'r':0,'b':245,'g':0}]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     
     if (this.gameType == 1) {
@@ -87,8 +90,8 @@ GameServer.prototype.start = function() {
         
         // Spawning
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
-        this.virusCheck();
-        //setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate); // Old code
+        //this.virusCheck();
+        setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate); // Old code
         
         // Move engine
         setInterval(this.updateMoveEngine.bind(this), 100);
@@ -105,6 +108,12 @@ GameServer.prototype.start = function() {
     this.socketServer.on('connection', connectionEstablished.bind(this));
 
     function connectionEstablished(ws) {
+        if (this.clients.length > this.config.serverMaxConnections) {
+            ws.close();
+            console.log("[Game] Client tried to connect, but server player limit has been reached!");
+            return;
+        }
+    	
         function close(error) {
             console.log("[Game] Disconnect: %s:%d", this.socket.remoteAddress, this.socket.remotePort);
             var index = this.server.clients.indexOf(this.socket);
@@ -113,16 +122,16 @@ GameServer.prototype.start = function() {
             }
 
             if (this.socket.playerTracker.cells.length > 0) {
-				var len = this.socket.playerTracker.cells.length;
-				for (var i = 0; i < len; i++) {
-					var cell = this.socket.playerTracker.cells[i];
+                var len = this.socket.playerTracker.cells.length;
+                for (var i = 0; i < len; i++) {
+                    var cell = this.socket.playerTracker.cells[i];
 					
-					if (!cell) {
-						continue;
-					}
+                    if (!cell) {
+                        continue;
+                    }
 					
-					this.server.removeNode(cell);
-				}
+                    this.server.removeNode(cell);
+                }
             }
         }
 
@@ -137,12 +146,6 @@ GameServer.prototype.start = function() {
         ws.on('error', close.bind(bindObject));
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
-        
-        if (this.clients.length > this.config.maxConnections) {
-            ws.close();
-            console.log("[Game] Client tried to connect, but server player limit has been reached!");
-            return;
-        }
     }
 }
 
@@ -153,7 +156,7 @@ GameServer.prototype.getGameType = function() {
 GameServer.prototype.getNextNodeId = function() {
 	// Resets integer
     if (this.lastNodeId > 2147483647) {
-        this.lastNodeId = 0;
+        this.lastNodeId = 1;
     }
     return this.lastNodeId++;
 }
@@ -166,9 +169,9 @@ GameServer.prototype.getRandomPosition = function() {
 }
 
 GameServer.prototype.getRandomColor = function() {
-	var index = Math.floor(Math.random() * this.colors.length);
-	var color = this.colors[index];
-	return {
+    var index = Math.floor(Math.random() * this.colors.length);
+    var color = this.colors[index];
+    return {
         r: color.r,
         b: color.b,
         g: color.g
@@ -176,8 +179,8 @@ GameServer.prototype.getRandomColor = function() {
 }
 
 GameServer.prototype.getTeamColor = function(team) {
-	var color = this.colorsTeam[team];
-	return {
+    var color = this.colorsTeam[team];
+    return {
         r: color.r,
         b: color.b,
         g: color.g
@@ -188,14 +191,14 @@ GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
     
     switch (node.getType()) {
-		case 0: // Add to special player controlled node list
+        case 0: // Add to special player controlled node list
             this.nodesPlayer.push(node);
             // Teams
             if (this.gameType == 1) {
                 this.nodesTeam[node.owner.getTeam()].push(node);
             }
             break;
-		case 2: // Add to special virus node list
+        case 2: // Add to special virus node list
             this.nodesVirus.push(node);
             break;
 		default:
@@ -209,7 +212,7 @@ GameServer.prototype.addNode = function(node) {
 }
 
 GameServer.prototype.removeNode = function(node) {
-	// Remove from main nodes list
+    // Remove from main nodes list
     var index = this.nodes.indexOf(node);
     if (index != -1) {
         this.nodes.splice(index, 1);
@@ -221,13 +224,13 @@ GameServer.prototype.removeNode = function(node) {
     	this.movingNodes.splice(index, 1);
     }
     
-	switch (node.getType()) {
+    switch (node.getType()) {
         case 0: // Remove from owning player's cell list
             var owner = node.owner;
             // Remove from player screen
             owner.cells.splice(owner.cells.indexOf(node), 1);
             owner.visibleNodes.splice(owner.visibleNodes.indexOf(node), 1);
-            owner.nodeDestroyQueue.push(node); 
+            //owner.nodeDestroyQueue.push(node); 
             // Remove from special player controlled node list
             this.nodesPlayer.splice(this.nodesPlayer.indexOf(node), 1);
             // Teams
@@ -235,11 +238,16 @@ GameServer.prototype.removeNode = function(node) {
                 this.nodesTeam[owner.getTeam()].splice(this.nodesTeam.indexOf(node), 1);
             }
             break;
-		case 2: // Remove from special virus node list
+        case 2: // Remove from special virus node list
             this.nodesVirus.splice(this.nodesVirus.indexOf(node), 1);
-		default:
+        default:
             // End the function
             break;
+    }
+	
+    // Animation when eating
+    if (node.getKiller()) {
+        node.getKiller().owner.nodeDestroyQueue.push(node); 
     }
 }
 
@@ -262,17 +270,17 @@ GameServer.prototype.spawnFood = function() {
             this.addNode(f);
             this.currentFood++;
         }
-	}    
+    }    
 }
 
-GameServer.prototype.spawnVirus = function() { // Depreciated 
-    if (this.nodesVirus.length < this.config.virusMaxAmount) {
+GameServer.prototype.spawnVirus = function() {
+    if (this.nodesVirus.length < this.config.virusMinAmount) {
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
     }
 }
 
-GameServer.prototype.virusCheck = function() {
+GameServer.prototype.virusCheck = function() { // Buggy code?
     // Checks if there are enough viruses on the map
     while (this.nodesVirus.length < this.config.virusMinAmount) {
         if (this.nodesVirus.length > this.config.virusMaxAmount) {
@@ -280,15 +288,16 @@ GameServer.prototype.virusCheck = function() {
             //console.log("[Debug] Current Node Id: " + this.lastNodeId);
             break;
         }
-    	
+        
     	// Spawns a virus
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
+        //console.log("[Debug] Current Viruses: " + this.nodesVirus.length);
     }
 }
 
 GameServer.prototype.updateMoveEngine = function() {
-	// Move player cells
+    // Move player cells
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
     		
@@ -308,14 +317,14 @@ GameServer.prototype.updateMoveEngine = function() {
                 
             switch (n) {
                 case 3: // Ejected Mass
-                    cell.mass += this.config.ejectMassGain;
+                    cell.addMass(this.config.ejectMassGain);
                     break;                      	
                 case 0: // Player Cell
-                    cell.mass += list[j].mass;
+                    cell.addMass(list[j].mass);
                     break;
                 case 1: // Food
                     this.currentFood--;
-                    cell.mass += this.config.foodMass;
+                    cell.addMass(this.config.foodMass);
                     break;
                 case 2: // Virus - viruses do not give mass when eaten
                     this.virusCheck();
@@ -355,6 +364,9 @@ GameServer.prototype.updateMoveEngine = function() {
                 default:
                     break;
             }
+            
+            // Remove cell
+            list[j].setKiller(cell);
             this.removeNode(list[j]); 
         }
     }
@@ -429,8 +441,8 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 
 GameServer.prototype.shootVirus = function(parent) {
 	var parentPos = {
-		x: parent.position.x,
-		y: parent.position.y,
+            x: parent.position.x,
+            y: parent.position.y,
 	};
 	
     var	newVirus = new Cell(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, 2);
