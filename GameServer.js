@@ -106,6 +106,12 @@ GameServer.prototype.start = function() {
     this.socketServer.on('connection', connectionEstablished.bind(this));
 
     function connectionEstablished(ws) {
+        if (this.clients.length > this.config.maxConnections) {
+            ws.close();
+            console.log("[Game] Client tried to connect, but server player limit has been reached!");
+            return;
+        }
+    	
         function close(error) {
             console.log("[Game] Disconnect: %s:%d", this.socket.remoteAddress, this.socket.remotePort);
             var index = this.server.clients.indexOf(this.socket);
@@ -138,12 +144,6 @@ GameServer.prototype.start = function() {
         ws.on('error', close.bind(bindObject));
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
-        
-        if (this.clients.length > this.config.maxConnections) {
-            ws.close();
-            console.log("[Game] Client tried to connect, but server player limit has been reached!");
-            return;
-        }
     }
 }
 
@@ -167,9 +167,9 @@ GameServer.prototype.getRandomPosition = function() {
 }
 
 GameServer.prototype.getRandomColor = function() {
-	var index = Math.floor(Math.random() * this.colors.length);
-	var color = this.colors[index];
-	return {
+    var index = Math.floor(Math.random() * this.colors.length);
+    var color = this.colors[index];
+    return {
         r: color.r,
         b: color.b,
         g: color.g
@@ -177,8 +177,8 @@ GameServer.prototype.getRandomColor = function() {
 }
 
 GameServer.prototype.getTeamColor = function(team) {
-	var color = this.colorsTeam[team];
-	return {
+    var color = this.colorsTeam[team];
+    return {
         r: color.r,
         b: color.b,
         g: color.g
@@ -189,14 +189,14 @@ GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
     
     switch (node.getType()) {
-		case 0: // Add to special player controlled node list
+        case 0: // Add to special player controlled node list
             this.nodesPlayer.push(node);
             // Teams
             if (this.gameType == 1) {
                 this.nodesTeam[node.owner.getTeam()].push(node);
             }
             break;
-		case 2: // Add to special virus node list
+        case 2: // Add to special virus node list
             this.nodesVirus.push(node);
             break;
 		default:
@@ -210,7 +210,7 @@ GameServer.prototype.addNode = function(node) {
 }
 
 GameServer.prototype.removeNode = function(node) {
-	// Remove from main nodes list
+    // Remove from main nodes list
     var index = this.nodes.indexOf(node);
     if (index != -1) {
         this.nodes.splice(index, 1);
@@ -222,7 +222,7 @@ GameServer.prototype.removeNode = function(node) {
     	this.movingNodes.splice(index, 1);
     }
     
-	switch (node.getType()) {
+    switch (node.getType()) {
         case 0: // Remove from owning player's cell list
             var owner = node.owner;
             // Remove from player screen
@@ -236,17 +236,17 @@ GameServer.prototype.removeNode = function(node) {
                 this.nodesTeam[owner.getTeam()].splice(this.nodesTeam.indexOf(node), 1);
             }
             break;
-		case 2: // Remove from special virus node list
+        case 2: // Remove from special virus node list
             this.nodesVirus.splice(this.nodesVirus.indexOf(node), 1);
-		default:
+        default:
             // End the function
             break;
     }
 	
-	// Animation when eating
-	if (node.getKiller()) {
-		node.getKiller().owner.nodeDestroyQueue.push(node); 
-	}
+    // Animation when eating
+    if (node.getKiller()) {
+        node.getKiller().owner.nodeDestroyQueue.push(node); 
+    }
 }
 
 GameServer.prototype.updateAll = function() {
@@ -268,7 +268,7 @@ GameServer.prototype.spawnFood = function() {
             this.addNode(f);
             this.currentFood++;
         }
-	}    
+    }    
 }
 
 GameServer.prototype.spawnVirus = function() {
@@ -295,7 +295,7 @@ GameServer.prototype.virusCheck = function() { // Buggy code?
 }
 
 GameServer.prototype.updateMoveEngine = function() {
-	// Move player cells
+    // Move player cells
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
     		
@@ -439,8 +439,8 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 
 GameServer.prototype.shootVirus = function(parent) {
 	var parentPos = {
-		x: parent.position.x,
-		y: parent.position.y,
+            x: parent.position.x,
+            y: parent.position.y,
 	};
 	
     var	newVirus = new Cell(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, 2);
