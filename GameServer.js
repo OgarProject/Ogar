@@ -53,7 +53,7 @@ function GameServer(port,gameType) {
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
         ejectSpeed: 200, // Base speed of ejected cells
-        playerStartMass: 10, // Starting mass of the player cell
+        playerStartMass: 1000, // Starting mass of the player cell
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
@@ -227,7 +227,7 @@ GameServer.prototype.removeNode = function(node) {
             // Remove from player screen
             owner.cells.splice(owner.cells.indexOf(node), 1);
             owner.visibleNodes.splice(owner.visibleNodes.indexOf(node), 1);
-            owner.nodeDestroyQueue.push(node); 
+            //owner.nodeDestroyQueue.push(node); 
             // Remove from special player controlled node list
             this.nodesPlayer.splice(this.nodesPlayer.indexOf(node), 1);
             // Teams
@@ -241,6 +241,11 @@ GameServer.prototype.removeNode = function(node) {
             // End the function
             break;
     }
+	
+	// Animation when eating
+	if (node.getKiller()) {
+		node.getKiller().owner.nodeDestroyQueue.push(node); 
+	}
 }
 
 GameServer.prototype.updateAll = function() {
@@ -355,6 +360,9 @@ GameServer.prototype.updateMoveEngine = function() {
                 default:
                     break;
             }
+            
+            // Remove cell
+            list[j].setKiller(cell);
             this.removeNode(list[j]); 
         }
     }
