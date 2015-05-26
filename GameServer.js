@@ -42,10 +42,11 @@ function GameServer(port,gameType) {
     
     this.config = {
         maxConnections: 64, // Maximum amount of connections to the server. 
-        foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
+        foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds
         foodSpawnAmount: 5, // The amount of food to spawn per interval
         foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
         foodMass: 1, // Starting food size (In mass)
+        virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (viruses will spawn until virusMinAmount is reached)
         virusMinAmount: 10, // Minimum amount of viruses on the map. 
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100.0, // Starting virus size (In mass)
@@ -87,8 +88,8 @@ GameServer.prototype.start = function() {
         
         // Spawning
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
-        this.virusCheck();
-        //setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate); // Old code
+        //this.virusCheck();
+        setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate); // Old code
         
         // Move engine
         setInterval(this.updateMoveEngine.bind(this), 100);
@@ -270,14 +271,14 @@ GameServer.prototype.spawnFood = function() {
 	}    
 }
 
-GameServer.prototype.spawnVirus = function() { // Depreciated 
+GameServer.prototype.spawnVirus = function() {
     if (this.nodesVirus.length < this.config.virusMaxAmount) {
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
     }
 }
 
-GameServer.prototype.virusCheck = function() {
+GameServer.prototype.virusCheck = function() { // Buggy code?
     // Checks if there are enough viruses on the map
     while (this.nodesVirus.length < this.config.virusMinAmount) {
         if (this.nodesVirus.length > this.config.virusMaxAmount) {
@@ -285,10 +286,11 @@ GameServer.prototype.virusCheck = function() {
             //console.log("[Debug] Current Node Id: " + this.lastNodeId);
             break;
         }
-    	
+        
     	// Spawns a virus
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
+        //console.log("[Debug] Current Viruses: " + this.nodesVirus.length);
     }
 }
 
