@@ -17,8 +17,8 @@ The project is nearly complete. Here's a rough list of what's been done and what
 
 ## Known Issues
 - [General] When disconnecting, some cells from splitting are left behind
-- [General] Formula for calculating speed is wrong
-- [General] Formula for calculating view distance is wrong
+- [General] Several formulas for calculating variables (ex. speed, mass decay) are incorrect
+- [General] Viruses sometimes mass spawn and fill up the map
 - [Team] Cells just block their team mates when colliding, instead of pushing them a little
 
 ## Obtaining and Using
@@ -41,7 +41,7 @@ Currently, Ogar listens on the following addresses and ports:
 Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports.
 
 ## Configuring Ogar
-Ogar has a configurations field that can be modified. To do this, open up GameServer.js with a decent text editor (except for notepad), then go to line 45 to see the config values.
+Ogar has a configurations field that can be modified. To do this, open up GameServer.js with a decent text editor (except for notepad), then go to line 43 to see the config values.
 
 ## Contributing
 Please see [CONTRIBUTING.md](https://github.com/forairan/Ogar/blob/master/CONTRIBUTING.md) for contribution guidelines.
