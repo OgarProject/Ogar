@@ -44,7 +44,7 @@ function GameServer(port,gameType) {
         maxConnections: 64, // Maximum amount of connections to the server. 
         foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds
         foodSpawnAmount: 5, // The amount of food to spawn per interval
-        foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
+        foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
         virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (viruses will spawn until virusMinAmount is reached)
         virusMinAmount: 10, // Minimum amount of viruses on the map. 
@@ -54,7 +54,7 @@ function GameServer(port,gameType) {
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
         ejectSpeed: 200, // Base speed of ejected cells
-        playerStartMass: 10, // Starting mass of the player cell
+        playerStartMass: 10, // Starting mass of the player cell. Large values may cause problens when clients connect.
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
@@ -68,7 +68,7 @@ function GameServer(port,gameType) {
         teamMassDecay: 1.5 // Multiplier for mass decay in team mode 
     };
 	
-	this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
+    this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
     this.colorsTeam =  [{'r':245,'b':0,'g':0},{'r':0,'b':0,'g':245},{'r':0,'b':245,'g':0}]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     
     if (this.gameType == 1) {
@@ -114,16 +114,16 @@ GameServer.prototype.start = function() {
             }
 
             if (this.socket.playerTracker.cells.length > 0) {
-				var len = this.socket.playerTracker.cells.length;
-				for (var i = 0; i < len; i++) {
-					var cell = this.socket.playerTracker.cells[i];
+                var len = this.socket.playerTracker.cells.length;
+                for (var i = 0; i < len; i++) {
+                    var cell = this.socket.playerTracker.cells[i];
 					
-					if (!cell) {
-						continue;
-					}
+                    if (!cell) {
+                        continue;
+                    }
 					
-					this.server.removeNode(cell);
-				}
+                    this.server.removeNode(cell);
+                }
             }
         }
 
@@ -272,7 +272,7 @@ GameServer.prototype.spawnFood = function() {
 }
 
 GameServer.prototype.spawnVirus = function() {
-    if (this.nodesVirus.length < this.config.virusMaxAmount) {
+    if (this.nodesVirus.length < this.config.virusMinAmount) {
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
     }
