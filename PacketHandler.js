@@ -26,8 +26,8 @@ PacketHandler.prototype.handleMessage = function(message) {
     var view = new DataView(buffer);
     var packetId = view.getUint8(0, true);
     
-    if (packetId != 254 && !this.properInit)
-    {
+    // Client with mods tried to connect
+    if (packetId != 254 && !this.properInit && !this.gameServer.config.serverAllowMods) {
         console.log("[Game] Client at %s tried to connect with mods enabled.", this.socket.remoteAddress);
         this.socket.close();
     }

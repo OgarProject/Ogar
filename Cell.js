@@ -57,6 +57,10 @@ Cell.prototype.getSize = function() {
     return Math.sqrt(100 * this.mass) + .1;
 }
 
+Cell.prototype.addMass = function(n) {
+    this.mass = Math.min(this.mass + n,this.owner.gameServer.config.playerMaxMass);
+}
+
 Cell.prototype.getSpeed = function() {
 	// Custom speed formula
 	var speed = 5 + (35 * (1 - (this.mass/(200+this.mass))));

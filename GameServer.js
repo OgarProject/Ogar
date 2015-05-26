@@ -41,7 +41,8 @@ function GameServer(port,gameType) {
     this.gameTypeStrings = ["Free For All","Teams"];
     
     this.config = {
-        maxConnections: 64, // Maximum amount of connections to the server. 
+        serverMaxConnections: 64, // Maximum amount of connections to the server. 
+        serverAllowMods: true, // Whether or not to allow clients with mods to connect
         foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds
         foodSpawnAmount: 5, // The amount of food to spawn per interval
         foodMaxAmount: 500, // Maximum food cells on the map
@@ -55,6 +56,7 @@ function GameServer(port,gameType) {
         ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
         ejectSpeed: 200, // Base speed of ejected cells
         playerStartMass: 10, // Starting mass of the player cell. Large values may cause problens when clients connect.
+        playerMaxMass: 22500, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
@@ -106,7 +108,7 @@ GameServer.prototype.start = function() {
     this.socketServer.on('connection', connectionEstablished.bind(this));
 
     function connectionEstablished(ws) {
-        if (this.clients.length > this.config.maxConnections) {
+        if (this.clients.length > this.config.serverMaxConnections) {
             ws.close();
             console.log("[Game] Client tried to connect, but server player limit has been reached!");
             return;
@@ -315,14 +317,14 @@ GameServer.prototype.updateMoveEngine = function() {
                 
             switch (n) {
                 case 3: // Ejected Mass
-                    cell.mass += this.config.ejectMassGain;
+                    cell.addMass(this.config.ejectMassGain);
                     break;                      	
                 case 0: // Player Cell
-                    cell.mass += list[j].mass;
+                    cell.addMass(list[j].mass);
                     break;
                 case 1: // Food
                     this.currentFood--;
-                    cell.mass += this.config.foodMass;
+                    cell.addMass(this.config.foodMass);
                     break;
                 case 2: // Virus - viruses do not give mass when eaten
                     this.virusCheck();
