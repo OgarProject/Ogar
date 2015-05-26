@@ -135,7 +135,7 @@ PlayerTracker.prototype.update = function() {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var range = 1000;
+    var range = 1250;
     var len = this.cells.length;
     
     for (var i = 0; i < len;i++) {
