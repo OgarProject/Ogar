@@ -9,7 +9,6 @@ function PlayerTracker(gameServer, socket) {
     this.socket = socket;
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
-    //this.cell = null; Depreciated, use this.cells instead
     this.cells = [];
     this.score = 0; // Needed for leaderboard
 
