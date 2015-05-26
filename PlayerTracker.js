@@ -135,7 +135,7 @@ PlayerTracker.prototype.update = function() {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var range = 900;
+    var range = 1000;
     var len = this.cells.length;
     
     for (var i = 0; i < len;i++) {
@@ -144,7 +144,7 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
             continue;
         }
     	
-        range += (this.cells[i].mass + 100);
+        range += ((this.cells[i].getSize() * 2) + 50);
     }
     this.sightRange = range;
 }
@@ -194,8 +194,6 @@ PlayerTracker.prototype.calcViewBox = function() {
 		if (node.collisionCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
 			// Cell is in range of viewBox
 			newVisible.push(node);
-			
-			//
 		}
     }
 	return newVisible;
