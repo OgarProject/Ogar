@@ -24,7 +24,7 @@ function GameServer(port,gameType) {
         top: 0,
         bottom: 6000.0
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
-    this.lastNodeId = 0;
+    this.lastNodeId = 1;
     this.clients = [];
     this.port = port;
     this.nodes = [];
@@ -154,7 +154,7 @@ GameServer.prototype.getGameType = function() {
 GameServer.prototype.getNextNodeId = function() {
 	// Resets integer
     if (this.lastNodeId > 2147483647) {
-        this.lastNodeId = 0;
+        this.lastNodeId = 1;
     }
     return this.lastNodeId++;
 }
