@@ -24,7 +24,7 @@ function GameServer(port,gameType) {
         top: 0,
         bottom: 6000.0
     }; // Right: X increases, Down: Y increases (as of 2015-05-20)
-    this.lastNodeId = 1;
+    this.lastNodeId = 0;
     this.clients = [];
     this.port = port;
     this.nodes = [];
@@ -34,7 +34,6 @@ function GameServer(port,gameType) {
     this.nodesTeam = []; // Teams
     
     this.currentFood = 0;
-    this.currentViruses = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     
@@ -42,28 +41,29 @@ function GameServer(port,gameType) {
     this.gameTypeStrings = ["Free For All","Teams"];
     
     this.config = {
-    	foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
-    	foodSpawnAmount: 5, // The amount of food to spawn per interval
-    	foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
-    	foodMass: 1, // Starting food size (In mass)
-    	virusMinAmount: 10, // Minimum amount of viruses on the map. 
-    	virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
-    	virusStartMass: 100.0, // Starting virus size (In mass)
-    	virusBurstMass: 198.0, // Viruses explode past this size
-    	ejectMass: 16, // Mass of ejected cells
-    	ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
-    	ejectSpeed: 200, // Base speed of ejected cells
-    	playerStartMass: 10, // Starting mass of the player cell
-    	playerMinMassEject: 32, // Mass required to eject a cell
-    	playerMinMassSplit: 36, // Mass required to split
-    	playerMaxCells: 16, // Max cells the player is allowed to have
-    	playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
-    	playerMassDecayRate: .0002, // Amount of mass lost per tick (Multplier) (1 tick = 200 milliseconds)
-    	playerMinMassDecay: 9, // Minimum mass for decay to occur
-    	playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
-    	leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
-    	leaderboardUpdateClient: 20, // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
-    	teamAmount: 3, // Amount of teams for team mode. This has no effect on other modes. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue)
+        maxConnections: 64, // Maximum amount of connections to the server. 
+        foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds (Placeholder number)
+        foodSpawnAmount: 5, // The amount of food to spawn per interval
+        foodMaxAmount: 500, // Maximum food cells on the map (Placeholder number)
+        foodMass: 1, // Starting food size (In mass)
+        virusMinAmount: 10, // Minimum amount of viruses on the map. 
+        virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
+        virusStartMass: 100.0, // Starting virus size (In mass)
+        virusBurstMass: 198.0, // Viruses explode past this size
+        ejectMass: 16, // Mass of ejected cells
+        ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
+        ejectSpeed: 200, // Base speed of ejected cells
+        playerStartMass: 10, // Starting mass of the player cell
+        playerMinMassEject: 32, // Mass required to eject a cell
+        playerMinMassSplit: 36, // Mass required to split
+        playerMaxCells: 16, // Max cells the player is allowed to have
+        playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
+        playerMassDecayRate: .0002, // Amount of mass lost per tick (Multplier) (1 tick = 200 milliseconds)
+        playerMinMassDecay: 9, // Minimum mass for decay to occur
+        playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
+        leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
+        leaderboardUpdateClient: 20, // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
+        teamAmount: 3, // Amount of teams for team mode. This has no effect on other modes. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue)
         teamMassDecay: 1.5 // Multiplier for mass decay in team mode 
     };
 	
@@ -87,7 +87,7 @@ GameServer.prototype.start = function() {
         
         // Spawning
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
-        this.virusCheck(0);
+        this.virusCheck();
         //setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate); // Old code
         
         // Move engine
@@ -137,6 +137,12 @@ GameServer.prototype.start = function() {
         ws.on('error', close.bind(bindObject));
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
+        
+        if (this.clients.length > this.config.maxConnections) {
+            ws.close();
+            console.log("[Game] Client tried to connect, but server player limit has been reached!");
+            return;
+        }
     }
 }
 
@@ -145,6 +151,10 @@ GameServer.prototype.getGameType = function() {
 }
 
 GameServer.prototype.getNextNodeId = function() {
+	// Resets integer
+    if (this.lastNodeId > 2147483647) {
+        this.lastNodeId = 0;
+    }
     return this.lastNodeId++;
 }
 
@@ -175,7 +185,7 @@ GameServer.prototype.getTeamColor = function(team) {
 }
 
 GameServer.prototype.addNode = function(node) {
-    this.nodes[node.nodeId] = node;
+    this.nodes.push(node);
     
     switch (node.getType()) {
 		case 0: // Add to special player controlled node list
@@ -256,20 +266,24 @@ GameServer.prototype.spawnFood = function() {
 }
 
 GameServer.prototype.spawnVirus = function() { // Depreciated 
-    if (this.currentViruses < this.config.virusMaxAmount) {
+    if (this.nodesVirus.length < this.config.virusMaxAmount) {
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
-        this.currentViruses++;
     }
 }
 
-GameServer.prototype.virusCheck = function(n) {
+GameServer.prototype.virusCheck = function() {
     // Checks if there are enough viruses on the map
-    this.currentViruses -= n;
-    while (this.currentViruses < this.config.virusMinAmount) {
+    while (this.nodesVirus.length < this.config.virusMinAmount) {
+        if (this.nodesVirus.length > this.config.virusMaxAmount) {
+            console.log("[Game] Warning! Server is trying to spawn more viruses than the limit allows!");
+            //console.log("[Debug] Current Node Id: " + this.lastNodeId);
+            break;
+        }
+    	
+    	// Spawns a virus
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
-        this.currentViruses++;
     }
 }
 
@@ -304,7 +318,7 @@ GameServer.prototype.updateMoveEngine = function() {
                     cell.mass += this.config.foodMass;
                     break;
                 case 2: // Virus - viruses do not give mass when eaten
-                    this.virusCheck(1);
+                    this.virusCheck();
                     // Split formula
                     var maxSplits = Math.floor(cell.mass/16) - 1; // Maximum amount of splits
                     var numSplits = this.config.playerMaxCells - client.cells.length; // Get number of splits
@@ -361,7 +375,7 @@ GameServer.prototype.updateMoveEngine = function() {
         if (check.getMoveTicks() > 0) {
             // If the cell has enough move ticks, then move it
             check.calcMovePhys(this.border);
-            if ((check.getType() == 3) && (this.currentViruses < this.config.virusMaxAmount)) {
+            if ((check.getType() == 3) && (this.nodesVirus.length < this.config.virusMaxAmount)) {
                 // Check for viruses
                 var v = this.getNearestVirus(check);
                 if (v) {
@@ -426,7 +440,6 @@ GameServer.prototype.shootVirus = function(parent) {
     // Add to moving cells list
     this.addNode(newVirus);
     this.setAsMovingNode(newVirus);
-    this.currentViruses++;
 }
 
 GameServer.prototype.getCellsInRange = function(cell) {
