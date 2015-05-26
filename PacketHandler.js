@@ -4,6 +4,7 @@ var Packet = require('./packet');
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
+    this.properInit = false;
 }
 
 module.exports = PacketHandler;
@@ -24,6 +25,12 @@ PacketHandler.prototype.handleMessage = function(message) {
     var buffer = stobuf(message);
     var view = new DataView(buffer);
     var packetId = view.getUint8(0, true);
+    
+    if (packetId != 254 && !this.properInit)
+    {
+        console.log("[Game] Client at %s tried to connect with mods enabled.", this.socket.remoteAddress);
+        this.socket.close();
+    }
 
     switch (packetId) {
         case 0:
@@ -124,6 +131,9 @@ PacketHandler.prototype.handleMessage = function(message) {
                 this.gameServer.addNode(ejected);
                 this.gameServer.setAsMovingNode(ejected);
             }
+            break;
+        case 254:
+            this.properInit = true;
             break;
         case 255:
             // Connection
