@@ -64,6 +64,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 }
 
                 if (!cell) {
+                    console.log("[Warning] Tried to split a non existing cell.");
                     continue;
                 }
                 

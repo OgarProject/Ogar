@@ -223,11 +223,21 @@ GameServer.prototype.removeNode = function(node) {
         case 0: // Remove from owning player's cell list
             var owner = node.owner;
             // Remove from player screen
-            owner.cells.splice(owner.cells.indexOf(node), 1);
+            index = owner.cells.indexOf(node);
+            if (index != -1) {
+                owner.cells.splice(index, 1);
+            } else {
+                console.log("[Warning] Tried to remove a non existant cell from cell list.");
+            }
+            // Remove from visible list
             owner.visibleNodes.splice(owner.visibleNodes.indexOf(node), 1);
-            //owner.nodeDestroyQueue.push(node); 
             // Remove from special player controlled node list
-            this.nodesPlayer.splice(this.nodesPlayer.indexOf(node), 1);
+            index = this.nodesPlayer.indexOf(node);
+            if (index != -1) {
+                this.nodesPlayer.splice(index, 1);
+            } else {
+                console.log("[Warning] Tried to remove a non existant cell from player nodes.");
+            }
             // Teams
             if (this.gameType == 1) {
                 this.nodesTeam[owner.getTeam()].splice(this.nodesTeam.indexOf(node), 1);
