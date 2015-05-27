@@ -2,7 +2,7 @@ var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
-    this.initialized = false;
+    this.isOnline = true;
     this.name = "";
     this.color = gameServer.getRandomColor();
     this.gameServer = gameServer;
@@ -40,6 +40,16 @@ function PlayerTracker(gameServer, socket) {
 }
 
 module.exports = PlayerTracker;
+
+// Setters/Getters
+
+PlayerTracker.prototype.setStatus = function(bool) {
+    this.isOnline = bool;
+}
+
+PlayerTracker.prototype.getStatus = function() {
+    return this.isOnline;
+}
 
 PlayerTracker.prototype.setName = function(name) {
     this.name = name;
@@ -98,11 +108,6 @@ PlayerTracker.prototype.setBorder = function() {
 }
 
 PlayerTracker.prototype.update = function() {
-    if (!this.initialized) {
-        this.nodeAdditionQueue = this.gameServer.nodes.slice(0);
-        this.initialized = true;
-    }
-    
     // Update and destroy nodes (Obsolete)
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
@@ -135,7 +140,7 @@ PlayerTracker.prototype.update = function() {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var range = 1250;
+    var range = 1200;
     var len = this.cells.length;
     
     for (var i = 0; i < len;i++) {
