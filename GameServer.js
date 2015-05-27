@@ -110,7 +110,8 @@ GameServer.prototype.start = function() {
             if (index != -1) {
                 this.server.clients.splice(index, 1);
             }
-
+            
+            /* Obsolete
             if (this.socket.playerTracker.cells.length > 0) {
                 var len = this.socket.playerTracker.cells.length;
                 for (var i = 0; i < len; i++) {
@@ -123,6 +124,10 @@ GameServer.prototype.start = function() {
                     this.server.removeNode(cell);
                 }
             }
+            */
+            
+            // Switch online flag off
+            this.socket.playerTracker.setStatus(false);
         }
 
         console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
@@ -299,6 +304,13 @@ GameServer.prototype.updateMoveEngine = function() {
         }
     		
         var client = cell.owner;
+        
+        // If cell's owner is offline, remove this cell
+        if (!client.getStatus()) {
+            this.removeNode(cell);
+            continue;
+        }
+        
         cell.calcMove(client.getMouseX(), client.getMouseY(), this);
             
         // Check if cells nearby (Still buggy)
