@@ -1,12 +1,3 @@
-// Library imports
-var WebSocket = require('ws');
-
-// Project imports
-var Packet = require('./packet');
-var PlayerTracker = require('./PlayerTracker');
-var PacketHandler = require('./PacketHandler');
-var Cell = require('./Cell');
-
 //Library imports
 var WebSocket = require('ws');
 
@@ -34,6 +25,7 @@ function GameServer(port,gameType) {
     this.nodesTeam = []; // Teams
     
     this.currentFood = 0;
+    this.currentViruses = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     
@@ -47,7 +39,6 @@ function GameServer(port,gameType) {
         foodSpawnAmount: 5, // The amount of food to spawn per interval
         foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
-        virusSpawnRate: 10000, // The interval between each virus spawn in milliseconds (viruses will spawn until virusMinAmount is reached)
         virusMinAmount: 10, // Minimum amount of viruses on the map. 
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100.0, // Starting virus size (In mass)
@@ -90,8 +81,7 @@ GameServer.prototype.start = function() {
         
         // Spawning
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
-        //this.virusCheck();
-        setInterval(this.spawnVirus.bind(this), this.config.virusSpawnRate); // Old code
+        this.virusCheck();
         
         // Move engine
         setInterval(this.updateMoveEngine.bind(this), 100);
@@ -273,17 +263,19 @@ GameServer.prototype.spawnFood = function() {
     }    
 }
 
+/*
 GameServer.prototype.spawnVirus = function() {
     if (this.nodesVirus.length < this.config.virusMinAmount) {
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
         this.addNode(f);
     }
 }
+*/
 
-GameServer.prototype.virusCheck = function() { // Buggy code?
+GameServer.prototype.virusCheck = function() {
     // Checks if there are enough viruses on the map
-    while (this.nodesVirus.length < this.config.virusMinAmount) {
-        if (this.nodesVirus.length > this.config.virusMaxAmount) {
+    while (this.currentViruses < this.config.virusMinAmount) {
+        if (this.currentViruses > this.config.virusMaxAmount) {
             console.log("[Game] Warning! Server is trying to spawn more viruses than the limit allows!");
             //console.log("[Debug] Current Node Id: " + this.lastNodeId);
             break;
@@ -291,8 +283,8 @@ GameServer.prototype.virusCheck = function() { // Buggy code?
         
     	// Spawns a virus
         var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
+        this.currentViruses++;
         this.addNode(f);
-        //console.log("[Debug] Current Viruses: " + this.nodesVirus.length);
     }
 }
 
@@ -327,7 +319,6 @@ GameServer.prototype.updateMoveEngine = function() {
                     cell.addMass(this.config.foodMass);
                     break;
                 case 2: // Virus - viruses do not give mass when eaten
-                    this.virusCheck();
                     // Split formula
                     var maxSplits = Math.floor(cell.mass/16) - 1; // Maximum amount of splits
                     var numSplits = this.config.playerMaxCells - client.cells.length; // Get number of splits
@@ -370,6 +361,7 @@ GameServer.prototype.updateMoveEngine = function() {
             this.removeNode(list[j]); 
         }
     }
+    this.virusCheck();
 	// A system to move cells not controlled by players (ex. viruses, ejected mass)
     for (var i = 0; i < this.movingNodes.length; i++) {
         var check = this.movingNodes[i];
@@ -387,7 +379,7 @@ GameServer.prototype.updateMoveEngine = function() {
         if (check.getMoveTicks() > 0) {
             // If the cell has enough move ticks, then move it
             check.calcMovePhys(this.border);
-            if ((check.getType() == 3) && (this.nodesVirus.length < this.config.virusMaxAmount)) {
+            if ((check.getType() == 3) && (this.currentViruses < this.config.virusMaxAmount)) {
                 // Check for viruses
                 var v = this.getNearestVirus(check);
                 if (v) {
@@ -450,6 +442,7 @@ GameServer.prototype.shootVirus = function(parent) {
     newVirus.setMoveEngineData(175, 10);
 	
     // Add to moving cells list
+    this.currentViruses++;
     this.addNode(newVirus);
     this.setAsMovingNode(newVirus);
 }
@@ -667,6 +660,13 @@ GameServer.prototype.updateCells = function(){
             decay = (this.gameType == 1) ? decay * this.config.teamExtraMassDecay : decay ;
         	
             cell.mass *= (1 - this.config.playerMassDecayRate);
+        }
+    }
+    // Get current viruses
+    this.currentViruses = 0;
+    for (var i = 0; i < this.nodes.length; i++) { 
+        if (this.nodes[i].getType() == 2) {
+            this.currentViruses++;
         }
     }
 }
