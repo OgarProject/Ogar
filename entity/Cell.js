@@ -1,16 +1,15 @@
-function Cell(nodeId, owner, position, mass, type) {
+function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
     this.color = {r: 0, g: 255, b: 0};
     this.position = position;
-    this.size = 0; // Radius of the cell - Depreciated, use getSize() instead
     this.mass = mass; // Starting mass of the cell
-    this.speed = 30; // Filler, will be changed later
-    this.cellType = type; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
+    this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     
     this.killedBy; // Cell that ate this cell
     this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
     this.ignoreCollision = false;
+    this.gameServer = gameServer;
     
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
@@ -20,6 +19,7 @@ function Cell(nodeId, owner, position, mass, type) {
         this.setColor(this.owner.color);
         this.owner.cells.push(this); // Add to cells list of the owner 
     } 
+    
 }
 
 module.exports = Cell;
@@ -46,10 +46,6 @@ Cell.prototype.getColor = function() {
 
 Cell.prototype.getType = function() {
     return this.cellType;
-}
-
-Cell.prototype.getPos = function() {
-    return this.position;
 }
 
 Cell.prototype.getSize = function() {
@@ -164,14 +160,14 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
-                var newDeltaY = cell.getPos().y - y1;
-                var newDeltaX = cell.getPos().x - x1;
+                var newDeltaY = cell.position.y - y1;
+                var newDeltaX = cell.position.x - x1;
                 var newAngle = Math.atan2(newDeltaX,newDeltaY);
                 
                 var move = collisionDist - dist + 5;
                 
-                cell.position.x = cell.getPos().x + ( move * Math.sin(newAngle) );
-                cell.position.y = cell.getPos().y + ( move * Math.cos(newAngle) );
+                cell.position.x = cell.position.x + ( move * Math.sin(newAngle) );
+                cell.position.y = cell.position.y + ( move * Math.cos(newAngle) );
             }
         }
     }
@@ -197,14 +193,14 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
                 // Calculations
                 if (dist < collisionDist) { // Collided
                     // The moving cell pushes the colliding cell
-                    var newDeltaY = check.getPos().y - y1;
-                    var newDeltaX = check.getPos().x - x1;
+                    var newDeltaY = check.position.y - y1;
+                    var newDeltaX = check.position.x - x1;
                     var newAngle = Math.atan2(newDeltaX,newDeltaY);
                     
                     var move = collisionDist - dist;
                     
-                    check.position.x = check.getPos().x + ( move * Math.sin(newAngle) );
-                    check.position.y = check.getPos().y + ( move * Math.cos(newAngle) );
+                    check.position.x = check.position.x + ( move * Math.sin(newAngle) );
+                    check.position.y = check.position.y + ( move * Math.cos(newAngle) );
                 }
             }
         }
@@ -265,3 +261,16 @@ Cell.prototype.calcMovePhys = function(border) {
     this.position.y = Y;  
 }
 
+// Override these
+
+Cell.prototype.onConsume = function(consumer,gameServer) {
+    // Called when the cell is consumed
+}
+
+Cell.prototype.onAdd = function(gameServer) {
+    // Called when this cell is added to the world
+}
+
+Cell.prototype.onRemove = function(gameServer) {
+    // Called when this cell is removed
+}
