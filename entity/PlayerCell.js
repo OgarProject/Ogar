@@ -16,11 +16,10 @@ PlayerCell.prototype.onConsume = function(consumer,gameServer) {
 }
 
 PlayerCell.prototype.onAdd = function(gameServer) {
+    // Add to special player node list
     gameServer.nodesPlayer.push(this);
-    // Teams
-    if (gameServer.gameType == 1) {
-        gameServer.nodesTeam[this.owner.getTeam()].push(this);
-    }
+    // Gamemode actions
+    gameServer.gameMode.onCellAdd(this);
 }
 
 PlayerCell.prototype.onRemove = function(gameServer) {
@@ -44,8 +43,6 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     } else {
         console.log("[Warning] Tried to remove a non existant cell from player nodes.");
     }
-    // Teams
-    if (gameServer.gameType == 1) {
-        gameServer.nodesTeam[this.owner.getTeam()].splice(gameServer.nodesTeam.indexOf(this), 1);
-    }
+    // Gamemode actions
+    gameServer.gameMode.onCellRemove(this);
 }

@@ -173,7 +173,7 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
     }
     
     // Team collision
-    if (gameServer.getGameType() == 1) {
+    if (gameServer.gameMode.haveTeams) {
         var team = this.owner.getTeam();
  
         // Find team

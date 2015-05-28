@@ -8,7 +8,7 @@ var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 
 // GameServer implementation
-function GameServer(port,gameType) {
+function GameServer(port,gameMode) {
     this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
         left: 0,
         right: 6000.0,
@@ -22,14 +22,11 @@ function GameServer(port,gameType) {
     this.nodesVirus = []; // Virus nodes
     this.nodesPlayer = []; // Nodes controlled by players
     
-    this.nodesTeam = []; // Teams
-    
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     
-    this.gameType = gameType; // 0 = FFA, 1 = Teams
-    this.gameTypeStrings = ["Free For All","Teams"];
+    this.gameMode = gameMode;
     
     this.config = {
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
@@ -52,28 +49,22 @@ function GameServer(port,gameType) {
         playerMaxCells: 16, // Max cells the player is allowed to have
         playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
         playerMassDecayRate: .0004, // Amount of mass lost per tick (Multiplier) (1 tick = 200 milliseconds)
-        playerMinMassDecay: 10, // Minimum mass for decay to occur
+        playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
         leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
-        leaderboardUpdateClient: 20, // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
-        teamAmount: 3, // Amount of teams for team mode. This has no effect on other modes. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue)
-        teamMassDecay: 1.5 // Multiplier for mass decay in team mode 
+        leaderboardUpdateClient: 20 // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
     };
 	
     this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
-    this.colorsTeam =  [{'r':245,'b':0,'g':0},{'r':0,'b':0,'g':245},{'r':0,'b':245,'g':0}]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
-    
-    if (this.gameType == 1) {
-        // Set up teams
-        for (var i = 0; i < this.config.teamAmount; i++) {
-            this.nodesTeam[i] = [];
-        }
-    }
 }
 
 module.exports = GameServer;
 
 GameServer.prototype.start = function() {
+    // Gamemode configurations
+    this.gameMode.onServerInit(this);
+	
+    // Start the server
     this.socketServer = new WebSocket.Server({ port: this.port }, function() {
         // Update player
         setInterval(this.updateAll.bind(this), 100);
@@ -91,7 +82,7 @@ GameServer.prototype.start = function() {
         
         // Done
         console.log("[Game] Listening on port %d", this.port);
-        console.log("[Game] Current game mode is "+this.gameTypeStrings[this.gameType]);
+        console.log("[Game] Current game mode is "+this.gameMode.name);
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -128,8 +119,8 @@ GameServer.prototype.start = function() {
     }
 }
 
-GameServer.prototype.getGameType = function() {
-    return this.gameType;
+GameServer.prototype.getMode = function() {
+    return this.gameMode;
 }
 
 GameServer.prototype.getNextNodeId = function() {
@@ -150,15 +141,6 @@ GameServer.prototype.getRandomPosition = function() {
 GameServer.prototype.getRandomColor = function() {
     var index = Math.floor(Math.random() * this.colors.length);
     var color = this.colors[index];
-    return {
-        r: color.r,
-        b: color.b,
-        g: color.g
-    };
-}
-
-GameServer.prototype.getTeamColor = function(team) {
-    var color = this.colorsTeam[team];
     return {
         r: color.r,
         b: color.b,
@@ -368,6 +350,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
             continue;
         }
         
+        // AABB Collision
         if (!check.collisionCheck(bottomY,topY,rightX,leftX)) {
             continue;
         }
@@ -385,7 +368,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
             case 0: // Players
                 multiplier = check.owner == cell.owner ? 1.00 : multiplier;
                 // Can't eat team members
-                if (this.gameType == 1) {
+                if (this.gameMode.haveTeams) {
                     if (!check.owner) { // Error check
                         continue;
                     }
@@ -452,87 +435,10 @@ GameServer.prototype.getNearestVirus = function(cell) {
 }
 
 GameServer.prototype.updateLeaderboard = function() {
-    this.leaderboard = []; // Clear the leaderboard first
-    
-    switch (this.gameType) {
-        case 0: // FFA
-            for (var i = 0; i < this.clients.length; i++) {
-                if (typeof this.clients[i] == "undefined") {
-                    continue;
-                }
-
-                var player = this.clients[i].playerTracker;
-                var playerScore = player.getScore(true);
-                if (player.cells.length <= 0) {
-                    continue;
-                }
-                
-                if (this.leaderboard.length == 0) {
-                    // Initial player
-                    this.leaderboard.push(player);
-                    continue;
-                } else if (this.leaderboard.length < 10) {
-                    this.leaderboardAddSort(player);
-                } else {
-                    // 10 in leaderboard already
-                    if (playerScore > this.leaderboard[9].getScore(false)) {
-                        this.leaderboard.pop();
-                        this.leaderboardAddSort(player);
-                    }
-                }
-            }
-            break;
-        case 1: // Teams
-            var total = 0;
-            var teamMass = [];
-            // Get mass
-            for (var i = 0; i < this.config.teamAmount; i++) {
-                // Set starting mass
-                teamMass[i] = 0;
-        		
-                // Loop through cells
-                for (var j = 0; j < this.nodesTeam[i].length;j++) {
-                    var cell = this.nodesTeam[i][j];
-        			
-                    if (!cell) {
-                        continue;
-                    }
-        			
-                    teamMass[i] += cell.mass;
-                    total += cell.mass;
-                }
-            }
-            // Calc percentage
-            for (var i = 0; i < this.config.teamAmount; i++) {
-                // No players
-                if (total <= 0) {
-                    continue;
-                }
-            	
-                this.leaderboard[i] = teamMass[i]/total;
-            }
-            break;
-        default:
-            break;
-    }
-}
-
-GameServer.prototype.leaderboardAddSort = function(player) {
-    // Adds the player and sorts the leaderboard
-    var len = this.leaderboard.length - 1;
-    var loop = true;
-    while ((len >= 0) && (loop)) {
-        // Start from the bottom of the leaderboard
-        if (player.getScore(false) <= this.leaderboard[len].getScore(false)) {
-            this.leaderboard.splice(len + 1, 0, player);
-            loop = false; // End the loop if a spot is found
-        }
-        len--;
-    }
-    if (loop) {
-        // Add to top of the list because no spots were found
-        this.leaderboard.splice(0, 0,player);
-    }
+    // Clear the leaderboard first
+    this.leaderboard = []; 
+    // Update leaderboard with the gamemode's method
+    this.gameMode.updateLB(this);
 }
 
 GameServer.prototype.updateCells = function(){
@@ -548,8 +454,8 @@ GameServer.prototype.updateCells = function(){
         if (cell.mass > this.config.playerMinMassDecay) {
             var decay = 0;
         	
-            // Teams
-            decay = (this.gameType == 1) ? decay * this.config.teamExtraMassDecay : decay ;
+            // Gamemode modifiers
+            decay = decay * this.gameMode.decayMod;
         	
             cell.mass *= (1 - this.config.playerMassDecayRate);
         }

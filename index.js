@@ -1,3 +1,5 @@
+var GameMode = require('./gamemodes');
+
 if (process.argv.length < 4) {
     console.log("Ogar - an open source Agar.io server implementation");
     console.log("Usage: %s %s [--master] [--game] [gamemode]", process.argv[0], process.argv[1]);
@@ -14,7 +16,7 @@ if (process.argv.length < 4) {
 
 var runMaster = false;
 var runGame = false;
-var gameType = 0; // FFA by default
+var mode;
 
 process.argv.forEach(function(val) {
     if (val == "--master") {
@@ -24,7 +26,10 @@ process.argv.forEach(function(val) {
     } 
     // Gamemodes
     if (val == 1) {
-        gameType = 1;
+        mode = new GameMode.Teams();
+    } else if (val == 2) {
+        mode = new GameMode.Custom();
+    } else {
     }
 });
 
@@ -38,6 +43,6 @@ if (runMaster) {
 if (runGame) {
     // Initialize the game server
     var GameServer = require('./GameServer');
-    var game = new GameServer(443,gameType);
+    var game = new GameServer(443,mode);
     game.start();
 }
