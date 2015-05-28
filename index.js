@@ -30,6 +30,7 @@ process.argv.forEach(function(val) {
     } else if (val == 2) {
         mode = new GameMode.Custom();
     } else {
+        mode = new GameMode.FFA();
     }
 });
 
