@@ -225,7 +225,7 @@ GameServer.prototype.spawnFood = function() {
 GameServer.prototype.virusCheck = function() {
     // Checks if there are enough viruses on the map
     while (this.nodesVirus.length < this.config.virusMinAmount) {
-    	// Spawns a virus
+        // Spawns a virus
         var v = new Entity.Virus(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass);
         this.addNode(v);
     }
@@ -307,7 +307,7 @@ GameServer.prototype.setAsMovingNode = function(node) {
 
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass, speed) {
     // Starting position
-	var startPos = {
+    var startPos = {
         x: parent.position.x, 
         y: parent.position.y
     };

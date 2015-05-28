@@ -69,7 +69,7 @@ Virus.prototype.onAdd = function(gameServer) {
 
 Virus.prototype.onRemove = function(gameServer) {
     var index = gameServer.nodesVirus.indexOf(this);
-	if (index != -1) {
+    if (index != -1) {
         gameServer.nodesVirus.splice(index, 1);
     } else {
         console.log("[Warning] Tried to remove a non existing virus!");

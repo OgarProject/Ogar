@@ -151,7 +151,7 @@ PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // If client has no cells...
-    	var pos = this.gameServer.getRandomPosition();
+        var pos = this.gameServer.getRandomPosition();
         var cell = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, pos, this.gameServer.config.playerStartMass);
         this.gameServer.addNode(cell);
         

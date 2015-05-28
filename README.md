@@ -16,6 +16,7 @@ The project is nearly complete. Here's a rough list of what's been done and what
 - [x] Team mode
 
 ## Known Issues
+- [General] Spectator mode is not working
 - [General] Several formulas for calculating variables (ex. speed) are incorrect
 - [Team] Cells just block their team mates when colliding, instead of pushing them a little
 
