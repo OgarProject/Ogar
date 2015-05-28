@@ -1,6 +1,6 @@
-function UpdateLeaderboard(leaderboard, gameType) {
+function UpdateLeaderboard(leaderboard, packetLB) {
     this.leaderboard = leaderboard;
-    this.gameType = gameType;
+    this.packetLB = packetLB;
 }
 
 module.exports = UpdateLeaderboard;
@@ -11,8 +11,8 @@ UpdateLeaderboard.prototype.build = function() {
     var bufferSize = 5;
     var validElements = 0;
     
-    switch (this.gameType) {
-        case 0: // FFA
+    switch (this.packetLB) {
+        case 49: // FFA-type Packet (List)
         	// Get size of packet            
             for (var i = 0; i < lb.length; i++) {
             	
@@ -32,7 +32,7 @@ UpdateLeaderboard.prototype.build = function() {
             var view = new DataView(buf);
             
             // Set packet data
-            view.setUint8(0, 49, true); // Packet ID
+            view.setUint8(0, this.packetLB, true); // Packet ID
             view.setUint32(1, validElements, true); // Number of elements
             
             var offset = 5;
@@ -58,14 +58,14 @@ UpdateLeaderboard.prototype.build = function() {
                 offset += 2;
             }
             return buf;
-        case 1: // Teams
+        case 50: // Teams-type Packet (Pie Chart)
             validElements = lb.length;
             bufferSize += (validElements * 4);
         	
             var buf = new ArrayBuffer(bufferSize);
             var view = new DataView(buf);
             
-            view.setUint8(0, 50, true); // Packet ID
+            view.setUint8(0, this.packetLB, true); // Packet ID
             view.setUint32(1, validElements, true); // Number of elements
             
             var offset = 5;

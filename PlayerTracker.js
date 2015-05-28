@@ -32,11 +32,8 @@ function PlayerTracker(gameServer, socket) {
         rightX: 0
     }
     
-    if (gameServer.getGameType() == 1) {
-        // Get random team
-        this.team = Math.floor(Math.random() * gameServer.config.teamAmount);
-        this.color = gameServer.getTeamColor(this.team);
-    }
+    // Gamemode function
+    gameServer.gameMode.onPlayerInit(this);
 }
 
 module.exports = PlayerTracker;
@@ -129,7 +126,7 @@ PlayerTracker.prototype.update = function() {
 
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
-        this.socket.sendPacket(new Packet.UpdateLeaderboard(this.gameServer.leaderboard,this.gameServer.getGameType()));
+        this.socket.sendPacket(new Packet.UpdateLeaderboard(this.gameServer.leaderboard,this.gameServer.gameMode.packetLB));
         this.tickLeaderboard = this.gameServer.config.leaderboardUpdateClient;
     } else {
         this.tickLeaderboard--;

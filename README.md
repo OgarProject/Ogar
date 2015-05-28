@@ -16,6 +16,7 @@ The project is nearly complete. Here's a rough list of what's been done and what
 - [x] Team mode
 
 ## Known Issues
+- [General] Spectator mode is not working
 - [General] Several formulas for calculating variables (ex. speed) are incorrect
 - [Team] Cells just block their team mates when colliding, instead of pushing them a little
 
@@ -29,7 +30,7 @@ Although Ogar allows you to run both the Agar.io master server and game server s
 ```sh
 ~$ git clone git://github.com/forairan/Ogar.git Ogar
 ~$ npm install ./Ogar
-~$ node Ogar --master --game
+~$ node Ogar --master --game 0
 ```
 
 Currently, Ogar listens on the following addresses and ports:
@@ -39,7 +40,7 @@ Currently, Ogar listens on the following addresses and ports:
 Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports.
 
 ## Configuring Ogar
-Ogar has a configurations field that can be modified. To do this, open up GameServer.js with a decent text editor (except for notepad), then go to line 35 to see the config values.
+Ogar has a configurations field that can be modified. To do this, open up GameServer.js with a decent text editor (except for notepad), then go to line 31 to see the config values.
 
 ## Contributing
 Please see [CONTRIBUTING.md](https://github.com/forairan/Ogar/blob/master/CONTRIBUTING.md) for contribution guidelines.

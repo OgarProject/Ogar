@@ -1,4 +1,4 @@
-var Cell = require('./Cell');
+var Entity = require('./entity');
 var Packet = require('./packet');
 
 function PacketHandler(gameServer, socket) {
@@ -64,6 +64,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 }
 
                 if (!cell) {
+                    console.log("[Warning] Tried to split a non existing cell.");
                     continue;
                 }
                 
@@ -72,21 +73,21 @@ PacketHandler.prototype.handleMessage = function(message) {
                 }
 				
                 // Get angle
-                var deltaY = client.getMouseY() - cell.getPos().y;
-                var deltaX = client.getMouseX() - cell.getPos().x;
+                var deltaY = client.getMouseY() - cell.position.y;
+                var deltaX = client.getMouseX() - cell.position.x;
                 var angle = Math.atan2(deltaX,deltaY);
             	
                 // Get starting position
                 var size = cell.getSize();
                 var startPos = {
-                    x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
-                    y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
+                    x: cell.position.x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+                    y: cell.position.y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
                 };
                 // Calculate mass of splitting cell
                 var newMass = cell.mass / 2;
                 cell.mass = newMass;
                 // Create cell
-                split = new Cell(this.gameServer.getNextNodeId(), client, startPos, newMass, 0);
+                split = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, startPos, newMass);
                 split.setAngle(angle);
                 split.setMoveEngineData(120 + cell.getSpeed(), 10);
                 split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
@@ -109,20 +110,20 @@ PacketHandler.prototype.handleMessage = function(message) {
                     continue;
                 }
 				
-                var deltaY = client.getMouseY() - cell.getPos().y;
-                var deltaX = client.getMouseX() - cell.getPos().x;
+                var deltaY = client.getMouseY() - cell.position.y;
+                var deltaX = client.getMouseX() - cell.position.x;
                 var angle = Math.atan2(deltaX,deltaY);
             	
                 // Get starting position
                 var size = cell.getSize() + 5;
                 var startPos = {
-                    x: cell.getPos().x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
-                    y: cell.getPos().y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
+                    x: cell.position.x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+                    y: cell.position.y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
                 };
                 // Remove mass from parent cell
                 cell.mass -= this.gameServer.config.ejectMass;
                 // Create cell
-                ejected = new Cell(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass, 3);
+                ejected = new Entity.EjectedMass(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass);
                 ejected.setAngle(angle);
                 ejected.setMoveEngineData(this.gameServer.config.ejectSpeed, 10);
                 ejected.setColor(cell.getColor());
@@ -150,8 +151,8 @@ PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // If client has no cells...
-    	var pos = this.gameServer.getRandomPosition();
-        var cell = new Cell(this.gameServer.getNextNodeId(), client, pos, this.gameServer.config.playerStartMass, 0);
+        var pos = this.gameServer.getRandomPosition();
+        var cell = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, pos, this.gameServer.config.playerStartMass);
         this.gameServer.addNode(cell);
         
         // Set initial mouse coords
