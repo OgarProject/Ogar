@@ -5,7 +5,7 @@ var WebSocket = require('ws');
 var Packet = require('./packet');
 var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
-var Cell = require('./Cell');
+var Entity = require('./entity');
 
 // GameServer implementation
 function GameServer(port,gameType) {
@@ -25,7 +25,6 @@ function GameServer(port,gameType) {
     this.nodesTeam = []; // Teams
     
     this.currentFood = 0;
-    this.currentViruses = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     
@@ -53,7 +52,7 @@ function GameServer(port,gameType) {
         playerMaxCells: 16, // Max cells the player is allowed to have
         playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
         playerMassDecayRate: .0004, // Amount of mass lost per tick (Multiplier) (1 tick = 200 milliseconds)
-        playerMinMassDecay: 9, // Minimum mass for decay to occur
+        playerMinMassDecay: 10, // Minimum mass for decay to occur
         playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
         leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
         leaderboardUpdateClient: 20, // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
@@ -110,21 +109,6 @@ GameServer.prototype.start = function() {
             if (index != -1) {
                 this.server.clients.splice(index, 1);
             }
-            
-            /* Obsolete
-            if (this.socket.playerTracker.cells.length > 0) {
-                var len = this.socket.playerTracker.cells.length;
-                for (var i = 0; i < len; i++) {
-                    var cell = this.socket.playerTracker.cells[i];
-					
-                    if (!cell) {
-                        continue;
-                    }
-					
-                    this.server.removeNode(cell);
-                }
-            }
-            */
             
             // Switch online flag off
             this.socket.playerTracker.setStatus(false);
@@ -185,20 +169,8 @@ GameServer.prototype.getTeamColor = function(team) {
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
     
-    switch (node.getType()) {
-        case 0: // Add to special player controlled node list
-            this.nodesPlayer.push(node);
-            // Teams
-            if (this.gameType == 1) {
-                this.nodesTeam[node.owner.getTeam()].push(node);
-            }
-            break;
-        case 2: // Add to special virus node list
-            this.nodesVirus.push(node);
-            break;
-		default:
-            break;
-    }
+    // Special on-add actions
+    node.onAdd(this);
     
     // Adds to the owning player's screen
     if (node.owner){
@@ -219,37 +191,9 @@ GameServer.prototype.removeNode = function(node) {
     	this.movingNodes.splice(index, 1);
     }
     
-    switch (node.getType()) {
-        case 0: // Remove from owning player's cell list
-            var owner = node.owner;
-            // Remove from player screen
-            index = owner.cells.indexOf(node);
-            if (index != -1) {
-                owner.cells.splice(index, 1);
-            } else {
-                console.log("[Warning] Tried to remove a non existant cell from cell list.");
-            }
-            // Remove from visible list
-            owner.visibleNodes.splice(owner.visibleNodes.indexOf(node), 1);
-            // Remove from special player controlled node list
-            index = this.nodesPlayer.indexOf(node);
-            if (index != -1) {
-                this.nodesPlayer.splice(index, 1);
-            } else {
-                console.log("[Warning] Tried to remove a non existant cell from player nodes.");
-            }
-            // Teams
-            if (this.gameType == 1) {
-                this.nodesTeam[owner.getTeam()].splice(this.nodesTeam.indexOf(node), 1);
-            }
-            break;
-        case 2: // Remove from special virus node list
-            this.nodesVirus.splice(this.nodesVirus.indexOf(node), 1);
-        default:
-            // End the function
-            break;
-    }
-	
+	// Special on-remove actions
+    node.onRemove(this);
+    
     // Animation when eating
     if (node.getKiller()) {
         node.getKiller().owner.nodeDestroyQueue.push(node); 
@@ -269,7 +213,7 @@ GameServer.prototype.updateAll = function() {
 GameServer.prototype.spawnFood = function() {
     for (var i = 0; i < this.config.foodSpawnAmount; i++) {
         if (this.currentFood < this.config.foodMaxAmount) {
-            var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMass, 1);
+            var f = new Entity.Food(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMass);
             f.setColor(this.getRandomColor());
 			
             this.addNode(f);
@@ -278,34 +222,19 @@ GameServer.prototype.spawnFood = function() {
     }    
 }
 
-/*
-GameServer.prototype.spawnVirus = function() {
-    if (this.nodesVirus.length < this.config.virusMinAmount) {
-        var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
-        this.addNode(f);
-    }
-}
-*/
-
 GameServer.prototype.virusCheck = function() {
     // Checks if there are enough viruses on the map
-    while (this.currentViruses < this.config.virusMinAmount) {
-        if (this.currentViruses > this.config.virusMaxAmount) {
-            console.log("[Game] Warning! Server is trying to spawn more viruses than the limit allows!");
-            //console.log("[Debug] Current Node Id: " + this.lastNodeId);
-            break;
-        }
-        
+    while (this.nodesVirus.length < this.config.virusMinAmount) {
     	// Spawns a virus
-        var f = new Cell(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass, 2);
-        this.currentViruses++;
-        this.addNode(f);
+        var v = new Entity.Virus(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass);
+        this.addNode(v);
     }
 }
 
 GameServer.prototype.updateMoveEngine = function() {
     // Move player cells
-    for (var i = 0; i < this.nodesPlayer.length; i++) {
+    var len = this.nodesPlayer.length;
+    for (var i = 0; i < len; i++) {
         var cell = this.nodesPlayer[i];
     		
         // Do not move cells that have collision turned off
@@ -326,66 +255,19 @@ GameServer.prototype.updateMoveEngine = function() {
         // Check if cells nearby (Still buggy)
         var list = this.getCellsInRange(cell);
         for (var j = 0; j < list.length ; j++) {
-            //Remove the cells
-            var n = list[j].getType();
-                
-            switch (n) {
-                case 3: // Ejected Mass
-                    cell.addMass(this.config.ejectMassGain);
-                    break;                      	
-                case 0: // Player Cell
-                    cell.addMass(list[j].mass);
-                    break;
-                case 1: // Food
-                    this.currentFood--;
-                    cell.addMass(this.config.foodMass);
-                    break;
-                case 2: // Virus - viruses do not give mass when eaten
-                    // Split formula
-                    var maxSplits = Math.floor(cell.mass/16) - 1; // Maximum amount of splits
-                    var numSplits = this.config.playerMaxCells - client.cells.length; // Get number of splits
-                    numSplits = Math.min(numSplits,maxSplits);
-                    var splitMass = Math.min(cell.mass/(numSplits + 1), 32); // Maximum size of new splits
-                    
-                    // Big cells will split into cells larger than 32 mass (1/4 of their mass)
-                    var bigSplits = 0;
-                    var endMass = cell.mass - (numSplits * splitMass);
-                    if ((endMass > 300) && (numSplits > 0)) {
-                        bigSplits++;
-                        numSplits--;
-                    } 
-                    if ((endMass > 1200) && (numSplits > 0)) {
-                        bigSplits++;
-                        numSplits--;
-                    }
-                    
-                    // Splitting
-                    var angle = 0; // Starting angle
-                    for (var k = 0; k < numSplits; k++) {
-                        angle += 6/numSplits; // Get directions of splitting cells
-                        this.newCellVirused(client, cell, angle, splitMass,250);
-                        cell.mass -= splitMass;
-                    }
-                    
-                    for (var k = 0; k < bigSplits; k++) {
-                        angle = Math.random() * 6.2; // Random directions
-                        splitMass = cell.mass / 4;
-                        this.newCellVirused(client, cell, angle, splitMass,25);
-                        cell.mass -= splitMass;
-                    }
-                    break;
-                default:
-                    break;
-            }
+            var check = list[j];
+        	
+            // Consume effect
+            check.onConsume(cell,this);
             
             // Remove cell
-            list[j].setKiller(cell);
-            this.removeNode(list[j]); 
+            check.setKiller(cell);
+            this.removeNode(check); 
         }
     }
-    this.virusCheck();
 	// A system to move cells not controlled by players (ex. viruses, ejected mass)
-    for (var i = 0; i < this.movingNodes.length; i++) {
+    len = this.movingNodes.length;
+    for (var i = 0; i < len; i++) {
         var check = this.movingNodes[i];
     	
         // Recycle unused nodes
@@ -393,29 +275,18 @@ GameServer.prototype.updateMoveEngine = function() {
             // Remove moving cells that are undefined
             this.movingNodes.splice(i, 1);
             check = movingNodes[i];
-        }
-        if (i >= this.movingNodes.length) {
+        } if (i >= this.movingNodes.length) {
             continue;
         }
         
         if (check.getMoveTicks() > 0) {
             // If the cell has enough move ticks, then move it
             check.calcMovePhys(this.border);
-            if ((check.getType() == 3) && (this.currentViruses < this.config.virusMaxAmount)) {
+            if ((check.getType() == 3) && (this.nodesVirus.length < this.config.virusMaxAmount)) {
                 // Check for viruses
                 var v = this.getNearestVirus(check);
-                if (v) {
-                    // Feed the virus
-                    v.setAngle(check.getAngle()); // Set direction if the virus explodes
-                    v.mass += 14; // 7 cells to burst the virus
-                    this.removeNode(check);
-            		
-                    // Check if the virus is going to explode
-                    if (v.mass >= this.config.virusBurstMass) {
-                        v.mass = this.config.virusStartMass; // Reset mass
-                        this.shootVirus(v);
-                    }
-            		
+                if (v) { // Feeds the virus if it exists
+                    v.feed(check,this);
                 }
             }
         } else {
@@ -437,12 +308,12 @@ GameServer.prototype.setAsMovingNode = function(node) {
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass, speed) {
     // Starting position
 	var startPos = {
-        x: parent.getPos().x, 
-        y: parent.getPos().y
+        x: parent.position.x, 
+        y: parent.position.y
     };
 	
 	// Create cell
-	newCell = new Cell(this.getNextNodeId(), client, startPos, mass, 0);
+	newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
 	newCell.setAngle(angle);
 	newCell.setMoveEngineData(speed, 4);
 	newCell.setRecombineTicks(this.config.playerRecombineTime);
@@ -455,16 +326,15 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 
 GameServer.prototype.shootVirus = function(parent) {
 	var parentPos = {
-            x: parent.position.x,
-            y: parent.position.y,
+        x: parent.position.x,
+        y: parent.position.y,
 	};
 	
-    var	newVirus = new Cell(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, 2);
+    var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass);
     newVirus.setAngle(parent.getAngle());
     newVirus.setMoveEngineData(175, 10);
 	
     // Add to moving cells list
-    this.currentViruses++;
     this.addNode(newVirus);
     this.setAsMovingNode(newVirus);
 }
@@ -682,13 +552,6 @@ GameServer.prototype.updateCells = function(){
             decay = (this.gameType == 1) ? decay * this.config.teamExtraMassDecay : decay ;
         	
             cell.mass *= (1 - this.config.playerMassDecayRate);
-        }
-    }
-    // Get current viruses
-    this.currentViruses = 0;
-    for (var i = 0; i < this.nodes.length; i++) { 
-        if (this.nodes[i].getType() == 2) {
-            this.currentViruses++;
         }
     }
 }
