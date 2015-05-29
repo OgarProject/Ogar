@@ -42,7 +42,7 @@ function GameServer(port,gameMode) {
         virusBurstMass: 198.0, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
-        ejectSpeed: 180, // Base speed of ejected cells
+        ejectSpeed: 170, // Base speed of ejected cells
         playerStartMass: 10, // Starting mass of the player cell. Large values may cause problens when clients connect.
         playerMaxMass: 225000, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
@@ -227,11 +227,11 @@ GameServer.prototype.virusCheck = function() {
 }
 
 GameServer.prototype.updateMoveEngine = function() {
-	// Checks eating range every 250 ms
+	// Checks eating range every 300 ms
     var checkRange = false;
     if (this.currentTick <= 0) {
         checkRange = true;
-        currentTick = 5;
+        currentTick = 6;
     } else {
         currentTick--;
     }
@@ -256,7 +256,7 @@ GameServer.prototype.updateMoveEngine = function() {
         
         cell.calcMove(client.getMouseX(), client.getMouseY(), this);
             
-        // Only check nearby cells every 250 ms
+        // Only check nearby cells every 300 ms
         if (!checkRange) {
             continue;
         }
@@ -341,7 +341,7 @@ GameServer.prototype.shootVirus = function(parent) {
 	
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(200, 25);
+    newVirus.setMoveEngineData(200, 20);
 	
     // Add to moving cells list
     this.addNode(newVirus);

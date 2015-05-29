@@ -230,7 +230,7 @@ Cell.prototype.calcMovePhys = function(border) {
     var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
 	
     // Movement engine
-    this.moveEngineSpeed *= .7; // Decaying speed
+    this.moveEngineSpeed *= .75; // Decaying speed
     this.moveEngineTicks--;
 	 
     // Border check - Bouncy physics
