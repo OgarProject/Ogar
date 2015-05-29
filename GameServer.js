@@ -23,6 +23,7 @@ function GameServer(port,gameMode) {
     this.nodesPlayer = []; // Nodes controlled by players
     
     this.currentFood = 0;
+    this.currentTick = 0; // For move engine
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     
@@ -41,9 +42,9 @@ function GameServer(port,gameMode) {
         virusBurstMass: 198.0, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
-        ejectSpeed: 200, // Base speed of ejected cells
-        playerStartMass: 10, // Starting mass of the player cell. Large values may cause problens when clients connect.
-        playerMaxMass: 22500, // Maximum mass a player can have
+        ejectSpeed: 180, // Base speed of ejected cells
+        playerStartMass: 1000, // Starting mass of the player cell. Large values may cause problens when clients connect.
+        playerMaxMass: 225000, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
@@ -52,7 +53,7 @@ function GameServer(port,gameMode) {
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
         leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
-        leaderboardUpdateClient: 20 // How often leaderboard data is sent to the client (1 tick = 100 milliseconds)
+        leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
     };
 	
     this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
@@ -67,14 +68,14 @@ GameServer.prototype.start = function() {
     // Start the server
     this.socketServer = new WebSocket.Server({ port: this.port }, function() {
         // Update player
-        setInterval(this.updateAll.bind(this), 100);
+        setInterval(this.updateAll.bind(this), 50);
         
         // Spawning
         setInterval(this.spawnFood.bind(this), this.config.foodSpawnRate);
         this.virusCheck();
         
         // Move engine
-        setInterval(this.updateMoveEngine.bind(this), 100);
+        setInterval(this.updateMoveEngine.bind(this), 50);
         setInterval(this.updateCells.bind(this), 200);
         
         // Leaderboard
@@ -157,7 +158,19 @@ GameServer.prototype.addNode = function(node) {
     // Adds to the owning player's screen
     if (node.owner){
         node.owner.socket.sendPacket(new Packet.AddNodes(node));
-    }   
+    }
+    
+    // Add to visible nodes
+    for (var i = 0; i < this.clients.length;i++) {
+        client = this.clients[i].playerTracker;
+        if (!client) {
+            continue;
+        }
+
+        if (node.collisionCheck(client.viewBox.bottomY,client.viewBox.topY,client.viewBox.rightX,client.viewBox.leftX)) {
+            client.visibleNodes.push(node);
+        }
+    }
 }
 
 GameServer.prototype.removeNode = function(node) {
@@ -214,6 +227,15 @@ GameServer.prototype.virusCheck = function() {
 }
 
 GameServer.prototype.updateMoveEngine = function() {
+	// Checks eating range every 250 ms
+    var checkRange = false;
+    if (this.currentTick <= 0) {
+        checkRange = true;
+        currentTick = 5;
+    } else {
+        currentTick--;
+    }
+    
     // Move player cells
     var len = this.nodesPlayer.length;
     for (var i = 0; i < len; i++) {
@@ -234,6 +256,11 @@ GameServer.prototype.updateMoveEngine = function() {
         
         cell.calcMove(client.getMouseX(), client.getMouseY(), this);
             
+        // Only check nearby cells every 250 ms
+        if (!checkRange) {
+            continue;
+        }
+        
         // Check if cells nearby (Still buggy)
         var list = this.getCellsInRange(cell);
         for (var j = 0; j < list.length ; j++) {
@@ -297,7 +324,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 	// Create cell
 	newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
 	newCell.setAngle(angle);
-	newCell.setMoveEngineData(speed, 4);
+	newCell.setMoveEngineData(speed, 8);
 	newCell.setRecombineTicks(this.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
@@ -314,7 +341,7 @@ GameServer.prototype.shootVirus = function(parent) {
 	
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(175, 10);
+    newVirus.setMoveEngineData(200, 25);
 	
     // Add to moving cells list
     this.addNode(newVirus);

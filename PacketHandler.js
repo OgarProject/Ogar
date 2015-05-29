@@ -89,7 +89,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Create cell
                 split = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, startPos, newMass);
                 split.setAngle(angle);
-                split.setMoveEngineData(120 + cell.getSpeed(), 10);
+                split.setMoveEngineData(75 + (cell.getSpeed() * 2), 20);
                 split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
             	
                 // Add to moving cells list
@@ -125,7 +125,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Create cell
                 ejected = new Entity.EjectedMass(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass);
                 ejected.setAngle(angle);
-                ejected.setMoveEngineData(this.gameServer.config.ejectSpeed, 10);
+                ejected.setMoveEngineData(this.gameServer.config.ejectSpeed, 20);
                 ejected.setColor(cell.getColor());
             	
                 // Add to moving cells list

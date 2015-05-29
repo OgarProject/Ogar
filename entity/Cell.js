@@ -59,7 +59,7 @@ Cell.prototype.addMass = function(n) {
 
 Cell.prototype.getSpeed = function() {
 	// Custom speed formula
-	var speed = 5 + (35 * (1 - (this.mass/(200+this.mass))));
+	var speed = 5 + (20 * (1 - (this.mass/(70+this.mass))));
 	speed *= this.owner.gameServer.config.playerSpeedMultiplier;
 	return speed;
 }
@@ -230,7 +230,7 @@ Cell.prototype.calcMovePhys = function(border) {
     var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
 	
     // Movement engine
-    this.moveEngineSpeed *= .75; // Decaying speed
+    this.moveEngineSpeed *= .7; // Decaying speed
     this.moveEngineTicks--;
 	 
     // Border check - Bouncy physics
