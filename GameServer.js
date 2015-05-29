@@ -43,7 +43,7 @@ function GameServer(port,gameMode) {
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
         ejectSpeed: 180, // Base speed of ejected cells
-        playerStartMass: 1000, // Starting mass of the player cell. Large values may cause problens when clients connect.
+        playerStartMass: 10, // Starting mass of the player cell. Large values may cause problens when clients connect.
         playerMaxMass: 225000, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
