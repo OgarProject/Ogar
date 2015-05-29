@@ -16,7 +16,7 @@ UpdateNodes.prototype.build = function() {
             continue;
         }
         
-        nodesLength = nodesLength + 22 + (node.getName().length * 2);
+        nodesLength = nodesLength + 16 + (node.getName().length * 2);
     }
     
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 22) + nodesLength + 4 + 2 + 4 + (this.nodes.length * 4));
@@ -47,16 +47,16 @@ UpdateNodes.prototype.build = function() {
         }
         
         var v = node.getType() == 2 ? 1: 0; // Virus flag
-
+        
         view.setUint32(offset, node.nodeId, true); // Node ID
-        view.setFloat32(offset + 4, node.position.x, true); // X position
-        view.setFloat32(offset + 8, node.position.y, true); // Y position
-        view.setFloat32(offset + 12, node.getSize(), true); // Mass formula: Radius (size) = (mass * mass) / 100
-        view.setUint8(offset + 16, node.color.r, true); // Color (R)
-        view.setUint8(offset + 17, node.color.g, true); // Color (G)
-        view.setUint8(offset + 18, node.color.b, true); // Color (B)
-        view.setUint8(offset + 19, v, true); // Flags
-        offset += 20;
+        view.setUint16(offset + 4, node.position.x, true); // X position
+        view.setUint16(offset + 6, node.position.y, true); // Y position
+        view.setUint16(offset + 8, node.getSize(), true); // Mass formula: Radius (size) = (mass * mass) / 100
+        view.setUint8(offset + 10, node.color.r, true); // Color (R)
+        view.setUint8(offset + 11, node.color.g, true); // Color (G)
+        view.setUint8(offset + 12, node.color.b, true); // Color (B)
+        view.setUint8(offset + 13, v, true); // Flags
+        offset += 14;
         
         var name = node.getName();
         if (name) {
