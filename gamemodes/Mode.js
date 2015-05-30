@@ -4,6 +4,8 @@ function Mode() {
     this.decayMod = 1.0; // Modifier for decay rate (Multiplier)
     this.packetLB = 49; // Packet id for leaderboard packet (49 = List, 50 = Pie chart)
     this.haveTeams = false; // True = gamemode uses teams, false = gamemode doesnt use teams
+    
+    this.rankOne; // Current player that has the highest score
 }
 
 module.exports = Mode;

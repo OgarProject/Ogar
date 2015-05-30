@@ -60,5 +60,7 @@ FFA.prototype.updateLB = function(gameServer) {
             }
         }
     }
+	
+	this.rankOne = lb[0];
 }
 

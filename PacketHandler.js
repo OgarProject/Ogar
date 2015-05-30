@@ -46,6 +46,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             this.setNickname(nick);
             break;
+        case 1:
+            // Spectate mode
+            if (this.socket.playerTracker.cells.length <= 0) {
+                // Make sure client has no cells
+                this.socket.playerTracker.spectate = true;
+            }
+            break;
         case 16:
             // Mouse Move
             var client = this.socket.playerTracker;
@@ -53,92 +60,16 @@ PacketHandler.prototype.handleMessage = function(message) {
             client.setMouseY(view.getFloat64(9, true));
             break;
 		case 17: // Space Press - Split cell
-            var client = this.socket.playerTracker;
-            var len = client.cells.length;
-            for (var i = 0; i < len; i++) {
-                var cell = client.cells[i];
-				
-                if (client.cells.length >= this.gameServer.config.playerMaxCells) {
-                    // Player cell limit
-                    continue;
-                }
-
-                if (!cell) {
-                    console.log("[Warning] Tried to split a non existing cell.");
-                    continue;
-                }
-                
-                if (cell.mass < this.gameServer.config.playerMinMassSplit) {
-                    continue;
-                }
-				
-                // Get angle
-                var deltaY = client.getMouseY() - cell.position.y;
-                var deltaX = client.getMouseX() - cell.position.x;
-                var angle = Math.atan2(deltaX,deltaY);
-            	
-                // Get starting position
-                var size = cell.getSize();
-                var startPos = {
-                    x: cell.position.x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
-                    y: cell.position.y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
-                };
-                // Calculate mass of splitting cell
-                var newMass = cell.mass / 2;
-                cell.mass = newMass;
-                // Create cell
-                split = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, startPos, newMass);
-                split.setAngle(angle);
-                split.setMoveEngineData(75 + (cell.getSpeed() * 2), 20);
-                split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
-            	
-                // Add to moving cells list
-                this.gameServer.setAsMovingNode(split);
-                this.gameServer.addNode(split);
-            }
+            this.splitCells(this.socket.playerTracker);
             break;
         case 21: // W Press - Eject mass
-            var client = this.socket.playerTracker;
-            for (var i = 0; i < client.cells.length; i++) {
-                var cell = client.cells[i];
-				
-                if (!cell) {
-                    continue;
-                }
-                
-                if (cell.mass < this.gameServer.config.playerMinMassEject) {
-                    continue;
-                }
-				
-                var deltaY = client.getMouseY() - cell.position.y;
-                var deltaX = client.getMouseX() - cell.position.x;
-                var angle = Math.atan2(deltaX,deltaY);
-            	
-                // Get starting position
-                var size = cell.getSize() + 5;
-                var startPos = {
-                    x: cell.position.x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
-                    y: cell.position.y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
-                };
-                // Remove mass from parent cell
-                cell.mass -= this.gameServer.config.ejectMass;
-                // Create cell
-                ejected = new Entity.EjectedMass(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass);
-                ejected.setAngle(angle);
-                ejected.setMoveEngineData(this.gameServer.config.ejectSpeed, 20);
-                ejected.setColor(cell.getColor());
-            	
-                // Add to moving cells list
-                this.gameServer.addNode(ejected);
-                this.gameServer.setAsMovingNode(ejected);
-            }
+            this.ejectMass(this.socket.playerTracker);
             break;
         case 254:
             this.properInit = true;
             break;
         case 255:
-            // Connection
-            // Send SetBorder packet first
+            // Connection Start - Send SetBorder packet first
             var border = this.gameServer.border;
             this.socket.sendPacket(new Packet.SetBorder(border.left, border.right, border.top, border.bottom));
             break;
@@ -158,7 +89,90 @@ PacketHandler.prototype.setNickname = function(newNick) {
         // Set initial mouse coords
         client.setMouseX(pos.x);
         client.setMouseY(pos.y);
+        
+        // Turn off spectate mode
+        client.spectate = false;
     }
 	client.setName(newNick);
 }
 
+PacketHandler.prototype.splitCells = function(client) {
+     var len = client.cells.length;
+     for (var i = 0; i < len; i++) {
+         var cell = client.cells[i];
+			
+         if (client.cells.length >= this.gameServer.config.playerMaxCells) {
+             // Player cell limit
+             continue;
+         }
+
+         if (!cell) {
+             console.log("[Warning] Tried to split a non existing cell.");
+             continue;
+         }
+         
+         if (cell.mass < this.gameServer.config.playerMinMassSplit) {
+             continue;
+         }
+			
+         // Get angle
+         var deltaY = client.getMouseY() - cell.position.y;
+         var deltaX = client.getMouseX() - cell.position.x;
+         var angle = Math.atan2(deltaX,deltaY);
+     	
+         // Get starting position
+         var size = cell.getSize();
+         var startPos = {
+             x: cell.position.x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+             y: cell.position.y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
+         };
+         // Calculate mass of splitting cell
+         var newMass = cell.mass / 2;
+         cell.mass = newMass;
+         // Create cell
+         split = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, startPos, newMass);
+         split.setAngle(angle);
+         split.setMoveEngineData(75 + (cell.getSpeed() * 2), 20);
+         split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
+     	
+         // Add to moving cells list
+         this.gameServer.setAsMovingNode(split);
+         this.gameServer.addNode(split);
+     }
+}
+
+PacketHandler.prototype.ejectMass = function(client) {
+	for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
+		
+        if (!cell) {
+            continue;
+        }
+        
+        if (cell.mass < this.gameServer.config.playerMinMassEject) {
+            continue;
+        }
+		
+        var deltaY = client.getMouseY() - cell.position.y;
+        var deltaX = client.getMouseX() - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+    	
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + this.gameServer.config.ejectMass) * Math.sin(angle) ), 
+            y: cell.position.y + ( (size + this.gameServer.config.ejectMass) * Math.cos(angle) )
+        };
+        // Remove mass from parent cell
+        cell.mass -= this.gameServer.config.ejectMass;
+        // Create cell
+        ejected = new Entity.EjectedMass(this.gameServer.getNextNodeId(), null, startPos, this.gameServer.config.ejectMass);
+        ejected.setAngle(angle);
+        ejected.setMoveEngineData(this.gameServer.config.ejectSpeed, 20);
+        ejected.setColor(cell.getColor());
+    	
+        // Add to moving cells list
+        this.gameServer.addNode(ejected);
+        this.gameServer.setAsMovingNode(ejected);
+    }
+}

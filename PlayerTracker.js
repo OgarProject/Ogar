@@ -19,6 +19,8 @@ function PlayerTracker(gameServer, socket) {
     this.tickViewBox = 0;
     
     this.team = 0;
+    this.spectate = false;
+    this.spectatedPlayer; // Current player that this player is watching
     
     // Viewing box
     this.sightRange = 0;
@@ -106,7 +108,7 @@ PlayerTracker.prototype.setBorder = function() {
 }
 
 PlayerTracker.prototype.update = function() {
-    // Update and destroy nodes (Obsolete)
+    // Update and destroy nodes (Animation)
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
@@ -124,7 +126,6 @@ PlayerTracker.prototype.update = function() {
     } else {
         this.tickViewBox--;
     }
-    
     
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes));
@@ -182,28 +183,41 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
 }
 
 PlayerTracker.prototype.calcViewBox = function() {
-	this.updateSightRange();
-	this.updateCenter();
-	
-	// Box
-	this.viewBox.topY = this.centerPos.y - this.sightRange;
-	this.viewBox.bottomY = this.centerPos.y + this.sightRange;
-	
-	this.viewBox.leftX = this.centerPos.x - this.sightRange;
-	this.viewBox.rightX = this.centerPos.x + this.sightRange;
-	
-	var newVisible = [];
-	for (var i = 0; i < this.gameServer.nodes.length ;i++) {
-		node = this.gameServer.nodes[i];
-		
-		if (!node) {
-			continue;
-		}
-		
-		if (node.collisionCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
-			// Cell is in range of viewBox
-			newVisible.push(node);
-		}
+    if (this.spectate) {
+        // Spectate mode
+        this.spectatedPlayer = this.gameServer.gameMode.rankOne;
+        if (this.spectatedPlayer) {
+            // Get spectated player's location
+            this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,.15));
+            return this.spectatedPlayer.visibleNodes;
+        } else {
+            return []; // Nothing
+        }
     }
-	return newVisible;
+		
+    // Main function
+    this.updateSightRange();
+    this.updateCenter();
+	
+    // Box
+    this.viewBox.topY = this.centerPos.y - this.sightRange;
+    this.viewBox.bottomY = this.centerPos.y + this.sightRange;
+	
+    this.viewBox.leftX = this.centerPos.x - this.sightRange;
+    this.viewBox.rightX = this.centerPos.x + this.sightRange;
+	
+    var newVisible = [];
+    for (var i = 0; i < this.gameServer.nodes.length ;i++) {
+        node = this.gameServer.nodes[i];
+		
+        if (!node) {
+            continue;
+        }
+		
+        if (node.collisionCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
+            // Cell is in range of viewBox
+            newVisible.push(node);
+        }
+    }
+    return newVisible;
 }

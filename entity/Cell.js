@@ -141,10 +141,10 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
     var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
     var speed = Math.min(this.getSpeed(),dist);
     
-    var x1 = this.position.x + ( speed * Math.sin(angle) );
-    var y1 = this.position.y + ( speed * Math.cos(angle) );
+    var x1 = Math.floor(this.position.x + ( speed * Math.sin(angle) ));
+    var y1 = Math.floor(this.position.y + ( speed * Math.cos(angle) ));
 	
-    // Collision check for other cells (Work in progress)
+    // Collision check for other cells
     for (var i = 0; i < this.owner.cells.length;i++) {
         var cell = this.owner.cells[i];
 		
