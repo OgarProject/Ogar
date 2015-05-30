@@ -9,12 +9,6 @@ var Entity = require('./entity');
 
 // GameServer implementation
 function GameServer(port,gameMode) {
-    this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
-        left: 0,
-        right: 6000.0,
-        top: 0,
-        bottom: 6000.0
-    }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.lastNodeId = 1;
     this.clients = [];
     this.port = port;
@@ -29,6 +23,12 @@ function GameServer(port,gameMode) {
     
     this.gameMode = gameMode;
     
+    this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
+        left: 0,
+        right: 6000.0,
+        top: 0,
+        bottom: 6000.0
+    }; // Right: X increases, Down: Y increases (as of 2015-05-20)
     this.config = {
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
         serverAllowMods: true, // Whether or not to allow clients with mods to connect
@@ -48,8 +48,8 @@ function GameServer(port,gameMode) {
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
-        playerRecombineTime: 150, // Amount of ticks before a cell is allowed to recombine (1 tick = 200 milliseconds) - currently 30 seconds
-        playerMassDecayRate: .0004, // Amount of mass lost per tick (Multiplier) (1 tick = 200 milliseconds)
+        playerRecombineTime: 15, // Amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds) - currently 30 seconds
+        playerMassDecayRate: .004, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
         leaderboardUpdateInterval: 2000, // Time between leaderboard updates, in milliseconds
@@ -76,7 +76,7 @@ GameServer.prototype.start = function() {
         
         // Move engine
         setInterval(this.updateMoveEngine.bind(this), 50);
-        setInterval(this.updateCells.bind(this), 200);
+        setInterval(this.updateCells.bind(this), 2000);
         
         // Leaderboard
         setInterval(this.updateLeaderboard.bind(this), this.config.leaderboardUpdateInterval);
@@ -227,11 +227,11 @@ GameServer.prototype.virusCheck = function() {
 }
 
 GameServer.prototype.updateMoveEngine = function() {
-	// Checks eating range every 300 ms
+	// Checks eating range every 500 ms
     var checkRange = false;
     if (this.currentTick <= 0) {
         checkRange = true;
-        currentTick = 6;
+        currentTick = 10;
     } else {
         currentTick--;
     }
@@ -256,7 +256,7 @@ GameServer.prototype.updateMoveEngine = function() {
         
         cell.calcMove(client.getMouseX(), client.getMouseY(), this);
             
-        // Only check nearby cells every 300 ms
+        // Only check nearby cells every 500 ms
         if (!checkRange) {
             continue;
         }
@@ -471,6 +471,10 @@ GameServer.prototype.updateLeaderboard = function() {
 GameServer.prototype.updateCells = function(){
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
+        
+        if (!cell) {
+        	continue;
+        }
         
         // Recombining
         if (cell.getRecombineTicks() > 0) {
