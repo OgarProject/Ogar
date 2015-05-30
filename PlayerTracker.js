@@ -16,6 +16,7 @@ function PlayerTracker(gameServer, socket) {
     this.mouseX = 0;
     this.mouseY = 0;
     this.tickLeaderboard = 0; // 
+    this.tickViewBox = 0;
     
     this.team = 0;
     
@@ -112,12 +113,18 @@ PlayerTracker.prototype.update = function() {
             this.visibleNodes.splice(index, 1);
         } else {
             this.nodeDestroyQueue.splice(i,1);
-            //console.log("Warning: Node in destroy queue was never visible anyways!");
+            //console.log("[Warning] Node in destroy queue was never visible anyways!");
         }
     }
     
-    // Get visible nodes
-    this.visibleNodes = this.calcViewBox();
+    // Get visible nodes every 200 ms
+    if (this.tickViewBox <= 0) {
+        this.visibleNodes = this.calcViewBox();
+        this.tickViewBox = 4;
+    } else {
+        this.tickViewBox--;
+    }
+    
     
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes));
@@ -137,7 +144,7 @@ PlayerTracker.prototype.update = function() {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var range = 1200;
+    var range = 1000;
     var len = this.cells.length;
     
     for (var i = 0; i < len;i++) {
@@ -146,7 +153,7 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
             continue;
         }
     	
-        range += ((this.cells[i].getSize() * 2) + 50);
+        range += (this.cells[i].getSize() * 2.5);
     }
     this.sightRange = range;
 }

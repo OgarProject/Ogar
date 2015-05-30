@@ -43,9 +43,16 @@ UpdateLeaderboard.prototype.build = function() {
                 }
 
                 var item = lb[i];
-                view.setUint32(offset, item.nodeId, true);
+                
+                var nodeID = 0; // Get node id of player's 1st cell
+                if (item.cells[0]) {
+                    nodeID = item.cells[0].nodeId;
+                }
+                
+                view.setUint32(offset, nodeID, true);
                 offset += 4;
 
+                // Set name
                 var name = item.getName();
                 if (name) {
                     for (var j = 0; j < name.length; j++) {
