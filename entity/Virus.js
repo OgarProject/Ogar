@@ -4,10 +4,23 @@ function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 	
     this.cellType = 2;
+    this.protection = 0;
 }
 
 module.exports = Virus;
 Virus.prototype = new Cell();
+
+Virus.prototype.getProt = function () {
+    return this.protection;
+}
+
+Virus.prototype.setProt = function (n) {
+    this.protection = n;
+}
+
+Virus.prototype.decProt = function () {
+    this.protection--;
+}
 
 Virus.prototype.calcMove = function () {
     // Only for player controlled movement
@@ -29,6 +42,10 @@ Virus.prototype.feed = function(feeder,gameServer) {
 // Main Functions
 
 Virus.prototype.onConsume = function(consumer,gameServer) {
+    if (this.protection > 0) {
+        return;
+    }
+	
     var client = consumer.owner;
     var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits

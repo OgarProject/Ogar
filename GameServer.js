@@ -1,4 +1,4 @@
-//Library imports
+// Library imports
 var WebSocket = require('ws');
 
 // Project imports
@@ -17,7 +17,7 @@ function GameServer(port,gameMode) {
     this.nodesPlayer = []; // Nodes controlled by players
     
     this.currentFood = 0;
-    this.currentTick = 0; // For move engine
+    this.currentTick = 0; // For move engine, eating calculations are calculated every 10 ticks (500 ms)
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     
@@ -32,6 +32,9 @@ function GameServer(port,gameMode) {
     this.config = {
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
         serverAllowMods: true, // Whether or not to allow clients with mods to connect
+        serverViewBase: 1000, // Base view distance of each player (Warning: High values may cause lag)
+        serverViewMod: 2.5, // View distance is increased by each cell's radius multiplied by this config value
+        serverBots: 0, // Amount of player bots to spawn (Private feature)
         foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds
         foodSpawnAmount: 5, // The amount of food to spawn per interval
         foodMaxAmount: 500, // Maximum food cells on the map
@@ -41,9 +44,9 @@ function GameServer(port,gameMode) {
         virusStartMass: 100.0, // Starting virus size (In mass)
         virusBurstMass: 198.0, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
-        ejectMassGain: 14, //Amount of mass gained from consuming ejected cells
+        ejectMassGain: 14, // Amount of mass gained from consuming ejected cells
         ejectSpeed: 170, // Base speed of ejected cells
-        playerStartMass: 10, // Starting mass of the player cell. Large values may cause problens when clients connect.
+        playerStartMass: 10, // Starting mass of the player cell.
         playerMaxMass: 225000, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
@@ -56,7 +59,7 @@ function GameServer(port,gameMode) {
         leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
     };
 	
-    this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}];
+    this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}]; 
 }
 
 module.exports = GameServer;
@@ -84,6 +87,11 @@ GameServer.prototype.start = function() {
         // Done
         console.log("[Game] Listening on port %d", this.port);
         console.log("[Game] Current game mode is "+this.gameMode.name);
+        
+        // Player bots (Experimental)
+        if (this.config.serverBots > 0) {
+            console.log("[Game] Loaded "+this.bots.clients.length+" player bots");
+        }
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -190,8 +198,14 @@ GameServer.prototype.removeNode = function(node) {
     node.onRemove(this);
     
     // Animation when eating
-    if (node.getKiller()) {
-        node.getKiller().owner.nodeDestroyQueue.push(node); 
+    for (var i = 0; i < this.clients.length;i++) {
+        client = this.clients[i].playerTracker;
+        if (!client) {
+            continue;
+        }
+
+        // Remove from client
+        client.nodeDestroyQueue.push(node); 
     }
 }
 
@@ -222,6 +236,7 @@ GameServer.prototype.virusCheck = function() {
     while (this.nodesVirus.length < this.config.virusMinAmount) {
         // Spawns a virus
         var v = new Entity.Virus(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass);
+        v.setProt(2);
         this.addNode(v);
     }
 }
@@ -261,7 +276,7 @@ GameServer.prototype.updateMoveEngine = function() {
             continue;
         }
         
-        // Check if cells nearby (Still buggy)
+        // Check if cells nearby
         var list = this.getCellsInRange(cell);
         for (var j = 0; j < list.length ; j++) {
             var check = list[j];
@@ -489,6 +504,12 @@ GameServer.prototype.updateCells = function(){
             decay = decay * this.gameMode.decayMod;
         	
             cell.mass *= (1 - this.config.playerMassDecayRate);
+        }
+    }
+    for (i in this.nodesVirus) {
+        var v = this.nodesVirus[i];
+        if (v.getProt() > 0) {
+            v.decProt();
         }
     }
 }

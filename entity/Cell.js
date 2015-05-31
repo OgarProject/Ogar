@@ -19,7 +19,6 @@ function Cell(nodeId, owner, position, mass, gameServer) {
         this.setColor(this.owner.color);
         this.owner.cells.push(this); // Add to cells list of the owner 
     } 
-    
 }
 
 module.exports = Cell;
@@ -59,7 +58,10 @@ Cell.prototype.addMass = function(n) {
 
 Cell.prototype.getSpeed = function() {
 	// Custom speed formula
-	var speed = 5 + (20 * (1 - (this.mass/(70+this.mass))));
+	// Old formula: 5 + (20 * (1 - (this.mass/(70+this.mass))));
+	// Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
+	// (should possibly have a config value for this?)
+	var speed = 745.28 * Math.pow(this.mass, -0.222) * 50 / 1000;
 	speed *= this.owner.gameServer.config.playerSpeedMultiplier;
 	return speed;
 }
@@ -141,10 +143,10 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
     var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
     var speed = Math.min(this.getSpeed(),dist);
     
-    var x1 = this.position.x + ( speed * Math.sin(angle) );
-    var y1 = this.position.y + ( speed * Math.cos(angle) );
+    var x1 = Math.floor(this.position.x + ( speed * Math.sin(angle) ));
+    var y1 = Math.floor(this.position.y + ( speed * Math.cos(angle) ));
 	
-    // Collision check for other cells (Work in progress)
+    // Collision check for other cells
     for (var i = 0; i < this.owner.cells.length;i++) {
         var cell = this.owner.cells[i];
 		
