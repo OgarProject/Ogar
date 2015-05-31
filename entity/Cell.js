@@ -19,7 +19,6 @@ function Cell(nodeId, owner, position, mass, gameServer) {
         this.setColor(this.owner.color);
         this.owner.cells.push(this); // Add to cells list of the owner 
     } 
-    
 }
 
 module.exports = Cell;

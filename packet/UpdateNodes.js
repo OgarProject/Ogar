@@ -75,6 +75,7 @@ UpdateNodes.prototype.build = function() {
 
     view.setUint32(offset, 0, true); // Terminate node data
     view.setUint32(offset + 4, this.nodes.length, true); // # of active nodes
+    view.setUint16(offset + 8, 0, true); // ???
 
     offset += 10;
     

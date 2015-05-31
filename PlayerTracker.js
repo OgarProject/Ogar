@@ -4,12 +4,10 @@ var GameServer = require('./GameServer');
 function PlayerTracker(gameServer, socket) {
     this.isOnline = true;
     this.name = "";
-    this.color = gameServer.getRandomColor();
     this.gameServer = gameServer;
     this.socket = socket;
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
-    //this.cell = null; Depreciated, use this.cells instead
     this.cells = [];
     this.score = 0; // Needed for leaderboard
 
@@ -36,7 +34,9 @@ function PlayerTracker(gameServer, socket) {
     }
     
     // Gamemode function
-    gameServer.gameMode.onPlayerInit(this);
+    if (gameServer) {
+        gameServer.gameMode.onPlayerInit(this);
+    }
 }
 
 module.exports = PlayerTracker;
@@ -145,7 +145,7 @@ PlayerTracker.prototype.update = function() {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var range = 1000;
+    var range = this.gameServer.config.serverViewBase;
     var len = this.cells.length;
     
     for (var i = 0; i < len;i++) {
@@ -154,7 +154,7 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
             continue;
         }
     	
-        range += (this.cells[i].getSize() * 2.5);
+        range += (this.cells[i].getSize() * this.gameServer.config.serverViewMod);
     }
     this.sightRange = range;
 }
