@@ -198,8 +198,14 @@ GameServer.prototype.removeNode = function(node) {
     node.onRemove(this);
     
     // Animation when eating
-    if (node.getKiller()) {
-        node.getKiller().owner.nodeDestroyQueue.push(node); 
+    for (var i = 0; i < this.clients.length;i++) {
+        client = this.clients[i].playerTracker;
+        if (!client) {
+            continue;
+        }
+
+        // Remove from client
+        client.nodeDestroyQueue.push(node); 
     }
 }
 

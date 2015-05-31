@@ -19,7 +19,7 @@ UpdateNodes.prototype.build = function() {
         nodesLength = nodesLength + 16 + (node.getName().length * 2);
     }
     
-    var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 22) + nodesLength + 4 + 2 + 4 + (this.nodes.length * 4));
+    var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + nodesLength + 8);
     var view = new DataView(buf);
 
     view.setUint8(0, 16, true); // Packet ID
@@ -29,16 +29,21 @@ UpdateNodes.prototype.build = function() {
     for (var i = 0; i < this.destroyQueue.length; i++) {
         var node = this.destroyQueue[i];
 
-        if (typeof node == "undefined") {
+        if (!node) {
             continue;
         }
+        
+        var killer = 0;
+        if (node.getKiller()) {
+            killer = node.getKiller().nodeId;
+        }
 
-        view.setUint32(offset, node.getKiller().nodeId, true); // Killer ID
+        view.setUint32(offset, killer, true); // Killer ID
         view.setUint32(offset + 4, node.nodeId, true); // Node ID
         
         offset += 8;
     }
-
+    
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
 
@@ -72,17 +77,16 @@ UpdateNodes.prototype.build = function() {
         view.setUint16(offset, 0, true); // End of string
         offset += 2;
     }
-
-    view.setUint32(offset, 0, true); // Terminate node data
-    view.setUint32(offset + 4, this.nodes.length, true); // # of active nodes
-    view.setUint16(offset + 8, 0, true); // ???
-
-    offset += 10;
     
-    for (var i = 0; i < this.nodes.length; i++) {
-        var node = this.nodes[i];
+    view.setUint32(offset, 0, true); // End
+    view.setUint32(offset + 4, this.destroyQueue.length, true); // # of destroyed nodes
 
-        if (typeof node == "undefined") {
+    offset += 8;
+    
+    for (var i = 0; i < this.destroyQueue.length; i++) {
+        var node = this.destroyQueue[i];
+
+        if (!node) {
             continue;
         }
 

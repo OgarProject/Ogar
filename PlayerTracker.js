@@ -109,16 +109,13 @@ PlayerTracker.prototype.setBorder = function() {
 }
 
 PlayerTracker.prototype.update = function() {
-    // Update and destroy nodes (Animation)
+	// Remove nodes from visible nodes if possible
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
-        } else {
-            this.nodeDestroyQueue.splice(i,1);
-            //console.log("[Warning] Node in destroy queue was never visible anyways!");
         }
-    }
+    } 
     
     // Get visible nodes every 200 ms
     if (this.tickViewBox <= 0) {
