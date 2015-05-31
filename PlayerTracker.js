@@ -187,8 +187,12 @@ PlayerTracker.prototype.calcViewBox = function() {
         // Spectate mode
         this.spectatedPlayer = this.gameServer.gameMode.rankOne;
         if (this.spectatedPlayer) {
-            // Get spectated player's location
-            this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,.15));
+            // Get spectated player's location and calculate zoom amount
+			var specZoom = 0.0;
+			for (var i = 0; i < this.spectatedPlayer.cells.length; i++)
+				specZoom += this.spectatedPlayer.cells[i].getSize();
+			specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.9;
+            this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,specZoom));
             return this.spectatedPlayer.visibleNodes;
         } else {
             return []; // Nothing
