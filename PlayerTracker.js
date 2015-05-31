@@ -35,6 +35,7 @@ function PlayerTracker(gameServer, socket) {
     
     // Gamemode function
     if (gameServer) {
+        this.color = gameServer.getRandomColor(); // Get color
         gameServer.gameMode.onPlayerInit(this);
     }
 }
