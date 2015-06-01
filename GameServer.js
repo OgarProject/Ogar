@@ -90,6 +90,8 @@ GameServer.prototype.start = function() {
         
         // Player bots (Experimental)
         if (this.config.serverBots > 0) {
+            var BotLoader = require('./ai/BotLoader.js');
+            this.bots = new BotLoader(this,this.config.serverBots);
             console.log("[Game] Loaded "+this.bots.clients.length+" player bots");
         }
     }.bind(this));

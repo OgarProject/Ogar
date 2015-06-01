@@ -115,11 +115,23 @@ PlayerTracker.prototype.update = function() {
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
         }
-    } 
-    
+    }
+   
     // Get visible nodes every 200 ms
     if (this.tickViewBox <= 0) {
-        this.visibleNodes = this.calcViewBox();
+        var newVisible = this.calcViewBox();
+        
+        // Compare and estroy nodes that are not seen
+        for (var i = 0; i < this.visibleNodes.length; i++) {
+            var index = newVisible.indexOf(this.visibleNodes[i]);
+            if (index == -1) {
+                // Not seen by the client anymore
+                this.nodeDestroyQueue.push(this.visibleNodes[i]);
+            }
+        }
+        
+        this.visibleNodes = newVisible;
+        // Reset Ticks
         this.tickViewBox = 4;
     } else {
         this.tickViewBox--;
@@ -187,7 +199,7 @@ PlayerTracker.prototype.calcViewBox = function() {
         if (this.spectatedPlayer) {
             // Get spectated player's location and calculate zoom amount
 			var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
-			specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.9;
+			specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
             this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,specZoom));
             return this.spectatedPlayer.visibleNodes;
         } else {
