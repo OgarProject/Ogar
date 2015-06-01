@@ -118,15 +118,16 @@ PlayerTracker.prototype.update = function() {
     }
    
     // Get visible nodes every 200 ms
+	var nonVisibleNodes = [];
     if (this.tickViewBox <= 0) {
         var newVisible = this.calcViewBox();
         
-        // Compare and estroy nodes that are not seen
+        // Compare and destroy nodes that are not seen
         for (var i = 0; i < this.visibleNodes.length; i++) {
             var index = newVisible.indexOf(this.visibleNodes[i]);
             if (index == -1) {
                 // Not seen by the client anymore
-                this.nodeDestroyQueue.push(this.visibleNodes[i]);
+                nonVisibleNodes.push(this.visibleNodes[i]);
             }
         }
         
@@ -138,7 +139,7 @@ PlayerTracker.prototype.update = function() {
     }
     
     // Send packet
-    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes));
+    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes, nonVisibleNodes));
 
     this.nodeDestroyQueue = []; // Reset destroy queue
 
