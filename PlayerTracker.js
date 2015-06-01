@@ -156,7 +156,7 @@ PlayerTracker.prototype.update = function() {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var range = this.gameServer.config.serverViewBase;
+    var totalSize = 1.0;
     var len = this.cells.length;
     
     for (var i = 0; i < len;i++) {
@@ -165,9 +165,9 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
             continue;
         }
     	
-        range += (this.cells[i].getSize() * this.gameServer.config.serverViewMod);
+        totalSize += this.cells[i].getSize();
     }
-    this.sightRange = range;
+    this.sightRange = 1024 / Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
 }
 
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells

@@ -32,8 +32,6 @@ function GameServer(port,gameMode) {
     this.config = {
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
         serverAllowMods: true, // Whether or not to allow clients with mods to connect
-        serverViewBase: 1000, // Base view distance of each player (Warning: High values may cause lag)
-        serverViewMod: 2.5, // View distance is increased by each cell's radius multiplied by this config value
         serverBots: 0, // Amount of player bots to spawn (Private feature)
         foodSpawnRate: 1000, // The interval between each food cell spawn in milliseconds
         foodSpawnAmount: 5, // The amount of food to spawn per interval
