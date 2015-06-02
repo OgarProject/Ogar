@@ -132,7 +132,7 @@ PacketHandler.prototype.splitCells = function(client) {
          // Create cell
          split = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, startPos, newMass);
          split.setAngle(angle);
-         split.setMoveEngineData(75 + (cell.getSpeed() * 2), 20);
+         split.setMoveEngineData(70 + (cell.getSpeed() * 4), 20);
          split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
      	
          // Add to moving cells list
