@@ -22,6 +22,7 @@ function GameServer(port,gameMode) {
     this.leaderboard = [];
     
     this.gameMode = gameMode;
+    this.time = new Date();
     
     this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
         left: 0,
@@ -90,7 +91,7 @@ GameServer.prototype.start = function() {
         if (this.config.serverBots > 0) {
             var BotLoader = require('./ai/BotLoader.js');
             this.bots = new BotLoader(this,this.config.serverBots);
-            console.log("[Game] Loaded "+this.bots.clients.length+" player bots");
+            console.log("[Game] Loaded "+this.config.serverBots+" player bots");
         }
     }.bind(this));
 
@@ -242,6 +243,13 @@ GameServer.prototype.virusCheck = function() {
 }
 
 GameServer.prototype.updateMoveEngine = function() {
+	// Timer
+	/*
+	var local = new Date();
+	console.log(local - this.time - 50);
+	this.time = local;
+	*/
+	
 	// Checks eating range every 500 ms
     var checkRange = false;
     if (this.currentTick <= 0) {

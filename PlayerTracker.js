@@ -118,7 +118,7 @@ PlayerTracker.prototype.update = function() {
     }
    
     // Get visible nodes every 200 ms
-	var nonVisibleNodes = [];
+    var nonVisibleNodes = []; // Nodes that are not visible
     if (this.tickViewBox <= 0) {
         var newVisible = this.calcViewBox();
         

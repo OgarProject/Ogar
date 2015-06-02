@@ -1,7 +1,7 @@
 function UpdateNodes(destroyQueue, nodes, nonVisibleNodes) {
     this.destroyQueue = destroyQueue;
     this.nodes = nodes;
-	this.nonVisibleNodes = nonVisibleNodes;
+    this.nonVisibleNodes = nonVisibleNodes;
 }
 
 module.exports = UpdateNodes;
@@ -79,11 +79,23 @@ UpdateNodes.prototype.build = function() {
         offset += 2;
     }
     
+    var len = this.nonVisibleNodes.length + this.destroyQueue.length;
     view.setUint32(offset, 0, true); // End
-    view.setUint32(offset + 4, this.nonVisibleNodes.length, true); // # of non-visible nodes to destroy
+    view.setUint32(offset + 4, len, true); // # of non-visible nodes to destroy
 
     offset += 8;
     
+    // Destroy queue + nonvisible nodes
+    for (var i = 0; i < this.destroyQueue.length; i++) {
+        var node = this.destroyQueue[i];
+
+        if (!node) {
+            continue;
+        }
+
+        view.setUint32(offset, node.nodeId, true);
+        offset += 4;
+    }
     for (var i = 0; i < this.nonVisibleNodes.length; i++) {
         var node = this.nonVisibleNodes[i];
 
