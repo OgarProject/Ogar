@@ -60,7 +60,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     // Update every 500 ms
     if (this.tickViewBox <= 0) {
         this.visibleNodes = this.calcViewBox();
-        this.tickViewBox = 25;
+        this.tickViewBox = 10;
     } else {
         this.tickViewBox--;
 		return;
