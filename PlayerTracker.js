@@ -109,24 +109,49 @@ PlayerTracker.prototype.setBorder = function() {
 }
 
 PlayerTracker.prototype.update = function() {
+	// Actions buffer
+    if (this.socket.packetHandler.pressSpace) {
+        // Split cell
+        this.socket.packetHandler.splitCells(this);
+        this.socket.packetHandler.pressSpace = false;
+    }
+    if (this.socket.packetHandler.pressW) {
+        // Eject mass
+        this.socket.packetHandler.ejectMass(this);
+        this.socket.packetHandler.pressW = false;
+    }
+    
 	// Remove nodes from visible nodes if possible
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
         }
-    } 
-    
+    }
+
     // Get visible nodes every 200 ms
+    var nonVisibleNodes = []; // Nodes that are not visible
     if (this.tickViewBox <= 0) {
-        this.visibleNodes = this.calcViewBox();
+        var newVisible = this.calcViewBox();
+        
+        // Compare and destroy nodes that are not seen
+        for (var i = 0; i < this.visibleNodes.length; i++) {
+            var index = newVisible.indexOf(this.visibleNodes[i]);
+            if (index == -1) {
+                // Not seen by the client anymore
+                nonVisibleNodes.push(this.visibleNodes[i]);
+            }
+        }
+        
+        this.visibleNodes = newVisible;
+        // Reset Ticks
         this.tickViewBox = 4;
     } else {
         this.tickViewBox--;
     }
     
     // Send packet
-    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes));
+    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes, nonVisibleNodes));
 
     this.nodeDestroyQueue = []; // Reset destroy queue
 
@@ -143,7 +168,7 @@ PlayerTracker.prototype.update = function() {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var range = this.gameServer.config.serverViewBase;
+    var totalSize = 1.0;
     var len = this.cells.length;
     
     for (var i = 0; i < len;i++) {
@@ -152,9 +177,9 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
             continue;
         }
     	
-        range += (this.cells[i].getSize() * this.gameServer.config.serverViewMod);
+        totalSize += this.cells[i].getSize();
     }
-    this.sightRange = range;
+    this.sightRange = 1024 / Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
 }
 
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
@@ -187,7 +212,7 @@ PlayerTracker.prototype.calcViewBox = function() {
         if (this.spectatedPlayer) {
             // Get spectated player's location and calculate zoom amount
 			var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
-			specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.9;
+			specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
             this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,specZoom));
             return this.spectatedPlayer.visibleNodes;
         } else {

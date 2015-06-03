@@ -57,7 +57,6 @@ Cell.prototype.addMass = function(n) {
 }
 
 Cell.prototype.getSpeed = function() {
-	// Custom speed formula
 	// Old formula: 5 + (20 * (1 - (this.mass/(70+this.mass))));
 	// Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
 	// (should possibly have a config value for this?)
@@ -275,4 +274,8 @@ Cell.prototype.onAdd = function(gameServer) {
 
 Cell.prototype.onRemove = function(gameServer) {
     // Called when this cell is removed
+}
+
+Cell.prototype.moveDone = function(gameServer) {
+    // Called when this cell finished moving with the auto move engine
 }

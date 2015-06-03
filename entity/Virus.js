@@ -4,23 +4,10 @@ function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 	
     this.cellType = 2;
-    this.protection = 0;
 }
 
 module.exports = Virus;
 Virus.prototype = new Cell();
-
-Virus.prototype.getProt = function () {
-    return this.protection;
-}
-
-Virus.prototype.setProt = function (n) {
-    this.protection = n;
-}
-
-Virus.prototype.decProt = function () {
-    this.protection--;
-}
 
 Virus.prototype.calcMove = function () {
     // Only for player controlled movement
@@ -42,15 +29,17 @@ Virus.prototype.feed = function(feeder,gameServer) {
 // Main Functions
 
 Virus.prototype.onConsume = function(consumer,gameServer) {
-    if (this.protection > 0) {
-        return;
-    }
-	
     var client = consumer.owner;
     var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits,maxSplits);
     var splitMass = Math.min(consumer.mass/(numSplits + 1), 32); // Maximum size of new splits
+    
+    // Add mass to the cell if its not splitting
+    if (numSplits <= 0) {
+        consumer.addMass(this.mass);
+        return;
+    }
     
     // Big cells will split into cells larger than 32 mass (1/4 of their mass)
     var bigSplits = 0;
@@ -91,5 +80,4 @@ Virus.prototype.onRemove = function(gameServer) {
     } else {
         console.log("[Warning] Tried to remove a non existing virus!");
     }
-    gameServer.virusCheck();	
 }

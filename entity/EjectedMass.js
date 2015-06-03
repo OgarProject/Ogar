@@ -15,6 +15,20 @@ EjectedMass.prototype.calcMove = function () {
 
 // Main Functions
 
+EjectedMass.prototype.onRemove = function(gameServer) { 
+    // Remove from list of ejected mass
+    var index = gameServer.nodesEjected.indexOf(this);
+    if (index != -1) {
+        gameServer.nodesEjected.splice(index,1);
+    }
+}
+
 EjectedMass.prototype.onConsume = function(consumer,gameServer) {
+    // Adds mass to consumer
     consumer.addMass(gameServer.config.ejectMassGain);
+}
+
+EjectedMass.prototype.moveDone = function(gameServer) {
+	// Add to list of ejected mass
+    gameServer.nodesEjected.push(this);
 }

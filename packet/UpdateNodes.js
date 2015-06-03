@@ -1,6 +1,7 @@
-function UpdateNodes(destroyQueue, nodes) {
+function UpdateNodes(destroyQueue, nodes, nonVisibleNodes) {
     this.destroyQueue = destroyQueue;
     this.nodes = nodes;
+    this.nonVisibleNodes = nonVisibleNodes;
 }
 
 module.exports = UpdateNodes;
@@ -19,7 +20,7 @@ UpdateNodes.prototype.build = function() {
         nodesLength = nodesLength + 16 + (node.getName().length * 2);
     }
     
-    var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + nodesLength + 8);
+    var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
     var view = new DataView(buf);
 
     view.setUint8(0, 16, true); // Packet ID
@@ -78,13 +79,25 @@ UpdateNodes.prototype.build = function() {
         offset += 2;
     }
     
+    var len = this.nonVisibleNodes.length + this.destroyQueue.length;
     view.setUint32(offset, 0, true); // End
-    view.setUint32(offset + 4, this.destroyQueue.length, true); // # of destroyed nodes
+    view.setUint32(offset + 4, len, true); // # of non-visible nodes to destroy
 
     offset += 8;
     
+    // Destroy queue + nonvisible nodes
     for (var i = 0; i < this.destroyQueue.length; i++) {
         var node = this.destroyQueue[i];
+
+        if (!node) {
+            continue;
+        }
+
+        view.setUint32(offset, node.nodeId, true);
+        offset += 4;
+    }
+    for (var i = 0; i < this.nonVisibleNodes.length; i++) {
+        var node = this.nonVisibleNodes[i];
 
         if (!node) {
             continue;
