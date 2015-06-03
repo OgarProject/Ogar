@@ -75,9 +75,6 @@ GameServer.prototype.start = function() {
         for (var i = 0; i < this.config.foodStartAmount; i++) {
             this.spawnFood();
         }
-    	
-        // Spawn starting viruses
-        this.virusCheck(); 
         
         // Start Main Loop
         setInterval(this.mainLoop.bind(this), 1);
@@ -223,7 +220,8 @@ GameServer.prototype.mainLoop = function() {
         // Spawn food
         this.tickSpawn++;
         if (this.tickSpawn >= this.config.foodSpawnRate) {
-            this.updateFood();
+            this.updateFood(); // Spawn food
+            this.virusCheck(); // Spawn viruses
 			
             this.tickSpawn = 0; // Reset
         }
@@ -273,10 +271,36 @@ GameServer.prototype.spawnFood = function() {
 
 GameServer.prototype.virusCheck = function() {
     // Checks if there are enough viruses on the map
-    while (this.nodesVirus.length < this.config.virusMinAmount) {
+    if (this.nodesVirus.length < this.config.virusMinAmount) {
         // Spawns a virus
-        var v = new Entity.Virus(this.getNextNodeId(), null, this.getRandomPosition(), this.config.virusStartMass);
-        v.setProt(2);
+        var pos = this.getRandomPosition();
+    	
+        // Check for players (Experimental)
+        for (var i = 0; i < this.nodesPlayer; i++) {
+            var check = this.nodesPlayer[i];
+    		
+            var r = check.getSize(); // Radius of checking player cell
+    		
+            // Collision box
+            var topY = check.position.y - r;
+            var bottomY = check.position.y + r;
+            var leftX = check.position.x - r;
+            var rightX = check.position.x + r;
+    		
+            // Check for collisions
+            if (pos.y < bottomY) {
+                return;
+            } if (pos.y > topY) {
+                return;
+            } if (pos.x < rightX) {
+                return;
+            } if (pos.x > leftX) {
+                return;
+            }
+        }
+    	
+        // Spawn if no cells are colliding
+        var v = new Entity.Virus(this.getNextNodeId(), null, pos, this.config.virusStartMass);
         this.addNode(v);
     }
 }
@@ -530,12 +554,6 @@ GameServer.prototype.updateCells = function(){
             decay = decay * this.gameMode.decayMod;
         	
             cell.mass *= (1 - this.config.playerMassDecayRate);
-        }
-    }
-    for (i in this.nodesVirus) {
-        var v = this.nodesVirus[i];
-        if (v.getProt() > 0) {
-            v.decProt();
         }
     }
 }
