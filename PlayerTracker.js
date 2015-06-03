@@ -99,25 +99,16 @@ PlayerTracker.prototype.getTeam = function() {
 
 // Functions
 
-PlayerTracker.prototype.clear = function() {
-    this.socket.sendPacket(new Packet.ClearNodes());
-}
-
-PlayerTracker.prototype.setBorder = function() {
-    var border = this.gameServer.border;
-    this.socket.sendPacket(new Packet.SetBorder(border.left, border.right, border.top, border.bottom));
-}
-
 PlayerTracker.prototype.update = function() {
 	// Actions buffer
     if (this.socket.packetHandler.pressSpace) {
         // Split cell
-        this.socket.packetHandler.splitCells(this);
+        this.gameServer.splitCells(this);
         this.socket.packetHandler.pressSpace = false;
     }
     if (this.socket.packetHandler.pressW) {
         // Eject mass
-        this.socket.packetHandler.ejectMass(this);
+        this.gameServer.ejectMass(this);
         this.socket.packetHandler.pressW = false;
     }
     
@@ -179,7 +170,7 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
     	
         totalSize += this.cells[i].getSize();
     }
-    this.sightRange = 1024 / Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
+    this.sightRange = this.gameServer.config.serverViewBase / Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
 }
 
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
@@ -211,8 +202,8 @@ PlayerTracker.prototype.calcViewBox = function() {
         this.spectatedPlayer = this.gameServer.gameMode.rankOne;
         if (this.spectatedPlayer) {
             // Get spectated player's location and calculate zoom amount
-			var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
-			specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
+            var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
+            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
             this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,specZoom));
             return this.spectatedPlayer.visibleNodes;
         } else {

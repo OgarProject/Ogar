@@ -37,8 +37,9 @@ function GameServer(port,gameMode) {
     this.config = {
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
         serverBots: 0, // Amount of player bots to spawn (Experimental)
+        serverViewBase: 1024, // Base view distance of players. Warning: high values may cause lag
         foodSpawnRate: 20, // The interval between each food cell spawn in ticks (1 tick = 50 ms)
-        foodSpawnAmount: 5, // The amount of food to spawn per interval
+        foodSpawnAmount: 10, // The amount of food to spawn per interval
         foodStartAmount: 100, // The starting amount of food in the map
         foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
@@ -49,7 +50,7 @@ function GameServer(port,gameMode) {
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
         ejectSpeed: 170, // Base speed of ejected cells
-        ejectSpawnPlayer: 10, // Chance for a player to spawn from ejected mass
+        ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
         playerMaxMass: 225000, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
@@ -231,8 +232,12 @@ GameServer.prototype.mainLoop = function() {
         // Update cells/leaderboard loop
         this.tickMain++;
         if (this.tickMain >= 40) { // 2 seconds
+            // Update cells
             this.updateCells();
-            this.updateLeaderboard();
+            
+            // Update leaderboard with the gamemode's method
+            this.leaderboard = []; 
+            this.gameMode.updateLB(this);
 			
             this.tickMain = 0; // Reset
         }
@@ -419,6 +424,89 @@ GameServer.prototype.setAsMovingNode = function(node) {
 	this.movingNodes.push(node);
 }
 
+GameServer.prototype.splitCells = function(client) {
+    var len = client.cells.length;
+    for (var i = 0; i < len; i++) {
+        var cell = client.cells[i];
+			
+        if (client.cells.length >= this.config.playerMaxCells) {
+            // Player cell limit
+            continue;
+        }
+
+        if (!cell) {
+            console.log("[Warning] Tried to split a non existing cell.");
+            continue;
+        }
+        
+        if (cell.mass < this.config.playerMinMassSplit) {
+            continue;
+        }
+			
+        // Get angle
+        var deltaY = client.getMouseY() - cell.position.y;
+        var deltaX = client.getMouseX() - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+    	
+        // Get starting position
+        var size = cell.getSize();
+        var startPos = {
+            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
+            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+        };
+        // Calculate mass of splitting cell
+        var newMass = cell.mass / 2;
+        cell.mass = newMass;
+        // Create cell
+        split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
+        split.setAngle(angle);
+        split.setMoveEngineData(40 + (cell.getSpeed() * 4), 20);
+        split.setRecombineTicks(this.config.playerRecombineTime);
+    	
+        // Add to moving cells list
+        this.setAsMovingNode(split);
+        this.addNode(split);
+    }
+}
+
+GameServer.prototype.ejectMass = function(client) {
+    for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
+        
+        if (!cell) {
+            continue;
+        }
+       
+        if (cell.mass < this.config.playerMinMassEject) {
+            continue;
+        }
+		
+        var deltaY = client.getMouseY() - cell.position.y;
+        var deltaX = client.getMouseX() - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+   	
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
+            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+        };
+        
+        // Remove mass from parent cell
+        cell.mass -= this.config.ejectMass;
+        
+        // Create cell
+        ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
+        ejected.setAngle(angle);
+        ejected.setMoveEngineData(this.config.ejectSpeed, 20);
+        ejected.setColor(cell.getColor());
+       
+        // Add to moving cells list
+        this.addNode(ejected);
+        this.setAsMovingNode(ejected);
+    }
+}
+
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass, speed) {
     // Starting position
     var startPos = {
@@ -564,13 +652,6 @@ GameServer.prototype.getNearestVirus = function(cell) {
         virus = check;
     }
     return virus;
-}
-
-GameServer.prototype.updateLeaderboard = function() {
-    // Clear the leaderboard first
-    this.leaderboard = []; 
-    // Update leaderboard with the gamemode's method
-    this.gameMode.updateLB(this);
 }
 
 GameServer.prototype.updateCells = function(){

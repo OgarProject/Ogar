@@ -216,7 +216,7 @@ BotPlayer.prototype.decide = function(cell) {
 				
                 if (splitDist >= distToTarget) {
                     // Splitkill
-                    this.socket.packetHandler.splitCells(this);
+                    this.gameServer.splitCells(this);
                 }
             }
             break;
