@@ -4,7 +4,9 @@ var Packet = require('./packet');
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
-    this.properInit = false;
+    
+    this.pressW = false;
+    this.pressSpace = false;
 }
 
 module.exports = PacketHandler;
@@ -25,12 +27,6 @@ PacketHandler.prototype.handleMessage = function(message) {
     var buffer = stobuf(message);
     var view = new DataView(buffer);
     var packetId = view.getUint8(0, true);
-    
-    // Client with mods tried to connect
-    if (packetId != 254 && !this.properInit && !this.gameServer.config.serverAllowMods) {
-        console.log("[Game] Client at %s tried to connect with mods enabled.", this.socket.remoteAddress);
-        this.socket.close();
-    }
 
     switch (packetId) {
         case 0:
@@ -59,14 +55,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             client.setMouseX(view.getFloat64(1, true));
             client.setMouseY(view.getFloat64(9, true));
             break;
-		case 17: // Space Press - Split cell
-            this.splitCells(this.socket.playerTracker);
+		case 17: 
+            // Space Press - Split cell
+            this.pressSpace = true;
             break;
-        case 21: // W Press - Eject mass
-            this.ejectMass(this.socket.playerTracker);
-            break;
-        case 254:
-            this.properInit = true;
+        case 21: 
+            // W Press - Eject mass
+            this.pressW = true;
             break;
         case 255:
             // Connection Start - Send SetBorder packet first

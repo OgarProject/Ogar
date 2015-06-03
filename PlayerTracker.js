@@ -109,6 +109,18 @@ PlayerTracker.prototype.setBorder = function() {
 }
 
 PlayerTracker.prototype.update = function() {
+	// Actions buffer
+    if (this.socket.packetHandler.pressSpace) {
+        // Split cell
+        this.socket.packetHandler.splitCells(this);
+        this.socket.packetHandler.pressSpace = false;
+    }
+    if (this.socket.packetHandler.pressW) {
+        // Eject mass
+        this.socket.packetHandler.ejectMass(this);
+        this.socket.packetHandler.pressW = false;
+    }
+    
 	// Remove nodes from visible nodes if possible
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
@@ -116,7 +128,7 @@ PlayerTracker.prototype.update = function() {
             this.visibleNodes.splice(index, 1);
         }
     }
-   
+
     // Get visible nodes every 200 ms
     var nonVisibleNodes = []; // Nodes that are not visible
     if (this.tickViewBox <= 0) {
