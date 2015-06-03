@@ -44,7 +44,7 @@ BotPlayer.prototype.updateSightRange = function() { // For view distance
 }
 
 BotPlayer.prototype.update = function() { // Overrides the update function from player tracker
-	// Remove nodes from visible nodes if possible
+    // Remove nodes from visible nodes if possible
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
         if (index > -1) {
@@ -53,9 +53,9 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     }
 	
     // Respawn if bot is dead
-	if (this.cells.length <= 0) {
-		this.socket.packetHandler.setNickname(this.name);
-	}
+    if (this.cells.length <= 0) {
+        this.socket.packetHandler.setNickname(this.name);
+    }
 
     // Update every 500 ms
     if (this.tickViewBox <= 0) {
@@ -63,57 +63,57 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
         this.tickViewBox = 10;
     } else {
         this.tickViewBox--;
-		return;
+        return;
     }
 	
 	// Calc predators/prey
-	var cell = this.getLowestCell();
-	this.predators = [];
-	this.prey = [];
-	this.food = [];
+    var cell = this.getLowestCell();
+    this.predators = [];
+    this.prey = [];
+    this.food = [];
     
-	var ignoreMass = Math.min((cell.mass / 10), 100); // Ignores targeting cells below this mass
-	// Loop
-	for (i in this.visibleNodes) {
-		var check = this.visibleNodes[i];
+    var ignoreMass = Math.min((cell.mass / 10), 100); // Ignores targeting cells below this mass
+    // Loop
+    for (i in this.visibleNodes) {
+        var check = this.visibleNodes[i];
 		
-		// Cannot target itself
-		if ((!check) || (cell.owner == check.owner)){
-			continue;
-		}
+        // Cannot target itself
+        if ((!check) || (cell.owner == check.owner)){
+            continue;
+        }
 		
-		var t = check.getType();
-		if (t == 0) {
-			// Cannot target teammates
-	        if (this.gameServer.gameMode.haveTeams) {
-	            if (check.owner.team == this.team) {
-	                continue;
-	            }
-	        }
+        var t = check.getType();
+        if (t == 0) {
+            // Cannot target teammates
+            if (this.gameServer.gameMode.haveTeams) {
+                if (check.owner.team == this.team) {
+                    continue;
+                }
+            }
 	        
-	        // Check for danger
-		    if (cell.mass > (check.mass * 1.25)){
-		    	//if (check.mass > ignoreMass) {
-		    		// Prey
-					this.prey.push(check);
-		    	//}
-			} else if (check.mass > (cell.mass * 1.25)) {
-				// Predator
-				this.predators.push(check);
-			}
-		} else if (t == 1) { // Food
-			this.food.push(check);
-		} else if (t == 3) { // Ejected mass
-			if (cell.mass > 20) {
-				this.food.push(check);
-			}
-		}
-	}
+            // Check for danger
+            if (cell.mass > (check.mass * 1.25)){
+                //if (check.mass > ignoreMass) {
+                    // Prey
+                this.prey.push(check);
+                //}
+            } else if (check.mass > (cell.mass * 1.25)) {
+                // Predator
+                this.predators.push(check);
+            }
+        } else if (t == 1) { // Food
+            this.food.push(check);
+        } else if (t == 3) { // Ejected mass
+            if (cell.mass > 20) {
+                this.food.push(check);
+            }
+        }
+    }
 	
-	// Action
-	this.decide(cell);
+    // Action
+    this.decide(cell);
 	
-	this.nodeDestroyQueue = []; // Empty
+    this.nodeDestroyQueue = []; // Empty
 }
 
 // Custom
@@ -134,26 +134,38 @@ BotPlayer.prototype.decide = function(cell) {
 	}
 	
     switch (this.gameState) {
-		case 0: // Wander
-		    //console.log("[Bot] "+cell.getName()+": Wandering");
-		    if ((cell.position.x == this.mouseX) && (cell.position.y == this.mouseY)) {
-				// Get a new position
-				var randomPos = this.gameServer.getRandomPosition();
-		        this.mouseX = randomPos.x;
-                this.mouseY = randomPos.y;
-			}
+        case 0: // Wander
+            //console.log("[Bot] "+cell.getName()+": Wandering");
+            if ((cell.position.x == this.mouseX) && (cell.position.y == this.mouseY)) {
+                // Get a new position
+                var index = Math.floor(Math.random() * this.gameServer.nodes.length);
+                var randomNode = this.gameServer.nodes[index];
+                var pos = {x: 0, y: 0};
+		        
+                if (randomNode.getType() == 3 | 1) {
+                    pos.x = randomNode.position.x;
+                    pos.y = randomNode.position.y;
+                } else {
+                    // Not a food/ejected cell
+                    pos = this.gameServer.getRandomPosition();
+                }
+		        
+                // Set bot's mouse coords to this location
+                this.mouseX = pos.x;
+                this.mouseY = pos.y;
+            }
             break;
-		case 1: // Looking for food
-		    //console.log("[Bot] "+cell.getName()+": Getting Food");
-		    if ((!this.target) || (this.target.getType() == 0) || (this.visibleNodes.indexOf(this.target) == -1)) {
-				// Food is eaten/a player cell/out of sight... so find a new food cell to target
-				this.target = this.findNearest(cell,this.food);
+        case 1: // Looking for food
+            //console.log("[Bot] "+cell.getName()+": Getting Food");
+            if ((!this.target) || (this.target.getType() == 0) || (this.visibleNodes.indexOf(this.target) == -1)) {
+                // Food is eaten/a player cell/out of sight... so find a new food cell to target
+                this.target = this.findNearest(cell,this.food);
 							
-			    this.mouseX = this.target.position.x;
+                this.mouseX = this.target.position.x;
                 this.mouseY = this.target.position.y;
-			}
+            }
             break;
-	    case 2: // Run from (potential) predators
+        case 2: // Run from (potential) predators
             var avoid = this.predators[0];
             //console.log("[Bot] "+cell.getName()+": Fleeing from "+avoid.getName());
 	    	
@@ -164,56 +176,55 @@ BotPlayer.prototype.decide = function(cell) {
             
             // Now reverse the angle
             if (angle > Math.PI) {
-            	angle -= Math.PI;
+                angle -= Math.PI;
             } else {
-            	angle += Math.PI;
+                angle += Math.PI;
             }
 	    	
-			// Direction to move
+            // Direction to move
             var x1 = cell.position.x + (500 * Math.sin(angle));
             var y1 = cell.position.y + (500 * Math.cos(angle));
 			
-			if ((!this.target) || (this.target.getType() == 0) || (this.visibleNodes.indexOf(this.target) == -1)) {
-			    var foods = this.getFoodBox(x1,y1);
-			    if (foods) {
-				    this.target = this.findNearest(cell, this.food);
+            if ((!this.target) || (this.target.getType() == 0) || (this.visibleNodes.indexOf(this.target) == -1)) {
+                var foods = this.getFoodBox(x1,y1);
+                if (foods) {
+                    this.target = this.findNearest(cell, this.food);
 				
-				    this.mouseX = this.target.position.x;
-				    this.mouseY = this.target.position.y;
-				    break;
-			    }
-			}   
+                    this.mouseX = this.target.position.x;
+                    this.mouseY = this.target.position.y;
+                    break;
+                }
+            }   
 			
-			this.mouseX = x1;
+            this.mouseX = x1;
             this.mouseY = y1;   
             break;
-	    case 3: // Target prey
-	        if ((!this.target) || (this.visibleNodes.indexOf(this.target) == -1)) {
-				this.target = this.getRandom(this.prey);
-			}
-			//console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
+        case 3: // Target prey
+            if ((!this.target) || (this.visibleNodes.indexOf(this.target) == -1)) {
+                this.target = this.getRandom(this.prey);
+            }
+            //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
 							
-		    this.mouseX = this.target.position.x;
+            this.mouseX = this.target.position.x;
             this.mouseY = this.target.position.y;
 			
-			var massReq = 1.25 * (this.target.mass * 2 ); // Mass required to splitkill the target
+            var massReq = 1.25 * (this.target.mass * 2 ); // Mass required to splitkill the target
 			
-			if ((cell.mass > massReq) && (this.cells.length <= 2)) { // Will not split into more than 4 cells
-				var splitDist = (4 * (50 + (cell.getSpeed() * 4))) + (cell.getSize() * 1.75);
-				var distToTarget = this.getAccDist(cell,this.target);
+            if ((cell.mass > massReq) && (this.cells.length <= 2)) { // Will not split into more than 4 cells
+                var splitDist = (4 * (50 + (cell.getSpeed() * 4))) + (cell.getSize() * 1.75); // Distance needed to splitkill
+                var distToTarget = this.getAccDist(cell,this.target); // Distance between the target and this cell
 				
                 if (splitDist >= distToTarget) {
-                	// Splitkill
+                    // Splitkill
                     this.socket.packetHandler.splitCells(this);
                 }
-			}
-			break;
-		default:
-		    //console.log("[Bot] "+cell.getName()+": Idle "+this.gameState);
-		    this.gameState = 0;
+            }
             break;
-	}
-	
+		default:
+            //console.log("[Bot] "+cell.getName()+": Idle "+this.gameState);
+            this.gameState = 0;
+            break;
+    }
 }
 
 // Finds the nearest cell in list
