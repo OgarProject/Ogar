@@ -64,8 +64,8 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 255:
             // Connection Start - Send SetBorder packet first
-            var border = this.gameServer.border;
-            this.socket.sendPacket(new Packet.SetBorder(border.left, border.right, border.top, border.bottom));
+            var c = this.gameServer.config;
+            this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
             break;
         default:
             break;

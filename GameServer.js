@@ -28,16 +28,14 @@ function GameServer(port,gameMode) {
     this.tickMain = 0; // 50 ms ticks, 40 of these = 1 leaderboard update
     this.tickSpawn = 0; // 50 ms ticks, used with spawning food
     
-    this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
-        left: 0,
-        right: 6000.0,
-        top: 0,
-        bottom: 6000.0
-    }; // Right: X increases, Down: Y increases (as of 2015-05-20)
-    this.config = {
+    this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
         serverBots: 0, // Amount of player bots to spawn (Experimental)
         serverViewBase: 1024, // Base view distance of players. Warning: high values may cause lag
+        borderLeft: 0, // Left border of map (Vanilla value: 0)
+        borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
+        borderTop: 0, // Top border of map (Vanilla value: 0)
+        borderBottom: 6000, // Bottom border of map (Vanilla value: 11180.3398875)
         foodSpawnRate: 20, // The interval between each food cell spawn in ticks (1 tick = 50 ms)
         foodSpawnAmount: 10, // The amount of food to spawn per interval
         foodStartAmount: 100, // The starting amount of food in the map
@@ -52,7 +50,7 @@ function GameServer(port,gameMode) {
         ejectSpeed: 170, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
-        playerMaxMass: 225000, // Maximum mass a player can have
+        playerMaxMass: 22500, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
@@ -142,8 +140,8 @@ GameServer.prototype.getNextNodeId = function() {
 
 GameServer.prototype.getRandomPosition = function() {
     return {
-        x: Math.floor(Math.random() * (this.border.right - this.border.left)) + this.border.left,
-        y: Math.floor(Math.random() * (this.border.bottom - this.border.top)) + this.border.top
+        x: Math.floor(Math.random() * (this.config.borderRight - this.config.borderLeft)) + this.config.borderLeft,
+        y: Math.floor(Math.random() * (this.config.borderBottom - this.config.borderTop)) + this.config.borderTop
     };
 }
 
@@ -400,7 +398,7 @@ GameServer.prototype.updateMoveEngine = function() {
         
         if (check.getMoveTicks() > 0) {
             // If the cell has enough move ticks, then move it
-            check.calcMovePhys(this.border);
+            check.calcMovePhys(this.config);
             if ((check.getType() == 3) && (this.nodesVirus.length < this.config.virusMaxAmount)) {
                 // Check for viruses
                 var v = this.getNearestVirus(check);

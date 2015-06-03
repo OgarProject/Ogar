@@ -131,7 +131,7 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
 }
 
 Cell.prototype.calcMove = function(x2, y2, gameServer) {
-	var border = gameServer.border;
+	var config = gameServer.config;
 	
     // Get angle
     var deltaY = y2 - this.position.y;
@@ -208,24 +208,24 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
     }
     
     // Check to ensure we're not passing the world border
-    if (x1 < border.left) {
-        x1 = border.left;
+    if (x1 < config.borderLeft) {
+        x1 = config.borderLeft;
     }
-	if (x1 > border.right) {
-        x1 = border.right;
+	if (x1 > config.borderRight) {
+        x1 = config.borderRight;
     }
-    if (y1 < border.top) {
-        y1 = border.top;
+    if (y1 < config.borderTop) {
+        y1 = config.borderTop;
     }
-    if (y1 > border.bottom) {
-        y1 = border.bottom;
+    if (y1 > config.borderBottom) {
+        y1 = config.borderBottom;
     }
 
     this.position.x = x1;
     this.position.y = y1;
 }
 
-Cell.prototype.calcMovePhys = function(border) {
+Cell.prototype.calcMovePhys = function(config) {
     // Movement for ejected cells
     var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.angle) );
     var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
@@ -236,25 +236,25 @@ Cell.prototype.calcMovePhys = function(border) {
 	 
     // Border check - Bouncy physics
     var radius = 40;
-    if ((this.position.x - radius) < border.left) {
+    if ((this.position.x - radius) < config.borderLeft) {
         // Flip angle horizontally - Left side
         this.angle = Math.abs(1 - this.angle);
-        X = border.left + radius;
+        X = config.borderLeft + radius;
     }
-    if ((this.position.x + radius) > border.right) {
+    if ((this.position.x + radius) > config.borderRight) {
         // Flip angle horizontally - Right side
         this.angle = 1 - this.angle;
-        X = border.right - radius;
+        X = config.borderRight - radius;
     }
-    if ((this.position.y - radius) < border.top) {
+    if ((this.position.y - radius) < config.borderTop) {
         // Flip angle vertically - Top side
         this.angle = this.angle - 1;
-        Y = border.top + radius;
+        Y = config.borderTop + radius;
     }
-    if ((this.position.y + radius) > border.bottom) {
+    if ((this.position.y + radius) > config.borderBottom) {
         // Flip angle vertically - Bottom side
         this.angle = this.angle - 1;
-        Y = border.bottom - radius;
+        Y = config.borderBottom - radius;
     }
     
     // Set position
