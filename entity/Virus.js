@@ -37,7 +37,7 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
     
     // Add mass to the cell if its not splitting
     if (numSplits <= 0) {
-        cell.addMass(this.mass);
+        consumer.addMass(this.mass);
         return;
     }
     
