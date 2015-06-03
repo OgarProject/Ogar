@@ -275,3 +275,7 @@ Cell.prototype.onAdd = function(gameServer) {
 Cell.prototype.onRemove = function(gameServer) {
     // Called when this cell is removed
 }
+
+Cell.prototype.moveDone = function(gameServer) {
+    // Called when this cell finished moving with the auto move engine
+}

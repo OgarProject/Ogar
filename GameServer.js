@@ -14,6 +14,7 @@ function GameServer(port,gameMode) {
     this.port = port;
     this.nodes = [];
     this.nodesVirus = []; // Virus nodes
+    this.nodesEjected = []; // Ejected mass nodes
     this.nodesPlayer = []; // Nodes controlled by players
     
     this.currentFood = 0;
@@ -46,8 +47,9 @@ function GameServer(port,gameMode) {
         virusStartMass: 100.0, // Starting virus size (In mass)
         virusBurstMass: 198.0, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
-        ejectMassGain: 14, // Amount of mass gained from consuming ejected cells
+        ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
         ejectSpeed: 170, // Base speed of ejected cells
+        ejectSpawnPlayer: 10, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
         playerMaxMass: 225000, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
@@ -269,6 +271,44 @@ GameServer.prototype.spawnFood = function() {
     this.currentFood++; 
 }
 
+GameServer.prototype.spawnPlayer = function(client) {
+    var pos = this.getRandomPosition();
+    var startMass = this.config.playerStartMass;
+    
+    // Check if there are ejected mass in the world. Does not work in team mode
+    if ((this.nodesEjected.length > 0) && (!this.gameMode.haveTeams)) {
+        var index = Math.floor(Math.random() * 100) + 1;
+        if (index <= this.config.ejectSpawnPlayer) {
+            // Get ejected cell
+            var index = Math.floor(Math.random() * this.nodesEjected.length);
+            var e = this.nodesEjected[index];
+    		
+            // Remove ejected mass
+            this.removeNode(e);
+    		
+            // Inherit
+            pos.x = e.position.x;
+            pos.y = e.position.y;
+            startMass = e.mass;
+    		
+            var color = e.getColor();
+            client.setColor({
+                'r': color.r,
+                'g': color.g,
+                'b': color.b
+            });
+        }
+    }
+    
+    // Spawn player and add to world
+    var cell = new Entity.PlayerCell(this.getNextNodeId(), client, pos, startMass);
+    this.addNode(cell);
+    
+    // Set initial mouse coords
+    client.setMouseX(pos.x);
+    client.setMouseY(pos.y);
+}
+
 GameServer.prototype.virusCheck = function() {
     // Checks if there are enough viruses on the map
     if (this.nodesVirus.length < this.config.virusMinAmount) {
@@ -364,8 +404,8 @@ GameServer.prototype.updateMoveEngine = function() {
                 }
             }
         } else {
-            // Set collision off
-            check.setCollisionOff(false);
+            // Auto move is done
+        	check.moveDone(this);
             // Remove cell from list
             var index = this.movingNodes.indexOf(check);
             if (index != -1) {

@@ -46,3 +46,8 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     // Gamemode actions
     gameServer.gameMode.onCellRemove(this);
 }
+
+PlayerCell.prototype.moveDone = function(gameServer) {
+	this.setCollisionOff(false);
+}
+

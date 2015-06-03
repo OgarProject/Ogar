@@ -76,14 +76,8 @@ PacketHandler.prototype.handleMessage = function(message) {
 PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
-        // If client has no cells...
-        var pos = this.gameServer.getRandomPosition();
-        var cell = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, pos, this.gameServer.config.playerStartMass);
-        this.gameServer.addNode(cell);
-        
-        // Set initial mouse coords
-        client.setMouseX(pos.x);
-        client.setMouseY(pos.y);
+        // If client has no cells... then spawn a player
+        this.gameServer.spawnPlayer(client);
         
         // Turn off spectate mode
         client.spectate = false;
@@ -127,7 +121,7 @@ PacketHandler.prototype.splitCells = function(client) {
          // Create cell
          split = new Entity.PlayerCell(this.gameServer.getNextNodeId(), client, startPos, newMass);
          split.setAngle(angle);
-         split.setMoveEngineData(50 + (cell.getSpeed() * 4), 20);
+         split.setMoveEngineData(40 + (cell.getSpeed() * 4), 20);
          split.setRecombineTicks(this.gameServer.config.playerRecombineTime);
      	
          // Add to moving cells list

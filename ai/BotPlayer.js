@@ -54,7 +54,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
 	
     // Respawn if bot is dead
     if (this.cells.length <= 0) {
-        this.socket.packetHandler.setNickname(this.name);
+        this.gameServer.spawnPlayer(this);
     }
 
     // Update every 500 ms
@@ -211,7 +211,7 @@ BotPlayer.prototype.decide = function(cell) {
             var massReq = 1.25 * (this.target.mass * 2 ); // Mass required to splitkill the target
 			
             if ((cell.mass > massReq) && (this.cells.length <= 2)) { // Will not split into more than 4 cells
-                var splitDist = (4 * (50 + (cell.getSpeed() * 4))) + (cell.getSize() * 1.75); // Distance needed to splitkill
+                var splitDist = (4 * (40 + (cell.getSpeed() * 4))) + (cell.getSize() * 1.75); // Distance needed to splitkill
                 var distToTarget = this.getAccDist(cell,this.target); // Distance between the target and this cell
 				
                 if (splitDist >= distToTarget) {
