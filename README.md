@@ -14,6 +14,9 @@ The project is nearly complete. Here's a rough list of what's been done and what
 - [x] Cells eating other cells
 - [x] Leaderboard
 - [x] Team mode
+- [x] Spectate mode
+
+Playerbots are currently basic and for testing purposes. To use them, change "serverBots" to a value higher than zero (I like to use 50) in the config field of GameServer.js.
 
 ## Known Issues
 - [General] Several formulas for calculating variables (ex. distance of splitting) are incorrect
