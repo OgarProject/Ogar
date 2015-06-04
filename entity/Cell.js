@@ -130,6 +130,11 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
     return true;
 }
 
+Cell.prototype.visibleCheck = function(bottomY,topY,rightX,leftX) {
+    // Checks if this cell is visible to the player
+    return this.collisionCheck(bottomY,topY,rightX,leftX);
+}
+
 Cell.prototype.calcMove = function(x2, y2, gameServer) {
 	var config = gameServer.config;
 	

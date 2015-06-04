@@ -230,7 +230,7 @@ PlayerTracker.prototype.calcViewBox = function() {
             continue;
         }
 		
-        if (node.collisionCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
+        if (node.visibleCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
             // Cell is in range of viewBox
             newVisible.push(node);
         }

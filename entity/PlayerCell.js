@@ -11,6 +11,36 @@ PlayerCell.prototype = new Cell();
 
 // Main Functions
 
+PlayerCell.prototype.visibleCheck = function(bottomY,topY,rightX,leftX) {
+	// Checks if this cell is visible to the player
+    var r = this.getSize(); // Radius of cell
+    var corners = [{x: this.position.x + r,y: this.position.y + r},
+        {x: this.position.x + r,y: this.position.y - r},
+        {x: this.position.x - r,y: this.position.y + r},
+        {x: this.position.x - r,y: this.position.y - r},];
+	
+    var seen = false;
+    var i = 0;
+    while ((i < 4) && (!seen)) {
+        var pos = corners[i];
+        if (pos.y > bottomY) {
+            i++;
+            continue;
+        } if (pos.y < topY) {
+            i++;
+            continue;
+        } if (pos.x > rightX) {
+            i++;
+            continue;
+        } if (pos.x < leftX) {
+            i++;
+            continue;
+        } 
+        seen = true;
+    }
+    return seen;
+}
+
 PlayerCell.prototype.onConsume = function(consumer,gameServer) {
     consumer.addMass(this.mass);
 }
