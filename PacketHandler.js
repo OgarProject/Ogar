@@ -51,8 +51,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 16:
             // Mouse Move
             var client = this.socket.playerTracker;
-            client.setMouseX(view.getFloat64(1, true));
-            client.setMouseY(view.getFloat64(9, true));
+            client.setMouse(view.getFloat64(1, true),view.getFloat64(9, true));
             break;
 		case 17: 
             // Space Press - Split cell

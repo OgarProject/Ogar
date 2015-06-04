@@ -1,8 +1,8 @@
-function Cell(nodeId, owner, position, mass, gameServer) {
+function Cell(nodeId, owner, pos, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    this.color = {r: 0, g: 255, b: 0};
-    this.position = position;
+    this.color = [0 ,250 ,0];  // RGB
+    this.pos = pos; // 0 = x , 1 = y
     this.mass = mass; // Starting mass of the cell
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     
@@ -34,13 +34,11 @@ Cell.prototype.getName = function() {
 }
 
 Cell.prototype.setColor = function(color) {
-    this.color.r = color.r;
-    this.color.b = color.b;
-    this.color.g = color.g;
+    this.color = color;
 }
 
 Cell.prototype.getColor = function() {
-    return this.color;
+    return [this.color[0], this.color[1], this.color[2]];
 }
 
 Cell.prototype.getType = function() {
@@ -61,7 +59,6 @@ Cell.prototype.getSpeed = function() {
 	// Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
 	// (should possibly have a config value for this?)
 	var speed = 745.28 * Math.pow(this.mass, -0.222) * 50 / 1000;
-	speed *= this.owner.gameServer.config.playerSpeedMultiplier;
 	return speed;
 }
 
@@ -117,14 +114,16 @@ Cell.prototype.setKiller = function(cell) {
 // Functions
 
 Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
+	var x = this.pos[0];
+	var y = this.pos[1];
 	// Collision checking
-	if (this.position.y > bottomY) {
+	if (y > bottomY) {
         return false;
-    } if (this.position.y < topY) {
+    } if (y < topY) {
         return false;
-    } if (this.position.x > rightX) {
+    } if (x > rightX) {
         return false;
-    } if (this.position.x < leftX) {
+    } if (x < leftX) {
         return false;
     } 
     return true;
@@ -139,16 +138,16 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
 	var config = gameServer.config;
 	
     // Get angle
-    var deltaY = y2 - this.position.y;
-    var deltaX = x2 - this.position.x;
+	var deltaX = x2 - this.pos[0];
+    var deltaY = y2 - this.pos[1];
     var angle = Math.atan2(deltaX,deltaY);
     
     // Distance between mouse pointer and cell
-    var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
+    var dist = Math.sqrt( Math.pow(x2 - this.pos[0], 2) +  Math.pow(y2 - this.pos[1], 2) );
     var speed = Math.min(this.getSpeed(),dist);
     
-    var x1 = Math.floor(this.position.x + ( speed * Math.sin(angle) ));
-    var y1 = Math.floor(this.position.y + ( speed * Math.cos(angle) ));
+    var x1 = (this.pos[0] + ( speed * Math.sin(angle) ));
+    var y1 = (this.pos[1] + ( speed * Math.cos(angle) ));
 	
     // Collision check for other cells
     for (var i = 0; i < this.owner.cells.length;i++) {
@@ -160,20 +159,20 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
 		
         if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
             // Cannot recombine - Collision with your own cells
-            var dist = Math.sqrt( Math.pow(cell.position.x - this.position.x, 2) +  Math.pow(cell.position.y - this.position.y, 2) );
+            var dist = Math.sqrt( Math.pow(cell.pos[0] - this.pos[0], 2) +  Math.pow(cell.pos[1] - this.pos[1], 2) );
             var collisionDist = cell.getSize() + this.getSize(); // Minimum distance between the 2 cells
         	
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
-                var newDeltaY = cell.position.y - y1;
-                var newDeltaX = cell.position.x - x1;
+                var newDeltaY = cell.pos[1] - y1;
+                var newDeltaX = cell.pos[0] - x1;
                 var newAngle = Math.atan2(newDeltaX,newDeltaY);
                 
                 var move = collisionDist - dist + 5;
                 
-                cell.position.x = cell.position.x + ( move * Math.sin(newAngle) );
-                cell.position.y = cell.position.y + ( move * Math.cos(newAngle) );
+                cell.pos[0] = cell.pos[0] + ( move * Math.sin(newAngle) ) >> 0; // Convert to int
+                cell.pos[1] = cell.pos[1] + ( move * Math.cos(newAngle) ) >> 0; // Convert to int
             }
         }
     }
@@ -193,20 +192,20 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
     		
             if (check.owner.getTeam() == team) {
                 // Collision with teammates
-                var dist = Math.sqrt( Math.pow(check.position.x - this.position.x, 2) +  Math.pow(check.position.y - this.position.y, 2) );
+                var dist = Math.sqrt( Math.pow(check.pos[0] - this.pos[0], 2) +  Math.pow(check.pos[1] - this.pos[1], 2) );
                 var collisionDist = check.getSize() + this.getSize(); // Minimum distance between the 2 cells
     			
                 // Calculations
                 if (dist < collisionDist) { // Collided
                     // The moving cell pushes the colliding cell
-                    var newDeltaY = check.position.y - y1;
-                    var newDeltaX = check.position.x - x1;
+                    var newDeltaY = check.pos[1] - y1;
+                    var newDeltaX = check.pos[0] - x1;
                     var newAngle = Math.atan2(newDeltaX,newDeltaY);
                     
                     var move = collisionDist - dist;
                     
-                    check.position.x = check.position.x + ( move * Math.sin(newAngle) );
-                    check.position.y = check.position.y + ( move * Math.cos(newAngle) );
+                    check.pos[0] = check.pos[0] + ( move * Math.sin(newAngle) ) >> 0; // Convert to int
+                    check.pos[1] = check.pos[1] + ( move * Math.cos(newAngle) ) >> 0; // Convert to int
                 }
             }
         }
@@ -226,14 +225,14 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
         y1 = config.borderBottom;
     }
 
-    this.position.x = x1;
-    this.position.y = y1;
+    this.pos[0] = x1 >> 0; // Convert to int
+    this.pos[1] = y1 >> 0; // Convert to int
 }
 
 Cell.prototype.calcMovePhys = function(config) {
     // Movement for ejected cells
-    var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.angle) );
-    var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
+    var X = this.pos[0] + ( this.moveEngineSpeed * Math.sin(this.angle) );
+    var Y = this.pos[1] + ( this.moveEngineSpeed * Math.cos(this.angle) );
 	
     // Movement engine
     this.moveEngineSpeed *= .75; // Decaying speed
@@ -241,30 +240,30 @@ Cell.prototype.calcMovePhys = function(config) {
 	 
     // Border check - Bouncy physics
     var radius = 40;
-    if ((this.position.x - radius) < config.borderLeft) {
+    if ((this.pos[0] - radius) < config.borderLeft) {
         // Flip angle horizontally - Left side
         this.angle = Math.abs(1 - this.angle);
         X = config.borderLeft + radius;
     }
-    if ((this.position.x + radius) > config.borderRight) {
+    if ((this.pos[0] + radius) > config.borderRight) {
         // Flip angle horizontally - Right side
         this.angle = 1 - this.angle;
         X = config.borderRight - radius;
     }
-    if ((this.position.y - radius) < config.borderTop) {
+    if ((this.pos[1] - radius) < config.borderTop) {
         // Flip angle vertically - Top side
         this.angle = this.angle - 1;
         Y = config.borderTop + radius;
     }
-    if ((this.position.y + radius) > config.borderBottom) {
+    if ((this.pos[1] + radius) > config.borderBottom) {
         // Flip angle vertically - Bottom side
         this.angle = this.angle - 1;
         Y = config.borderBottom - radius;
     }
     
     // Set position
-    this.position.x = X;
-    this.position.y = Y;  
+    this.pos[0] = X >> 0; // Convert to int
+    this.pos[1] = Y >> 0; // Convert to int
 }
 
 // Override these
