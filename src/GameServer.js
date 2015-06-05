@@ -1,17 +1,19 @@
 // Library imports
 var WebSocket = require('ws');
+var Fs = require("fs");
+var Ini = require('./modules/ini.js');
 
 // Project imports
 var Packet = require('./packet');
 var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
+var Gamemode = require('./gamemodes');
 
 // GameServer implementation
-function GameServer(port,gameMode) {
+function GameServer() {
     this.lastNodeId = 1;
     this.clients = [];
-    this.port = port;
     this.nodes = [];
     this.nodesVirus = []; // Virus nodes
     this.nodesEjected = []; // Ejected mass nodes
@@ -20,7 +22,6 @@ function GameServer(port,gameMode) {
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
-    this.gameMode = gameMode;
     
     // Main loop tick
     this.time = new Date();
@@ -28,40 +29,51 @@ function GameServer(port,gameMode) {
     this.tickMain = 0; // 50 ms ticks, 40 of these = 1 leaderboard update
     this.tickSpawn = 0; // 50 ms ticks, used with spawning food
     
-    this.border = { // Vanilla border values are - top: 0, left: 0, right: 111180.3398875, bottom: 11180.3398875,
-        left: 0,
-        right: 6000.0,
-        top: 0,
-        bottom: 6000.0
-    }; // Right: X increases, Down: Y increases (as of 2015-05-20)
-    this.config = {
+    // Config
+    this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
+        serverPort: 443, // Server port
+        serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0, // Amount of player bots to spawn (Experimental)
-        foodSpawnRate: 20, // The interval between each food cell spawn in ticks (1 tick = 50 ms)
-        foodSpawnAmount: 5, // The amount of food to spawn per interval
+        serverViewBase: 1024, // Base view distance of players. Warning: high values may cause lag
+        borderLeft: 0, // Left border of map (Vanilla value: 0)
+        borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
+        borderTop: 0, // Top border of map (Vanilla value: 0)
+        borderBottom: 6000, // Bottom border of map (Vanilla value: 11180.3398875)
+        spawnInterval: 20, // The interval between each food cell spawn in ticks (1 tick = 50 ms)
+        foodSpawnAmount: 10, // The amount of food to spawn per interval
         foodStartAmount: 100, // The starting amount of food in the map
         foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
         virusMinAmount: 10, // Minimum amount of viruses on the map. 
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
-        virusStartMass: 100.0, // Starting virus size (In mass)
-        virusBurstMass: 198.0, // Viruses explode past this size
+        virusStartMass: 100, // Starting virus size (In mass)
+        virusBurstMass: 198, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
         ejectSpeed: 170, // Base speed of ejected cells
-        ejectSpawnPlayer: 10, // Chance for a player to spawn from ejected mass
+        ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
-        playerMaxMass: 225000, // Maximum mass a player can have
+        playerMaxMass: 22500, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
         playerRecombineTime: 15, // Amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds) - currently 30 seconds
-        playerMassDecayRate: .004, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
+        playerMassDecayRate: 4, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
-        playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
+        playerSpeedMultiplier: 1, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
         leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
     };
-	
+    //this.config = Ini.parse(Fs.readFileSync('./gameserver.ini', 'utf-8'));
+    
+    // Gamemodes
+    if (this.config.serverGamemode == 1) {
+    	this.gameMode = new Gamemode.Teams();
+    } else {
+        this.gameMode = new Gamemode.FFA();
+    }
+    
+    // Colors
     this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}]; 
 }
 
@@ -72,7 +84,9 @@ GameServer.prototype.start = function() {
     this.gameMode.onServerInit(this);
 	
     // Start the server
-    this.socketServer = new WebSocket.Server({ port: this.port }, function() {
+    this.socketServer = new WebSocket.Server({ port: this.config.serverPort }, function() {
+        console.log("[Game] Ogar - An open source Agar.io server implementation");
+    	
         // Spawn starting food
         for (var i = 0; i < this.config.foodStartAmount; i++) {
             this.spawnFood();
@@ -82,7 +96,7 @@ GameServer.prototype.start = function() {
         setInterval(this.mainLoop.bind(this), 1);
         
         // Done
-        console.log("[Game] Listening on port %d", this.port);
+        console.log("[Game] Listening on port %d", this.config.serverPort);
         console.log("[Game] Current game mode is "+this.gameMode.name);
         
         // Player bots (Experimental)
@@ -141,8 +155,8 @@ GameServer.prototype.getNextNodeId = function() {
 
 GameServer.prototype.getRandomPosition = function() {
     return {
-        x: Math.floor(Math.random() * (this.border.right - this.border.left)) + this.border.left,
-        y: Math.floor(Math.random() * (this.border.bottom - this.border.top)) + this.border.top
+        x: Math.floor(Math.random() * (this.config.borderRight - this.config.borderLeft)) + this.config.borderLeft,
+        y: Math.floor(Math.random() * (this.config.borderBottom - this.config.borderTop)) + this.config.borderTop
     };
 }
 
@@ -174,7 +188,7 @@ GameServer.prototype.addNode = function(node) {
             continue;
         }
 
-        if (node.collisionCheck(client.viewBox.bottomY,client.viewBox.topY,client.viewBox.rightX,client.viewBox.leftX)) {
+        if (node.visibleCheck(client.viewBox,client.centerPos)) {
             client.visibleNodes.push(node);
         }
     }
@@ -221,7 +235,7 @@ GameServer.prototype.mainLoop = function() {
 		
         // Spawn food
         this.tickSpawn++;
-        if (this.tickSpawn >= this.config.foodSpawnRate) {
+        if (this.tickSpawn >= this.config.spawnInterval) {
             this.updateFood(); // Spawn food
             this.virusCheck(); // Spawn viruses
 			
@@ -231,8 +245,12 @@ GameServer.prototype.mainLoop = function() {
         // Update cells/leaderboard loop
         this.tickMain++;
         if (this.tickMain >= 40) { // 2 seconds
+            // Update cells
             this.updateCells();
-            this.updateLeaderboard();
+            
+            // Update leaderboard with the gamemode's method
+            this.leaderboard = []; 
+            this.gameMode.updateLB(this);
 			
             this.tickMain = 0; // Reset
         }
@@ -305,8 +323,7 @@ GameServer.prototype.spawnPlayer = function(client) {
     this.addNode(cell);
     
     // Set initial mouse coords
-    client.setMouseX(pos.x);
-    client.setMouseY(pos.y);
+    client.mouse = {x: pos.x, y: pos.y};
 }
 
 GameServer.prototype.virusCheck = function() {
@@ -364,7 +381,7 @@ GameServer.prototype.updateMoveEngine = function() {
             continue;
         }
         
-        cell.calcMove(client.getMouseX(), client.getMouseY(), this);
+        cell.calcMove(client.mouse.x, client.mouse.y, this);
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);
@@ -395,7 +412,7 @@ GameServer.prototype.updateMoveEngine = function() {
         
         if (check.getMoveTicks() > 0) {
             // If the cell has enough move ticks, then move it
-            check.calcMovePhys(this.border);
+            check.calcMovePhys(this.config);
             if ((check.getType() == 3) && (this.nodesVirus.length < this.config.virusMaxAmount)) {
                 // Check for viruses
                 var v = this.getNearestVirus(check);
@@ -417,6 +434,89 @@ GameServer.prototype.updateMoveEngine = function() {
 
 GameServer.prototype.setAsMovingNode = function(node) {
 	this.movingNodes.push(node);
+}
+
+GameServer.prototype.splitCells = function(client) {
+    var len = client.cells.length;
+    for (var i = 0; i < len; i++) {
+        var cell = client.cells[i];
+			
+        if (client.cells.length >= this.config.playerMaxCells) {
+            // Player cell limit
+            continue;
+        }
+
+        if (!cell) {
+            console.log("[Warning] Tried to split a non existing cell.");
+            continue;
+        }
+        
+        if (cell.mass < this.config.playerMinMassSplit) {
+            continue;
+        }
+			
+        // Get angle
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+    	
+        // Get starting position
+        var size = cell.getSize();
+        var startPos = {
+            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
+            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+        };
+        // Calculate mass of splitting cell
+        var newMass = cell.mass / 2;
+        cell.mass = newMass;
+        // Create cell
+        split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
+        split.setAngle(angle);
+        split.setMoveEngineData(40 + (cell.getSpeed() * 4), 20);
+        split.setRecombineTicks(this.config.playerRecombineTime);
+    	
+        // Add to moving cells list
+        this.setAsMovingNode(split);
+        this.addNode(split);
+    }
+}
+
+GameServer.prototype.ejectMass = function(client) {
+    for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
+        
+        if (!cell) {
+            continue;
+        }
+       
+        if (cell.mass < this.config.playerMinMassEject) {
+            continue;
+        }
+		
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+   	
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
+            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+        };
+        
+        // Remove mass from parent cell
+        cell.mass -= this.config.ejectMass;
+        
+        // Create cell
+        ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
+        ejected.setAngle(angle);
+        ejected.setMoveEngineData(this.config.ejectSpeed, 20);
+        ejected.setColor(cell.getColor());
+       
+        // Add to moving cells list
+        this.addNode(ejected);
+        this.setAsMovingNode(ejected);
+    }
 }
 
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass, speed) {
@@ -566,14 +666,8 @@ GameServer.prototype.getNearestVirus = function(cell) {
     return virus;
 }
 
-GameServer.prototype.updateLeaderboard = function() {
-    // Clear the leaderboard first
-    this.leaderboard = []; 
-    // Update leaderboard with the gamemode's method
-    this.gameMode.updateLB(this);
-}
-
 GameServer.prototype.updateCells = function(){
+    var massDecay = this.config.playerMinMassDecay/1000;
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
         
@@ -593,7 +687,7 @@ GameServer.prototype.updateCells = function(){
             // Gamemode modifiers
             decay = decay * this.gameMode.decayMod;
         	
-            cell.mass *= (1 - this.config.playerMassDecayRate);
+            cell.mass *= (1 - massDecay);
         }
     }
 }

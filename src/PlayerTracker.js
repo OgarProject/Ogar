@@ -11,8 +11,7 @@ function PlayerTracker(gameServer, socket) {
     this.cells = [];
     this.score = 0; // Needed for leaderboard
 
-    this.mouseX = 0;
-    this.mouseY = 0;
+    this.mouse = {x: 0, y: 0};
     this.tickLeaderboard = 0; // 
     this.tickViewBox = 0;
     
@@ -22,15 +21,13 @@ function PlayerTracker(gameServer, socket) {
     
     // Viewing box
     this.sightRange = 0;
-    this.centerPos = {
-        x: 0,
-        y: 0
-    }
+    this.centerPos = {x: 0, y: 0 }
     this.viewBox = {
         topY: 0,
         bottomY: 0,
         leftX: 0,
-        rightX: 0
+        rightX: 0,
+        width: 0 // Half-width
     }
     
     // Gamemode function
@@ -60,22 +57,6 @@ PlayerTracker.prototype.getName = function() {
     return this.name;
 }
 
-PlayerTracker.prototype.getMouseX = function() {
-    return this.mouseX;
-}
-
-PlayerTracker.prototype.getMouseY = function() {
-    return this.mouseY;
-}
-
-PlayerTracker.prototype.setMouseX = function(n) {
-    this.mouseX = n;
-}
-
-PlayerTracker.prototype.setMouseY = function(n) {
-    this.mouseY = n;
-}
-
 PlayerTracker.prototype.getScore = function(reCalcScore) {
     if (reCalcScore) {
         var s = 0;
@@ -99,25 +80,16 @@ PlayerTracker.prototype.getTeam = function() {
 
 // Functions
 
-PlayerTracker.prototype.clear = function() {
-    this.socket.sendPacket(new Packet.ClearNodes());
-}
-
-PlayerTracker.prototype.setBorder = function() {
-    var border = this.gameServer.border;
-    this.socket.sendPacket(new Packet.SetBorder(border.left, border.right, border.top, border.bottom));
-}
-
 PlayerTracker.prototype.update = function() {
 	// Actions buffer
     if (this.socket.packetHandler.pressSpace) {
         // Split cell
-        this.socket.packetHandler.splitCells(this);
+        this.gameServer.splitCells(this);
         this.socket.packetHandler.pressSpace = false;
     }
     if (this.socket.packetHandler.pressW) {
         // Eject mass
-        this.socket.packetHandler.ejectMass(this);
+        this.gameServer.ejectMass(this);
         this.socket.packetHandler.pressW = false;
     }
     
@@ -179,7 +151,7 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
     	
         totalSize += this.cells[i].getSize();
     }
-    this.sightRange = 1024 / Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
+    this.sightRange = this.gameServer.config.serverViewBase / Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
 }
 
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
@@ -201,8 +173,8 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
         Y += this.cells[i].position.y;
     }
     
-    this.centerPos.x = X / len;
-    this.centerPos.y = Y / len;
+    this.centerPos.x = X / len >> 0;
+    this.centerPos.y = Y / len >> 0;
 }
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -211,8 +183,8 @@ PlayerTracker.prototype.calcViewBox = function() {
         this.spectatedPlayer = this.gameServer.gameMode.rankOne;
         if (this.spectatedPlayer) {
             // Get spectated player's location and calculate zoom amount
-			var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
-			specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
+            var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
+            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
             this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,specZoom));
             return this.spectatedPlayer.visibleNodes;
         } else {
@@ -227,9 +199,9 @@ PlayerTracker.prototype.calcViewBox = function() {
     // Box
     this.viewBox.topY = this.centerPos.y - this.sightRange;
     this.viewBox.bottomY = this.centerPos.y + this.sightRange;
-	
     this.viewBox.leftX = this.centerPos.x - this.sightRange;
     this.viewBox.rightX = this.centerPos.x + this.sightRange;
+    this.viewBox.width = this.sightRange;
 	
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length ;i++) {
@@ -239,7 +211,7 @@ PlayerTracker.prototype.calcViewBox = function() {
             continue;
         }
 		
-        if (node.collisionCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
+        if (node.visibleCheck(this.viewBox,this.centerPos)) {
             // Cell is in range of viewBox
             newVisible.push(node);
         }

@@ -11,6 +11,19 @@ PlayerCell.prototype = new Cell();
 
 // Main Functions
 
+PlayerCell.prototype.visibleCheck = function(box,centerPos) {
+    // Use old fashioned checking method if cell is small
+	if (this.mass < 150) {
+	    return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
+	}
+	
+	// Checks if this cell is visible to the player
+    var len = this.getSize() + box.width >> 0; // Width of cell + width of the box (Int)
+    
+    return ((this.position.x - centerPos.x) < len) && 
+           ((this.position.y - centerPos.y) < len);
+}
+
 PlayerCell.prototype.onConsume = function(consumer,gameServer) {
     consumer.addMass(this.mass);
 }
