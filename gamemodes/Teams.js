@@ -11,7 +11,7 @@ function Teams() {
     
     // Special
     this.teamAmount = 3; // Amount of teams. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue).
-    this.colors = [[245,0,0],[0,245,0],[0,0,245]]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
+    this.colors = [{'r':245,'b':0,'g':0},{'r':0,'b':0,'g':245},{'r':0,'b':245,'g':0}]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     this.nodes = []; // Teams
 }
 
@@ -22,7 +22,11 @@ Teams.prototype = new Mode();
 
 Teams.prototype.getTeamColor = function(team) {
     var color = this.colors[team];
-    return [color[0],color[1],color[2]];
+    return {
+        r: color.r,
+        b: color.b,
+        g: color.g
+    };
 }
 
 // Override

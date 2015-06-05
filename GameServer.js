@@ -23,7 +23,7 @@ function GameServer(port,gameMode) {
     this.gameMode = gameMode;
     
     // Main loop tick
-    this.time = new Date(); this.testTick = 0;
+    this.time = new Date();
     this.tick = 0; // 1 second ticks of mainLoop
     this.tickMain = 0; // 50 ms ticks, 40 of these = 1 leaderboard update
     this.tickSpawn = 0; // 50 ms ticks, used with spawning food
@@ -57,6 +57,7 @@ function GameServer(port,gameMode) {
         playerRecombineTime: 15, // Amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds) - currently 30 seconds
         playerMassDecayRate: .004, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
+        playerSpeedMultiplier: 1.0, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
         leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
     };
 	
@@ -138,16 +139,20 @@ GameServer.prototype.getNextNodeId = function() {
 }
 
 GameServer.prototype.getRandomPosition = function() {
-    return [
-        Math.floor(Math.random() * (this.config.borderRight - this.config.borderLeft)) + this.config.borderLeft,
-        Math.floor(Math.random() * (this.config.borderBottom - this.config.borderTop)) + this.config.borderTop
-    ];
+    return {
+        x: Math.floor(Math.random() * (this.config.borderRight - this.config.borderLeft)) + this.config.borderLeft,
+        y: Math.floor(Math.random() * (this.config.borderBottom - this.config.borderTop)) + this.config.borderTop
+    };
 }
 
 GameServer.prototype.getRandomColor = function() {
     var index = Math.floor(Math.random() * this.colors.length);
     var color = this.colors[index];
-    return [color.r ,color.g ,color.b];
+    return {
+        r: color.r,
+        b: color.b,
+        g: color.g
+    };
 }
 
 GameServer.prototype.addNode = function(node) {
@@ -233,14 +238,10 @@ GameServer.prototype.mainLoop = function() {
             this.gameMode.updateLB(this);
 			
             this.tickMain = 0; // Reset
-            
-            // Debug
-            //console.log(this.testTick);
-            //this.testTick = 0; 
         }
 		
         // Debug
-        //this.testTick += (this.tick - 50);
+        //console.log(this.tick - 50);
 		
         // Reset
         this.tick = 0; 
@@ -289,12 +290,16 @@ GameServer.prototype.spawnPlayer = function(client) {
             this.removeNode(e);
     		
             // Inherit
-            pos[0] = e.pos[0];
-            pos[1] = e.pos[1];
+            pos.x = e.position.x;
+            pos.y = e.position.y;
             startMass = e.mass;
     		
             var color = e.getColor();
-            client.setColor(color);
+            client.setColor({
+                'r': color.r,
+                'g': color.g,
+                'b': color.b
+            });
         }
     }
     
@@ -303,7 +308,8 @@ GameServer.prototype.spawnPlayer = function(client) {
     this.addNode(cell);
     
     // Set initial mouse coords
-    client.setMouse(pos[0], pos[1]);
+    client.setMouseX(pos.x);
+    client.setMouseY(pos.y);
 }
 
 GameServer.prototype.virusCheck = function() {
@@ -319,10 +325,10 @@ GameServer.prototype.virusCheck = function() {
             var r = check.getSize(); // Radius of checking player cell
     		
             // Collision box
-            var topY = check.pos[1] - r;
-            var bottomY = check.pos[1] + r;
-            var leftX = check.pos[0] - r;
-            var rightX = check.pos[0] + r;
+            var topY = check.position.y - r;
+            var bottomY = check.position.y + r;
+            var leftX = check.position.x - r;
+            var rightX = check.position.x + r;
     		
             // Check for collisions
             if (pos.y < bottomY) {
@@ -361,7 +367,7 @@ GameServer.prototype.updateMoveEngine = function() {
             continue;
         }
         
-        cell.calcMove(client.mouse[0], client.mouse[1], this);
+        cell.calcMove(client.getMouseX(), client.getMouseY(), this);
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);
@@ -436,16 +442,16 @@ GameServer.prototype.splitCells = function(client) {
         }
 			
         // Get angle
-        var deltaX = client.mouse[0] - cell.pos[0];
-        var deltaY = client.mouse[1] - cell.pos[1];
+        var deltaY = client.getMouseY() - cell.position.y;
+        var deltaX = client.getMouseX() - cell.position.x;
         var angle = Math.atan2(deltaX,deltaY);
     	
         // Get starting position
         var size = cell.getSize();
-        var startPos = [
-            cell.pos[0] + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
-            cell.pos[1] + ( (size + this.config.ejectMass) * Math.cos(angle) )
-        ];
+        var startPos = {
+            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
+            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+        };
         // Calculate mass of splitting cell
         var newMass = cell.mass / 2;
         cell.mass = newMass;
@@ -472,17 +478,17 @@ GameServer.prototype.ejectMass = function(client) {
         if (cell.mass < this.config.playerMinMassEject) {
             continue;
         }
-        
-        var deltaX = client.mouse[0] - cell.pos[0];
-        var deltaY = client.mouse[1] - cell.pos[1];
+		
+        var deltaY = client.getMouseY() - cell.position.y;
+        var deltaX = client.getMouseX() - cell.position.x;
         var angle = Math.atan2(deltaX,deltaY);
    	
         // Get starting position
         var size = cell.getSize() + 5;
-        var startPos = [
-            cell.pos[0] + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
-            cell.pos[1] + ( (size + this.config.ejectMass) * Math.cos(angle) )
-        ];
+        var startPos = {
+            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
+            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+        };
         
         // Remove mass from parent cell
         cell.mass -= this.config.ejectMass;
@@ -501,7 +507,10 @@ GameServer.prototype.ejectMass = function(client) {
 
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass, speed) {
     // Starting position
-    var startPos = [parent.pos[0], parent.pos[1]];
+    var startPos = {
+        x: parent.position.x, 
+        y: parent.position.y
+    };
 	
 	// Create cell
 	newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
@@ -516,7 +525,10 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 }
 
 GameServer.prototype.shootVirus = function(parent) {
-	var parentPos = [parent.pos[0], parent.pos[1]];
+	var parentPos = {
+        x: parent.position.x,
+        y: parent.position.y,
+	};
 	
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass);
     newVirus.setAngle(parent.getAngle());
@@ -531,11 +543,11 @@ GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
     var r = cell.getSize(); // Get cell radius (Cell size = radius)
 	
-    var topY = cell.pos[1] - r;
-    var bottomY = cell.pos[1] + r;
+    var topY = cell.position.y - r;
+    var bottomY = cell.position.y + r;
 	
-    var leftX = cell.pos[0] - r;
-    var rightX = cell.pos[0] + r;
+    var leftX = cell.position.x - r;
+    var rightX = cell.position.x + r;
 
     // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
 	var len = cell.owner.visibleNodes.length;
@@ -594,8 +606,8 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
             	
         // Eating range
-        var xs = Math.pow(check.pos[0] - cell.pos[0], 2);
-        var ys = Math.pow(check.pos[1] - cell.pos[1], 2);
+        var xs = Math.pow(check.position.x - cell.position.x, 2);
+        var ys = Math.pow(check.position.y - cell.position.y, 2);
         var dist = Math.sqrt( xs + ys );
                 
         var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 1/3 of the radius of the cell being eaten
@@ -615,11 +627,11 @@ GameServer.prototype.getNearestVirus = function(cell) {
 	var virus = null;
     var r = 100; // Checking radius
 	
-    var topY = cell.pos[1] - r;
-    var bottomY = cell.pos[1] + r;
+    var topY = cell.position.y - r;
+    var bottomY = cell.position.y + r;
 	
-    var leftX = cell.pos[0] - r;
-    var rightX = cell.pos[0] + r;
+    var leftX = cell.position.x - r;
+    var rightX = cell.position.x + r;
 
     // Loop through all viruses on the map. There is probably a more efficient way of doing this but whatever
 	var len = this.nodesVirus.length;

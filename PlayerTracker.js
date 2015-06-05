@@ -11,7 +11,8 @@ function PlayerTracker(gameServer, socket) {
     this.cells = [];
     this.score = 0; // Needed for leaderboard
 
-    this.mouse = [0,0]; // Mouse coords
+    this.mouseX = 0;
+    this.mouseY = 0;
     this.tickLeaderboard = 0; // 
     this.tickViewBox = 0;
     
@@ -21,7 +22,10 @@ function PlayerTracker(gameServer, socket) {
     
     // Viewing box
     this.sightRange = 0;
-    this.centerPos = [0,0];
+    this.centerPos = {
+        x: 0,
+        y: 0
+    }
     this.viewBox = {
         topY: 0,
         bottomY: 0,
@@ -48,17 +52,28 @@ PlayerTracker.prototype.getStatus = function() {
     return this.isOnline;
 }
 
-PlayerTracker.prototype.setMouse = function(x,y) {
-    this.mouse[0] = x;
-    this.mouse[1] = y;
-}
-
 PlayerTracker.prototype.setName = function(name) {
     this.name = name;
 }
 
 PlayerTracker.prototype.getName = function() {
     return this.name;
+}
+
+PlayerTracker.prototype.getMouseX = function() {
+    return this.mouseX;
+}
+
+PlayerTracker.prototype.getMouseY = function() {
+    return this.mouseY;
+}
+
+PlayerTracker.prototype.setMouseX = function(n) {
+    this.mouseX = n;
+}
+
+PlayerTracker.prototype.setMouseY = function(n) {
+    this.mouseY = n;
 }
 
 PlayerTracker.prototype.getScore = function(reCalcScore) {
@@ -73,7 +88,9 @@ PlayerTracker.prototype.getScore = function(reCalcScore) {
 }
 
 PlayerTracker.prototype.setColor = function(color) {
-    this.color = color;
+    this.color.r = color.r;
+    this.color.b = color.b;
+    this.color.g = color.g;
 }
 
 PlayerTracker.prototype.getTeam = function() {
@@ -171,12 +188,12 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
             continue;
         }
     	
-        X += this.cells[i].pos[0];
-        Y += this.cells[i].pos[1];
+        X += this.cells[i].position.x;
+        Y += this.cells[i].position.y;
     }
     
-    this.centerPos[0] = X / len;
-    this.centerPos[1] = Y / len;
+    this.centerPos.x = X / len;
+    this.centerPos.y = Y / len;
 }
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -187,7 +204,7 @@ PlayerTracker.prototype.calcViewBox = function() {
             // Get spectated player's location and calculate zoom amount
             var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
             specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
-            this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos[0],this.spectatedPlayer.centerPos[1],specZoom));
+            this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,specZoom));
             return this.spectatedPlayer.visibleNodes;
         } else {
             return []; // Nothing
@@ -199,11 +216,11 @@ PlayerTracker.prototype.calcViewBox = function() {
     this.updateCenter();
 	
     // Box
-    this.viewBox.topY = this.centerPos[1] - this.sightRange;
-    this.viewBox.bottomY = this.centerPos[1] + this.sightRange;
+    this.viewBox.topY = this.centerPos.y - this.sightRange;
+    this.viewBox.bottomY = this.centerPos.y + this.sightRange;
 	
-    this.viewBox.leftX = this.centerPos[0] - this.sightRange;
-    this.viewBox.rightX = this.centerPos[0] + this.sightRange;
+    this.viewBox.leftX = this.centerPos.x - this.sightRange;
+    this.viewBox.rightX = this.centerPos.x + this.sightRange;
 	
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length ;i++) {

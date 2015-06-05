@@ -14,10 +14,10 @@ PlayerCell.prototype = new Cell();
 PlayerCell.prototype.visibleCheck = function(bottomY,topY,rightX,leftX) {
 	// Checks if this cell is visible to the player
     var r = this.getSize(); // Radius of cell
-    var corners = [{x: this.pos[0] + r,y: this.pos[1] + r},
-        {x: this.pos[0] + r,y: this.pos[1] - r},
-        {x: this.pos[0] - r,y: this.pos[1] + r},
-        {x: this.pos[0] - r,y: this.pos[1] - r},];
+    var corners = [{x: this.position.x + r,y: this.position.y + r},
+        {x: this.position.x + r,y: this.position.y - r},
+        {x: this.position.x - r,y: this.position.y + r},
+        {x: this.position.x - r,y: this.position.y - r},];
 	
     var seen = false;
     var i = 0;
