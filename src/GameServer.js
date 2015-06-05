@@ -331,10 +331,14 @@ GameServer.prototype.virusCheck = function() {
     if (this.nodesVirus.length < this.config.virusMinAmount) {
         // Spawns a virus
         var pos = this.getRandomPosition();
-    	
+        
         // Check for players (Experimental)
-        for (var i = 0; i < this.nodesPlayer; i++) {
+        for (var i = 0; i < this.nodesPlayer.length; i++) {
             var check = this.nodesPlayer[i];
+            
+            if (check.mass < this.config.virusStartMass) {
+                continue;
+            }
     		
             var r = check.getSize(); // Radius of checking player cell
     		
@@ -343,17 +347,20 @@ GameServer.prototype.virusCheck = function() {
             var bottomY = check.position.y + r;
             var leftX = check.position.x - r;
             var rightX = check.position.x + r;
-    		
+            
             // Check for collisions
-            if (pos.y < bottomY) {
-                return;
-            } if (pos.y > topY) {
-                return;
-            } if (pos.x < rightX) {
-                return;
-            } if (pos.x > leftX) {
-                return;
+            if (pos.y > bottomY) {
+                continue;
+            } if (pos.y < topY) {
+                continue;
+            } if (pos.x > rightX) {
+                continue;
+            } if (pos.x < leftX) {
+                continue;
             }
+            
+            // Collided
+            return;
         }
     	
         // Spawn if no cells are colliding
