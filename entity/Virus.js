@@ -35,9 +35,11 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
     numSplits = Math.min(numSplits,maxSplits);
     var splitMass = Math.min(consumer.mass/(numSplits + 1), 32); // Maximum size of new splits
     
-    // Add mass to the cell if its not splitting
+    // Cell consumes mass before splitting
+    consumer.addMass(this.mass);
+    
+    // Cell cannot split any further
     if (numSplits <= 0) {
-        consumer.addMass(this.mass);
         return;
     }
     
