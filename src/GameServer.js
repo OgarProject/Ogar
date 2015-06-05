@@ -51,7 +51,7 @@ function GameServer() {
         virusBurstMass: 198, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
-        ejectSpeed: 170, // Base speed of ejected cells
+        ejectSpeed: 160, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
         playerMaxMass: 22500, // Maximum mass a player can have
@@ -472,7 +472,7 @@ GameServer.prototype.splitCells = function(client) {
         // Create cell
         split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
-        split.setMoveEngineData(40 + (cell.getSpeed() * 4), 20);
+        split.setMoveEngineData(35 + (cell.getSpeed() * 4), 20);
         split.setRecombineTicks(this.config.playerRecombineTime);
     	
         // Add to moving cells list
@@ -529,7 +529,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 	// Create cell
 	newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
 	newCell.setAngle(angle);
-	newCell.setMoveEngineData(speed, 8);
+	newCell.setMoveEngineData(speed, 10);
 	newCell.setRecombineTicks(this.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
