@@ -173,7 +173,7 @@ GameServer.prototype.addNode = function(node) {
             continue;
         }
 
-        if (node.collisionCheck(client.viewBox.bottomY,client.viewBox.topY,client.viewBox.rightX,client.viewBox.leftX)) {
+        if (node.visibleCheck(client.viewBox,client.centerPos)) {
             client.visibleNodes.push(node);
         }
     }
@@ -308,8 +308,7 @@ GameServer.prototype.spawnPlayer = function(client) {
     this.addNode(cell);
     
     // Set initial mouse coords
-    client.setMouseX(pos.x);
-    client.setMouseY(pos.y);
+    client.mouse = {x: pos.x, y: pos.y};
 }
 
 GameServer.prototype.virusCheck = function() {
@@ -367,7 +366,7 @@ GameServer.prototype.updateMoveEngine = function() {
             continue;
         }
         
-        cell.calcMove(client.getMouseX(), client.getMouseY(), this);
+        cell.calcMove(client.mouse.x, client.mouse.y, this);
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);
@@ -442,8 +441,8 @@ GameServer.prototype.splitCells = function(client) {
         }
 			
         // Get angle
-        var deltaY = client.getMouseY() - cell.position.y;
-        var deltaX = client.getMouseX() - cell.position.x;
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
         var angle = Math.atan2(deltaX,deltaY);
     	
         // Get starting position
@@ -479,8 +478,8 @@ GameServer.prototype.ejectMass = function(client) {
             continue;
         }
 		
-        var deltaY = client.getMouseY() - cell.position.y;
-        var deltaX = client.getMouseX() - cell.position.x;
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
         var angle = Math.atan2(deltaX,deltaY);
    	
         // Get starting position

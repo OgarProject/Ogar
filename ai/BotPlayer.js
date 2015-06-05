@@ -151,8 +151,7 @@ BotPlayer.prototype.decide = function(cell) {
                 }
 		        
                 // Set bot's mouse coords to this location
-                this.mouseX = pos.x;
-                this.mouseY = pos.y;
+                this.mouse = {x: pos.x, y: pos.y};
             }
             break;
         case 1: // Looking for food
@@ -161,8 +160,7 @@ BotPlayer.prototype.decide = function(cell) {
                 // Food is eaten/a player cell/out of sight... so find a new food cell to target
                 this.target = this.findNearest(cell,this.food);
 							
-                this.mouseX = this.target.position.x;
-                this.mouseY = this.target.position.y;
+                this.mouse = {x: this.target.position.x, y: this.target.position.y};
             }
             break;
         case 2: // Run from (potential) predators
@@ -196,8 +194,7 @@ BotPlayer.prototype.decide = function(cell) {
                 }
             }   
 			
-            this.mouseX = x1;
-            this.mouseY = y1;   
+            this.mouse = {x: x1, y: y1};
             break;
         case 3: // Target prey
             if ((!this.target) || (this.visibleNodes.indexOf(this.target) == -1)) {
@@ -205,8 +202,7 @@ BotPlayer.prototype.decide = function(cell) {
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
 							
-            this.mouseX = this.target.position.x;
-            this.mouseY = this.target.position.y;
+            this.mouse = {x: this.target.position.x, y: this.target.position.y};
 			
             var massReq = 1.25 * (this.target.mass * 2 ); // Mass required to splitkill the target
 			

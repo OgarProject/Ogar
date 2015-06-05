@@ -49,7 +49,7 @@ Cell.prototype.getType = function() {
 
 Cell.prototype.getSize = function() {
 	// Calculates radius based on cell mass
-    return Math.sqrt(100 * this.mass) + .1;
+    return Math.sqrt(100 * this.mass + .25) >> 0;
 }
 
 Cell.prototype.addMass = function(n) {
@@ -130,9 +130,9 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
     return true;
 }
 
-Cell.prototype.visibleCheck = function(bottomY,topY,rightX,leftX) {
+Cell.prototype.visibleCheck = function(box,centerPos) {
     // Checks if this cell is visible to the player
-    return this.collisionCheck(bottomY,topY,rightX,leftX);
+    return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
 }
 
 Cell.prototype.calcMove = function(x2, y2, gameServer) {
@@ -147,8 +147,8 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
     var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
     var speed = Math.min(this.getSpeed(),dist);
     
-    var x1 = Math.floor(this.position.x + ( speed * Math.sin(angle) ));
-    var y1 = Math.floor(this.position.y + ( speed * Math.cos(angle) ));
+    var x1 = this.position.x + ( speed * Math.sin(angle) );
+    var y1 = this.position.y + ( speed * Math.cos(angle) );
 	
     // Collision check for other cells
     for (var i = 0; i < this.owner.cells.length;i++) {
@@ -172,8 +172,8 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
                 
                 var move = collisionDist - dist + 5;
                 
-                cell.position.x = cell.position.x + ( move * Math.sin(newAngle) );
-                cell.position.y = cell.position.y + ( move * Math.cos(newAngle) );
+                cell.position.x = cell.position.x + ( move * Math.sin(newAngle) ) >> 0;
+                cell.position.y = cell.position.y + ( move * Math.cos(newAngle) ) >> 0;
             }
         }
     }
@@ -205,8 +205,8 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
                     
                     var move = collisionDist - dist;
                     
-                    check.position.x = check.position.x + ( move * Math.sin(newAngle) );
-                    check.position.y = check.position.y + ( move * Math.cos(newAngle) );
+                    check.position.x = check.position.x + ( move * Math.sin(newAngle) ) >> 0;
+                    check.position.y = check.position.y + ( move * Math.cos(newAngle) ) >> 0;
                 }
             }
         }
@@ -226,8 +226,8 @@ Cell.prototype.calcMove = function(x2, y2, gameServer) {
         y1 = config.borderBottom;
     }
 
-    this.position.x = x1;
-    this.position.y = y1;
+    this.position.x = x1 >> 0;
+    this.position.y = y1 >> 0;
 }
 
 Cell.prototype.calcMovePhys = function(config) {
@@ -263,8 +263,8 @@ Cell.prototype.calcMovePhys = function(config) {
     }
     
     // Set position
-    this.position.x = X;
-    this.position.y = Y;  
+    this.position.x = X >> 0;
+    this.position.y = Y >> 0;  
 }
 
 // Override these

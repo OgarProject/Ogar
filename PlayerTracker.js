@@ -11,8 +11,7 @@ function PlayerTracker(gameServer, socket) {
     this.cells = [];
     this.score = 0; // Needed for leaderboard
 
-    this.mouseX = 0;
-    this.mouseY = 0;
+    this.mouse = {x: 0, y: 0};
     this.tickLeaderboard = 0; // 
     this.tickViewBox = 0;
     
@@ -22,15 +21,13 @@ function PlayerTracker(gameServer, socket) {
     
     // Viewing box
     this.sightRange = 0;
-    this.centerPos = {
-        x: 0,
-        y: 0
-    }
+    this.centerPos = {x: 0, y: 0 }
     this.viewBox = {
         topY: 0,
         bottomY: 0,
         leftX: 0,
-        rightX: 0
+        rightX: 0,
+        width: 0 // Half-width
     }
     
     // Gamemode function
@@ -58,22 +55,6 @@ PlayerTracker.prototype.setName = function(name) {
 
 PlayerTracker.prototype.getName = function() {
     return this.name;
-}
-
-PlayerTracker.prototype.getMouseX = function() {
-    return this.mouseX;
-}
-
-PlayerTracker.prototype.getMouseY = function() {
-    return this.mouseY;
-}
-
-PlayerTracker.prototype.setMouseX = function(n) {
-    this.mouseX = n;
-}
-
-PlayerTracker.prototype.setMouseY = function(n) {
-    this.mouseY = n;
 }
 
 PlayerTracker.prototype.getScore = function(reCalcScore) {
@@ -192,8 +173,8 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
         Y += this.cells[i].position.y;
     }
     
-    this.centerPos.x = X / len;
-    this.centerPos.y = Y / len;
+    this.centerPos.x = X / len >> 0;
+    this.centerPos.y = Y / len >> 0;
 }
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -218,9 +199,9 @@ PlayerTracker.prototype.calcViewBox = function() {
     // Box
     this.viewBox.topY = this.centerPos.y - this.sightRange;
     this.viewBox.bottomY = this.centerPos.y + this.sightRange;
-	
     this.viewBox.leftX = this.centerPos.x - this.sightRange;
     this.viewBox.rightX = this.centerPos.x + this.sightRange;
+    this.viewBox.width = this.sightRange;
 	
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length ;i++) {
@@ -230,7 +211,7 @@ PlayerTracker.prototype.calcViewBox = function() {
             continue;
         }
 		
-        if (node.visibleCheck(this.viewBox.bottomY,this.viewBox.topY,this.viewBox.rightX,this.viewBox.leftX)) {
+        if (node.visibleCheck(this.viewBox,this.centerPos)) {
             // Cell is in range of viewBox
             newVisible.push(node);
         }

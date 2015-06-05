@@ -11,34 +11,17 @@ PlayerCell.prototype = new Cell();
 
 // Main Functions
 
-PlayerCell.prototype.visibleCheck = function(bottomY,topY,rightX,leftX) {
-	// Checks if this cell is visible to the player
-    var r = this.getSize(); // Radius of cell
-    var corners = [{x: this.position.x + r,y: this.position.y + r},
-        {x: this.position.x + r,y: this.position.y - r},
-        {x: this.position.x - r,y: this.position.y + r},
-        {x: this.position.x - r,y: this.position.y - r},];
+PlayerCell.prototype.visibleCheck = function(box,centerPos) {
+    // Use old fashioned checking method if cell is small
+	if (this.mass < 150) {
+	    return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
+	}
 	
-    var seen = false;
-    var i = 0;
-    while ((i < 4) && (!seen)) {
-        var pos = corners[i];
-        if (pos.y > bottomY) {
-            i++;
-            continue;
-        } if (pos.y < topY) {
-            i++;
-            continue;
-        } if (pos.x > rightX) {
-            i++;
-            continue;
-        } if (pos.x < leftX) {
-            i++;
-            continue;
-        } 
-        seen = true;
-    }
-    return seen;
+	// Checks if this cell is visible to the player
+    var len = this.getSize() + box.width >> 0; // Width of cell + width of the box (Int)
+    
+    return ((this.position.x - centerPos.x) < len) && 
+           ((this.position.y - centerPos.y) < len);
 }
 
 PlayerCell.prototype.onConsume = function(consumer,gameServer) {
