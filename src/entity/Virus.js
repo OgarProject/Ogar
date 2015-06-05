@@ -64,9 +64,9 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
     }
     
     for (var k = 0; k < bigSplits; k++) {
-        angle = Math.random() * 6.2; // Random directions
+        angle = Math.random() * 6.28; // Random directions
         splitMass = consumer.mass / 4;
-        gameServer.newCellVirused(client, consumer, angle, splitMass,25);
+        gameServer.newCellVirused(client, consumer, angle, splitMass,18);
         consumer.mass -= splitMass;
     }
 }
