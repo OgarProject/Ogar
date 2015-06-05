@@ -53,7 +53,7 @@ function GameServer() {
         ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
         ejectSpeed: 160, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
-        playerStartMass: 10, // Starting mass of the player cell.
+        playerStartMass: 100, // Starting mass of the player cell.
         playerMaxMass: 22500, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
@@ -480,7 +480,7 @@ GameServer.prototype.splitCells = function(client) {
         split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
         split.setMoveEngineData(35 + (cell.getSpeed() * 4), 20);
-        split.setRecombineTicks(this.config.playerRecombineTime);
+        split.calcMergeTime(this.config.playerRecombineTime);
     	
         // Add to moving cells list
         this.setAsMovingNode(split);
@@ -537,7 +537,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 	newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
 	newCell.setAngle(angle);
 	newCell.setMoveEngineData(speed, 10);
-	newCell.setRecombineTicks(this.config.playerRecombineTime);
+	newCell.calcMergeTime(this.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
     // Add to moving cells list
@@ -674,7 +674,7 @@ GameServer.prototype.getNearestVirus = function(cell) {
 }
 
 GameServer.prototype.updateCells = function(){
-    var massDecay = this.config.playerMinMassDecay/1000;
+    var massDecay = 1 - ((this.config.playerMassDecayRate/1000) * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
         
@@ -688,13 +688,8 @@ GameServer.prototype.updateCells = function(){
         }
 		
         // Mass decay
-        if (cell.mass > this.config.playerMinMassDecay) {
-            var decay = 0;
-        	
-            // Gamemode modifiers
-            decay = decay * this.gameMode.decayMod;
-        	
-            cell.mass *= (1 - massDecay);
+        if (cell.mass >= this.config.playerMinMassDecay) {
+            cell.mass *= massDecay;
         }
     }
 }
