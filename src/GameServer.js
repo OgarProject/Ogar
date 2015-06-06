@@ -70,10 +70,9 @@ function GameServer() {
     this.loadConfig();
     
     // Gamemodes
-    if (this.config.serverGamemode == 1) {
-    	this.gameMode = new Gamemode.Teams();
-    } else {
-        this.gameMode = new Gamemode.FFA();
+    this.gameMode = Gamemode.list[this.config.serverGamemode];
+    if (!this.gameMode) {
+        this.gameMode = Gamemode.list[0]; // Default is FFA
     }
     
     // Colors
