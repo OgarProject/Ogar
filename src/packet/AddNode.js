@@ -1,10 +1,10 @@
-function AddNodes(item) {
+function AddNode(item) {
     this.item = item;
 }
 
-module.exports = AddNodes;
+module.exports = AddNode;
 
-AddNodes.prototype.build = function() {
+AddNode.prototype.build = function() {
     // Only add player controlled cells with this packet or it will bug the camera
     var buf = new ArrayBuffer(5);
     var view = new DataView(buf);
