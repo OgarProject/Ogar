@@ -60,9 +60,7 @@ Cell.prototype.getSpeed = function() {
 	// Old formula: 5 + (20 * (1 - (this.mass/(70+this.mass))));
 	// Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
 	// (should possibly have a config value for this?)
-	var speed = 745.28 * Math.pow(this.mass, -0.222) * 50 / 1000;
-	speed *= this.owner.gameServer.config.playerSpeedMultiplier;
-	return speed;
+	return 745.28 * Math.pow(this.mass, -0.222) * 50 / 1000;
 }
 
 Cell.prototype.setAngle = function(radians) {
@@ -243,7 +241,7 @@ Cell.prototype.calcMovePhys = function(config) {
     var radius = 40;
     if ((this.position.x - radius) < config.borderLeft) {
         // Flip angle horizontally - Left side
-        this.angle = Math.abs(1 - this.angle);
+        this.angle = Math.abs(3.14 - this.angle);
         X = config.borderLeft + radius;
     }
     if ((this.position.x + radius) > config.borderRight) {
@@ -253,12 +251,12 @@ Cell.prototype.calcMovePhys = function(config) {
     }
     if ((this.position.y - radius) < config.borderTop) {
         // Flip angle vertically - Top side
-        this.angle = this.angle - 1;
+        this.angle = Math.abs(this.angle - 3.14);
         Y = config.borderTop + radius;
     }
     if ((this.position.y + radius) > config.borderBottom) {
         // Flip angle vertically - Bottom side
-        this.angle = this.angle - 1;
+        this.angle = Math.abs(this.angle - 3.14);
         Y = config.borderBottom - radius;
     }
     
