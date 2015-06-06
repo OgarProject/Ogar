@@ -21,7 +21,7 @@ function encode (obj, opt) {
     opt.whitespace = opt.whitespace === true
   }
 
-  var separator = opt.whitespace ? " = " : "="
+  var separator = " = "
 
   Object.keys(obj).forEach(function (k, _, __) {
     var val = obj[k]

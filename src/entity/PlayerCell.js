@@ -24,6 +24,12 @@ PlayerCell.prototype.visibleCheck = function(box,centerPos) {
            ((this.position.y - centerPos.y) < len);
 }
 
+PlayerCell.prototype.calcMergeTime = function(base) {
+    this.recombineTicks = base + ((0.01 * this.mass) >> 0); // Int (30 sec + (.02 * mass))
+}
+
+// Override
+
 PlayerCell.prototype.onConsume = function(consumer,gameServer) {
     consumer.addMass(this.mass);
 }

@@ -1,7 +1,7 @@
 // Library imports
 var WebSocket = require('ws');
-var Fs = require("fs");
-var Ini = require('./modules/ini.js');
+var fs = require("fs");
+var ini = require('./modules/ini.js');
 
 // Project imports
 var Packet = require('./packet');
@@ -12,6 +12,9 @@ var Gamemode = require('./gamemodes');
 
 // GameServer implementation
 function GameServer() {
+    // Start msg
+    console.log("[Game] Ogar - An open source Agar.io server implementation");
+
     this.lastNodeId = 1;
     this.clients = [];
     this.nodes = [];
@@ -51,26 +54,25 @@ function GameServer() {
         virusBurstMass: 198, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
         ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
-        ejectSpeed: 170, // Base speed of ejected cells
+        ejectSpeed: 160, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
         playerMaxMass: 22500, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
-        playerRecombineTime: 15, // Amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds) - currently 30 seconds
+        playerRecombineTime: 15, // Base amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds)
         playerMassDecayRate: 4, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
-        playerSpeedMultiplier: 1, // Speed multiplier. Values higher than 1.0 may result in glitchy movement.
         leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
     };
-    //this.config = Ini.parse(Fs.readFileSync('./gameserver.ini', 'utf-8'));
+    // Parse config
+    this.loadConfig();
     
     // Gamemodes
-    if (this.config.serverGamemode == 1) {
-    	this.gameMode = new Gamemode.Teams();
-    } else {
-        this.gameMode = new Gamemode.FFA();
+    this.gameMode = Gamemode.list[this.config.serverGamemode];
+    if (!this.gameMode) {
+        this.gameMode = Gamemode.list[0]; // Default is FFA
     }
     
     // Colors
@@ -85,8 +87,6 @@ GameServer.prototype.start = function() {
 	
     // Start the server
     this.socketServer = new WebSocket.Server({ port: this.config.serverPort }, function() {
-        console.log("[Game] Ogar - An open source Agar.io server implementation");
-    	
         // Spawn starting food
         for (var i = 0; i < this.config.foodStartAmount; i++) {
             this.spawnFood();
@@ -331,10 +331,14 @@ GameServer.prototype.virusCheck = function() {
     if (this.nodesVirus.length < this.config.virusMinAmount) {
         // Spawns a virus
         var pos = this.getRandomPosition();
-    	
+        
         // Check for players (Experimental)
-        for (var i = 0; i < this.nodesPlayer; i++) {
+        for (var i = 0; i < this.nodesPlayer.length; i++) {
             var check = this.nodesPlayer[i];
+            
+            if (check.mass < this.config.virusStartMass) {
+                continue;
+            }
     		
             var r = check.getSize(); // Radius of checking player cell
     		
@@ -343,17 +347,20 @@ GameServer.prototype.virusCheck = function() {
             var bottomY = check.position.y + r;
             var leftX = check.position.x - r;
             var rightX = check.position.x + r;
-    		
+            
             // Check for collisions
-            if (pos.y < bottomY) {
-                return;
-            } if (pos.y > topY) {
-                return;
-            } if (pos.x < rightX) {
-                return;
-            } if (pos.x > leftX) {
-                return;
+            if (pos.y > bottomY) {
+                continue;
+            } if (pos.y < topY) {
+                continue;
+            } if (pos.x > rightX) {
+                continue;
+            } if (pos.x < leftX) {
+                continue;
             }
+            
+            // Collided
+            return;
         }
     	
         // Spawn if no cells are colliding
@@ -439,19 +446,16 @@ GameServer.prototype.setAsMovingNode = function(node) {
 GameServer.prototype.splitCells = function(client) {
     var len = client.cells.length;
     for (var i = 0; i < len; i++) {
-        var cell = client.cells[i];
-			
+    	
         if (client.cells.length >= this.config.playerMaxCells) {
             // Player cell limit
             continue;
         }
-
-        if (!cell) {
-            console.log("[Warning] Tried to split a non existing cell.");
-            continue;
-        }
         
-        if (cell.mass < this.config.playerMinMassSplit) {
+        var cell = client.cells[i];
+        if (!cell) {
+            continue;
+        } if (cell.mass < this.config.playerMinMassSplit) {
             continue;
         }
 			
@@ -473,7 +477,7 @@ GameServer.prototype.splitCells = function(client) {
         split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
         split.setMoveEngineData(40 + (cell.getSpeed() * 4), 20);
-        split.setRecombineTicks(this.config.playerRecombineTime);
+        split.calcMergeTime(this.config.playerRecombineTime);
     	
         // Add to moving cells list
         this.setAsMovingNode(split);
@@ -507,6 +511,9 @@ GameServer.prototype.ejectMass = function(client) {
         // Remove mass from parent cell
         cell.mass -= this.config.ejectMass;
         
+        // Randomize angle
+        angle += (Math.random() * .5) - .25;
+        
         // Create cell
         ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
         ejected.setAngle(angle);
@@ -529,8 +536,8 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
 	// Create cell
 	newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
 	newCell.setAngle(angle);
-	newCell.setMoveEngineData(speed, 8);
-	newCell.setRecombineTicks(this.config.playerRecombineTime);
+	newCell.setMoveEngineData(speed, 10);
+	newCell.calcMergeTime(this.config.playerRecombineTime);
 	newCell.setCollisionOff(true); // Turn off collision
 	
     // Add to moving cells list
@@ -666,8 +673,8 @@ GameServer.prototype.getNearestVirus = function(cell) {
     return virus;
 }
 
-GameServer.prototype.updateCells = function(){
-    var massDecay = this.config.playerMinMassDecay/1000;
+GameServer.prototype.updateCells = function() {
+    var massDecay = 1 - ((this.config.playerMassDecayRate/1000) * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
         
@@ -681,14 +688,21 @@ GameServer.prototype.updateCells = function(){
         }
 		
         // Mass decay
-        if (cell.mass > this.config.playerMinMassDecay) {
-            var decay = 0;
-        	
-            // Gamemode modifiers
-            decay = decay * this.gameMode.decayMod;
-        	
-            cell.mass *= (1 - massDecay);
+        if (cell.mass >= this.config.playerMinMassDecay) {
+            cell.mass *= massDecay;
         }
+    }
+}
+
+GameServer.prototype.loadConfig = function() {
+    try {
+        this.config = ini.parse(fs.readFileSync('./gameserver.ini', 'utf-8'));
+    } catch (err) {
+        // No config
+        console.log("[Game] Config not found... Generating new config");
+    	
+        // Create a new config
+        fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
     }
 }
 
