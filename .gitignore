@@ -29,3 +29,6 @@ build/Release
 # https://docs.npmjs.com/misc/faq#should-i-check-my-node-modules-folder-into-git
 node_modules
 *.project
+src/.settings/.jsdtscope
+src/.settings/org.eclipse.wst.jsdt.ui.superType.container
+src/.settings/org.eclipse.wst.jsdt.ui.superType.name

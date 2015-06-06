@@ -12,6 +12,8 @@ UpdateLeaderboard.prototype.build = function() {
     var validElements = 0;
     
     switch (this.packetLB) {
+        case 48: // Custom Text List
+        	break;
         case 49: // FFA-type Packet (List)
         	// Get size of packet            
             for (var i = 0; i < lb.length; i++) {

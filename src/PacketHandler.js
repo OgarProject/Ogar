@@ -4,6 +4,7 @@ function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
     
+    this.pressQ = false;
     this.pressW = false;
     this.pressSpace = false;
 }
@@ -58,6 +59,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             // Space Press - Split cell
             this.pressSpace = true;
             break;
+		case 18: 
+            // Q Key Pressed
+            this.pressQ = true;
+            break;
+		case 19: 
+            // Q Key Released
+            break;
         case 21: 
             // W Press - Eject mass
             this.pressW = true;
@@ -76,7 +84,7 @@ PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // If client has no cells... then spawn a player
-        this.gameServer.spawnPlayer(client);
+        this.gameServer.gameMode.onPlayerSpawn(this.gameServer,client);
         
         // Turn off spectate mode
         client.spectate = false;

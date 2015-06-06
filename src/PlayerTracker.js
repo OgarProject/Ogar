@@ -81,16 +81,16 @@ PlayerTracker.prototype.getTeam = function() {
 // Functions
 
 PlayerTracker.prototype.update = function() {
-	// Actions buffer
-    if (this.socket.packetHandler.pressSpace) {
-        // Split cell
-        this.gameServer.splitCells(this);
+	// Actions buffer (So that people cant spam packets)
+    if (this.socket.packetHandler.pressSpace) { // Split cell
+        this.gameServer.gameMode.pressSpace(this.gameServer,this);
         this.socket.packetHandler.pressSpace = false;
-    }
-    if (this.socket.packetHandler.pressW) {
-        // Eject mass
-        this.gameServer.ejectMass(this);
+    } if (this.socket.packetHandler.pressW) { // Eject mass
+        this.gameServer.gameMode.pressW(this.gameServer,this);
         this.socket.packetHandler.pressW = false;
+    } if (this.socket.packetHandler.pressQ) { // Q Press
+        this.gameServer.gameMode.pressQ(this.gameServer,this);
+        this.socket.packetHandler.pressQ = false;
     }
     
 	// Remove nodes from visible nodes if possible

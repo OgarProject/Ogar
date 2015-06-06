@@ -178,7 +178,7 @@ GameServer.prototype.addNode = function(node) {
     
     // Adds to the owning player's screen
     if (node.owner){
-        node.owner.socket.sendPacket(new Packet.AddNodes(node));
+        node.owner.socket.sendPacket(new Packet.AddNode(node));
     }
     
     // Add to visible nodes
@@ -251,6 +251,9 @@ GameServer.prototype.mainLoop = function() {
             // Update leaderboard with the gamemode's method
             this.leaderboard = []; 
             this.gameMode.updateLB(this);
+            
+            // Update - Gamemode
+            this.gameMode.onServerUpdate(this);
 			
             this.tickMain = 0; // Reset
         }
