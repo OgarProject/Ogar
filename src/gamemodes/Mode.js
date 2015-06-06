@@ -26,7 +26,7 @@ Mode.prototype.onPlayerInit = function(player) {
 
 Mode.prototype.onPlayerSpawn = function(gameServer,player) {
     // Called when a player is spawned
-	gameServer.spawnPlayer(player);
+    gameServer.spawnPlayer(player);
 }
 
 Mode.prototype.pressQ = function(gameServer,player) {
@@ -35,12 +35,12 @@ Mode.prototype.pressQ = function(gameServer,player) {
 
 Mode.prototype.pressW = function(gameServer,player) {
     // Called when the W key is pressed
-	gameServer.ejectMass(player);
+    gameServer.ejectMass(player);
 }
 
 Mode.prototype.pressSpace = function(gameServer,player) {
     // Called when the Space bar is pressed
-	gameServer.splitCells(player);
+    gameServer.splitCells(player);
 }
 
 Mode.prototype.onCellAdd = function(cell) {

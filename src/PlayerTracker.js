@@ -89,6 +89,7 @@ PlayerTracker.prototype.update = function() {
         this.gameServer.gameMode.pressW(this.gameServer,this);
         this.socket.packetHandler.pressW = false;
     } if (this.socket.packetHandler.pressQ) { // Q Press
+        //this.socket.sendPacket(new Packet.DrawLine(this.mouse.x,this.mouse.y));
         this.gameServer.gameMode.pressQ(this.gameServer,this);
         this.socket.packetHandler.pressQ = false;
     }
