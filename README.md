@@ -18,9 +18,6 @@ The project is nearly complete. Here's a rough list of what's been done and what
 
 Playerbots are currently basic and for testing purposes. To use them, change "serverBots" to a value higher than zero (I like to use 50) in the config field of GameServer.js.
 
-## Known Issues
-- [General] Several formulas for calculating variables (ex. distance of splitting) are incorrect
-
 ## Obtaining and Using
 If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. This is a beta feature, and if there are any problems, switch back to using Ogar with node.js. The rest of this section is for non Windows users.
 
@@ -41,7 +38,7 @@ Currently, Ogar listens on the following addresses and ports:
 Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports.
 
 ## Configuring Ogar
-Ogar has a configurations field that can be modified. To do this, open up GameServer.js with a decent text editor (except for notepad), then go to line 317 to see the config values. The windows version uses "gameserver.ini".
+Use gameserver.ini to modify Ogar's configurations field.
 
 ## Contributing
 Please see [CONTRIBUTING.md](https://github.com/forairan/Ogar/blob/master/CONTRIBUTING.md) for contribution guidelines.
