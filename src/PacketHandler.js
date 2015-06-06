@@ -55,15 +55,15 @@ PacketHandler.prototype.handleMessage = function(message) {
             client.mouse.x = view.getFloat64(1, true);
             client.mouse.y = view.getFloat64(9, true);
             break;
-		case 17: 
+        case 17: 
             // Space Press - Split cell
             this.pressSpace = true;
             break;
-		case 18: 
+        case 18: 
             // Q Key Pressed
             this.pressQ = true;
             break;
-		case 19: 
+        case 19: 
             // Q Key Released
             break;
         case 21: 
