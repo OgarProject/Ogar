@@ -56,12 +56,12 @@ function GameServer() {
         ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
         ejectSpeed: 160, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
-        playerStartMass: 100, // Starting mass of the player cell.
+        playerStartMass: 10, // Starting mass of the player cell.
         playerMaxMass: 22500, // Maximum mass a player can have
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
-        playerRecombineTime: 15, // Amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds) - currently 30 seconds
+        playerRecombineTime: 15, // Base amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds)
         playerMassDecayRate: 4, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
@@ -446,19 +446,16 @@ GameServer.prototype.setAsMovingNode = function(node) {
 GameServer.prototype.splitCells = function(client) {
     var len = client.cells.length;
     for (var i = 0; i < len; i++) {
-        var cell = client.cells[i];
-			
+    	
         if (client.cells.length >= this.config.playerMaxCells) {
             // Player cell limit
             continue;
         }
-
-        if (!cell) {
-            console.log("[Warning] Tried to split a non existing cell.");
-            continue;
-        }
         
-        if (cell.mass < this.config.playerMinMassSplit) {
+        var cell = client.cells[i];
+        if (!cell) {
+            continue;
+        } if (cell.mass < this.config.playerMinMassSplit) {
             continue;
         }
 			
@@ -513,6 +510,9 @@ GameServer.prototype.ejectMass = function(client) {
         
         // Remove mass from parent cell
         cell.mass -= this.config.ejectMass;
+        
+        // Randomize angle
+        angle += (Math.random() * .5) - .25;
         
         // Create cell
         ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
