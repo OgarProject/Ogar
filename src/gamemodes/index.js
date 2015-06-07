@@ -5,6 +5,17 @@ module.exports = {
     Custom: require('./Custom'),
 };
 
-var list = [new module.exports.FFA(),new module.exports.Teams()];
+var get = function(id) {
+    var mode;
+    switch (id) {
+        case 1: // Teams
+            mode = new module.exports.Teams();
+            break;
+        default: // FFA is default
+            mode = new module.exports.FFA();
+            break;
+    }
+    return mode;
+}
 
-module.exports.list = list;
+module.exports.get = get;

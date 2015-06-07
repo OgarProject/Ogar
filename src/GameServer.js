@@ -70,10 +70,7 @@ function GameServer() {
     this.loadConfig();
     
     // Gamemodes
-    this.gameMode = Gamemode.list[this.config.serverGamemode];
-    if (!this.gameMode) {
-        this.gameMode = Gamemode.list[0]; // Default is FFA
-    }
+    this.gameMode = Gamemode.get(this.config.serverGamemode);
     
     // Colors
     this.colors = [{'r':235,'b':0,'g':75},{'r':225,'b':255,'g':125},{'r':180,'b':20,'g':7},{'r':80,'b':240,'g':170},{'r':180,'b':135,'g':90},{'r':195,'b':0,'g':240},{'r':150,'b':255,'g':18},{'r':80,'b':0,'g':245},{'r':165,'b':0,'g':25},{'r':80,'b':0,'g':145},{'r':80,'b':240,'g':170},{'r':55,'b':255,'g':92}]; 
