@@ -110,7 +110,12 @@ function decode (str) {
       p[key].push(value)
     }
     else {
-      p[key] = parseInt(value)
+    	if (isInt(value)) {
+    		p[key] = parseInt(value)
+    	} else {
+    		p[key] = parseFloat(value)
+    	}
+      
     }
   })
 
@@ -188,3 +193,5 @@ function unsafe (val, doUnesc) {
   }
   return val
 }
+
+var isInt = function(n) { return parseInt(n) === n };
