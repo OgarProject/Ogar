@@ -2,7 +2,6 @@ var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
-    this.isOnline = true;
     this.name = "";
     this.gameServer = gameServer;
     this.socket = socket;
@@ -40,14 +39,6 @@ function PlayerTracker(gameServer, socket) {
 module.exports = PlayerTracker;
 
 // Setters/Getters
-
-PlayerTracker.prototype.setStatus = function(bool) {
-    this.isOnline = bool;
-}
-
-PlayerTracker.prototype.getStatus = function() {
-    return this.isOnline;
-}
 
 PlayerTracker.prototype.setName = function(name) {
     this.name = name;

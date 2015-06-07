@@ -119,13 +119,23 @@ GameServer.prototype.start = function() {
     	
         function close(error) {
             console.log("[Game] Disconnect: %s:%d", this.socket.remoteAddress, this.socket.remotePort);
+
+            var client = this.socket.playerTracker;
+            var len = this.socket.playerTracker.cells.length;
+            for (var i = 0; i < len; i++) {
+            	var cell = this.socket.playerTracker.cells[0];
+            	
+            	if (!cell) {
+            		continue;
+            	}
+                       
+            	this.server.removeNode(cell);
+            }
+
             var index = this.server.clients.indexOf(this.socket);
             if (index != -1) {
                 this.server.clients.splice(index, 1);
             }
-            
-            // Switch online flag off
-            this.socket.playerTracker.setStatus(false);
         }
 
         console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
@@ -174,13 +184,15 @@ GameServer.prototype.getRandomColor = function() {
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
     
-    // Special on-add actions
-    node.onAdd(this);
-    
     // Adds to the owning player's screen
-    if (node.owner){
+    if (node.owner) {
+        node.setColor(node.owner.color);
+        node.owner.cells.push(node);
         node.owner.socket.sendPacket(new Packet.AddNode(node));
     }
+    
+    // Special on-add actions
+    node.onAdd(this);
     
     // Add to visible nodes
     for (var i = 0; i < this.clients.length;i++) {
@@ -389,12 +401,6 @@ GameServer.prototype.updateMoveEngine = function() {
     		
         var client = cell.owner;
         
-        // If cell's owner is offline, remove this cell
-        if (!client.getStatus()) {
-            this.removeNode(cell);
-            continue;
-        }
-        
         cell.calcMove(client.mouse.x, client.mouse.y, this);
 
         // Check if cells nearby
@@ -481,7 +487,7 @@ GameServer.prototype.splitCells = function(client) {
         var newMass = cell.mass / 2;
         cell.mass = newMass;
         // Create cell
-        split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
+        var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
         split.setMoveEngineData(40 + (cell.getSpeed() * 4), 20);
         split.calcMergeTime(this.config.playerRecombineTime);
@@ -522,7 +528,7 @@ GameServer.prototype.ejectMass = function(client) {
         angle += (Math.random() * .5) - .25;
         
         // Create cell
-        ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMassGain);
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMassGain);
         ejected.setAngle(angle);
         ejected.setMoveEngineData(this.config.ejectSpeed, 20);
         ejected.setColor(cell.getColor());

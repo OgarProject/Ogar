@@ -45,8 +45,9 @@ Tournament.prototype.endGame = function(gameServer) {
 
 Tournament.prototype.onServerInit = function(gameServer) {
 	// Remove all cells
-	for (var i = 0; i < gameServer.nodes.length; i++) {
-		var node = gameServer.nodes[i];
+	var len = gameServer.nodes.length;
+	for (var i = 0; i < len; i++) {
+		var node = gameServer.nodes[0];
 		
 		if (!node) {
 			continue;
