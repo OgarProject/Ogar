@@ -234,7 +234,7 @@ GameServer.prototype.mainLoop = function() {
     		
             // Spawn food
             this.tickSpawn++;
-            if ((this.tickSpawn >= this.config.spawnInterval) && (this.run)) {
+            if (this.tickSpawn >= this.config.spawnInterval) {
                 this.updateFood(); // Spawn food
                 this.virusCheck(); // Spawn viruses
     			
@@ -255,9 +255,6 @@ GameServer.prototype.mainLoop = function() {
             this.leaderboard = []; 
             this.gameMode.updateLB(this);
             this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard,this.gameMode.packetLB);
-            
-            // Update - Gamemode
-            this.gameMode.onServerUpdate(this);
 			
             this.tickMain = 0; // Reset
         }

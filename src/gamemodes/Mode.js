@@ -16,10 +16,6 @@ Mode.prototype.onServerInit = function(gameServer) {
     // Called when the server starts
 }
 
-Mode.prototype.onServerUpdate = function(gameServer) {
-    // Called during each server update tick
-}
-
 Mode.prototype.onPlayerInit = function(player) {
     // Called after a player object is constructed
 }
