@@ -48,8 +48,8 @@ UpdateLeaderboard.prototype.build = function() {
                 view.setUint32(offset, 1, true);
                 offset += 4;
                 
-                for (var j = 0; j < name.length; j++) {
-                    view.setUint16(offset, name.charCodeAt(j), true);
+                for (var j = 0; j < item.length; j++) {
+                    view.setUint16(offset, item.charCodeAt(j), true);
                     offset += 2;
                 }
 

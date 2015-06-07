@@ -37,8 +37,11 @@ BotPlayer.prototype.getLowestCell = function() {
 // Override
 
 BotPlayer.prototype.updateSightRange = function() { // For view distance
-    var range = 1000;
-    range += this.cells[0].getSize() * 2.5;
+    var range = 1000; // Base sight range
+    
+    if (this.cells[0]) {
+        range += this.cells[0].getSize() * 2.5;
+    }
 	
     this.sightRange = range;
 }
@@ -51,21 +54,25 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
             this.visibleNodes.splice(index, 1);
         }
     }
-	
-    // Respawn if bot is dead
-    if (this.cells.length <= 0) {
-        this.gameServer.spawnPlayer(this);
-    }
-
+    
     // Update every 500 ms
-    if (this.tickViewBox <= 0) {
+    if ((this.tickViewBox <= 0) && (this.gameServer.run)) {
         this.visibleNodes = this.calcViewBox();
         this.tickViewBox = 10;
     } else {
         this.tickViewBox--;
         return;
     }
-	
+    
+    // Respawn if bot is dead
+    if (this.cells.length <= 0) {
+        this.gameServer.gameMode.onPlayerSpawn(this);
+        if (this.cells.length == 0) {
+            // End the function if there are no cells
+            return;
+        }
+    }
+    
 	// Calc predators/prey
     var cell = this.getLowestCell();
     this.predators = [];
