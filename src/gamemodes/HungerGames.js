@@ -7,8 +7,12 @@ function HungerGames() {
     this.name = "Hunger Games";
     this.packetLB = 48;
     
+    // Config (1 tick = 2000 ms)
+    this.prepTime = 5; // Amount of ticks after the server fills up to wait until starting the game
+    this.endTime = 15; // Amount of ticks after someone wins to restart the game
+    
     // Gamemode Specific Variables
-    this.gamePhase = 0; // 0 = Waiting for players, 1 = Game in progress, 2 = End
+    this.gamePhase = 0; // 0 = Waiting for players, 1 = Prepare to start, 2 = Game in progress, 3 = End
     this.tributes = [];
     this.maxTributes = 12;
     this.tributeSpawnPoints = [
@@ -19,6 +23,7 @@ function HungerGames() {
     ];
     
     this.winner;
+    this.timer;
 }
 
 module.exports = HungerGames;
@@ -39,22 +44,39 @@ HungerGames.prototype.getPos = function() {
 	return {x: pos.x, y: pos.y};
 }
 
+HungerGames.prototype.startGamePrep = function(gameServer) {
+	this.gamePhase = 1;
+	this.timer = this.prepTime; // 10 seconds
+}
+
 HungerGames.prototype.startGame = function(gameServer) {
 	gameServer.run = true;
-	this.gamePhase = 1;
+	this.gamePhase = 2;
 }
 
 HungerGames.prototype.endGame = function(gameServer) {
-	gameServer.run = false;
 	this.winner = this.tributes[0];
-	this.gamePhase = 2;
+	this.gamePhase = 3;
+	this.timer = this.endTime; // 30 Seconds
 }
 
 // Override
 
 HungerGames.prototype.onServerInit = function(gameServer) {
+	// Remove all cells
+	for (var i = 0; i < gameServer.nodes.length; i++) {
+		var node = gameServer.nodes[i];
+		
+		if (!node) {
+			continue;
+		}
+		
+		gameServer.removeNode(node);
+	}
+	
 	// Pauses the server
 	gameServer.run = false;
+	this.gamePhase = 0;
 	
     // Override config values
 	if (gameServer.config.serverBots > this.maxTributes) {
@@ -89,7 +111,7 @@ HungerGames.prototype.onPlayerSpawn = function(gameServer,player) {
 		
 		if (this.tributes.length == this.maxTributes) {
 			// Start the game once there is enough players
-			this.startGame(gameServer);
+			this.startGamePrep(gameServer);
 		}
 	}
 }
@@ -120,12 +142,30 @@ HungerGames.prototype.updateLB = function(gameServer) {
     	    lb[2] = this.tributes.length+"/"+this.maxTributes;
     	    break;
         case 1:
-    	    lb[0] = "Players Remaining ";
+        	lb[0] = "Game starting in";
+        	lb[1] = (this.timer * 2).toString();
+        	lb[2] = "Good luck!";
+        	if (this.timer <= 0) {
+            	// Reset the game
+                this.startGame(gameServer);
+            } else {
+                this.timer--;
+            }
+        	break;
+        case 2:
+    	    lb[0] = "Players Remaining";
     	    lb[1] = this.tributes.length+"/"+this.maxTributes;
     	    break;
-        case 2:
-        	lb[0] = "Congratulations to";
+        case 3:
+        	lb[0] = "Congratulations";
     	    lb[1] = this.winner.getName();
+    	    lb[2] = "for winning!";
+            if (this.timer <= 0) {
+            	// Reset the game
+                this.onServerInit(gameServer);
+            } else {
+                this.timer--;
+            }
         	break;
         default:
         	break;
