@@ -25,6 +25,7 @@ function GameServer() {
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
+    this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
     
     // Main loop tick
     this.time = new Date();
@@ -248,6 +249,7 @@ GameServer.prototype.mainLoop = function() {
             // Update leaderboard with the gamemode's method
             this.leaderboard = []; 
             this.gameMode.updateLB(this);
+            this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard,this.gameMode.packetLB);
             
             // Update - Gamemode
             this.gameMode.onServerUpdate(this);
