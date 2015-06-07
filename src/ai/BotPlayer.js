@@ -1,16 +1,16 @@
 var PlayerTracker = require('../PlayerTracker');
 
 function BotPlayer() {
-	PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
-	//this.color = gameServer.getRandomColor();
+    PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
+    //this.color = gameServer.getRandomColor();
 	
-	// AI only
-	this.gameState = 0;
-	this.predators = []; // List of cells that can eat this bot
-	this.prey = []; // List of cells that can be eaten by this bot
-	this.food = [];
+    // AI only
+    this.gameState = 0;
+    this.predators = []; // List of cells that can eat this bot
+    this.prey = []; // List of cells that can be eaten by this bot
+    this.food = [];
 	
-	this.target;
+    this.target;
 }
 
 module.exports = BotPlayer;
@@ -19,19 +19,19 @@ BotPlayer.prototype = new PlayerTracker();
 // Functions
 
 BotPlayer.prototype.getLowestCell = function() {
-	// Gets the cell with the lowest mass
-	if (this.cells.length <= 0) {
-		return null; // Error!
-	}
+    // Gets the cell with the lowest mass
+    if (this.cells.length <= 0) {
+        return null; // Error!
+    }
 	
-	// Starting cell
-	var lowest = this.cells[0];
-	for (i = 1; i < this.cells.length; i++) {
-		if (lowest.mass > this.cells[i].mass) {
-		    lowest = this.cells[i];	
-		}
-	}
-	return lowest;
+    // Starting cell
+    var lowest = this.cells[0];
+    for (i = 1; i < this.cells.length; i++) {
+        if (lowest.mass > this.cells[i].mass) {
+            lowest = this.cells[i];	
+        }
+    }
+    return lowest;
 }
 
 // Override
@@ -66,14 +66,14 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     
     // Respawn if bot is dead
     if (this.cells.length <= 0) {
-        this.gameServer.gameMode.onPlayerSpawn(this);
+        this.gameServer.gameMode.onPlayerSpawn(this.gameServer,this);
         if (this.cells.length == 0) {
             // End the function if there are no cells
             return;
         }
     }
     
-	// Calc predators/prey
+    // Calc predators/prey
     var cell = this.getLowestCell();
     this.predators = [];
     this.prey = [];
@@ -126,19 +126,19 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
 // Custom
 
 BotPlayer.prototype.decide = function(cell) {
-	// Check for predators
-	if (this.predators.length <= 0) {
-		if (this.prey.length > 0) {
-			this.gameState = 3;
-		} else if (this.food.length > 0) {
-			this.gameState = 1;
-		} else {
-			this.gameState = 0;
-		}
-	} else {
-		// Run
-		this.gameState = 2;
-	}
+    // Check for predators
+    if (this.predators.length <= 0) {
+        if (this.prey.length > 0) {
+            this.gameState = 3;
+        } else if (this.food.length > 0) {
+            this.gameState = 1;
+        } else {
+            this.gameState = 0;
+        }
+    } else {
+        // Run
+        this.gameState = 2;
+    }
 	
     switch (this.gameState) {
         case 0: // Wander
@@ -232,22 +232,22 @@ BotPlayer.prototype.decide = function(cell) {
 
 // Finds the nearest cell in list
 BotPlayer.prototype.findNearest = function(cell,list) {
-	if (this.currentTarget) {
-		// Do not check for food if target already exists
-		return null;
-	}
+    if (this.currentTarget) {
+        // Do not check for food if target already exists
+        return null;
+    }
 	
-	// Check for nearest cell in list
-	var shortest = list[0];
-	var shortestDist = this.getDist(cell,shortest);
-	for (i = 1; i < list.length; i++) {
-		var check = list[i];
-		var dist = this.getDist(cell,check)
-		if (shortestDist > dist) {
-			shortest = check;
-			shortestDist = dist;
-		}
-	}
+    // Check for nearest cell in list
+    var shortest = list[0];
+    var shortestDist = this.getDist(cell,shortest);
+    for (i = 1; i < list.length; i++) {
+        var check = list[i];
+        var dist = this.getDist(cell,check)
+        if (shortestDist > dist) {
+            shortest = check;
+            shortestDist = dist;
+        }
+    }
 	
     return shortest;
 }
