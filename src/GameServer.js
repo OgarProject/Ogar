@@ -15,6 +15,7 @@ function GameServer() {
     // Start msg
     console.log("[Game] Ogar - An open source Agar.io server implementation");
 
+    this.run = true;
     this.lastNodeId = 1;
     this.clients = [];
     this.nodes = [];
@@ -227,17 +228,22 @@ GameServer.prototype.mainLoop = function() {
 
     if (this.tick >= 50) {
         // Loop main functions
-        this.updateMoveEngine();
-        this.updateClients();
-		
-        // Spawn food
-        this.tickSpawn++;
-        if (this.tickSpawn >= this.config.spawnInterval) {
-            this.updateFood(); // Spawn food
-            this.virusCheck(); // Spawn viruses
-			
-            this.tickSpawn = 0; // Reset
+        if (this.run) {
+            // Move cells
+            this.updateMoveEngine();
+    		
+            // Spawn food
+            this.tickSpawn++;
+            if ((this.tickSpawn >= this.config.spawnInterval) && (this.run)) {
+                this.updateFood(); // Spawn food
+                this.virusCheck(); // Spawn viruses
+    			
+                this.tickSpawn = 0; // Reset
+            }
         }
+    	
+        // Update the client's maps
+        this.updateClients();
 		
         // Update cells/leaderboard loop
         this.tickMain++;
@@ -675,6 +681,12 @@ GameServer.prototype.getNearestVirus = function(cell) {
 }
 
 GameServer.prototype.updateCells = function() {
+    if (!this.run) {
+        // Dont run this function if the server is paused
+        return;
+    }
+    
+    // Loop through all player cells
     var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
