@@ -54,7 +54,7 @@ function GameServer() {
         virusStartMass: 100, // Starting virus size (In mass)
         virusBurstMass: 198, // Viruses explode past this size
         ejectMass: 16, // Mass of ejected cells
-        ejectMassGain: 12, // Amount of mass gained from consuming ejected cells
+        ejectMassGain: 12.8, // Amount of mass gained from consuming ejected cells
         ejectSpeed: 160, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
@@ -63,9 +63,8 @@ function GameServer() {
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
         playerRecombineTime: 15, // Base amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds)
-        playerMassDecayRate: 4, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
+        playerMassDecayRate: .004, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
-        leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
     };
     // Parse config
     this.loadConfig();
@@ -517,7 +516,7 @@ GameServer.prototype.ejectMass = function(client) {
         angle += (Math.random() * .5) - .25;
         
         // Create cell
-        ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
+        ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMassGain);
         ejected.setAngle(angle);
         ejected.setMoveEngineData(this.config.ejectSpeed, 20);
         ejected.setColor(cell.getColor());
@@ -676,7 +675,7 @@ GameServer.prototype.getNearestVirus = function(cell) {
 }
 
 GameServer.prototype.updateCells = function() {
-    var massDecay = 1 - ((this.config.playerMassDecayRate/1000) * this.gameMode.decayMod);
+    var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
         
