@@ -26,73 +26,73 @@ Tournament.prototype = new Mode();
 // Gamemode Specific Functions
 
 Tournament.prototype.startGamePrep = function(gameServer) {
-	this.gamePhase = 1;
-	this.timer = this.prepTime; // 10 seconds
+    this.gamePhase = 1;
+    this.timer = this.prepTime; // 10 seconds
 }
 
 Tournament.prototype.startGame = function(gameServer) {
-	gameServer.run = true;
-	this.gamePhase = 2;
+    gameServer.run = true;
+    this.gamePhase = 2;
 }
 
 Tournament.prototype.endGame = function(gameServer) {
-	this.winner = this.contenders[0];
-	this.gamePhase = 3;
-	this.timer = this.endTime; // 30 Seconds
+    this.winner = this.contenders[0];
+    this.gamePhase = 3;
+    this.timer = this.endTime; // 30 Seconds
 }
 
 // Override
 
 Tournament.prototype.onServerInit = function(gameServer) {
-	// Remove all cells
-	var len = gameServer.nodes.length;
-	for (var i = 0; i < len; i++) {
-		var node = gameServer.nodes[0];
+    // Remove all cells
+    var len = gameServer.nodes.length;
+    for (var i = 0; i < len; i++) {
+        var node = gameServer.nodes[0];
 		
-		if (!node) {
-			continue;
-		}
+        if (!node) {
+            continue;
+        }
 		
-		gameServer.removeNode(node);
-	}
+        gameServer.removeNode(node);
+    }
 	
-	// Pauses the server
-	gameServer.run = false;
-	this.gamePhase = 0;
+    // Pauses the server
+    gameServer.run = false;
+    this.gamePhase = 0;
 	
-	// Get config values
-	this.prepTime = gameServer.config.tourneyPrepTime;
-	this.endTime = gameServer.config.tourneyEndTime;
-	this.maxContenders = gameServer.config.tourneyMaxPlayers;
+    // Get config values
+    this.prepTime = gameServer.config.tourneyPrepTime;
+    this.endTime = gameServer.config.tourneyEndTime;
+    this.maxContenders = gameServer.config.tourneyMaxPlayers;
 }
 
 Tournament.prototype.onPlayerSpawn = function(gameServer,player) {
     // Only spawn players if the game hasnt started yet
-	if ((this.gamePhase == 0) && (this.contenders.length < this.maxContenders)) {
-		gameServer.spawnPlayer(player);
-		this.contenders.push(player); // Add to contenders list
+    if ((this.gamePhase == 0) && (this.contenders.length < this.maxContenders)) {
+        gameServer.spawnPlayer(player);
+        this.contenders.push(player); // Add to contenders list
 		
-		if (this.contenders.length == this.maxContenders) {
-			// Start the game once there is enough players
-			this.startGamePrep(gameServer);
-		}
-	}
+        if (this.contenders.length == this.maxContenders) {
+            // Start the game once there is enough players
+            this.startGamePrep(gameServer);
+        }
+    }
 }
 
 Tournament.prototype.onCellRemove = function(cell) {
-	var owner = cell.owner;
-	if (owner.cells.length <= 0) {
-		// Remove from contenders list
-		var index = this.contenders.indexOf(owner);
-		if (index != -1) {
-			this.contenders.splice(index,1);
-		}
+    var owner = cell.owner;
+    if (owner.cells.length <= 0) {
+        // Remove from contenders list
+        var index = this.contenders.indexOf(owner);
+        if (index != -1) {
+            this.contenders.splice(index,1);
+        }
         
 		// Victory conditions
-		if (this.contenders.length == 1) {
-			this.endGame(cell.owner.gameServer);
-		}
-	}
+        if (this.contenders.length == 1) {
+            this.endGame(cell.owner.gameServer);
+        }
+    }
 }
 
 Tournament.prototype.updateLB = function(gameServer) {
@@ -100,37 +100,37 @@ Tournament.prototype.updateLB = function(gameServer) {
     
     switch (this.gamePhase) {
         case 0:
-    	    lb[0] = "Waiting for";
-    	    lb[1] = "players: ";
-    	    lb[2] = this.contenders.length+"/"+this.maxContenders;
-    	    break;
+            lb[0] = "Waiting for";
+            lb[1] = "players: ";
+            lb[2] = this.contenders.length+"/"+this.maxContenders;
+            break;
         case 1:
-        	lb[0] = "Game starting in";
-        	lb[1] = (this.timer * 2).toString();
-        	lb[2] = "Good luck!";
-        	if (this.timer <= 0) {
-            	// Reset the game
+            lb[0] = "Game starting in";
+            lb[1] = (this.timer * 2).toString();
+            lb[2] = "Good luck!";
+            if (this.timer <= 0) {
+                // Reset the game
                 this.startGame(gameServer);
             } else {
                 this.timer--;
             }
-        	break;
+            break;
         case 2:
-    	    lb[0] = "Players Remaining";
-    	    lb[1] = this.contenders.length+"/"+this.maxContenders;
-    	    break;
+            lb[0] = "Players Remaining";
+            lb[1] = this.contenders.length+"/"+this.maxContenders;
+            break;
         case 3:
-        	lb[0] = "Congratulations";
-    	    lb[1] = this.winner.getName();
-    	    lb[2] = "for winning!";
+            lb[0] = "Congratulations";
+            lb[1] = this.winner.getName();
+            lb[2] = "for winning!";
             if (this.timer <= 0) {
-            	// Reset the game
+                // Reset the game
                 this.onServerInit(gameServer);
             } else {
                 this.timer--;
             }
-        	break;
+            break;
         default:
-        	break;
+            break;
     }  
 }

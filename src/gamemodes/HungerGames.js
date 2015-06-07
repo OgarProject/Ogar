@@ -46,39 +46,40 @@ HungerGames.prototype.getPos = function() {
 }
 
 HungerGames.prototype.spawnFood = function(gameServer,mass,pos) {
-	var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass);
+    var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass);
     f.setColor(gameServer.getRandomColor());
     gameServer.addNode(f);
     gameServer.currentFood++; 
 }
 
 HungerGames.prototype.spawnVirus = function(gameServer,pos) {
-	var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass);
+    var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass);
     gameServer.addNode(v);
 }
 
 HungerGames.prototype.startGamePrep = function(gameServer) {
-	this.gamePhase = 1;
-	this.timer = this.prepTime; // 10 seconds
+    this.gamePhase = 1;
+    this.timer = this.prepTime; // 10 seconds
 }
 
 HungerGames.prototype.startGame = function(gameServer) {
-	gameServer.run = true;
-	this.gamePhase = 2;
+    gameServer.run = true;
+    this.gamePhase = 2;
 }
 
 HungerGames.prototype.endGame = function(gameServer) {
-	this.winner = this.tributes[0];
-	this.gamePhase = 3;
-	this.timer = this.endTime; // 30 Seconds
+    this.winner = this.tributes[0];
+    this.gamePhase = 3;
+    this.timer = this.endTime; // 30 Seconds
 }
 
 // Override
 
 HungerGames.prototype.onServerInit = function(gameServer) {
 	// Remove all cells
-	for (var i = 0; i < gameServer.nodes.length; i++) {
-		var node = gameServer.nodes[i];
+	var len = gameServer.nodes.length;
+	for (var i = 0; i < len; i++) {
+		var node = gameServer.nodes[0];
 		
 		if (!node) {
 			continue;
@@ -186,38 +187,38 @@ HungerGames.prototype.updateLB = function(gameServer) {
     
     switch (this.gamePhase) {
         case 0:
-    	    lb[0] = "Waiting for";
-    	    lb[1] = "players: ";
-    	    lb[2] = this.tributes.length+"/"+this.maxTributes;
-    	    break;
+            lb[0] = "Waiting for";
+            lb[1] = "players: ";
+            lb[2] = this.tributes.length+"/"+this.maxTributes;
+            break;
         case 1:
-        	lb[0] = "Game starting in";
-        	lb[1] = (this.timer * 2).toString();
-        	lb[2] = "Good luck!";
-        	if (this.timer <= 0) {
-            	// Reset the game
+            lb[0] = "Game starting in";
+            lb[1] = (this.timer * 2).toString();
+            lb[2] = "Good luck!";
+            if (this.timer <= 0) {
+                // Reset the game
                 this.startGame(gameServer);
             } else {
                 this.timer--;
             }
-        	break;
+            break;
         case 2:
-    	    lb[0] = "Players Remaining";
-    	    lb[1] = this.tributes.length+"/"+this.maxTributes;
-    	    break;
+            lb[0] = "Players Remaining";
+            lb[1] = this.tributes.length+"/"+this.maxTributes;
+            break;
         case 3:
-        	lb[0] = "Congratulations";
-    	    lb[1] = this.winner.getName();
-    	    lb[2] = "for winning!";
+            lb[0] = "Congratulations";
+            lb[1] = this.winner.getName();
+            lb[2] = "for winning!";
             if (this.timer <= 0) {
-            	// Reset the game
+                // Reset the game
                 this.onServerInit(gameServer);
             } else {
                 this.timer--;
             }
-        	break;
+            break;
         default:
-        	break;
+            break;
     }  
 }
 
