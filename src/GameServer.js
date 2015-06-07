@@ -66,6 +66,9 @@ function GameServer() {
         playerRecombineTime: 15, // Base amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds)
         playerMassDecayRate: .004, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
+        tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
+        tourneyPrepTime: 5, // Amount of ticks to wait after all players are ready (1 tick = 2000 ms)
+        tourneyEndTime: 15, // Amount of ticks to wait after a player wins (1 tick = 2000 ms)
     };
     // Parse config
     this.loadConfig();
