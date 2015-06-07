@@ -125,7 +125,7 @@ HungerGames.prototype.updateLB = function(gameServer) {
     	    break;
         case 2:
         	lb[0] = "Congratulations to";
-    	    lb[1] = this.winner.playerTracker.getName();
+    	    lb[1] = this.winner.getName();
         	break;
         default:
         	break;
