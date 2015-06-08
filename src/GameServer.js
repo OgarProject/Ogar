@@ -719,8 +719,8 @@ GameServer.prototype.loadConfig = function() {
         var load = ini.parse(fs.readFileSync('./gameserver.ini', 'utf-8'));
         
         // Replace all the default config's values with the loaded config's values
-        for (var obj in this.load) { 
-            this.config[obj] = load[obj]; 
+        for (var obj in load) {
+            this.config[obj] = load[obj];
         }
     } catch (err) {
         // No config
