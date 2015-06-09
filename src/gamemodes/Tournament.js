@@ -11,6 +11,7 @@ function Tournament() {
     this.prepTime = 5; // Amount of ticks after the server fills up to wait until starting the game
     this.endTime = 15; // Amount of ticks after someone wins to restart the game
     this.autoFill = false;
+    this.autoFillPlayers = 1;
     
     // Gamemode Specific Variables
     this.gamePhase = 0; // 0 = Waiting for players, 1 = Prepare to start, 2 = Game in progress, 3 = End
@@ -80,6 +81,7 @@ Tournament.prototype.onServerInit = function(gameServer) {
     if (gameServer.config.tourneyAutoFill > 0) {
         this.timer = gameServer.config.tourneyAutoFill;
         this.autoFill = true;
+        this.autoFillPlayers = gameServer.config.tourneyAutoFillPlayers;
     }
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;
@@ -131,7 +133,7 @@ Tournament.prototype.updateLB = function(gameServer) {
             if (this.autoFill) {
                 if (this.timer <= 0) {
                     this.fillBots(gameServer);
-                } else {
+                } else if (this.contenders.length >= this.autoFillPlayers) {
                     this.timer--;
                 }
             }
@@ -158,6 +160,8 @@ Tournament.prototype.updateLB = function(gameServer) {
             if (this.timer <= 0) {
                 // Reset the game
                 this.onServerInit(gameServer);
+                // Respawn starting food
+                gameServer.startingFood();
             } else {
                 this.timer--;
             }
