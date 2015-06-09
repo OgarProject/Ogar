@@ -11,17 +11,19 @@ function HungerGames() {
     // Config (1 tick = 2000 ms)
     this.prepTime = 5; // Amount of ticks after the server fills up to wait until starting the game
     this.endTime = 15; // Amount of ticks after someone wins to restart the game
+    this.autoFill = false;
     
     // Gamemode Specific Variables
     this.gamePhase = 0; // 0 = Waiting for players, 1 = Prepare to start, 2 = Game in progress, 3 = End
     this.tributes = [];
     this.maxTributes = 12;
-    this.tributeSpawnPoints = [
+    this.baseSpawnPoints = [
         {x: 1600,y: 200},{x: 3200,y: 200},{x: 4800,y: 200}, // Top
         {x: 200,y: 1600},{x: 200,y: 3200},{x: 200,y: 4800}, // Left
         {x: 6200,y: 1600},{x: 6200,y: 3200},{x: 6200,y: 4800}, // Right
         {x: 1600,y: 6200},{x: 3200,y: 6200},{x: 4800,y: 6200}  // Bottom
     ];
+    this.tributeSpawnPoints;
     
     this.winner;
     this.timer;
@@ -65,12 +67,27 @@ HungerGames.prototype.startGamePrep = function(gameServer) {
 HungerGames.prototype.startGame = function(gameServer) {
     gameServer.run = true;
     this.gamePhase = 2;
+    this.getSpectate(); // Gets a random person to spectate
 }
 
 HungerGames.prototype.endGame = function(gameServer) {
     this.winner = this.tributes[0];
     this.gamePhase = 3;
     this.timer = this.endTime; // 30 Seconds
+}
+
+HungerGames.prototype.fillBots = function(gameServer) {
+    // Fills the server with bots if there arent enough players
+    var fill = this.maxTributes - this.tributes.length;
+    for (var i = 0;i < fill;i++) {
+        gameServer.bots.addBot(gameServer);
+    }
+}
+
+HungerGames.prototype.getSpectate = function() {
+    // Finds a random person to spectate
+    var index = Math.floor(Math.random() * this.tributes.length);
+    this.rankOne = this.tributes[index];
 }
 
 // Override
@@ -88,13 +105,20 @@ HungerGames.prototype.onServerInit = function(gameServer) {
 		gameServer.removeNode(node);
 	}
 	
+	// Resets spawn points
+    this.tributeSpawnPoints = this.baseSpawnPoints.slice();
+	
 	// Pauses the server
 	gameServer.run = false;
 	this.gamePhase = 0;
 	
     // Override config values
+    if (gameServer.config.tourneyAutoFill > 0) {
+        this.timer = gameServer.config.tourneyAutoFill;
+        this.autoFill = true;
+    }
 	if (gameServer.config.serverBots > this.maxTributes) {
-		// the number of bots cannot exceed the maximum amount of tributes
+		// The number of bots cannot exceed the maximum amount of tributes
 		gameServer.config.serverBots = this.maxTributes;
 	}
     gameServer.config.spawnInterval = 20;
@@ -174,9 +198,14 @@ HungerGames.prototype.onCellRemove = function(cell) {
 		if (index != -1) {
 			this.tributes.splice(index,1);
 		}
+		
+        // Remove if being specated
+		if (owner == this.rankOne) {
+			this.getSpectate(); // Gets a random person to spectate
+		}
         
 		// Victory conditions
-		if (this.tributes.length == 1) {
+		if ((this.tributes.length == 1) && (this.gamePhase == 2)){
 			this.endGame(cell.owner.gameServer);
 		}
 	}
@@ -190,6 +219,13 @@ HungerGames.prototype.updateLB = function(gameServer) {
             lb[0] = "Waiting for";
             lb[1] = "players: ";
             lb[2] = this.tributes.length+"/"+this.maxTributes;
+            if (this.autoFill) {
+            	if (this.timer <= 0) {
+                    this.fillBots(gameServer);
+                } else {
+                    this.timer--;
+                }
+            }
             break;
         case 1:
             lb[0] = "Game starting in";
