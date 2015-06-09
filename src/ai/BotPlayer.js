@@ -71,7 +71,8 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     if (this.cells.length <= 0) {
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer,this);
         if (this.cells.length == 0) {
-            // End the function if there are no cells
+            // If the bot cannot spawn any cells, then disconnect it
+            this.socket.close();
             return;
         }
     }
@@ -80,8 +81,6 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     var cell = this.getLowestCell();
 	var r = cell.getSize();
     this.clearLists();
-	
-	cell.mass = 300;
     
     var ignoreMass = Math.min((cell.mass / 10), 100); // Ignores targeting cells below this mass
     // Loop

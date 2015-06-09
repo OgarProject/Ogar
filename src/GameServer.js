@@ -9,6 +9,7 @@ var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
+var BotLoader = require('./ai/BotLoader.js');
 
 // GameServer implementation
 function GameServer() {
@@ -27,6 +28,7 @@ function GameServer() {
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
+    this.bots = new BotLoader(this);
     
     // Main loop tick
     this.time = new Date();
@@ -69,6 +71,7 @@ function GameServer() {
         tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 5, // Amount of ticks to wait after all players are ready (1 tick = 2000 ms)
         tourneyEndTime: 15, // Amount of ticks to wait after a player wins (1 tick = 2000 ms)
+        tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after (value * 2) seconds
     };
     // Parse config
     this.loadConfig();
@@ -102,8 +105,9 @@ GameServer.prototype.start = function() {
         
         // Player bots (Experimental)
         if (this.config.serverBots > 0) {
-            var BotLoader = require('./ai/BotLoader.js');
-            this.bots = new BotLoader(this,this.config.serverBots);
+            for (var i = 0;i < this.config.serverBots;i++) {
+                this.bots.addBot();
+            }
             console.log("[Game] Loaded "+this.config.serverBots+" player bots");
         }
     }.bind(this));

@@ -11,15 +11,7 @@ function BotLoader(gameServer,botAmount) {
 	this.nameIndex = 0;
 	
 	for (var i = 0; i < botAmount; i++) {
-		var s = new FakeSocket();
-		s.playerTracker = new BotPlayer(gameServer, s);
-		s.packetHandler = new PacketHandler(gameServer, s);
-		
-		// Add to client list
-		gameServer.clients.push(s);
-		
-		// Add to world
-		s.packetHandler.setNickname(this.getName());
+		this.addBot(gameServer);
 	}
 }
 
@@ -39,3 +31,16 @@ BotLoader.prototype.getName = function() {
 	
 	return name;
 }
+
+BotLoader.prototype.addBot = function(gameServer) {
+    var s = new FakeSocket(gameServer);
+    s.playerTracker = new BotPlayer(gameServer, s);
+    s.packetHandler = new PacketHandler(gameServer, s);
+	
+    // Add to client list
+    gameServer.clients.push(s);
+	
+    // Add to world
+    s.packetHandler.setNickname(this.getName());
+}
+
