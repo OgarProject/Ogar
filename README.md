@@ -1,22 +1,5 @@
 # Ogar
-An open source Agar.io server implementation, written in Node.js.
-
-## Project Status
-The project is nearly complete. Here's a rough list of what's been done and what needs to be done:
-
-- [x] Master server basic implementation
-- [x] Game server basic implementation (clients can connect)
-- [x] Single-cell movement
-- [x] Randomly generated cells and viruses
-- [x] Ejecting mass
-- [x] Splitting
-- [x] Multi-cell player movement
-- [x] Cells eating other cells
-- [x] Leaderboard
-- [x] Team mode
-- [x] Spectate mode
-
-Playerbots are currently basic and for testing purposes. To use them, change "serverBots" to a value higher than zero (I like to use 50) in the config field of GameServer.js.
+A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client (as of 6/9/15).
 
 ## Obtaining and Using
 If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. This is a beta feature, and if there are any problems, switch back to using Ogar with node.js. The rest of this section is for non Windows users.
@@ -37,8 +20,20 @@ Currently, Ogar listens on the following addresses and ports:
 
 Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports.
 
+Once the server is running, you can connect (locally) simply type "agar.io?127.0.0.1:443" into your browser's address bar. No client side mods are needed to connect.
+
 ## Configuring Ogar
-Use gameserver.ini to modify Ogar's configurations field.
+Use gameserver.ini to modify Ogar's configurations field. Playerbots are currently basic and for testing purposes. To use them, change "serverBots" to a value higher than zero in the configuration file.
+
+## Custom Game modes
+Ogar has support for custom game modes. To switch between game modes, change the value of "serverGamemode" in the configurations file to the selected game mode id and restart the server. The current supported game modes are:
+
+Id   | Name
+-----|--------------
+0    | Free For All
+1    | Teams
+10   | Tournament
+11   | Hunger Games
 
 ## Contributing
 Please see [CONTRIBUTING.md](https://github.com/forairan/Ogar/blob/master/CONTRIBUTING.md) for contribution guidelines.

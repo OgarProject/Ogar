@@ -48,7 +48,7 @@ Tournament.prototype.fillBots = function(gameServer) {
     // Fills the server with bots if there arent enough players
     var fill = this.maxContenders - this.contenders.length;
     for (var i = 0;i < fill;i++) {
-        gameServer.bots.addBot(gameServer);
+        gameServer.bots.addBot();
     }
 }
 
