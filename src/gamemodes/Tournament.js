@@ -10,6 +10,7 @@ function Tournament() {
     // Config (1 tick = 2000 ms)
     this.prepTime = 5; // Amount of ticks after the server fills up to wait until starting the game
     this.endTime = 15; // Amount of ticks after someone wins to restart the game
+    this.autoFill = false;
     
     // Gamemode Specific Variables
     this.gamePhase = 0; // 0 = Waiting for players, 1 = Prepare to start, 2 = Game in progress, 3 = End
@@ -33,12 +34,27 @@ Tournament.prototype.startGamePrep = function(gameServer) {
 Tournament.prototype.startGame = function(gameServer) {
     gameServer.run = true;
     this.gamePhase = 2;
+    this.getSpectate(); // Gets a random person to spectate
 }
 
 Tournament.prototype.endGame = function(gameServer) {
     this.winner = this.contenders[0];
     this.gamePhase = 3;
     this.timer = this.endTime; // 30 Seconds
+}
+
+Tournament.prototype.fillBots = function(gameServer) {
+    // Fills the server with bots if there arent enough players
+    var fill = this.maxContenders - this.contenders.length;
+    for (var i = 0;i < fill;i++) {
+        gameServer.bots.addBot(gameServer);
+    }
+}
+
+Tournament.prototype.getSpectate = function() {
+    // Finds a random person to spectate
+    var index = Math.floor(Math.random() * this.contenders.length);
+    this.rankOne = this.contenders[index];
 }
 
 // Override
@@ -61,6 +77,10 @@ Tournament.prototype.onServerInit = function(gameServer) {
     this.gamePhase = 0;
 	
     // Get config values
+    if (gameServer.config.tourneyAutoFill > 0) {
+        this.timer = gameServer.config.tourneyAutoFill;
+        this.autoFill = true;
+    }
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;
     this.maxContenders = gameServer.config.tourneyMaxPlayers;
@@ -88,8 +108,13 @@ Tournament.prototype.onCellRemove = function(cell) {
             this.contenders.splice(index,1);
         }
         
-		// Victory conditions
-        if (this.contenders.length == 1) {
+        // Remove if being specated
+        if (owner == this.rankOne) {
+            this.getSpectate(); // Gets a random person to spectate
+        }
+        
+        // Victory conditions
+        if ((this.contenders.length == 1) && (this.gamePhase == 2)){
             this.endGame(cell.owner.gameServer);
         }
     }
@@ -103,6 +128,13 @@ Tournament.prototype.updateLB = function(gameServer) {
             lb[0] = "Waiting for";
             lb[1] = "players: ";
             lb[2] = this.contenders.length+"/"+this.maxContenders;
+            if (this.autoFill) {
+                if (this.timer <= 0) {
+                    this.fillBots(gameServer);
+                } else {
+                    this.timer--;
+                }
+            }
             break;
         case 1:
             lb[0] = "Game starting in";

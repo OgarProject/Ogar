@@ -3,16 +3,12 @@ var BotPlayer = require('./BotPlayer');
 var FakeSocket = require('./FakeSocket');
 var PacketHandler = require('../PacketHandler');
 
-function BotLoader(gameServer,botAmount) {
+function BotLoader(gameServer) {
 	this.gameServer = gameServer;
 	
 	// Names
 	this.randomNames = ["Bacteria","Spore","Satanist","Earth","Nazi","Moon","Poland","sanik","ayy lmao","Reddit","CIA","wojak","doge","sir","facepunch","8","Russia","Circle","Blob","4chan","Mars","Ogar","NASA","Helper","Parasite","Square","Round","Bug","Splitting","Ice"];
 	this.nameIndex = 0;
-	
-	for (var i = 0; i < botAmount; i++) {
-		this.addBot(gameServer);
-	}
 }
 
 module.exports = BotLoader;
