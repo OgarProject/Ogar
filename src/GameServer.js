@@ -72,6 +72,7 @@ function GameServer() {
         tourneyPrepTime: 5, // Amount of ticks to wait after all players are ready (1 tick = 2000 ms)
         tourneyEndTime: 15, // Amount of ticks to wait after a player wins (1 tick = 2000 ms)
         tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after (value * 2) seconds
+        tourneyAutoFillPlayers: 1, // The timer for filling the server with bots will not count down unless there is this amount of real players
     };
     // Parse config
     this.loadConfig();
@@ -92,9 +93,7 @@ GameServer.prototype.start = function() {
     // Start the server
     this.socketServer = new WebSocket.Server({ port: this.config.serverPort }, function() {
         // Spawn starting food
-        for (var i = 0; i < this.config.foodStartAmount; i++) {
-            this.spawnFood();
-        }
+        this.startingFood();
         
         // Start Main Loop
         setInterval(this.mainLoop.bind(this), 1);
@@ -294,6 +293,13 @@ GameServer.prototype.updateClients = function() {
         }
 
         this.clients[i].playerTracker.update();
+    }
+}
+
+GameServer.prototype.startingFood = function() {
+    // Spawns the starting amount of food cells
+    for (var i = 0; i < this.config.foodStartAmount; i++) {
+        this.spawnFood();
     }
 }
 
