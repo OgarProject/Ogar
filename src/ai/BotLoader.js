@@ -28,13 +28,13 @@ BotLoader.prototype.getName = function() {
 	return name;
 }
 
-BotLoader.prototype.addBot = function(gameServer) {
-    var s = new FakeSocket(gameServer);
-    s.playerTracker = new BotPlayer(gameServer, s);
-    s.packetHandler = new PacketHandler(gameServer, s);
+BotLoader.prototype.addBot = function() {
+    var s = new FakeSocket(this.gameServer);
+    s.playerTracker = new BotPlayer(this.gameServer, s);
+    s.packetHandler = new PacketHandler(this.gameServer, s);
 	
     // Add to client list
-    gameServer.clients.push(s);
+    this.gameServer.clients.push(s);
 	
     // Add to world
     s.packetHandler.setNickname(this.getName());
