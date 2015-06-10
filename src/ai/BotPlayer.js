@@ -186,7 +186,7 @@ BotPlayer.prototype.decide = function(cell) {
     switch (this.gameState) {
         case 0: // Wander
             //console.log("[Bot] "+cell.getName()+": Wandering");
-            if ((cell.position.x == this.mouseX) && (cell.position.y == this.mouseY)) {
+            if ((cell.position.x == this.mouse.x) && (cell.position.y == this.mouse.y)) {
                 // Get a new position
                 var index = Math.floor(Math.random() * this.gameServer.nodes.length);
                 var randomNode = this.gameServer.nodes[index];
