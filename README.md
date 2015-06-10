@@ -20,7 +20,7 @@ Currently, Ogar listens on the following addresses and ports:
 
 Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports.
 
-Once the server is running, you can connect (locally) simply type "agar.io?127.0.0.1:443" into your browser's address bar. No client side mods are needed to connect.
+Once the server is running, you can connect (locally) by typing "agar.io?127.0.0.1:443" into your browser's address bar. No client side mods are needed to connect.
 
 ## Configuring Ogar
 Use gameserver.ini to modify Ogar's configurations field. Playerbots are currently basic and for testing purposes. To use them, change "serverBots" to a value higher than zero in the configuration file.

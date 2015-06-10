@@ -166,7 +166,7 @@ BotPlayer.prototype.getState = function(cell) {
             g = 1;
         }
 	} else {
-        if ((this.cells.length == 1) && (cell.mass > 200)) {
+        if ((this.cells.length == 1) && (cell.mass > 180)) {
 			var t = this.getBiggest(this.predators);
 			var tl = this.findNearbyVirus(t,500,this.virus);
 			if (tl != false) {
@@ -238,10 +238,11 @@ BotPlayer.prototype.decide = function(cell) {
             this.mouse = {x: x1, y: y1};
             break;
         case 3: // Target prey
-            if ((!this.target) || (this.visibleNodes.indexOf(this.target) == -1)) {
+            if ((!this.target) || (this.target.getType() != 0) || (this.visibleNodes.indexOf(this.target) == -1)) {
                 this.target = this.getRandom(this.prey);
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
+
 							
             this.mouse = {x: this.target.position.x, y: this.target.position.y};
 			
@@ -258,8 +259,8 @@ BotPlayer.prototype.decide = function(cell) {
             }
             break;
         case 4: // Shoot virus
-            if ((!this.target) || (!this.targetVirus) ||(!this.cells.length == 1) || (this.visibleNodes.indexOf(this.target) == -1)) {
-                this.gameState = 1; // Reset
+            if ((!this.target) || (!this.targetVirus) ||(!this.cells.length == 1) || (this.visibleNodes.indexOf(this.target) == -1) || (this.visibleNodes.indexOf(this.targetVirus) == -1)) {
+                this.gameState = 0; // Reset
 				this.target = null;
 				break;
             }
@@ -267,7 +268,7 @@ BotPlayer.prototype.decide = function(cell) {
 			// Make sure target is within range
 			var dist = this.getDist(this.targetVirus,this.target) - (this.target.getSize() + 100); 
 			if (dist > 500) {
-				this.gameState = 1; // Reset
+				this.gameState = 0; // Reset
                 this.target = null;
 				break;
 			}
@@ -295,7 +296,7 @@ BotPlayer.prototype.decide = function(cell) {
 				this.mouse = {x: cell.position.x, y: cell.position.y};
 				
 				// Cleanup 
-				this.gameState = 1; // Reset
+				this.gameState = 0; // Reset
 				this.target = null;
 			} else {
 				// Move to position
