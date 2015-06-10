@@ -741,6 +741,29 @@ GameServer.prototype.loadConfig = function() {
     }
 }
 
+GameServer.prototype.switchSpectator = function(player) {
+    if (this.gameMode.specByLeaderboard) {
+		player.spectatedPlayer++;
+		if (player.spectatedPlayer == this.leaderboard.length)
+			player.spectatedPlayer = 0;
+    } else {
+		// Find next non-spectator with cells in the client list
+		var oldPlayer = player.spectatedPlayer + 1;
+		while (player.spectatedPlayer != oldPlayer)
+		{
+			if (oldPlayer == this.clients.length)
+			{
+				oldPlayer = 0;
+				continue;
+			}
+			if (this.clients[oldPlayer].playerTracker.cells.length > 0)
+				break;
+			oldPlayer++;
+		}
+		player.spectatedPlayer = oldPlayer;
+    }
+}
+
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
     function getbuf(data) {

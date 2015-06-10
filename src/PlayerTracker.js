@@ -16,7 +16,7 @@ function PlayerTracker(gameServer, socket) {
     
     this.team = 0;
     this.spectate = false;
-    this.spectatedPlayer; // Current player that this player is watching
+    this.spectatedPlayer = -1; // Current player that this player is watching
     
     // Viewing box
     this.sightRange = 0;
@@ -172,16 +172,7 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
 PlayerTracker.prototype.calcViewBox = function() {
     if (this.spectate) {
         // Spectate mode
-        this.spectatedPlayer = this.gameServer.gameMode.rankOne;
-        if (this.spectatedPlayer) {
-            // Get spectated player's location and calculate zoom amount
-            var specZoom = Math.sqrt(100 * this.spectatedPlayer.score);
-            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
-            this.socket.sendPacket(new Packet.UpdatePosition(this.spectatedPlayer.centerPos.x,this.spectatedPlayer.centerPos.y,specZoom));
-            return this.spectatedPlayer.visibleNodes;
-        } else {
-            return []; // Nothing
-        }
+		return this.getSpectateNodes();
     }
 		
     // Main function
@@ -209,4 +200,32 @@ PlayerTracker.prototype.calcViewBox = function() {
         }
     }
     return newVisible;
+}
+
+PlayerTracker.prototype.getSpectateNodes = function() {
+	var specPlayer;
+		
+	if (this.gameServer.getMode().specByLeaderboard) {
+		this.spectatedPlayer = Math.min(this.gameServer.leaderboard.length - 1, this.spectatedPlayer);
+		specPlayer = this.spectatedPlayer == -1 ? null : this.gameServer.leaderboard[this.spectatedPlayer];
+	} else {
+		this.spectatedPlayer = Math.min(this.gameServer.clients.length - 1, this.spectatedPlayer);
+		specPlayer = this.spectatedPlayer == -1 ? null : this.gameServer.clients[this.spectatedPlayer].playerTracker;
+	}
+	if (specPlayer) {
+		// If selected player has died/disconnected, switch spectator and try again next tick
+		if (specPlayer.cells.length == 0) {
+			this.gameServer.switchSpectator(this);
+			return [];
+		}
+		// Get spectated player's location and calculate zoom amount
+		var specZoom = Math.sqrt(100 * specPlayer.score);
+		specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
+		// TODO: Send packet elsewhere so it is send more often
+		this.socket.sendPacket(new Packet.UpdatePosition(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom));
+		// TODO: Recalculate visible nodes for spectator to match specZoom
+		return specPlayer.visibleNodes;
+	} else {
+		return []; // Nothing
+	}
 }
