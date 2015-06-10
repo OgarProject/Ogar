@@ -68,7 +68,6 @@ HungerGames.prototype.startGamePrep = function(gameServer) {
 HungerGames.prototype.startGame = function(gameServer) {
     gameServer.run = true;
     this.gamePhase = 2;
-    this.getSpectate(); // Gets a random person to spectate
 }
 
 HungerGames.prototype.endGame = function(gameServer) {
@@ -83,12 +82,6 @@ HungerGames.prototype.fillBots = function(gameServer) {
     for (var i = 0;i < fill;i++) {
         gameServer.bots.addBot();
     }
-}
-
-HungerGames.prototype.getSpectate = function() {
-    // Finds a random person to spectate
-    var index = Math.floor(Math.random() * this.tributes.length);
-    this.rankOne = this.tributes[index];
 }
 
 // Override
@@ -199,11 +192,6 @@ HungerGames.prototype.onCellRemove = function(cell) {
 		var index = this.tributes.indexOf(owner);
 		if (index != -1) {
 			this.tributes.splice(index,1);
-		}
-		
-        // Remove if being specated
-		if (owner == this.rankOne) {
-			this.getSpectate(); // Gets a random person to spectate
 		}
         
 		// Victory conditions

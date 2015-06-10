@@ -46,6 +46,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             // Spectate mode
             if (this.socket.playerTracker.cells.length <= 0) {
                 // Make sure client has no cells
+                this.gameServer.switchSpectator(this.socket.playerTracker);
                 this.socket.playerTracker.spectate = true;
             }
             break;
