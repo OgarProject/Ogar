@@ -150,37 +150,35 @@ BotPlayer.prototype.clearLists = function() {
 }
 
 BotPlayer.prototype.getState = function(cell) {
-    var g = 0;
-	
     // Continue to shoot viruses
     if (this.gameState == 4) {
-		g = 4;
-		return g;
-	}
-	
-    // Check for predators
-	if (this.predators.length <= 0) {
-		if (this.prey.length > 0) {
-			g = 3;
-		} else if (this.food.length > 0) {
-            g = 1;
-        }
-	} else {
-        if ((this.cells.length == 1) && (cell.mass > 180)) {
-			var t = this.getBiggest(this.predators);
-			var tl = this.findNearbyVirus(t,500,this.virus);
-			if (tl != false) {
-				g = 4;
-				this.target = t;
-				this.targetVirus = tl;
-			}
-		} else {
-			// Run
-            g = 2;
-		}
+        return 4;
     }
 	
-    return g;
+    // Check for predators
+    if (this.predators.length <= 0) {
+        if (this.prey.length > 0) {
+            return 3;
+        } else if (this.food.length > 0) {
+            return 1;
+        }
+    } else {
+        if ((this.cells.length == 1) && (cell.mass > 180)) {
+            var t = this.getBiggest(this.predators);
+            var tl = this.findNearbyVirus(t,500,this.virus);
+            if (tl != false) {
+                this.target = t;
+                this.targetVirus = tl;
+                return 4;
+            }
+        } else {
+            // Run
+            return 2;
+        }
+    }
+	
+    // Bot wanders by default
+    return 0;
 }
 
 BotPlayer.prototype.decide = function(cell) {
@@ -194,7 +192,7 @@ BotPlayer.prototype.decide = function(cell) {
                 var randomNode = this.gameServer.nodes[index];
                 var pos = {x: 0, y: 0};
 		        
-                if (randomNode.getType() == 3 | 1) {
+                if ((randomNode.getType() == 3) || (randomNode.getType() == 1)) {
                     pos.x = randomNode.position.x;
                     pos.y = randomNode.position.y;
                 } else {
