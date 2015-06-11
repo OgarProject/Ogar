@@ -4,7 +4,7 @@ function Food() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 	
     this.cellType = 1;
-    this.size = Math.sqrt(100 * this.mass + .25) >> 0; 
+    this.size = Math.ceil(Math.sqrt(100 * this.mass)); 
 }
 
 module.exports = Food;
@@ -14,13 +14,9 @@ Food.prototype.getSize = function() {
     return this.size; 
 }
 
-Food.prototype.calcMove = function () {
-    // Food has no need to move
-}
+Food.prototype.calcMove = null; // Food has no need to move
 
-Food.prototype.calcMovePhys = function () {
-    // Food has no need to move
-}
+Food.prototype.calcMovePhys = null; // Food has no need to move
 
 // Main Functions
 

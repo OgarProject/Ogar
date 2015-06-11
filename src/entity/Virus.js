@@ -9,9 +9,7 @@ function Virus() {
 module.exports = Virus;
 Virus.prototype = new Cell();
 
-Virus.prototype.calcMove = function () {
-    // Only for player controlled movement
-}
+Virus.prototype.calcMove = null; // Only for player controlled movement
 
 Virus.prototype.feed = function(feeder,gameServer) {
     this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
