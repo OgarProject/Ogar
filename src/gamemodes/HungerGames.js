@@ -132,7 +132,7 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     // Spawn Initial Virus/Large food
     var mapWidth = gameServer.config.borderRight - gameServer.config.borderLeft;
     var mapHeight = gameServer.config.borderBottom - gameServer.config.borderTop;
-    
+
     // Food
     this.spawnFood(gameServer,200,{x: mapWidth * .5,y: mapHeight * .5}); // Center
     this.spawnFood(gameServer,80,{x: mapWidth * .4,y: mapHeight * .6}); //
