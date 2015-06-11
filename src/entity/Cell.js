@@ -45,7 +45,7 @@ Cell.prototype.getType = function() {
 
 Cell.prototype.getSize = function() {
 	// Calculates radius based on cell mass
-    return Math.sqrt(100 * this.mass + .25) >> 0;
+    return Math.ceil(Math.sqrt(100 * this.mass));
 }
 
 Cell.prototype.addMass = function(n) {
@@ -93,11 +93,7 @@ Cell.prototype.getCollision = function() {
 }
 
 Cell.prototype.getEatingRange = function() {
-    if (this.nodeType == 3) { // Ejected cells have a smaller eating range
-        return 0;
-    } else { // Other cells
-        return this.getSize() * .35;
-    }
+    return 0; // 0 for ejected cells
 }
 
 Cell.prototype.getKiller = function() {

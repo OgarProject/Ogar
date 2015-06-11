@@ -30,6 +30,10 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 
 // Override
 
+PlayerCell.prototype.getEatingRange = function() {
+    return this.getSize() * .4;
+}
+
 PlayerCell.prototype.onConsume = function(consumer,gameServer) {
     consumer.addMass(this.mass);
 }

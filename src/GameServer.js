@@ -307,7 +307,7 @@ GameServer.prototype.updateFood = function() {
     var toSpawn = Math.min(this.config.foodSpawnAmount,(this.config.foodMaxAmount-this.currentFood));
     for (var i = 0; i < toSpawn; i++) {
         this.spawnFood();
-    }    
+    }
 }
 
 GameServer.prototype.spawnFood = function() {
@@ -654,7 +654,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         var ys = Math.pow(check.position.y - cell.position.y, 2);
         var dist = Math.sqrt( xs + ys );
                 
-        var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 1/3 of the radius of the cell being eaten
+        var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 40% of the radius of the cell being eaten
         if (dist > eatingRange) {
             // Not in eating range
             continue;
