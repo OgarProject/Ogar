@@ -750,7 +750,8 @@ GameServer.prototype.switchSpectator = function(player) {
     } else {
 		// Find next non-spectator with cells in the client list
 		var oldPlayer = player.spectatedPlayer + 1;
-		while (player.spectatedPlayer != oldPlayer)
+		var count = 0;
+		while (player.spectatedPlayer != oldPlayer && count != this.clients.length)
 		{
 			if (oldPlayer == this.clients.length)
 			{
@@ -760,8 +761,12 @@ GameServer.prototype.switchSpectator = function(player) {
 			if (this.clients[oldPlayer].playerTracker.cells.length > 0)
 				break;
 			oldPlayer++;
+			count++;
 		}
-		player.spectatedPlayer = oldPlayer;
+		if (count == this.clients.length)
+			player.spectatedPlayer = -1;
+		else
+			player.spectatedPlayer = oldPlayer;
     }
 }
 
