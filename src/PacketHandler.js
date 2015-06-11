@@ -38,7 +38,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     break;
                 }
 
-                nick += String.fromCharCode(charCode);
+                nick += String.fromCharCode(charCode).substr(0,15);
             }
             this.setNickname(nick);
             break;
