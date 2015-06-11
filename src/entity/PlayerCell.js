@@ -51,8 +51,6 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     index = this.owner.cells.indexOf(this);
     if (index != -1) {
         this.owner.cells.splice(index, 1);
-    } else {
-        console.log("[Warning] Tried to remove a non existant cell from cell list.");
     }
     // Remove from visible list
     index = this.owner.visibleNodes.indexOf(this);
@@ -63,8 +61,6 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     index = gameServer.nodesPlayer.indexOf(this);
     if (index != -1) {
         gameServer.nodesPlayer.splice(index, 1);
-    } else {
-        console.log("[Warning] Tried to remove a non existant cell from player nodes.");
     }
     // Gamemode actions
     gameServer.gameMode.onCellRemove(this);
