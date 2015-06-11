@@ -32,6 +32,9 @@ function GameServer() {
     this.tickMain = 0; // 50 ms ticks, 40 of these = 1 leaderboard update
     this.tickSpawn = 0; // 50 ms ticks, used with spawning food
     
+    // Server timeout
+    this.serverTimeoutTime = 0; // for how much time has the server been empty ?
+    
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64, // Maximum amount of connections to the server. 
@@ -64,7 +67,8 @@ function GameServer() {
         playerRecombineTime: 15, // Base amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds)
         playerMassDecayRate: 4, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
         playerMinMassDecay: 9, // Minimum mass for decay to occur
-        leaderboardUpdateClient: 40 // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
+        leaderboardUpdateClient: 40, // How often leaderboard data is sent to the client (1 tick = 50 milliseconds)
+        serverTimeout: 0 // How long (in ticks) should the server stay alive after the last player disconnection ? (0 = always)
     };
     // Parse config
     this.loadConfig();
@@ -138,6 +142,12 @@ GameServer.prototype.start = function() {
         ws.on('error', close.bind(bindObject));
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
+        
+        if (this.serverTimeoutTime != 0)
+        {
+            this.serverTimeoutTime = 0; //the server is no longer empty
+        }
+        
     }
 }
 
@@ -257,6 +267,15 @@ GameServer.prototype.mainLoop = function() {
 		
         // Debug
         //console.log(this.tick - 50);
+        
+        // Check for server timeout
+        if (this.clients.length == 0 && this.config.serverTimeout != 0) {
+            this.serverTimeoutTime++;
+            if (this.serverTimeoutTime >= this.config.serverTimeout) {
+                console.log("[Game] The server has timed out, exiting...");
+                process.exit();
+            }
+        }
 		
         // Reset
         this.tick = 0; 
