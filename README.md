@@ -34,17 +34,17 @@ Id   | Name
 11   | Hunger Games
 
 ## Console Commands
-The current availabe console commands are listed here. Command names are not case sensitive and paramenters with brackets are required.
+The current availabe console commands are listed here. Command names are not case sensitive.
 
- - Addbot (Number)
-   * Adds (Number) of bots to the server. If an amount is not specified, 1 bot will be added.
- - Board (String 1) (String 2) ...
+ - Addbot [Number]
+   * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
+ - Board [String 1] [String 2] [String 3] ...
    * Replaces the text on the leaderboard with the string text.
  - Change [Config setting] [Value]
    * Changes a config setting to a value. Ex. "change serverMaxConnections 32" will change the variable serverMaxConnections to 32. Note that some config values (Like serverGamemode) are parsed before the server starts so changing them mid game will have no effect.
  - Color [Name] [Red] [Green] [Blue]
    * Replaces the color of all players matching [Name] with this color.
- - Food [X position] [Y position] (Mass)
+ - Food [X position] [Y position] [Mass]
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
    * Changes the gamemode of the server. Warning - This can cause problems.
@@ -54,11 +54,11 @@ The current availabe console commands are listed here. Command names are not cas
    * Kills all player cells on the map.
  - Mass [Name] [Number]
    * Sets the mass of all cells belonging to players that match [Name] to [Number].
- - Pause.
+ - Pause
    * Pauses/Unpauses the game.
  - Status
-   * Shows the amount of players currently connected.
- - Virus [X position] [Y position] (Mass)
+   * Shows the amount of players currently connected and the current gamemode.
+ - Virus [X position] [Y position] [Mass]
    * Spawns a virus cell at those coordinates. If a mass value is not specified, then the server will default to "virusStartMass" in the config.
 
 ## Contributing
