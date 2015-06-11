@@ -32,13 +32,14 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 0:
             // Set Nickname
             var nick = "";
-            for (var i = 1; i < view.byteLength; i += 2) {
+            var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
+            for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
                 var charCode = view.getUint16(i, true);
                 if (charCode == 0) {
                     break;
                 }
 
-                nick += String.fromCharCode(charCode).substr(0,15);
+                nick += String.fromCharCode(charCode);
             }
             this.setNickname(nick);
             break;
