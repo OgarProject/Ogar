@@ -42,9 +42,9 @@ if (runGame) {
     gameServer.start();
     
     // Initialize the server console
-    var readline = require('readline');
-    var in_ = readline.createInterface({ input: process.stdin, output: process.stdout });
     if (showConsole) {
+        var readline = require('readline');
+        var in_ = readline.createInterface({ input: process.stdin, output: process.stdout });
         setTimeout(prompt, 100);
     }
 }
@@ -59,21 +59,22 @@ function prompt() {
 }
 
 function parseCommands(str) {
-	// Splits the string
+    // Splits the string
     var split = str.split(" ");
 
     // Process the first string value
-    switch (split[0]) {
+    var first = split[0].toLowerCase();
+    switch (first) {
         case "gamemode":
-        	try {
-        		var n = parseInt(split[1]);
-        		gameServer.gameMode = require('./gamemodes').get(n);
-        		gameServer.gameMode.onServerInit(gameServer); // Resets the server
-        		console.log("[Game] Changed game mode to " + gameServer.gameMode.name);
-        	} catch (e) {
-        		console.log("[Console] Invalid game mode selected");
-        	}
-        	break;
+            try {
+                var n = parseInt(split[1]);
+                gameServer.gameMode = require('./gamemodes').get(n);
+                gameServer.gameMode.onServerInit(gameServer); // Resets the server
+                console.log("[Game] Changed game mode to " + gameServer.gameMode.name);
+            } catch (e) {
+                console.log("[Console] Invalid game mode selected");
+            }
+            break;
         case "change":
             var key = split[1];
             var value = parseInt(split[2]);
@@ -84,63 +85,164 @@ function parseCommands(str) {
                 console.log("[Console] Invalid config value");
             }
             break;
-        case "setmass":
-        	var name = split[1];
-        	var amount = parseInt(split[2]);
-        	
+        case "mass":
+            // Validation checks
+            var name = split[1];
+            if (typeof name == 'undefined') {
+                console.log("[Console] Please specify a valid name");
+                break;
+            }
+			
+            var amount = Math.max(parseInt(split[2]),9);
+            if (isNaN(amount)) {
+                console.log("[Console] Please specify a valid number");
+                break;
+            }
+
+	    // Sets mass to the specified amount
             for (var i in gameServer.clients) {
                 if (gameServer.clients[i].playerTracker.getName() == name) {
-                	var client = gameServer.clients[i].playerTracker;
-                	for (var j in client.cells) {
-                		client.cells[j].mass = Math.max(amount,9);
-                	}
+                    var client = gameServer.clients[i].playerTracker;
+                    for (var j in client.cells) {
+                        client.cells[j].mass = amount;
+                    }
                 }
             }
-        	break;
+            break;
+        case "color":
+            // Validation checks
+            var name = split[1];
+            if (typeof name == 'undefined') {
+                console.log("[Console] Please specify a valid name");
+                break;
+            }
+			
+            var color = {r: 0, g: 0, b: 0};
+            color.r = Math.max(Math.min(parseInt(split[2]), 255), 0);
+            color.g = Math.max(Math.min(parseInt(split[3]), 255), 0);
+            color.b = Math.max(Math.min(parseInt(split[4]), 255), 0);
+			
+            // Sets color to the specified amount
+            for (var i in gameServer.clients) {
+                if (gameServer.clients[i].playerTracker.getName() == name) {
+                    var client = gameServer.clients[i].playerTracker;
+                    client.setColor(color); // Set color
+                    for (var j in client.cells) {
+                        client.cells[j].setColor(color);
+                    }
+                }
+            }
+            break;
         case "board":
+            // Create new leaderboard
         	var newLB = [];
         	for (var i = 1; i < split.length; i++) {
-        		newLB[i - 1] = split[i];
+                    newLB[i - 1] = split[i];
         	}
-        	gameServer.gameMode.packetLB = 48;
-    		gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB}; // Clears the update leaderboard function
-        	break;
+			
+            // Clears the update leaderboard function and replaces it with our own
+            gameServer.gameMode.packetLB = 48;
+            gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB}; 
+            console.log("[Console] Successfully changed leaderboard values");
+            break;
         case "food":
-        	if (typeof split[3] == 'undefined') {
-        		split[3] = gameServer.config.foodStartMass;
-        	}
-        	try {
-                var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
-                var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, parseInt(split[3]));
-                f.setColor(gameServer.getRandomColor());
-                gameServer.addNode(f);
-                gameServer.currentFood++; 
-                console.log("[Console] Spawned 1 food cell at ( "+pos.x+" , "+pos.y+" )");
-        	} catch (e) {
-                console.log("[Console] Error proccessing that!");
-        	}
+            var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
+            var mass = parseInt(split[3]);
+			 
+            // Make sure the input values are numbers
+            if (isNaN(pos.x) || isNaN(pos.y)) {
+                console.log("[Console] Invalid coordinates");
+                break;
+            } if (isNaN(mass)) {
+                mass = gameServer.config.foodStartMass;
+            }
+			
+            // Spawn
+            var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass);
+            f.setColor(gameServer.getRandomColor());
+            gameServer.addNode(f);
+            gameServer.currentFood++; 
+            console.log("[Console] Spawned 1 food cell at ( "+pos.x+" , "+pos.y+" )");
         	break;
         case "virus":
-        	if (typeof split[3] == 'undefined') {
-        		split[3] = gameServer.config.virusStartMass;
-        	}
-        	try {
-                var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
-                var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, parseInt(split[3]));
-                gameServer.addNode(v);
-                console.log("[Console] Spawned 1 virus at ( "+pos.x+" , "+pos.y+" )");
-        	} catch (e) {
-                console.log("[Console] Error proccessing that!");
-        	}
+            var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
+            var mass = parseInt(split[3]);
+			 
+            // Make sure the input values are numbers
+            if (isNaN(pos.x) || isNaN(pos.y)) {
+                console.log("[Console] Invalid coordinates");
+                break;
+            } if (isNaN(mass)) {
+                mass = gameServer.config.virusStartMass;
+            }
+			
+            // Spawn
+            var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass);
+            gameServer.addNode(v);
+            console.log("[Console] Spawned 1 virus at ( "+pos.x+" , "+pos.y+" )");
         	break;
+		case "addbot":
+            var add = parseInt(split[1]);
+            if (isNaN(add)) {
+                add = 1; // Adds 1 bot if user doesnt specify a number
+        	}
+			
+            for (var i = 0; i < add; i++) {
+                gameServer.bots.addBot();
+            }
+            console.log("[Console] Added "+add+" player bots");
+            break;
+		case "kill":
+            var name = split[1];
+			var action = function (cell) {gameServer.removeNode(cell)};
+            if (typeof name == 'undefined') {
+                console.log("[Console] Please specify a valid name");
+                break;
+        	}
+			
+			var count = 0;
+            for (var i in gameServer.clients) {
+                if (gameServer.clients[i].playerTracker.getName() == name) {
+                    var client = gameServer.clients[i].playerTracker;
+                    for (var j in client.cells) {
+                        gameServer.removeNode(client.cells[0]);
+                        count++;
+                    }
+                }
+            }
+            console.log("[Console] Removed " + count + " cells");
+            break;
+		case "killall":
+            var count = 0;
+            for (var i in gameServer.nodesPlayer) {
+                gameServer.removeNode(gameServer.nodesPlayer[0]);
+				count++;
+            }
+			console.log("[Console] Removed " + count + " cells");
+            break;
         case "pause":
-            gameServer.run = !gameServer.run;
+            gameServer.run = !gameServer.run; // Switches the pause state
             var s = gameServer.run ? "Unpaused" : "Paused";
             console.log("[Console] " + s + " the game.");
             break;
+		case "status":
+            console.log("[Console] Current players: "+gameServer.clients.length+"/"+gameServer.config.serverMaxConnections);
+            console.log("[Console] Current game mode is "+gameServer.gameMode.name);
+            break;
         default:
-        	console.log("[Console] Error proccessing that!");
-        	break;
+            console.log("[Console] Invalid Command!");
+            break;
+    }
+}
+
+function searchForPlayers(name,action) {
+    for (var i in gameServer.clients) {
+        if (gameServer.clients[i].playerTracker.getName() == name) {
+            var client = gameServer.clients[i].playerTracker;
+            for (var j in client.cells) {
+                action(client.cells[j]);
+            }
+        }
     }
 }
 
