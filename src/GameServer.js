@@ -121,7 +121,7 @@ GameServer.prototype.start = function() {
         }
     	
         function close(error) {
-            console.log("[Game] Disconnect: %s:%d", this.socket.remoteAddress, this.socket.remotePort);
+            //console.log("[Game] Disconnect: %s:%d", this.socket.remoteAddress, this.socket.remotePort);
 
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
@@ -141,7 +141,7 @@ GameServer.prototype.start = function() {
             }
         }
 
-        console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
+        //console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         ws.playerTracker = new PlayerTracker(this, ws);

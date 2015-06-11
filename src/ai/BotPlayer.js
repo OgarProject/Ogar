@@ -6,6 +6,8 @@ function BotPlayer() {
 	
     // AI only
     this.gameState = 0;
+    this.path = [];
+    
     this.predators = []; // List of cells that can eat this bot
     this.prey = []; // List of cells that can be eaten by this bot
     this.food = [];
@@ -14,6 +16,8 @@ function BotPlayer() {
 	 
     this.target;
 	this.targetVirus; // Virus used to shoot into the target
+	
+    this.ejectMass = 0; // Amount of times to eject mass
 }
 
 module.exports = BotPlayer;

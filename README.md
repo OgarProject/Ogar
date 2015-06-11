@@ -6,8 +6,6 @@ If you are on Windows, Ogar no longer requires an installation of node.js to run
 
 As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (Unless you are on Windows). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws".
 
-Although Ogar allows you to run both the Agar.io master server and game server separately, it's currently recommended that you run both servers together until the master server is more implemented. Alternatively, you could run the game server only, and use a client-side mod to connect to the IP address of the server.
-
 ```sh
 ~$ git clone git://github.com/forairan/Ogar.git Ogar
 ~$ npm install ./Ogar
