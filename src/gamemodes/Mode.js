@@ -14,6 +14,7 @@ module.exports = Mode;
 
 Mode.prototype.onServerInit = function(gameServer) {
     // Called when the server starts
+    gameServer.run = true;
 }
 
 Mode.prototype.onPlayerInit = function(player) {
@@ -27,7 +28,10 @@ Mode.prototype.onPlayerSpawn = function(gameServer,player) {
 
 Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
-    gameServer.switchSpectator(player);
+    if (gameServer.run) {
+        // Only find a spectator if the game is running
+        gameServer.switchSpectator(player);
+    }
 }
 
 Mode.prototype.pressW = function(gameServer,player) {
