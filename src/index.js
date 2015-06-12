@@ -54,8 +54,8 @@ if (runGame) {
 function prompt() {
     in_.question(">", function(str) {
     	parseCommands(str);
-    	prompt();
-    });		
+        return prompt(); // Too lazy to learn async
+    });	
 }
 
 function parseCommands(str) {
@@ -204,7 +204,8 @@ function parseCommands(str) {
             for (var i in gameServer.clients) {
                 if (gameServer.clients[i].playerTracker.getName() == name) {
                     var client = gameServer.clients[i].playerTracker;
-                    for (var j in client.cells) {
+                    var len = client.cells.length;
+                    for (var j = 0; j < len; j++) {
                         gameServer.removeNode(client.cells[0]);
                         count++;
                     }
@@ -214,7 +215,8 @@ function parseCommands(str) {
             break;
 		case "killall":
             var count = 0;
-            for (var i in gameServer.nodesPlayer) {
+            var len = gameServer.nodesPlayer.length;
+            for (var i = 0; i < len; i++) {
                 gameServer.removeNode(gameServer.nodesPlayer[0]);
 				count++;
             }
@@ -234,15 +236,3 @@ function parseCommands(str) {
             break;
     }
 }
-
-function searchForPlayers(name,action) {
-    for (var i in gameServer.clients) {
-        if (gameServer.clients[i].playerTracker.getName() == name) {
-            var client = gameServer.clients[i].playerTracker;
-            for (var j in client.cells) {
-                action(client.cells[j]);
-            }
-        }
-    }
-}
-

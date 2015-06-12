@@ -33,8 +33,8 @@ function GameServer() {
     // Main loop tick
     this.time = new Date();
     this.tick = 0; // 1 second ticks of mainLoop
-    this.tickMain = 0; // 50 ms ticks, 40 of these = 1 leaderboard update
-    this.tickSpawn = 0; // 50 ms ticks, used with spawning food
+    this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
+    this.tickSpawn = 0; // Used with spawning food
     
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
@@ -65,14 +65,14 @@ function GameServer() {
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
-        playerRecombineTime: 15, // Base amount of ticks before a cell is allowed to recombine (1 tick = 2000 milliseconds)
-        playerMassDecayRate: .004, // Amount of mass lost per tick (Multiplier) (1 tick = 2000 milliseconds)
+        playerRecombineTime: 30, // Base amount of ticks before a cell is allowed to recombine (1 tick = 1000 milliseconds)
+        playerMassDecayRate: .002, // Amount of mass lost per second
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerMaxNickLength: 15, // Maximum nick length
         tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
-        tourneyPrepTime: 5, // Amount of ticks to wait after all players are ready (1 tick = 2000 ms)
-        tourneyEndTime: 15, // Amount of ticks to wait after a player wins (1 tick = 2000 ms)
-        tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after (value * 2) seconds
+        tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
+        tourneyEndTime: 30, // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
+        tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1, // The timer for filling the server with bots will not count down unless there is this amount of real players
     };
     // Parse config
@@ -266,7 +266,7 @@ GameServer.prototype.mainLoop = function() {
 		
         // Update cells/leaderboard loop
         this.tickMain++;
-        if (this.tickMain >= 40) { // 2 seconds
+        if (this.tickMain >= 20) { // 1 Second
             // Update cells
             this.updateCells();
             
@@ -494,13 +494,14 @@ GameServer.prototype.splitCells = function(client) {
             x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ), 
             y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
         };
-        // Calculate mass of splitting cell
+        // Calculate mass and speed of splitting cell
+        var splitSpeed = 30 + (cell.getSpeed() * 5);
         var newMass = cell.mass / 2;
         cell.mass = newMass;
         // Create cell
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
-        split.setMoveEngineData(40 + (cell.getSpeed() * 4), 20);
+        split.setMoveEngineData(splitSpeed, 40);
         split.calcMergeTime(this.config.playerRecombineTime);
     	
         // Add to moving cells list
@@ -536,7 +537,7 @@ GameServer.prototype.ejectMass = function(client) {
         cell.mass -= this.config.ejectMass;
         
         // Randomize angle
-        angle += (Math.random() * .5) - .25;
+        angle += (Math.random() * .4) - .2;
         
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMassGain);
@@ -745,28 +746,29 @@ GameServer.prototype.loadConfig = function() {
 GameServer.prototype.switchSpectator = function(player) {
     if (this.gameMode.specByLeaderboard) {
 		player.spectatedPlayer++;
-		if (player.spectatedPlayer == this.leaderboard.length)
+		if (player.spectatedPlayer == this.leaderboard.length) {
 			player.spectatedPlayer = 0;
+		}
     } else {
 		// Find next non-spectator with cells in the client list
 		var oldPlayer = player.spectatedPlayer + 1;
 		var count = 0;
-		while (player.spectatedPlayer != oldPlayer && count != this.clients.length)
-		{
-			if (oldPlayer == this.clients.length)
-			{
+		while (player.spectatedPlayer != oldPlayer && count != this.clients.length) {
+			if (oldPlayer == this.clients.length) {
 				oldPlayer = 0;
 				continue;
 			}
-			if (this.clients[oldPlayer].playerTracker.cells.length > 0)
+			if (this.clients[oldPlayer].playerTracker.cells.length > 0) {
 				break;
+			}
 			oldPlayer++;
 			count++;
 		}
-		if (count == this.clients.length)
-			player.spectatedPlayer = -1;
-		else
-			player.spectatedPlayer = oldPlayer;
+        if (count == this.clients.length) {
+            player.spectatedPlayer = -1;
+        } else {
+            player.spectatedPlayer = oldPlayer;
+        }
     }
 }
 

@@ -122,7 +122,7 @@ PlayerTracker.prototype.update = function() {
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
         this.socket.sendPacket(this.gameServer.lb_packet);
-        this.tickLeaderboard = 40; // 40 ticks = 2 seconds
+        this.tickLeaderboard = 20; // 20 ticks = 1 second
     } else {
         this.tickLeaderboard--;
     }

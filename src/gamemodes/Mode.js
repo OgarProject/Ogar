@@ -28,8 +28,7 @@ Mode.prototype.onPlayerSpawn = function(gameServer,player) {
 
 Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
-    if (gameServer.run && player.spectate) {
-        // Only find a spectator if the game is running and they're in spectate mode
+    if (player.spectate) {
         gameServer.switchSpectator(player);
     }
 }
