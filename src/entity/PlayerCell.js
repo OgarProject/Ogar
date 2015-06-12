@@ -47,15 +47,10 @@ PlayerCell.prototype.onAdd = function(gameServer) {
 
 PlayerCell.prototype.onRemove = function(gameServer) {
     var index;
-    // Remove from player screen
+    // Remove from player cell list
     index = this.owner.cells.indexOf(this);
     if (index != -1) {
         this.owner.cells.splice(index, 1);
-    }
-    // Remove from visible list
-    index = this.owner.visibleNodes.indexOf(this);
-    if (index != -1) {
-        this.owner.visibleNodes.splice(index, 1);
     }
     // Remove from special player controlled node list
     index = gameServer.nodesPlayer.indexOf(this);

@@ -88,11 +88,16 @@ PlayerTracker.prototype.update = function() {
     
     var updateNodes = []; // Nodes that need to be updated via packet
     
-	// Remove nodes from visible nodes if possible
-    for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
-        var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
+    // Remove nodes from visible nodes if possible
+    var d = 0;
+    while (d < this.nodeDestroyQueue.length) {
+    	var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
+            d++; // Increment
+        } else {
+            // Node was never visible anyways
+            this.nodeDestroyQueue.splice(d,1);
         }
     }
     
@@ -137,7 +142,6 @@ PlayerTracker.prototype.update = function() {
         if (node.getType() != 1) {
             // Not a food cell, so add it to players screen
             updateNodes.push(node);
-            continue;
         }
     }
     
