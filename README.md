@@ -34,12 +34,14 @@ Id   | Name
 11   | Hunger Games
 
 ## Console Commands
-The current availabe console commands are listed here. Command names are not case sensitive.
+The current availabe console commands are listed here. Command names are not case sensitive, but player names are. Note: To affect unnamed players, add 2 spaces after the command and then add any other parameters the command requires. Ex. "mass  200", "kill  ", or "color  0 0 250" 
 
  - Addbot [Number]
    * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
  - Board [String 1] [String 2] [String 3] ...
    * Replaces the text on the leaderboard with the string text.
+ - Boardreset
+   * Resets the leaderboard to display the proper data for the current gamemode
  - Change [Config setting] [Value]
    * Changes a config setting to a value. Ex. "change serverMaxConnections 32" will change the variable serverMaxConnections to 32. Note that some config values (Like serverGamemode) are parsed before the server starts so changing them mid game will have no effect.
  - Color [Name] [Red] [Green] [Blue]
@@ -54,6 +56,8 @@ The current availabe console commands are listed here. Command names are not cas
    * Kills all player cells on the map.
  - Mass [Name] [Number]
    * Sets the mass of all cells belonging to players that match [Name] to [Number].
+ - Playerlist
+   * Shows a list of connected players, the amount of cells they have, total mass, and their position. 
  - Pause
    * Pauses/Unpauses the game.
  - Status
