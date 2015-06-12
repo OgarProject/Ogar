@@ -34,7 +34,7 @@ Id   | Name
 11   | Hunger Games
 
 ## Console Commands
-The current availabe console commands are listed here. Command names are not case sensitive, but player names are. Note: To affect unnamed players, add 2 spaces after the command and then add any other parameters the command requires. Ex. "mass  200", "kill  ", or "color  0 0 250" 
+The current availabe console commands are listed here. Command names are not case sensitive, but player names are. Note: To affect unnamed players, add 2 spaces after the command and then add any other parameters the command requires. Ex. (Treat the underscores as spaces) "mass__200", "kill__", or "color__0 0 250" 
 
  - Addbot [Number]
    * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
