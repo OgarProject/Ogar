@@ -5,6 +5,7 @@ function PlayerTracker(gameServer, socket) {
     this.name = "";
     this.gameServer = gameServer;
     this.socket = socket;
+    this.nodeAdditionQueue = [];
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     this.cells = [];
@@ -85,6 +86,8 @@ PlayerTracker.prototype.update = function() {
         this.socket.packetHandler.pressQ = false;
     }
     
+    var updateNodes = []; // Nodes that need to be updated via packet
+    
 	// Remove nodes from visible nodes if possible
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
@@ -92,7 +95,7 @@ PlayerTracker.prototype.update = function() {
             this.visibleNodes.splice(index, 1);
         }
     }
-
+    
     // Get visible nodes every 350 ms
     var nonVisibleNodes = []; // Nodes that are not visible
     if (this.tickViewBox <= 0) {
@@ -107,17 +110,42 @@ PlayerTracker.prototype.update = function() {
             }
         }
         
+        // Add nodes to client's screen if client has not seen it already
+        for (var i = 0; i < newVisible.length; i++) {
+            var index = this.visibleNodes.indexOf(newVisible[i]);
+            if (index == -1) {
+                updateNodes.push(newVisible[i]);
+            }
+        }
+        
         this.visibleNodes = newVisible;
         // Reset Ticks
         this.tickViewBox = 7;
     } else {
         this.tickViewBox--;
+        // Add nodes to screen
+        for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
+            var node = this.nodeAdditionQueue[i];
+            this.visibleNodes.push(node);
+            updateNodes.push(node);
+        }
+    }
+    
+    // Update moving nodes
+    for (var i = 0; i < this.visibleNodes.length; i++) {
+        var node = this.visibleNodes[i];
+        if (node.getType() != 1) {
+            // Not a food cell, so add it to players screen
+            updateNodes.push(node);
+            continue;
+        }
     }
     
     // Send packet
-    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), this.visibleNodes, nonVisibleNodes));
+    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue.slice(0), updateNodes, nonVisibleNodes));
 
     this.nodeDestroyQueue = []; // Reset destroy queue
+    this.nodeAdditionQueue = []; // Reset addition queue
 
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
