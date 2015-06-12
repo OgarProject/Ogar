@@ -55,9 +55,9 @@ function GameServer() {
         virusMinAmount: 10, // Minimum amount of viruses on the map. 
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100, // Starting virus size (In mass)
-        virusBurstMass: 198, // Viruses explode past this size
-        ejectMass: 16, // Mass of ejected cells
-        ejectMassGain: 12.8, // Amount of mass gained from consuming ejected cells
+        virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
+        ejectMass: 12, // Mass of ejected cells
+        ejectMassLoss: 16, // Mass lost when ejecting cells
         ejectSpeed: 160, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
@@ -534,13 +534,13 @@ GameServer.prototype.ejectMass = function(client) {
         };
         
         // Remove mass from parent cell
-        cell.mass -= this.config.ejectMass;
+        cell.mass -= this.config.ejectMassLoss;
         
         // Randomize angle
         angle += (Math.random() * .4) - .2;
         
         // Create cell
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMassGain);
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
         ejected.setAngle(angle);
         ejected.setMoveEngineData(this.config.ejectSpeed, 20);
         ejected.setColor(cell.getColor());

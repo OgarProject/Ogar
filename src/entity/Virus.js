@@ -4,6 +4,7 @@ function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 	
     this.cellType = 2;
+    this.fed = 0;
 }
 
 module.exports = Virus;
@@ -13,12 +14,14 @@ Virus.prototype.calcMove = null; // Only for player controlled movement
 
 Virus.prototype.feed = function(feeder,gameServer) {
     this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-    this.mass += 14; // 7 cells to burst the virus
+    this.mass += feeder.mass;
+    this.fed++;
     gameServer.removeNode(feeder);
 	
     // Check if the virus is going to explode
-    if (this.mass >= gameServer.config.virusBurstMass) {
+    if (this.fed >= gameServer.config.virusFeedAmount) {
         this.mass = gameServer.config.virusStartMass; // Reset mass
+        this.fed = 0;
         gameServer.shootVirus(this);
     }
 	
