@@ -206,7 +206,7 @@ GameServer.prototype.addNode = function(node) {
         }
 
         if (node.visibleCheck(client.viewBox,client.centerPos)) {
-            client.visibleNodes.push(node);
+            client.nodeAdditionQueue.push(node);
         }
     }
 }
