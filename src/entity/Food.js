@@ -20,6 +20,14 @@ Food.prototype.calcMovePhys = null; // Food has no need to move
 
 // Main Functions
 
+Food.prototype.sendUpdate = function() {
+    // Whether or not to include this cell in the update packet
+    if (this.moveEngineTicks == 0) {
+        return false;
+    }
+    return true;
+}
+
 Food.prototype.onConsume = function(consumer,gameServer) {
     gameServer.currentFood--;
     consumer.addMass(this.mass);

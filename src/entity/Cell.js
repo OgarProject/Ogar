@@ -259,6 +259,11 @@ Cell.prototype.calcMovePhys = function(config) {
 
 // Override these
 
+Cell.prototype.sendUpdate = function() {
+    // Whether or not to include this cell in the update packet
+    return true;
+}
+
 Cell.prototype.onConsume = function(consumer,gameServer) {
     // Called when the cell is consumed
 }
