@@ -139,8 +139,8 @@ PlayerTracker.prototype.update = function() {
     // Update moving nodes
     for (var i = 0; i < this.visibleNodes.length; i++) {
         var node = this.visibleNodes[i];
-        if (node.getType() != 1) {
-            // Not a food cell, so add it to players screen
+        if (node.sendUpdate()) {
+            // Sends an update if cell is moving
             updateNodes.push(node);
         }
     }
