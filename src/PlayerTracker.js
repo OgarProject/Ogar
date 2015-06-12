@@ -57,7 +57,7 @@ PlayerTracker.prototype.getScore = function(reCalcScore) {
             this.score = s;
         }
     }
-    return this.score;
+    return this.score >> 0;
 }
 
 PlayerTracker.prototype.setColor = function(color) {
@@ -101,7 +101,7 @@ PlayerTracker.prototype.update = function() {
         }
     }
     
-    // Get visible nodes every 350 ms
+    // Get visible nodes every 400 ms
     var nonVisibleNodes = []; // Nodes that are not visible
     if (this.tickViewBox <= 0) {
         var newVisible = this.calcViewBox();
@@ -125,7 +125,7 @@ PlayerTracker.prototype.update = function() {
         
         this.visibleNodes = newVisible;
         // Reset Ticks
-        this.tickViewBox = 7;
+        this.tickViewBox = 8;
     } else {
         this.tickViewBox--;
         // Add nodes to screen
