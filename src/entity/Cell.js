@@ -7,7 +7,6 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     
     this.killedBy; // Cell that ate this cell
-    this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
     this.ignoreCollision = false;
     this.gameServer = gameServer;
     
@@ -74,14 +73,6 @@ Cell.prototype.setMoveEngineData = function(speed, ticks) {
 
 Cell.prototype.getMoveTicks = function() {
     return this.moveEngineTicks;
-}
-
-Cell.prototype.getRecombineTicks = function() {
-    return this.recombineTicks;
-}
-
-Cell.prototype.setRecombineTicks = function(n) {
-    this.recombineTicks = n;
 }
 
 Cell.prototype.setCollisionOff = function(bool) {

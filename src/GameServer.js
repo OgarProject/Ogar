@@ -714,8 +714,8 @@ GameServer.prototype.updateCells = function() {
         }
         
         // Recombining
-        if (cell.getRecombineTicks() > 0) {
-            cell.setRecombineTicks(cell.getRecombineTicks() - 1);
+        if (cell.recombineTicks > 0) {
+            cell.recombineTicks--;
         }
 		
         // Mass decay

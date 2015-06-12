@@ -4,6 +4,7 @@ function PlayerCell() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 0;
+    this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
 }
 
 module.exports = PlayerCell;
