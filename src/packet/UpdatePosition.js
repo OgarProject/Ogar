@@ -16,4 +16,5 @@ UpdatePosition.prototype.build = function() {
     view.setFloat32(9, this.size, true);
 
     return buf;
-}
+};
+
