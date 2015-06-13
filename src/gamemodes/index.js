@@ -23,6 +23,7 @@ var get = function(id) {
             break;
     }
     return mode;
-}
+};
 
 module.exports.get = get;
+

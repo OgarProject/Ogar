@@ -25,7 +25,7 @@ process.argv.forEach(function(val) {
         console.log("");
         console.log("You can use both options simultaneously to run both the master and game server.");
         console.log("");
-    } 
+    }
 });
 
 if (runMaster) {
@@ -40,7 +40,7 @@ if (runGame) {
     GameServer = require('./GameServer');
     var gameServer = new GameServer();
     gameServer.start();
-    
+
     // Initialize the server console
     if (showConsole) {
         var readline = require('readline');
@@ -56,7 +56,7 @@ function prompt() {
     	parseCommands(str);
         return prompt(); // Too lazy to learn async
     });	
-}
+};
 
 function parseCommands(str) {
     // Splits the string
@@ -114,12 +114,12 @@ function parseCommands(str) {
                 console.log("[Console] Please specify a valid name");
                 break;
             }
-			
+
             var color = {r: 0, g: 0, b: 0};
             color.r = Math.max(Math.min(parseInt(split[2]), 255), 0);
             color.g = Math.max(Math.min(parseInt(split[3]), 255), 0);
             color.b = Math.max(Math.min(parseInt(split[4]), 255), 0);
-			
+
             // Sets color to the specified amount
             for (var i in gameServer.clients) {
                 if (gameServer.clients[i].playerTracker.getName() == name) {
@@ -134,15 +134,17 @@ function parseCommands(str) {
         case "food":
             var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
             var mass = parseInt(split[3]);
-			 
+
             // Make sure the input values are numbers
             if (isNaN(pos.x) || isNaN(pos.y)) {
                 console.log("[Console] Invalid coordinates");
                 break;
-            } if (isNaN(mass)) {
+            }
+
+            if (isNaN(mass)) {
                 mass = gameServer.config.foodStartMass;
             }
-			
+
             // Spawn
             var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass);
             f.setColor(gameServer.getRandomColor());
@@ -160,15 +162,15 @@ function parseCommands(str) {
                 console.log("[Console] Invalid game mode selected");
             }
             break;
-		case "kill":
+        case "kill":
             var name = split[1];
-			var action = function (cell) {gameServer.removeNode(cell)};
+            var action = function (cell) {gameServer.removeNode(cell)};
             if (typeof name == 'undefined') {
                 console.log("[Console] Please specify a valid name");
                 break;
-        	}
-			
-			var count = 0;
+            }
+
+            var count = 0;
             for (var i in gameServer.clients) {
                 if (gameServer.clients[i].playerTracker.getName() == name) {
                     var client = gameServer.clients[i].playerTracker;
@@ -181,14 +183,14 @@ function parseCommands(str) {
             }
             console.log("[Console] Removed " + count + " cells");
             break;
-		case "killall":
+        case "killall":
             var count = 0;
             var len = gameServer.nodesPlayer.length;
             for (var i = 0; i < len; i++) {
                 gameServer.removeNode(gameServer.nodesPlayer[0]);
-				count++;
+                count++;
             }
-			console.log("[Console] Removed " + count + " cells");
+            console.log("[Console] Removed " + count + " cells");
             break;
 		case "mass":
             // Validation checks
