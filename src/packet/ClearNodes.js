@@ -9,4 +9,5 @@ ClearNodes.prototype.build = function() {
     view.setUint8(0, 20, true);
 
     return buf;
-}
+};
+
