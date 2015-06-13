@@ -259,7 +259,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         // TODO: Send packet elsewhere so it is send more often
         this.socket.sendPacket(new Packet.UpdatePosition(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom));
         // TODO: Recalculate visible nodes for spectator to match specZoom
-        return specPlayer.visibleNodes;
+        return specPlayer.visibleNodes.slice(0,specPlayer.visibleNodes.length);
     } else {
         return []; // Nothing
     }
