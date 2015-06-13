@@ -7,19 +7,18 @@ function UpdateNodes(destroyQueue, nodes, nonVisibleNodes) {
 module.exports = UpdateNodes;
 
 UpdateNodes.prototype.build = function() {
-    
     // Calculate nodes sub packet size before making the data view
     var nodesLength = 0;
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-        
+
         if (typeof node == "undefined") {
             continue;
         }
-        
+
         nodesLength = nodesLength + 16 + (node.getName().length * 2);
     }
-    
+
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
     var view = new DataView(buf);
 
@@ -33,7 +32,7 @@ UpdateNodes.prototype.build = function() {
         if (!node) {
             continue;
         }
-        
+
         var killer = 0;
         if (node.getKiller()) {
             killer = node.getKiller().nodeId;
@@ -41,19 +40,19 @@ UpdateNodes.prototype.build = function() {
 
         view.setUint32(offset, killer, true); // Killer ID
         view.setUint32(offset + 4, node.nodeId, true); // Node ID
-        
+
         offset += 8;
     }
-    
+
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
 
         if (typeof node == "undefined") {
             continue;
         }
-        
+
         var v = node.getType() == 2 ? 1: 0; // Virus flag
-        
+
         view.setUint32(offset, node.nodeId, true); // Node ID
         view.setUint16(offset + 4, node.position.x, true); // X position
         view.setUint16(offset + 6, node.position.y, true); // Y position
@@ -63,7 +62,7 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 12, node.color.b, true); // Color (B)
         view.setUint8(offset + 13, v, true); // Flags
         offset += 14;
-        
+
         var name = node.getName();
         if (name) {
             for (var j = 0; j < name.length; j++) {
@@ -78,13 +77,13 @@ UpdateNodes.prototype.build = function() {
         view.setUint16(offset, 0, true); // End of string
         offset += 2;
     }
-    
+
     var len = this.nonVisibleNodes.length + this.destroyQueue.length;
     view.setUint32(offset, 0, true); // End
     view.setUint32(offset + 4, len, true); // # of non-visible nodes to destroy
 
     offset += 8;
-    
+
     // Destroy queue + nonvisible nodes
     for (var i = 0; i < this.destroyQueue.length; i++) {
         var node = this.destroyQueue[i];
@@ -108,4 +107,5 @@ UpdateNodes.prototype.build = function() {
     }
 
     return buf;
-}
+};
+

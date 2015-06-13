@@ -11,6 +11,7 @@ AddNode.prototype.build = function() {
 
     view.setUint8(0, 32, true);
     view.setUint32(1, this.item.nodeId, true);
-    
+
     return buf;
-}
+};
+

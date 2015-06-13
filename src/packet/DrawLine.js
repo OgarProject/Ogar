@@ -14,4 +14,5 @@ DrawLine.prototype.build = function() {
     view.setUint16(3, this.y, true);
 
     return buf;
-}
+};
+
