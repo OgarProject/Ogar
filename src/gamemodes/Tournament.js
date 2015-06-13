@@ -2,22 +2,22 @@ var Mode = require('./Mode');
 
 function Tournament() {
     Mode.apply(this, Array.prototype.slice.call(arguments));
-	
+
     this.ID = 10;
     this.name = "Tournament";
     this.packetLB = 48;
-    
+
     // Config (1 tick = 2000 ms)
     this.prepTime = 5; // Amount of ticks after the server fills up to wait until starting the game
     this.endTime = 15; // Amount of ticks after someone wins to restart the game
     this.autoFill = false;
     this.autoFillPlayers = 1;
-    
+
     // Gamemode Specific Variables
     this.gamePhase = 0; // 0 = Waiting for players, 1 = Prepare to start, 2 = Game in progress, 3 = End
     this.contenders = [];
     this.maxContenders = 12;
-    
+
     this.winner;
     this.timer;
 }
@@ -30,19 +30,19 @@ Tournament.prototype = new Mode();
 Tournament.prototype.startGamePrep = function(gameServer) {
     this.gamePhase = 1;
     this.timer = this.prepTime; // 10 seconds
-}
+};
 
 Tournament.prototype.startGame = function(gameServer) {
     gameServer.run = true;
     this.gamePhase = 2;
     this.getSpectate(); // Gets a random person to spectate
-}
+};
 
 Tournament.prototype.endGame = function(gameServer) {
     this.winner = this.contenders[0];
     this.gamePhase = 3;
     this.timer = this.endTime; // 30 Seconds
-}
+};
 
 Tournament.prototype.fillBots = function(gameServer) {
     // Fills the server with bots if there arent enough players
@@ -50,13 +50,13 @@ Tournament.prototype.fillBots = function(gameServer) {
     for (var i = 0;i < fill;i++) {
         gameServer.bots.addBot();
     }
-}
+};
 
 Tournament.prototype.getSpectate = function() {
     // Finds a random person to spectate
     var index = Math.floor(Math.random() * this.contenders.length);
     this.rankOne = this.contenders[index];
-}
+};
 
 // Override
 
@@ -65,18 +65,18 @@ Tournament.prototype.onServerInit = function(gameServer) {
     var len = gameServer.nodes.length;
     for (var i = 0; i < len; i++) {
         var node = gameServer.nodes[0];
-		
+
         if (!node) {
             continue;
         }
-		
+
         gameServer.removeNode(node);
     }
-	
+
     // Pauses the server
     gameServer.run = false;
     this.gamePhase = 0;
-	
+
     // Get config values
     if (gameServer.config.tourneyAutoFill > 0) {
         this.timer = gameServer.config.tourneyAutoFill;
@@ -86,20 +86,20 @@ Tournament.prototype.onServerInit = function(gameServer) {
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;
     this.maxContenders = gameServer.config.tourneyMaxPlayers;
-}
+};
 
 Tournament.prototype.onPlayerSpawn = function(gameServer,player) {
     // Only spawn players if the game hasnt started yet
     if ((this.gamePhase == 0) && (this.contenders.length < this.maxContenders)) {
         gameServer.spawnPlayer(player);
         this.contenders.push(player); // Add to contenders list
-		
+
         if (this.contenders.length == this.maxContenders) {
             // Start the game once there is enough players
             this.startGamePrep(gameServer);
         }
     }
-}
+};
 
 Tournament.prototype.onCellRemove = function(cell) {
     var owner = cell.owner;
@@ -109,22 +109,22 @@ Tournament.prototype.onCellRemove = function(cell) {
         if (index != -1) {
             this.contenders.splice(index,1);
         }
-        
+
         // Remove if being specated
         if (owner == this.rankOne) {
             this.getSpectate(); // Gets a random person to spectate
         }
-        
+
         // Victory conditions
         if ((this.contenders.length == 1) && (this.gamePhase == 2)){
             this.endGame(cell.owner.gameServer);
         }
     }
-}
+};
 
 Tournament.prototype.updateLB = function(gameServer) {
     var lb = gameServer.leaderboard;
-    
+
     switch (this.gamePhase) {
         case 0:
             lb[0] = "Waiting for";
@@ -168,5 +168,6 @@ Tournament.prototype.updateLB = function(gameServer) {
             break;
         default:
             break;
-    }  
-}
+    }
+};
+
