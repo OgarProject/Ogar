@@ -17,4 +17,5 @@ MasterServer.prototype.start = function() {
     this.httpServer.listen(this.port, function() {
         console.log("[Master] Listening on port %d", this.port);
     }.bind(this));
-}
+};
+
