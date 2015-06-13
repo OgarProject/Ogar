@@ -7,8 +7,15 @@ function BotLoader(gameServer) {
 this.gameServer = gameServer;
 
     // Names
-    this.randomNames = ["Bacteria","Spore","Satanist","Earth","Nazi","Moon","Poland","sanik","ayy lmao","Reddit","CIA","wojak","doge","sir","facepunch","8","Russia","Circle","Blob","4chan","Mars","Ogar","NASA","Helper","Parasite","Square","Round","Bug","Splitting","Ice","Japan","irs"];
+    this.randomNames = [];
     this.nameIndex = 0;
+    
+    // Load names
+    try {
+        this.loadNames();
+    } catch (e) {
+        // Nothing, use the default names
+    }
 }
 
 module.exports = BotLoader;
@@ -28,6 +35,14 @@ BotLoader.prototype.getName = function() {
     return name;
 };
 
+BotLoader.prototype.loadNames = function() {
+    var fs = require("fs"); // Import the util library
+	
+    // Read and parse the names
+    this.randomNames = fs.readFileSync("./botnames.txt", "utf8").split('\r\n');
+};
+
+
 BotLoader.prototype.addBot = function() {
     var s = new FakeSocket(this.gameServer);
     s.playerTracker = new BotPlayer(this.gameServer, s);
@@ -39,4 +54,5 @@ BotLoader.prototype.addBot = function() {
     // Add to world
     s.packetHandler.setNickname(this.getName());
 };
+
 
