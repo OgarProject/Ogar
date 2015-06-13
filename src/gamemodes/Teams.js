@@ -8,10 +8,15 @@ function Teams() {
     this.decayMod = 1.5;
     this.packetLB = 50;
     this.haveTeams = true;
+    this.colorFuzziness = 32;
 
     // Special
     this.teamAmount = 3; // Amount of teams. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue).
-    this.colors = [{'r':245,'b':0,'g':0},{'r':0,'b':0,'g':245},{'r':0,'b':245,'g':0}]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
+    this.colors = [
+        {'r':255 - this.colorFuzziness, 'g':  0 + this.colorFuzziness, 'b':  0 + this.colorFuzziness},
+        {'r':  0 + this.colorFuzziness, 'g':255 - this.colorFuzziness, 'b':  0 + this.colorFuzziness},
+        {'r':  0 + this.colorFuzziness, 'g':  0 + this.colorFuzziness, 'b':255 - this.colorFuzziness},
+    ]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     this.nodes = []; // Teams
 }
 
@@ -20,13 +25,21 @@ Teams.prototype = new Mode();
 
 //Gamemode Specific Functions
 
-Teams.prototype.getTeamColor = function(team) {
-    var color = this.colors[team];
+Teams.prototype.fuzzColorComponent = function(component, amount) {
+    component += Math.floor(Math.random() * (amount * 2 + 1)) - amount;
+    return component < 0 ? 0 : component > 255 ? 255 : component;
+};
+
+Teams.prototype.fuzzColor = function(color, amount) {
     return {
-        r: color.r,
-        b: color.b,
-        g: color.g
+        r: this.fuzzColorComponent(color.r, amount),
+        b: this.fuzzColorComponent(color.b, amount),
+        g: this.fuzzColorComponent(color.g, amount)
     };
+};
+
+Teams.prototype.getTeamColor = function(team) {
+    return this.fuzzColor(this.colors[team], this.colorFuzziness);
 };
 
 // Override
