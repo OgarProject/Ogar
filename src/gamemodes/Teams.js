@@ -13,9 +13,9 @@ function Teams() {
     // Special
     this.teamAmount = 3; // Amount of teams. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue).
     this.colors = [
-        {'r':255 - this.colorFuzziness, 'g':  0 + this.colorFuzziness, 'b':  0 + this.colorFuzziness},
-        {'r':  0 + this.colorFuzziness, 'g':255 - this.colorFuzziness, 'b':  0 + this.colorFuzziness},
-        {'r':  0 + this.colorFuzziness, 'g':  0 + this.colorFuzziness, 'b':255 - this.colorFuzziness},
+        {'r': 223, 'g': 0, 'b': 0},
+        {'r': 0, 'g': 223, 'b': 0},
+        {'r': 0, 'g': 0, 'b': 223},
     ]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     this.nodes = []; // Teams
 }
@@ -25,24 +25,28 @@ Teams.prototype = new Mode();
 
 //Gamemode Specific Functions
 
-Teams.prototype.fuzzColorComponent = function(component, amount) {
-    component += Math.floor(Math.random() * (amount * 2 + 1)) - amount;
-    return component < 0 ? 0 : component > 255 ? 255 : component;
-};
-
-Teams.prototype.fuzzColor = function(color, amount) {
-    return {
-        r: this.fuzzColorComponent(color.r, amount),
-        b: this.fuzzColorComponent(color.b, amount),
-        g: this.fuzzColorComponent(color.g, amount)
-    };
+Teams.prototype.fuzzColorComponent = function(component) {
+    component += Math.random() * this.colorFuzziness >> 0;
+    return component;
 };
 
 Teams.prototype.getTeamColor = function(team) {
-    return this.fuzzColor(this.colors[team], this.colorFuzziness);
+    var color = this.colors[team];
+    return {
+        r: this.fuzzColorComponent(color.r),
+        b: this.fuzzColorComponent(color.b),
+        g: this.fuzzColorComponent(color.g)
+    };
 };
 
 // Override
+
+Teams.prototype.onPlayerSpawn = function(gameServer,player) {
+    // Random color based on team
+    player.color = this.getTeamColor(player.team);
+    // Spawn player
+    gameServer.spawnPlayer(player);
+};
 
 Teams.prototype.onServerInit = function(gameServer) {
     // Set up teams
@@ -54,7 +58,6 @@ Teams.prototype.onServerInit = function(gameServer) {
 Teams.prototype.onPlayerInit = function(player) {
     // Get random team
     player.team = Math.floor(Math.random() * this.teamAmount);
-    player.color = this.getTeamColor(player.team);
 };
 
 Teams.prototype.onCellAdd = function(cell) {
