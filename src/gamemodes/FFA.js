@@ -33,6 +33,13 @@ FFA.prototype.leaderboardAddSort = function(player,leaderboard) {
 
 // Override
 
+FFA.prototype.onPlayerSpawn = function(gameServer,player) {
+    // Random color
+    player.setColor(gameServer.getRandomColor());
+    // Spawn player
+    gameServer.spawnPlayer(player);
+}
+
 FFA.prototype.updateLB = function(gameServer) {
     var lb = gameServer.leaderboard;
     // Loop through all clients
