@@ -30,6 +30,10 @@ Virus.prototype.feed = function(feeder,gameServer) {
 
 // Main Functions
 
+Virus.prototype.getEatingRange = function() {
+    return this.getSize() * .5; // 0 for ejected cells
+};
+
 Virus.prototype.onConsume = function(consumer,gameServer) {
     var client = consumer.owner;
     var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
