@@ -145,6 +145,10 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
 
 MotherCell.prototype = new Cell(); // Base
 
+MotherCell.prototype.getEatingRange = function() {
+    return this.getSize() * .5;
+};
+
 MotherCell.prototype.update = function(gameServer) {
 	// Add mass
 	this.mass += .25;
