@@ -73,6 +73,39 @@ Teams.prototype.onCellRemove = function(cell) {
     }
 };
 
+Teams.prototype.onCellMove = function(x1,y1,cell) {
+    var team = cell.owner.getTeam();
+
+    // Find team
+    for (var i = 0; i < cell.owner.visibleNodes.length;i++) {
+        // Only collide with player cells
+        var check = cell.owner.visibleNodes[i];
+
+        if ((check.getType() != 0) || (cell.owner == check.owner)){
+            continue;
+        }
+
+        if (check.owner.getTeam() == team) {
+            // Collision with teammates
+            var dist = Math.sqrt( Math.pow(check.position.x - cell.position.x, 2) +  Math.pow(check.position.y - cell.position.y, 2) );
+            var collisionDist = check.getSize() + cell.getSize(); // Minimum distance between the 2 cells
+
+            // Calculations
+            if (dist < collisionDist) { // Collided
+                // The moving cell pushes the colliding cell
+                var newDeltaY = check.position.y - y1;
+                var newDeltaX = check.position.x - x1;
+                var newAngle = Math.atan2(newDeltaX,newDeltaY);
+
+                var move = collisionDist - dist;
+
+                check.position.x = check.position.x + ( move * Math.sin(newAngle) ) >> 0;
+                check.position.y = check.position.y + ( move * Math.cos(newAngle) ) >> 0;
+            }
+        }
+    }
+};
+
 Teams.prototype.updateLB = function(gameServer) {
     var total = 0;
     var teamMass = [];

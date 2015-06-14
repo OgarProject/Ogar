@@ -17,6 +17,14 @@ Mode.prototype.onServerInit = function(gameServer) {
     gameServer.run = true;
 };
 
+Mode.prototype.onTick = function(gameServer) {
+    // Called on every game tick 
+};
+
+Mode.prototype.onChange = function(gameServer) {
+    // Called when someone changes the gamemode via console commands
+};
+
 Mode.prototype.onPlayerInit = function(player) {
     // Called after a player object is constructed
 };
@@ -48,7 +56,11 @@ Mode.prototype.onCellAdd = function(cell) {
 };
 
 Mode.prototype.onCellRemove = function(cell) {
-// Called when a player cell is removed
+    // Called when a player cell is removed
+};
+
+Mode.prototype.onCellMove = function(x1,y1,cell) {
+	// Called when a player cell is moved
 };
 
 Mode.prototype.updateLB = function(gameServer) {

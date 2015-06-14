@@ -41,7 +41,7 @@ function GameServer() {
         serverMaxConnections: 64, // Maximum amount of connections to the server.
         serverPort: 443, // Server port
         serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
-        serverBots: 0, // Amount of player bots to spawn (Experimental)
+        serverBots: 0, // Amount of player bots to spawn
         serverViewBase: 1024, // Base view distance of players. Warning: high values may cause lag
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
@@ -272,6 +272,9 @@ GameServer.prototype.mainLoop = function() {
 
                 this.tickSpawn = 0; // Reset
             }
+            
+            // Gamemode tick
+            this.gameMode.onTick(this);
         }
 
         // Update the client's maps
@@ -375,7 +378,7 @@ GameServer.prototype.virusCheck = function() {
         // Spawns a virus
         var pos = this.getRandomPosition();
 
-        // Check for players (Experimental)
+        // Check for players
         for (var i = 0; i < this.nodesPlayer.length; i++) {
             var check = this.nodesPlayer[i];
 

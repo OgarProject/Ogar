@@ -4,6 +4,7 @@ function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2;
+    this.spiked = 1;
     this.fed = 0;
 }
 
