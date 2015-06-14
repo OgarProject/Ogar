@@ -110,11 +110,6 @@ Tournament.prototype.onCellRemove = function(cell) {
             this.contenders.splice(index,1);
         }
 
-        // Remove if being specated
-        if (owner == this.rankOne) {
-            this.getSpectate(); // Gets a random person to spectate
-        }
-
         // Victory conditions
         if ((this.contenders.length == 1) && (this.gamePhase == 2)){
             this.endGame(cell.owner.gameServer);
@@ -140,7 +135,7 @@ Tournament.prototype.updateLB = function(gameServer) {
             break;
         case 1:
             lb[0] = "Game starting in";
-            lb[1] = (this.timer * 2).toString();
+            lb[1] = this.timer.toString();
             lb[2] = "Good luck!";
             if (this.timer <= 0) {
                 // Reset the game
