@@ -24,10 +24,13 @@ Food.prototype.sendUpdate = function() {
         return false;
     }
     return true;
-}
+};
+
+Food.prototype.onRemove = function(consumer,gameServer) {
+    gameServer.currentFood--;
+};
 
 Food.prototype.onConsume = function(consumer,gameServer) {
-    gameServer.currentFood--;
     consumer.addMass(this.mass);
 };
 
