@@ -2,6 +2,7 @@ module.exports = {
     Mode: require('./Mode'),
     FFA: require('./FFA'),
     Teams: require('./Teams'),
+    Experimental: require('./Experimental'),
     Tournament: require('./Tournament'),
     HungerGames: require('./HungerGames'),
 };
@@ -11,6 +12,9 @@ var get = function(id) {
     switch (id) {
         case 1: // Teams
             mode = new module.exports.Teams();
+            break;
+        case 2: // Experimental
+            mode = new module.exports.Experimental();
             break;
         case 10: // Tournament
             mode = new module.exports.Tournament();

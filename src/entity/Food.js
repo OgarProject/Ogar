@@ -16,8 +16,6 @@ Food.prototype.getSize = function() {
 
 Food.prototype.calcMove = null; // Food has no need to move
 
-Food.prototype.calcMovePhys = null; // Food has no need to move
-
 // Main Functions
 
 Food.prototype.sendUpdate = function() {

@@ -51,8 +51,6 @@ UpdateNodes.prototype.build = function() {
             continue;
         }
 
-        var v = node.getType() == 2 ? 1: 0; // Virus flag
-
         view.setUint32(offset, node.nodeId, true); // Node ID
         view.setUint16(offset + 4, node.position.x, true); // X position
         view.setUint16(offset + 6, node.position.y, true); // Y position
@@ -60,7 +58,7 @@ UpdateNodes.prototype.build = function() {
         view.setUint8(offset + 10, node.color.r, true); // Color (R)
         view.setUint8(offset + 11, node.color.g, true); // Color (G)
         view.setUint8(offset + 12, node.color.b, true); // Color (B)
-        view.setUint8(offset + 13, v, true); // Flags
+        view.setUint8(offset + 13, node.spiked, true); // Flags
         offset += 14;
 
         var name = node.getName();

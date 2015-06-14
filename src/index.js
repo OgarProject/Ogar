@@ -155,7 +155,9 @@ function parseCommands(str) {
         case "gamemode":
             try {
                 var n = parseInt(split[1]);
-                gameServer.gameMode = require('./gamemodes').get(n);
+                var gm = require('./gamemodes').get(n); // If there is an invalid gamemode, the function will exit
+                gameServer.gameMode.onChange(gameServer); // Reverts the changes of the old gamemode
+                gameServer.gameMode = gm; // Apply new gamemode
                 gameServer.gameMode.onServerInit(gameServer); // Resets the server
                 console.log("[Game] Changed game mode to " + gameServer.gameMode.name);
             } catch (e) {
