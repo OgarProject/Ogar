@@ -223,7 +223,7 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     
 	// Move engine
 	f.angle = Math.random() * 6.28; // (Math.PI * 2) ??? Precision is not our greatest concern here
-	var dist = (Math.random() * 12) + 58; // Random distance
+	var dist = (Math.random() * 15) + 60; // Random distance
 	f.setMoveEngineData(dist,20);
 	
 	gameServer.setAsMovingNode(f);
