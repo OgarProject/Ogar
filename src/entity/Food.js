@@ -26,7 +26,7 @@ Food.prototype.sendUpdate = function() {
     return true;
 };
 
-Food.prototype.onRemove = function(consumer,gameServer) {
+Food.prototype.onRemove = function(gameServer) {
     gameServer.currentFood--;
 };
 
