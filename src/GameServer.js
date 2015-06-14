@@ -335,41 +335,20 @@ GameServer.prototype.spawnFood = function() {
     this.currentFood++;
 };
 
-GameServer.prototype.spawnPlayer = function(client) {
-    var pos = this.getRandomPosition();
-    var startMass = this.config.playerStartMass;
-
-    // Check if there are ejected mass in the world. Does not work in team mode
-    if ((this.nodesEjected.length > 0) && (!this.gameMode.haveTeams)) {
-        var index = Math.floor(Math.random() * 100) + 1;
-        if (index <= this.config.ejectSpawnPlayer) {
-            // Get ejected cell
-            var index = Math.floor(Math.random() * this.nodesEjected.length);
-            var e = this.nodesEjected[index];
-
-            // Remove ejected mass
-            this.removeNode(e);
-
-            // Inherit
-            pos.x = e.position.x;
-            pos.y = e.position.y;
-            startMass = e.mass;
-
-            var color = e.getColor();
-            client.setColor({
-                'r': color.r,
-                'g': color.g,
-                'b': color.b
-            });
-        }
-    }
-
+GameServer.prototype.spawnPlayer = function(player,pos,mass) {
+	if (pos == null) { // Get random pos
+		pos = this.getRandomPosition();
+	}
+	if (mass == null) { // Get starting mass
+		mass = this.config.playerStartMass;
+	}
+	
     // Spawn player and add to world
-    var cell = new Entity.PlayerCell(this.getNextNodeId(), client, pos, startMass);
+    var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
     this.addNode(cell);
 
     // Set initial mouse coords
-    client.mouse = {x: pos.x, y: pos.y};
+    player.mouse = {x: pos.x, y: pos.y};
 };
 
 GameServer.prototype.virusCheck = function() {

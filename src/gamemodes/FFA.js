@@ -35,9 +35,38 @@ FFA.prototype.leaderboardAddSort = function(player,leaderboard) {
 
 FFA.prototype.onPlayerSpawn = function(gameServer,player) {
     // Random color
-    player.setColor(gameServer.getRandomColor());
+    player.color = gameServer.getRandomColor();
+    
+    // Set up variables
+    var pos = gameServer.getRandomPosition();
+    var startMass = gameServer.config.playerStartMass;
+    
+    // Check if there are ejected mass in the world.
+    if (gameServer.nodesEjected.length > 0) {
+        var index = Math.floor(Math.random() * 100) + 1;
+        if (index <= gameServer.config.ejectSpawnPlayer) {
+            // Get ejected cell
+            var index = Math.floor(Math.random() * gameServer.nodesEjected.length);
+            var e = gameServer.nodesEjected[index];
+
+            // Remove ejected mass
+            gameServer.removeNode(e);
+
+            // Inherit
+            pos = {x: e.position.x, y: e.position.y};
+            startMass = e.mass;
+
+            var color = e.getColor();
+            player.setColor({
+                'r': color.r,
+                'g': color.g,
+                'b': color.b
+            });
+        }
+    }
+    
     // Spawn player
-    gameServer.spawnPlayer(player);
+    gameServer.spawnPlayer(player,pos,startMass);
 }
 
 FFA.prototype.updateLB = function(gameServer) {
