@@ -65,7 +65,7 @@ function GameServer() {
         playerMinMassEject: 32, // Mass required to eject a cell
         playerMinMassSplit: 36, // Mass required to split
         playerMaxCells: 16, // Max cells the player is allowed to have
-        playerRecombineTime: 30, // Base amount of ticks before a cell is allowed to recombine (1 tick = 1000 milliseconds)
+        playerRecombineTime: 30, // Base amount of seconds before a cell is allowed to recombine
         playerMassDecayRate: .002, // Amount of mass lost per second
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerMaxNickLength: 15, // Maximum nick length
@@ -655,7 +655,15 @@ GameServer.prototype.getCellsInRange = function(cell) {
                 multiplier = 1.33;
                 break;
             case 0: // Players
-                multiplier = check.owner == cell.owner ? 1.00 : multiplier;
+                // Can't eat self if it's not time to recombine yet
+                if (check.owner == cell.owner) {
+                    if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
+                        continue;
+                    }
+
+                    multiplier = 1.00;
+                }
+
                 // Can't eat team members
                 if (this.gameMode.haveTeams) {
                     if (!check.owner) { // Error check
