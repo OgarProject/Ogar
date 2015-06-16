@@ -118,7 +118,8 @@ Tournament.prototype.onCellRemove = function(cell) {
                 bots++;
             }
         }
-        if ((this.contenders.length-bots == 1) && (this.gamePhase == 2)){
+		
+        if (((this.contenders.length == 1) || (this.contenders.length <= bots)) && (this.gamePhase == 2)) {
             this.endGame(cell.owner.gameServer);
         }
     }
