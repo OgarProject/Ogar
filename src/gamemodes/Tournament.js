@@ -112,7 +112,13 @@ Tournament.prototype.onCellRemove = function(cell) {
         }
 
         // Victory conditions
-        if ((this.contenders.length == 1) && (this.gamePhase == 2)){
+        var bots = 0;
+        for (var i = 0; i < this.contenders.length; i++) {
+            if (!('_socket' in this.contenders[i])) {
+                bots++;
+            }
+        }
+        if ((this.contenders.length-bots == 1) && (this.gamePhase == 2)){
             this.endGame(cell.owner.gameServer);
         }
     }
