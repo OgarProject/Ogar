@@ -103,23 +103,32 @@ Tournament.prototype.onPlayerSpawn = function(gameServer,player) {
 };
 
 Tournament.prototype.onCellRemove = function(cell) {
-    var owner = cell.owner;
+    var owner = cell.owner,
+        human_just_died = false;
+
     if (owner.cells.length <= 0) {
         // Remove from contenders list
         var index = this.contenders.indexOf(owner);
         if (index != -1) {
+            if ('_socket' in this.contenders[index].socket) {
+                human_just_died = true;
+            }
             this.contenders.splice(index,1);
         }
 
         // Victory conditions
-        var bots = 0;
+        var humans = 0;
         for (var i = 0; i < this.contenders.length; i++) {
-            if (!('_socket' in this.contenders[i].socket)) {
-                bots++;
+            if ('_socket' in this.contenders[i].socket) {
+                humans++;
             }
         }
-		
-        if (((this.contenders.length == 1) || (this.contenders.length <= bots)) && (this.gamePhase == 2)) {
+
+        // the game is over if:
+        // 1) there is only 1 player left, OR
+        // 2) all the humans are dead, OR
+        // 3) the last-but-one human just died
+        if ((this.contenders.length == 1 || humans == 0 || (humans == 1 && human_just_died)) && this.gamePhase == 2) {
             this.endGame(cell.owner.gameServer);
         }
     }
