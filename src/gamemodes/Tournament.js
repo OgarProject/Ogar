@@ -114,7 +114,7 @@ Tournament.prototype.onCellRemove = function(cell) {
         // Victory conditions
         var bots = 0;
         for (var i = 0; i < this.contenders.length; i++) {
-            if (!('_socket' in this.contenders[i])) {
+            if (!('_socket' in this.contenders[i].socket)) {
                 bots++;
             }
         }
