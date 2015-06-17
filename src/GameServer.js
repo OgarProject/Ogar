@@ -406,7 +406,7 @@ GameServer.prototype.updateMoveEngine = function() {
     for (var i = 0; i < len; i++) {
         var cell = this.nodesPlayer[i];
 
-        // Do not move cells that have collision turned off
+        // Do not move cells that have already been eaten or have collision turned off
         if ((!cell) || (cell.getCollision())){
             continue;
         }
