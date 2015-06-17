@@ -608,6 +608,11 @@ GameServer.prototype.getCellsInRange = function(cell) {
             continue;
         }
 
+        // if something already collided with this cell, don't check for other collisions
+        if (check.inRange) {
+            continue;
+        }
+
         // Can't eat itself
         if (cell.nodeId == check.nodeId) {
             continue;
@@ -629,6 +634,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         switch (check.getType()) {
             case 1: // Food cell
                 list.push(check);
+                check.inRange = true; // skip future collision checks for this food
                 continue;
             case 2: // Virus
                 multiplier = 1.33;
@@ -676,6 +682,9 @@ GameServer.prototype.getCellsInRange = function(cell) {
 
         // Add to list of cells nearby
         list.push(check);
+
+        // Something is about to eat this cell; no need to check for other collisions with it
+        check.inRange = true;
     }
     return list;
 };
