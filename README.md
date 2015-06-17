@@ -16,7 +16,7 @@ Currently, Ogar listens on the following addresses and ports:
 * *:80 - for the master server
 * *:443 - for the game server
 
-Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports.
+Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports. **If you are getting an EADDRINUSE error, it means that the port required to run Ogar is being used. Usuallly, Skpye is the culprit. To solve this, either close out skype, or change the serverPort value in gameserver.ini to a different port. You will have to change your connection ip to 127.0.0.1:PORT**
 
 Once the server is running, you can connect (locally) by typing "agar.io?127.0.0.1:443" into your browser's address bar. No client side mods are needed to connect.
 
@@ -33,6 +33,7 @@ Id   | Name
 2    | Experimental (As of 6/13/15)
 10   | Tournament
 11   | Hunger Games
+20   | Rainbow FFA - Hint: Use with "setAcid(true)"
 
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are. Note: To affect unnamed players, add 2 spaces after the command and then add any other parameters the command requires. Ex. (Treat the underscores as spaces) "mass__200", "kill__", or "color__0 0 250" 
