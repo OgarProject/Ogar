@@ -33,6 +33,7 @@ Id   | Name
 2    | Experimental (As of 6/13/15)
 10   | Tournament
 11   | Hunger Games
+20   | Rainbow FFA - Hint: Use with "setAcid(true)"
 
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are. Note: To affect unnamed players, add 2 spaces after the command and then add any other parameters the command requires. Ex. (Treat the underscores as spaces) "mass__200", "kill__", or "color__0 0 250" 
