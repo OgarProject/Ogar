@@ -406,7 +406,7 @@ GameServer.prototype.updateMoveEngine = function() {
     for (var i = 0; i < len; i++) {
         var cell = this.nodesPlayer[i];
 
-        // Do not move cells that have collision turned off
+        // Do not move cells that have already been eaten or have collision turned off
         if ((!cell) || (cell.getCollision())){
             continue;
         }
@@ -419,6 +419,12 @@ GameServer.prototype.updateMoveEngine = function() {
         var list = this.getCellsInRange(cell);
         for (var j = 0; j < list.length ; j++) {
             var check = list[j];
+
+            // Fix outer loop variables - we're deleting from this.nodesPlayer, so need to update its length, and maybe 'i' too
+            len--;
+            if (check.nodeId < cell.nodeId) {
+                i--;
+            }
 
             // Consume effect
             check.onConsume(cell,this);
@@ -608,6 +614,11 @@ GameServer.prototype.getCellsInRange = function(cell) {
             continue;
         }
 
+        // if something already collided with this cell, don't check for other collisions
+        if (check.inRange) {
+            continue;
+        }
+
         // Can't eat itself
         if (cell.nodeId == check.nodeId) {
             continue;
@@ -629,6 +640,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         switch (check.getType()) {
             case 1: // Food cell
                 list.push(check);
+                check.inRange = true; // skip future collision checks for this food
                 continue;
             case 2: // Virus
                 multiplier = 1.33;
@@ -676,6 +688,9 @@ GameServer.prototype.getCellsInRange = function(cell) {
 
         // Add to list of cells nearby
         list.push(check);
+
+        // Something is about to eat this cell; no need to check for other collisions with it
+        check.inRange = true;
     }
     return list;
 };
