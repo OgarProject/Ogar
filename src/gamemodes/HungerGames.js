@@ -63,6 +63,8 @@ HungerGames.prototype.onServerInit = function(gameServer) {
         gameServer.removeNode(node);
     }
     
+    gameServer.bots.loadNames();
+
     // Resets spawn points
     this.contenderSpawnPoints = this.baseSpawnPoints.slice();
 
