@@ -85,6 +85,7 @@ function parseCommands(str) {
 		
             // Clears the update leaderboard function and replaces it with our own
             gameServer.gameMode.packetLB = 48;
+            gameServer.gameMode.specByLeaderboard = false;
             gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB}; 
             console.log("[Console] Successfully changed leaderboard values");
             break;
@@ -94,6 +95,7 @@ function parseCommands(str) {
             
             // Replace functions
             gameServer.gameMode.packetLB = gm.packetLB;
+            gameServer.gameMode.specByLeaderboard = gm.specByLeaderboard;
             gameServer.gameMode.updateLB = gm.updateLB; 
             console.log("[Console] Successfully reset leaderboard");
             break;
