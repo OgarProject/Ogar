@@ -7,17 +7,7 @@ var PacketHandler = require('../PacketHandler');
 
 function BotLoader(gameServer) {
     this.gameServer = gameServer;
-
-    // Names
-    this.randomNames = [];
-    this.nameIndex = 0;
-    
-    // Load names
-    try {
-        this.loadNames();
-    } catch (e) {
-        // Nothing, use the default names
-    }
+    this.loadNames();
 }
 
 module.exports = BotLoader;
@@ -38,14 +28,22 @@ BotLoader.prototype.getName = function() {
 };
 
 BotLoader.prototype.loadNames = function() {
-    var fs = require("fs"); // Import the util library
+    this.randomNames = [];
 
-    // Read and parse the names - filter out whitespace-only names
-    this.randomNames = fs.readFileSync("./botnames.txt", "utf8").split(os.EOL).filter(function(x) {
-        return !x.match(/^\s*$/);
-    });
+    // Load names
+    try {
+        var fs = require("fs"); // Import the util library
+
+        // Read and parse the names - filter out whitespace-only names
+        this.randomNames = fs.readFileSync("./botnames.txt", "utf8").split(os.EOL).filter(function(x) {
+            return !x.match(/^\s*$/);
+        });
+    } catch (e) {
+        // Nothing, use the default names
+    }
+
+    this.nameIndex = 0;
 };
-
 
 BotLoader.prototype.addBot = function() {
     var s = new FakeSocket(this.gameServer);

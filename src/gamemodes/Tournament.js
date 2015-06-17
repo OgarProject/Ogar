@@ -73,6 +73,8 @@ Tournament.prototype.onServerInit = function(gameServer) {
         gameServer.removeNode(node);
     }
 
+    gameServer.bots.loadNames();
+
     // Pauses the server
     gameServer.run = false;
     this.gamePhase = 0;
