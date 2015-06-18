@@ -95,7 +95,6 @@ function parseCommands(str) {
             
             // Replace functions
             gameServer.gameMode.packetLB = gm.packetLB;
-            gameServer.gameMode.specByLeaderboard = gm.specByLeaderboard;
             gameServer.gameMode.updateLB = gm.updateLB; 
             console.log("[Console] Successfully reset leaderboard");
             break;
