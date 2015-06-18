@@ -219,12 +219,17 @@ function parseCommands(str) {
                 }
             }
             break;
-		case "playerlist":
+	case "playerlist":
 			console.log("[Console] Showing "+gameServer.clients.length+" players: ");
 			for (var i = 0; i < gameServer.clients.length; i++) {
 				var client = gameServer.clients[i].playerTracker;
 				
-                // Get name
+                // Get ip
+		var ip = "0.0.0.0";
+		if (typeof gameServer.clients[i].remoteAddress !== 'undefined' ) {
+			ip = gameServer.clients[i].remoteAddress;
+		}		
+		// Get name
                 var nick;
                 if (client.spectate) {
                     nick = "SPECTATOR";
@@ -236,7 +241,7 @@ function parseCommands(str) {
                 }
 				
                 // Output
-                console.log("#"+(i+1)+"  Nick: "+nick+"  Cells: "+client.cells.length+"  Score: "+client.getScore()+"  Position: ("+client.centerPos.x+" , "+client.centerPos.y+")");
+                console.log("#"+(i+1)+"  IP: "+ip+" Nick: "+nick+"  Cells: "+client.cells.length+"  Score: "+client.getScore()+"  Position: ("+client.centerPos.x+" , "+client.centerPos.y+")");
 			}
             break;
         case "pause":
