@@ -75,6 +75,9 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
         gameServer.newCellVirused(client, consumer, angle, splitMass,18);
         consumer.mass -= splitMass;
     }
+	
+    // Prevent consumer cell from merging with other cells
+    consumer.calcMergeTime(gameServer.config.playerRecombineTime);
 };
 
 Virus.prototype.onAdd = function(gameServer) {
