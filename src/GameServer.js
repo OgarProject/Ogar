@@ -422,10 +422,12 @@ GameServer.prototype.updateMoveEngine = function() {
         for (var j = 0; j < list.length ; j++) {
             var check = list[j];
 
-            // Fix outer loop variables - we're deleting from this.nodesPlayer, so need to update its length, and maybe 'i' too
-            len--;
-            if (check.nodeId < cell.nodeId) {
-                i--;
+            // if we're deleting from this.nodesPlayer, fix outer loop variables; we need to update its length, and maybe 'i' too
+            if (check.cellType == 0) {
+                len--;
+                if (check.nodeId < cell.nodeId) {
+                    i--;
+                }
             }
 
             // Consume effect
