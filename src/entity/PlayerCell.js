@@ -29,6 +29,71 @@ PlayerCell.prototype.calcMergeTime = function(base) {
     this.recombineTicks = base + ((0.02 * this.mass) >> 0); // Int (30 sec + (.02 * mass))
 };
 
+// Movement
+
+PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
+    var config = gameServer.config;
+
+    // Get angle
+    var deltaY = y2 - this.position.y;
+    var deltaX = x2 - this.position.x;
+    var angle = Math.atan2(deltaX,deltaY);
+
+    // Distance between mouse pointer and cell
+    var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
+    var speed = Math.min(this.getSpeed(),dist);
+
+    var x1 = this.position.x + ( speed * Math.sin(angle) );
+    var y1 = this.position.y + ( speed * Math.cos(angle) );
+
+    // Collision check for other cells
+    for (var i = 0; i < this.owner.cells.length;i++) {
+        var cell = this.owner.cells[i];
+
+        if ((this.nodeId == cell.nodeId) || (this.ignoreCollision)) {
+            continue;
+        }
+
+        if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
+            // Cannot recombine - Collision with your own cells
+            var dist = Math.sqrt( Math.pow(cell.position.x - this.position.x, 2) +  Math.pow(cell.position.y - this.position.y, 2) );
+            var collisionDist = cell.getSize() + this.getSize(); // Minimum distance between the 2 cells
+
+            // Calculations
+            if (dist < collisionDist) { // Collided
+                // The moving cell pushes the colliding cell
+                var newDeltaY = cell.position.y - y1;
+                var newDeltaX = cell.position.x - x1;
+                var newAngle = Math.atan2(newDeltaX,newDeltaY);
+
+                var move = collisionDist - dist + 5;
+
+                cell.position.x = cell.position.x + ( move * Math.sin(newAngle) ) >> 0;
+                cell.position.y = cell.position.y + ( move * Math.cos(newAngle) ) >> 0;
+            }
+        }
+    }
+    
+    gameServer.gameMode.onCellMove(x1,y1,this);
+
+    // Check to ensure we're not passing the world border
+    if (x1 < config.borderLeft) {
+        x1 = config.borderLeft;
+    }
+    if (x1 > config.borderRight) {
+        x1 = config.borderRight;
+    }
+    if (y1 < config.borderTop) {
+        y1 = config.borderTop;
+    }
+    if (y1 > config.borderBottom) {
+        y1 = config.borderBottom;
+    }
+
+    this.position.x = x1 >> 0;
+    this.position.y = y1 >> 0;
+};
+
 // Override
 
 PlayerCell.prototype.getEatingRange = function() {
