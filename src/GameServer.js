@@ -462,16 +462,10 @@ GameServer.prototype.updateMoveEngine = function() {
             continue;
         }
 
-        if (check.getMoveTicks() > 0) {
+        if (check.moveEngineTicks > 0) {
+            check.onAutoMove(this);
             // If the cell has enough move ticks, then move it
             check.calcMovePhys(this.config);
-            if ((check.getType() == 3) && (this.nodesVirus.length < this.config.virusMaxAmount)) {
-                // Check for viruses
-                var v = this.getNearestVirus(check);
-                if (v) { // Feeds the virus if it exists
-                    v.feed(check,this);
-                }
-            }
         } else {
             // Auto move is done
             check.moveDone(this);
@@ -513,8 +507,8 @@ GameServer.prototype.splitCells = function(client) {
         // Get starting position
         var size = cell.getSize();
         var startPos = {
-            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ),
-            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+            x: cell.position.x + ( size * Math.sin(angle) ),
+            y: cell.position.y + ( size * Math.cos(angle) )
         };
         // Calculate mass and speed of splitting cell
         var splitSpeed = 30 + (cell.getSpeed() * 5);
@@ -566,7 +560,6 @@ GameServer.prototype.ejectMass = function(client) {
         ejected.setMoveEngineData(this.config.ejectSpeed, 20);
         ejected.setColor(cell.getColor());
 
-        // Add to moving cells list
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
     }
