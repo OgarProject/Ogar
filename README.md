@@ -40,12 +40,18 @@ The current available console commands are listed here. Command names are not ca
 
  - Addbot [Number]
    * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
+ - Ban [IP]
+   * Prevents anyone with the banned IP from joining.
+ - Banlist {clear}
+   * Shows a list of currently banned IPs. You can clear the banlist by typing "clear" as the 2nd parameter.
  - Board [String 1] [String 2] [String 3] ...
    * Replaces the text on the leaderboard with the string text.
  - Boardreset
    * Resets the leaderboard to display the proper data for the current gamemode
  - Change [Config setting] [Value]
    * Changes a config setting to a value. Ex. "change serverMaxConnections 32" will change the variable serverMaxConnections to 32. Note that some config values (Like serverGamemode) are parsed before the server starts so changing them mid game will have no effect.
+ - Clear
+   * Clears the console output
  - Color [Name] [Red] [Green] [Blue]
    * Replaces the color of all players matching [Name] with this color.
  - Food [X position] [Y position] [Mass]
@@ -59,11 +65,15 @@ The current available console commands are listed here. Command names are not ca
  - Mass [Name] [Number]
    * Sets the mass of all cells belonging to players that match [Name] to [Number].
  - Playerlist
-   * Shows a list of connected players, the amount of cells they have, total mass, and their position. 
+   * Shows a list of connected players, their IP, the amount of cells they have, total mass, and their position. 
  - Pause
    * Pauses/Unpauses the game.
  - Status
-   * Shows the amount of players currently connected and the current gamemode.
+   * Shows the amount of players currently connected, time elasped, memory usage (memory used/memory allocated), and the current gamemode.
+ - Tp [Name] [X position] [Y position]
+   * Teleports all players named [Name] to the specificed coordinates.
+ - Unban [IP]
+   * Unbans the specified IP.
  - Virus [X position] [Y position] [Mass]
    * Spawns a virus cell at those coordinates. If a mass value is not specified, then the server will default to "virusStartMass" in the config.
 
