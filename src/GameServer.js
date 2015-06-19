@@ -416,7 +416,7 @@ GameServer.prototype.updateMoveEngine = function() {
         var cell = this.nodesPlayer[i];
 
         // Do not move cells that have already been eaten or have collision turned off
-        if ((!cell) || (cell.getCollision())){
+        if ((!cell) || (cell.ignoreCollision)){
             continue;
         }
 
@@ -505,19 +505,19 @@ GameServer.prototype.splitCells = function(client) {
         var angle = Math.atan2(deltaX,deltaY);
 
         // Get starting position
-        var size = cell.getSize();
+        var size = cell.getSize()/2;
         var startPos = {
             x: cell.position.x + ( size * Math.sin(angle) ),
             y: cell.position.y + ( size * Math.cos(angle) )
         };
         // Calculate mass and speed of splitting cell
-        var splitSpeed = 30 + (cell.getSpeed() * 5);
+        var splitSpeed = cell.getSpeed() * 6;
         var newMass = cell.mass / 2;
         cell.mass = newMass;
         // Create cell
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
-        split.setMoveEngineData(splitSpeed, 40);
+        split.setMoveEngineData(splitSpeed, 32, 0.85); 
         split.calcMergeTime(this.config.playerRecombineTime);
 
         // Add to moving cells list
@@ -577,7 +577,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
     newCell.setAngle(angle);
     newCell.setMoveEngineData(speed, 10);
     newCell.calcMergeTime(this.config.playerRecombineTime);
-    newCell.setCollisionOff(true); // Turn off collision
+    newCell.ignoreCollision = true;  // Turn off collision
 
     // Add to moving cells list
     this.addNode(newCell);
@@ -629,7 +629,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // Can't eat cells that have collision turned off
-        if ((cell.owner == check.owner) && (cell.getCollision())) {
+        if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
             continue;
         }
 
