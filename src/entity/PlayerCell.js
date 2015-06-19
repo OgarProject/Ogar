@@ -26,6 +26,14 @@ PlayerCell.prototype.visibleCheck = function(box,centerPos) {
            ((this.position.y - centerPos.y) < len);
 };
 
+PlayerCell.prototype.simpleCollide = function(check,d) {
+    // Simple collision check
+    var len = 2 * d >> 0; // Width of cell + width of the box (Int)
+
+    return (this.abs(this.position.x - check.x) < len) &&
+           (this.abs(this.position.y - check.y) < len);
+};
+
 PlayerCell.prototype.calcMergeTime = function(base) {
     this.recombineTicks = base + ((0.02 * this.mass) >> 0); // Int (30 sec + (.02 * mass))
 };
@@ -34,6 +42,7 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 
 PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
     var config = gameServer.config;
+    var r = this.getSize(); // Cell radius
 
     // Get angle
     var deltaY = y2 - this.position.y;
@@ -41,7 +50,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
     var angle = Math.atan2(deltaX,deltaY);
 
     // Distance between mouse pointer and cell
-    var dist = Math.sqrt( Math.pow(x2 - this.position.x, 2) +  Math.pow(y2 - this.position.y, 2) );
+    var dist = this.getDist(this.position.x,this.position.y,x2,y2);
     var speed = Math.min(this.getSpeed(),dist);
 
     var x1 = this.position.x + ( speed * Math.sin(angle) );
@@ -57,9 +66,15 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
 
         if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
             // Cannot recombine - Collision with your own cells
-            var dist = Math.sqrt( Math.pow(cell.position.x - this.position.x, 2) +  Math.pow(cell.position.y - this.position.y, 2) );
-            var collisionDist = cell.getSize() + this.getSize(); // Minimum distance between the 2 cells
+            var collisionDist = cell.getSize() + r; // Minimum distance between the 2 cells
+            if (this.simpleCollide(cell, collisionDist)) {
+                // Skip
+                continue;
+            }
 
+            // First collision check passed... now more precise checking
+            dist = this.getDist(this.position.x,this.position.y,cell.position.x,cell.position.y);
+            
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
@@ -131,4 +146,20 @@ PlayerCell.prototype.onRemove = function(gameServer) {
 PlayerCell.prototype.moveDone = function(gameServer) {
     this.ignoreCollision = false;
 };
+
+// Lib
+
+PlayerCell.prototype.abs = function(x) {
+    return x < 0 ? -x : x;
+}
+
+PlayerCell.prototype.getDist = function(x1, y1, x2, y2) {
+    var xs = x2 - x1;
+    xs = xs * xs;
+
+    var ys = y2 - y1;
+    ys = ys * ys;
+
+    return Math.sqrt(xs + ys);
+}
 
