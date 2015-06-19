@@ -16,6 +16,7 @@ function GameServer() {
     // Start msg
     console.log("[Game] Ogar - An open source Agar.io server implementation");
 
+    // Startup 
     this.run = true;
     this.lastNodeId = 1;
     this.clients = [];
@@ -28,7 +29,10 @@ function GameServer() {
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
+
     this.bots = new BotLoader(this);
+    this.commands; // Command handler
+    this.banned = []; // List of banned IPs
 
     // Main loop tick
     this.time = new Date();
@@ -128,9 +132,12 @@ GameServer.prototype.start = function() {
     this.socketServer.on('connection', connectionEstablished.bind(this));
 
     function connectionEstablished(ws) {
-        if (this.clients.length > this.config.serverMaxConnections) {
+        if (this.clients.length > this.config.serverMaxConnections) { // Server full
             ws.close();
             console.log("[Game] Client tried to connect, but server player limit has been reached!");
+            return;
+        } else if (this.banned.indexOf(ws._socket.remoteAddress) != -1) { // Banned
+            ws.close();
             return;
         }
 
