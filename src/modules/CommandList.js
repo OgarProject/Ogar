@@ -80,12 +80,15 @@ Commands.list = {
     },
     change: function(gameServer,split) {
         var key = split[1];
-        var value = 0;
-		if (split[2].indexOf('.') != -1) {
-			value = parseFloat(split[2]);
-		} else {
-			value = parseInt(split[2]);
-		}
+        var value = split[2];
+
+        // Check if int/float
+        if (value.indexOf('.') != -1) {
+            value = parseFloat(value);
+        } else {
+            value = parseInt(value);
+        }
+
         if (typeof gameServer.config[key] != 'undefined') {
             gameServer.config[key] = value;
             console.log("[Console] Set " + key + " to " + value);
@@ -98,9 +101,9 @@ Commands.list = {
     },
     color: function(gameServer,split) {
         // Validation checks
-        var name = split[1];
-        if (typeof name == 'undefined') {
-            console.log("[Console] Please specify a valid name");
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
             return;
         }
 
@@ -111,14 +114,18 @@ Commands.list = {
 
         // Sets color to the specified amount
         for (var i in gameServer.clients) {
-            if (gameServer.clients[i].playerTracker.getName() == name) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 client.setColor(color); // Set color
                 for (var j in client.cells) {
                     client.cells[j].setColor(color);
                 }
+                break;
             }
         }
+    },
+    debug: function(gameServer,split) {
+        parseName(split,1);
     },
     food: function(gameServer,split) {
         var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
@@ -154,25 +161,26 @@ Commands.list = {
         }
     },
     kill: function(gameServer,split) {
-        var name = split[1];
-        var action = function (cell) {gameServer.removeNode(cell)};
-        if (typeof name == 'undefined') {
-            console.log("[Console] Please specify a valid name");
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
             return;
         }
 
         var count = 0;
         for (var i in gameServer.clients) {
-            if (gameServer.clients[i].playerTracker.getName() == name) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 var len = client.cells.length;
                 for (var j = 0; j < len; j++) {
                     gameServer.removeNode(client.cells[0]);
                     count++;
                 }
+
+                console.log("[Console] Removed " + count + " cells");
+                break;
             }
         }
-        console.log("[Console] Removed " + count + " cells");
     },
     killall: function(gameServer,split) {
         var count = 0;
@@ -185,9 +193,9 @@ Commands.list = {
     },
     mass: function(gameServer,split) {
         // Validation checks
-        var name = split[1];
-        if (typeof name == 'undefined') {
-            console.log("[Console] Please specify a valid name");
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
             return;
         }
         
@@ -199,11 +207,14 @@ Commands.list = {
 
         // Sets mass to the specified amount
         for (var i in gameServer.clients) {
-            if (gameServer.clients[i].playerTracker.getName() == name) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
                     client.cells[j].mass = amount;
                 }
+
+                console.log("[Console] Set mass of "+client.name+" to "+amount);
+                break;
             }
         }
     },
@@ -243,7 +254,7 @@ Commands.list = {
             }
             
             // Output
-            console.log("#"+(i+1)+"  IP: "+ip+"  "+data);
+            console.log("ID: "+(client.pID)+"  IP: "+ip+"  "+data);
         }
     },
     pause: function(gameServer,split) {
@@ -269,9 +280,9 @@ Commands.list = {
         console.log("[Console] Current game mode: "+gameServer.gameMode.name);
     },
     tp: function(gameServer,split) {
-        var name = split[1];
-        if (typeof name == 'undefined') {
-            console.log("[Console] Please specify a valid name");
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
             return;
         }
 
@@ -284,13 +295,15 @@ Commands.list = {
         
         // Spawn
         for (var i in gameServer.clients) {
-            if (gameServer.clients[i].playerTracker.getName() == name) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
                     client.cells[j].position.x = pos.x;
                     client.cells[j].position.y = pos.y;
                 }
-                console.log("[Console] Teleported "+name+" to ("+pos.x+" , "+pos.y+")");
+
+                console.log("[Console] Teleported "+client.name+" to ("+pos.x+" , "+pos.y+")");
+                break;
             }
         }
     },

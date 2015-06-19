@@ -2,6 +2,7 @@ var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
+    this.pID = -1;
     this.name = "";
     this.gameServer = gameServer;
     this.socket = socket;
@@ -32,7 +33,7 @@ function PlayerTracker(gameServer, socket) {
 
     // Gamemode function
     if (gameServer) {
-        this.color = gameServer.getRandomColor(); // Get color
+        this.pID = gameServer.getNewPlayerID();
         gameServer.gameMode.onPlayerInit(this);
     }
 }

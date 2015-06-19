@@ -52,26 +52,26 @@ The current available console commands are listed here. Command names are not ca
    * Changes a config setting to a value. Ex. "change serverMaxConnections 32" will change the variable serverMaxConnections to 32. Note that some config values (Like serverGamemode) are parsed before the server starts so changing them mid game will have no effect.
  - Clear
    * Clears the console output
- - Color [Name] [Red] [Green] [Blue]
-   * Replaces the color of all players matching [Name] with this color.
+ - Color [Player ID] [Red] [Green] [Blue]
+   * Replaces the color of the specified player with this color.
  - Food [X position] [Y position] [Mass]
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
    * Changes the gamemode of the server. Warning - This can cause problems.
- - Kill [Name]
-   * Kills all cells belonging to players that match [Name].
+ - Kill [Player ID]
+   * Kills all cells belonging to the specified player.
  - Killall
    * Kills all player cells on the map.
- - Mass [Name] [Number]
-   * Sets the mass of all cells belonging to players that match [Name] to [Number].
+ - Mass [Player ID] [Number]
+   * Sets the mass of all cells belonging to the specified player to [Number].
  - Playerlist
-   * Shows a list of connected players, their IP, the amount of cells they have, total mass, and their position. 
+   * Shows a list of connected players, their IP, player ID, the amount of cells they have, total mass, and their position. 
  - Pause
    * Pauses/Unpauses the game.
  - Status
    * Shows the amount of players currently connected, time elasped, memory usage (memory used/memory allocated), and the current gamemode.
- - Tp [Name] [X position] [Y position]
-   * Teleports all players named [Name] to the specificed coordinates.
+ - Tp [Player ID] [X position] [Y position]
+   * Teleports the specified player to the specificed coordinates.
  - Unban [IP]
    * Unbans the specified IP.
  - Virus [X position] [Y position] [Mass]
