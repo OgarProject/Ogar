@@ -80,7 +80,12 @@ Commands.list = {
     },
     change: function(gameServer,split) {
         var key = split[1];
-        var value = parseInt(split[2]);
+        var value = 0;
+		if (split[2].indexOf('.') != -1) {
+			value = parseFloat(split[2]);
+		} else {
+			value = parseInt(split[2]);
+		}
         if (typeof gameServer.config[key] != 'undefined') {
             gameServer.config[key] = value;
             console.log("[Console] Set " + key + " to " + value);
