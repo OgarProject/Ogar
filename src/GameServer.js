@@ -19,6 +19,7 @@ function GameServer() {
     // Startup 
     this.run = true;
     this.lastNodeId = 1;
+    this.lastPlayerId = 1;
     this.clients = [];
     this.nodes = [];
     this.nodesVirus = []; // Virus nodes
@@ -186,6 +187,14 @@ GameServer.prototype.getNextNodeId = function() {
         this.lastNodeId = 1;
     }
     return this.lastNodeId++;
+};
+
+GameServer.prototype.getNewPlayerID = function() {
+    // Resets integer
+    if (this.lastPlayerId > 2147483647) {
+        this.lastPlayerId = 1;
+    }
+    return this.lastPlayerId++;
 };
 
 GameServer.prototype.getRandomPosition = function() {
