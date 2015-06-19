@@ -5,6 +5,7 @@ function PlayerCell() {
 
     this.cellType = 0;
     this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
+    this.ignoreCollision = false; // This is used by player cells so that they dont cause any problems when splitting
 }
 
 module.exports = PlayerCell;
@@ -97,7 +98,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
 // Override
 
 PlayerCell.prototype.getEatingRange = function() {
-    return this.getSize() * .5;
+    return this.getSize() * .45;
 };
 
 PlayerCell.prototype.onConsume = function(consumer,gameServer) {
@@ -128,6 +129,6 @@ PlayerCell.prototype.onRemove = function(gameServer) {
 };
 
 PlayerCell.prototype.moveDone = function(gameServer) {
-    this.setCollisionOff(false);
+    this.ignoreCollision = false;
 };
 

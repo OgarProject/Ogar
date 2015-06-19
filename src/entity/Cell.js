@@ -8,7 +8,6 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.spiked = 0; // If 1, then this cell has spikes around it
 
     this.killedBy; // Cell that ate this cell
-    this.ignoreCollision = false;
     this.gameServer = gameServer;
 
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
@@ -73,14 +72,6 @@ Cell.prototype.setMoveEngineData = function(speed, ticks, decay) {
     this.moveDecay = isNaN(decay) ? 0.75 : decay;
 };
 
-Cell.prototype.setCollisionOff = function(bool) {
-    this.ignoreCollision = bool;
-};
-
-Cell.prototype.getCollision = function() {
-    return this.ignoreCollision;
-};
-
 Cell.prototype.getEatingRange = function() {
     return 0; // 0 for ejected cells
 };
@@ -127,7 +118,7 @@ Cell.prototype.calcMovePhys = function(config) {
     var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
 
     // Movement engine
-    this.moveEngineSpeed *= .75; // Decaying speed
+    this.moveEngineSpeed *= this.moveDecay; // Decaying speed
     this.moveEngineTicks--;
 
     // Border check - Bouncy physics

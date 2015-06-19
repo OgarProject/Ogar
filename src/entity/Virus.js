@@ -31,7 +31,7 @@ Virus.prototype.feed = function(feeder,gameServer) {
 // Main Functions
 
 Virus.prototype.getEatingRange = function() {
-    return this.getSize() * .5; // 0 for ejected cells
+    return this.getSize() * .45; // 0 for ejected cells
 };
 
 Virus.prototype.onConsume = function(consumer,gameServer) {
@@ -72,7 +72,7 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
     for (var k = 0; k < bigSplits; k++) {
         angle = Math.random() * 6.28; // Random directions
         splitMass = consumer.mass / 4;
-        gameServer.newCellVirused(client, consumer, angle, splitMass,18);
+        gameServer.newCellVirused(client, consumer, angle, splitMass,20);
         consumer.mass -= splitMass;
     }
 	
