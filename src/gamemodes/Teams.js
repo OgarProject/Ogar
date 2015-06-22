@@ -75,6 +75,7 @@ Teams.prototype.onCellRemove = function(cell) {
 
 Teams.prototype.onCellMove = function(x1,y1,cell) {
     var team = cell.owner.getTeam();
+    var r = cell.getSize();
 
     // Find team
     for (var i = 0; i < cell.owner.visibleNodes.length;i++) {
@@ -85,10 +86,17 @@ Teams.prototype.onCellMove = function(x1,y1,cell) {
             continue;
         }
 
+        // Collision with teammates
         if (check.owner.getTeam() == team) {
-            // Collision with teammates
-            var dist = Math.sqrt( Math.pow(check.position.x - cell.position.x, 2) +  Math.pow(check.position.y - cell.position.y, 2) );
-            var collisionDist = check.getSize() + cell.getSize(); // Minimum distance between the 2 cells
+            // Check if in collision range
+            var collisionDist = check.getSize() + r; // Minimum distance between the 2 cells
+            if (cell.simpleCollide(check, collisionDist)) {
+                // Skip
+                continue;
+            }
+
+            // First collision check passed... now more precise checking
+            dist = cell.getDist(cell.position.x,cell.position.y,check.position.x,check.position.y);
 
             // Calculations
             if (dist < collisionDist) { // Collided
