@@ -16,9 +16,9 @@ Currently, Ogar listens on the following addresses and ports:
 * *:80 - for the master server
 * *:443 - for the game server
 
-Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports. **If you are getting an EADDRINUSE error, it means that the port required to run Ogar is being used. Usuallly, Skpye is the culprit. To solve this, either close out skype, or change the serverPort value in gameserver.ini to a different port. You will have to change your connection url to "agar.io?127.0.0.1:PORT"**
+Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports. **If you are getting an EADDRINUSE error, it means that the port required to run Ogar is being used. Usuallly, Skpye is the culprit. To solve this, either close out skype, or change the serverPort value in gameserver.ini to a different port. You will have to change your connection ip to "127.0.0.1:PORT"**
 
-Once the server is running, you can connect (locally) by typing "agar.io?127.0.0.1:443" into your browser's address bar. No client side mods are needed to connect.
+Once the game server is running, you can connect (locally) by going to the agar.io website. Once the game is loaded, in your address bar, replace agar.io with javascript:connect("ws://127.0.0.1:443") and press enter.
 
 ## Configuring Ogar
 Use "gameserver.ini" to modify Ogar's configurations field. Playerbots are currently basic and for testing purposes. To use them, change "serverBots" to a value higher than zero in the configuration file. To add/remove bot names, edit the file named "botnames.txt" which is in the same folder as "gameserver.ini". Names should be separated by using the enter key.
