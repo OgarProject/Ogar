@@ -136,7 +136,7 @@ GameServer.prototype.start = function() {
                 console.log("[Error] Server could not bind to port! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
                 break;
             case "EACCES": 
-                console.log("[Error] Please make sure you are running Ogar with root priviledges.");
+                console.log("[Error] Please make sure you are running Ogar with root privileges.");
                 break;
             default:
                 console.log("[Error] Unhandled error code: "+e.code);
