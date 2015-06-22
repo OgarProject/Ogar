@@ -9,6 +9,20 @@ function Commands() {
 
 module.exports = Commands;
 
+// Utils
+var fillChar = function (data, char, fieldLength, rTL) {
+    var result = data.toString();
+    if (rTL === true) {
+        for (var i = result.length; i < fieldLength; i++)
+            result = char.concat(result);
+    }
+    else {
+        for (var i = result.length; i < fieldLength; i++)
+            result = result.concat(char);
+    }
+    return result;
+};
+
 // Commands
 
 Commands.list = {
@@ -219,18 +233,25 @@ Commands.list = {
         }
     },
     playerlist: function(gameServer,split) {
-        console.log("[Console] Showing "+gameServer.clients.length+" players: ");
+        console.log("[Console] Showing " + gameServer.clients.length + " players: ");
+        console.log(" ID         | IP              | %s | CELLS | SCORE  | POSITION    ",
+            fillChar('NICK', ' ', gameServer.config.playerMaxNickLength)); // Fill space
+        console.log(fillChar('', '-', ' ID         | IP              |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
         for (var i = 0; i < gameServer.clients.length; i++) {
             var client = gameServer.clients[i].playerTracker;
-            
-            // Get ip
+
+            // ID with 3 digits length
+            var id = fillChar((client.pID), ' ', 10, true);
+
+            // Get ip (15 digits length)
             var ip = "BOT";
             if (typeof gameServer.clients[i].remoteAddress != 'undefined' ) {
                 ip = gameServer.clients[i].remoteAddress;
             }
+            ip = fillChar(ip, ' ', 15);
 
             // Get name and data
-            var nick, data;
+            var nick = '', cells = '', score = '', position = '', data = '';
             if (client.spectate) {
                 try { 
                     // Get spectated player
@@ -244,17 +265,19 @@ Commands.list = {
                     nick = "";
                 }
                 nick = (nick == "") ? "An unnamed cell" : nick;
-                data = "Spectating: " + nick;
+                data = fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
+                console.log(" %s | %s | %s", id, ip, data);
             } else if (client.cells.length > 0) {
-                nick = (client.name == "") ? "An unnamed cell" : client.name;
-                data = "Nick: "+nick+"  Cells: "+client.cells.length+"  Score: "+client.getScore()+"  Position: ("+client.centerPos.x+" , "+client.centerPos.y+")";
+                nick = fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', gameServer.config.playerMaxNickLength);
+                cells = fillChar(client.cells.length, ' ', 5, true);
+                score = fillChar(client.getScore(true), ' ', 6, true);
+                position = fillChar(client.centerPos.x, ' ', 5, true) + ', ' + fillChar(client.centerPos.y, ' ', 5, true);
+                console.log(" %s | %s | %s | %s | %s | %s", id, ip, nick, cells, score, position);
             } else { 
                 // No cells = dead player or in-menu
-                data = "Dead"
+                data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
+                console.log(" %s | %s | %s", id, ip, data);
             }
-            
-            // Output
-            console.log("ID: "+(client.pID)+"  IP: "+ip+"  "+data);
         }
     },
     pause: function(gameServer,split) {

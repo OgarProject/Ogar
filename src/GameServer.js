@@ -13,9 +13,6 @@ var BotLoader = require('./ai/BotLoader.js');
 
 // GameServer implementation
 function GameServer() {
-    // Start msg
-    console.log("[Game] Ogar - An open source Agar.io server implementation");
-
     // Startup 
     this.run = true;
     this.lastNodeId = 1;
