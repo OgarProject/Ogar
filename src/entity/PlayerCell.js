@@ -47,6 +47,9 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
     var deltaY = y2 - this.position.y;
     var deltaX = x2 - this.position.x;
     var angle = Math.atan2(deltaX,deltaY);
+    if(isNaN(angle)) {
+	return;
+    }
 
     // Distance between mouse pointer and cell
     var dist = this.getDist(this.position.x,this.position.y,x2,y2);
