@@ -842,22 +842,10 @@ GameServer.prototype.switchSpectator = function(player) {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    function getbuf(data) {
-        var array = new Uint8Array(data.buffer || data);
-        var l = data.byteLength || data.length;
-        var o = data.byteOffset || 0;
-        var buffer = new Buffer(l);
-
-        for (var i = 0; i < l; i++) {
-            buffer[i] = array[o + i];
-        }
-
-        return buffer;
-    }
-
     if (this.readyState == WebSocket.OPEN && packet.build) {
-        var buf = packet.build();
-        this.send(getbuf(buf), { binary: true });
+        this.send(packet.build(), { binary: true });
+    } else  {
+        console.log("[Warning] Error sending packet!");
     }
 };
 
