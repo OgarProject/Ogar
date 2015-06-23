@@ -283,6 +283,33 @@ GameServer.prototype.removeNode = function(node) {
     }
 };
 
+GameServer.prototype.cellTick = function() {
+    // Move cells
+    this.updateMoveEngine();
+}
+
+GameServer.prototype.spawnTick = function() {
+    // Spawn food
+    this.tickSpawn++;
+    if (this.tickSpawn >= this.config.spawnInterval) {
+        this.updateFood(); // Spawn food
+        this.virusCheck(); // Spawn viruses
+
+        this.tickSpawn = 0; // Reset
+    }
+}
+
+GameServer.prototype.gamemodeTick = function() {
+    // Gamemode tick
+    this.gameMode.onTick(this);
+}
+
+GameServer.prototype.cellUpdateTick = function() {
+    // Update cells
+    this.updateCells();
+}
+
+
 GameServer.prototype.mainLoop = function() {
     // Timer
     var local = new Date();
@@ -292,20 +319,9 @@ GameServer.prototype.mainLoop = function() {
     if (this.tick >= 50) {
         // Loop main functions
         if (this.run) {
-            // Move cells
-            this.updateMoveEngine();
-
-            // Spawn food
-            this.tickSpawn++;
-            if (this.tickSpawn >= this.config.spawnInterval) {
-                this.updateFood(); // Spawn food
-                this.virusCheck(); // Spawn viruses
-
-                this.tickSpawn = 0; // Reset
-            }
-            
-            // Gamemode tick
-            this.gameMode.onTick(this);
+	    setTimeout(this.cellTick(), 0);
+	    setTimeout(this.spawnTick(), 0);
+	    setTimeout(this.gamemodeTick(), 0);
         }
 
         // Update the client's maps
@@ -314,8 +330,7 @@ GameServer.prototype.mainLoop = function() {
         // Update cells/leaderboard loop
         this.tickMain++;
         if (this.tickMain >= 20) { // 1 Second
-            // Update cells
-            this.updateCells();
+	    setTimeout(this.cellUpdateTick(), 0);
 
             // Update leaderboard with the gamemode's method
             this.leaderboard = [];
