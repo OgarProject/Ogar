@@ -3,6 +3,8 @@ var Packet = require('./packet');
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
+    // Detect protocol version - we can do something about it later
+    this.protocol = 0;
 
     this.pressQ = false;
     this.pressW = false;
@@ -73,7 +75,9 @@ PacketHandler.prototype.handleMessage = function(message) {
             this.pressW = true;
             break;
         case 255:
-            // Connection Start - Send SetBorder packet first
+            // Connection Start 
+            this.protocol = view.getUint32(1, true);
+            // Send SetBorder packet first
             var c = this.gameServer.config;
             this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
             break;
