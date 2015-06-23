@@ -22,7 +22,7 @@ function PlayerTracker(gameServer, socket) {
 
     // Viewing box
     this.sightRange = 0;
-    this.centerPos = {x: 0, y: 0 };
+    this.centerPos = {x: 3000, y: 3000 };
     this.viewBox = {
         topY: 0,
         bottomY: 0,
