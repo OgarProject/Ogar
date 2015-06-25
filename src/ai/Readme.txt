@@ -3,6 +3,15 @@ These bots are designed to be used for testing new commits of Ogar. To install t
 
 
 [Changelog]
+(6/24/15)
+-Bots will now consider threats when splitting
+-Bots now passively gain mass when running away
+-Bots will sometimes juke when being chased
+-Bots will try to merge (if possible) if they are being chased
+-Fixed bots trying to chase cells with more mass than them
+-Fixed bots getting stuck when there is no food on the map
+-Bots can now ignore viruses
+
 (6/9/15)
 -Bots will sometimes shoot viruses at big cells (Experimental)
 -Distance required for a large cell to be marked as a "predator" reduced to a reasonable amount (300)
