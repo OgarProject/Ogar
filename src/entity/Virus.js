@@ -38,7 +38,7 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
     var client = consumer.owner;
 
     // DEBUG
-    if ((!client.socket._socket) && (this.moveEngineTicks <= 0)) {
+    if ((!client.socket._socket) && (gameServer.config.serverBotIgnoreViruses) && (this.moveEngineTicks <= 0)) {
         return;
     }
     
