@@ -285,7 +285,7 @@ BotPlayer.prototype.decide = function(cell) {
                 var distToTarget = this.getAccDist(cell,this.target); // Distance between the target and this cell
 
                 if (splitDist >= distToTarget) {
-                    if ((this.threats.length > 0) && (this.getBiggest(this.threats).mass > (1.25 * (cell.mass/2))) {
+                    if ((this.threats.length > 0) && (this.getBiggest(this.threats).mass > (1.25 * (cell.mass/2)))) {
                         // Dont splitkill when they are cells that can possibly eat you after the split
                         break;
                     }
