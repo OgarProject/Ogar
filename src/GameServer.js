@@ -44,6 +44,7 @@ function GameServer() {
         serverPort: 443, // Server port
         serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0, // Amount of player bots to spawn
+        serverBotsIgnoreViruses: false,
         serverViewBase: 1024, // Base view distance of players. Warning: high values may cause lag
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
