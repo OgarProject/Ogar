@@ -26,6 +26,11 @@ PacketHandler.prototype.handleMessage = function(message) {
         return view.buffer;
     }
 
+    // Discard empty messages
+    if (message.length == 0) {
+        return;
+    }
+
     var buffer = stobuf(message);
     var view = new DataView(buffer);
     var packetId = view.getUint8(0, true);

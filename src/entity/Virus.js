@@ -31,11 +31,17 @@ Virus.prototype.feed = function(feeder,gameServer) {
 // Main Functions
 
 Virus.prototype.getEatingRange = function() {
-    return this.getSize() * .45; // 0 for ejected cells
+    return this.getSize() * .4; // 0 for ejected cells
 };
 
 Virus.prototype.onConsume = function(consumer,gameServer) {
     var client = consumer.owner;
+
+    // DEBUG
+    if ((!client.socket._socket) && (gameServer.config.serverBotIgnoreViruses) && (this.moveEngineTicks <= 0)) {
+        return;
+    }
+    
     var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits,maxSplits);
