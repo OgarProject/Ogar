@@ -44,6 +44,7 @@ function GameServer() {
         serverPort: 443, // Server port
         serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0, // Amount of player bots to spawn
+        serverBotsIgnoreViruses: false,
         serverViewBase: 1024, // Base view distance of players. Warning: high values may cause lag
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
@@ -107,7 +108,7 @@ GameServer.prototype.start = function() {
     this.gameMode.onServerInit(this);
 
     // Start the server
-    this.socketServer = new WebSocket.Server({ port: this.config.serverPort }, function() {
+    this.socketServer = new WebSocket.Server({ port: this.config.serverPort, perMessageDeflate: false}, function() {
         // Spawn starting food
         this.startingFood();
 
@@ -156,7 +157,7 @@ GameServer.prototype.start = function() {
         }
 
         function close(error) {
-            //console.log("[Game] Disconnect: %s:%d", this.socket.remoteAddress, this.socket.remotePort);
+            //console.log("[Game] Disconnect: "+error);
 
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
@@ -176,7 +177,7 @@ GameServer.prototype.start = function() {
             }
         }
 
-        //console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
+        // console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         ws.playerTracker = new PlayerTracker(this, ws);
@@ -842,22 +843,14 @@ GameServer.prototype.switchSpectator = function(player) {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    function getbuf(data) {
-        var array = new Uint8Array(data.buffer || data);
-        var l = data.byteLength || data.length;
-        var o = data.byteOffset || 0;
-        var buffer = new Buffer(l);
-
-        for (var i = 0; i < l; i++) {
-            buffer[i] = array[o + i];
-        }
-
-        return buffer;
-    }
-
-    if (this.readyState == WebSocket.OPEN && packet.build) {
-        var buf = packet.build();
-        this.send(getbuf(buf), { binary: true });
+    // Send only if the buffer is empty
+    if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0)) {
+        this.send(packet.build(), {binary: true});
+    } else {
+        //console.log("[Warning] There was an error sending the packet!");
+        // Remove socket
+        this.emit('close');
+        this.removeAllListeners();
     }
 };
 
