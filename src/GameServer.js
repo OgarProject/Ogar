@@ -157,7 +157,7 @@ GameServer.prototype.start = function() {
         }
 
         function close(error) {
-            // console.log("[Game] Disconnect: "+error);
+            //console.log("[Game] Disconnect: "+error);
 
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
@@ -843,16 +843,18 @@ GameServer.prototype.switchSpectator = function(player) {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    try {
-        if (this.readyState == WebSocket.OPEN && packet.build) {
+    // Send only if the buffer is empty
+    if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0)) {
+        try {
             this.send(packet.build(), {binary: true});
-        } else {
-            console.log("[Warning] There was an error sending the packet!");
-            this.close();
+        } catch (e) {
+            console.log("[Error] "+e);
         }
-    } catch (e) {
-        console.log("[Warning] "+e);
-        this.close();
+    } else {
+        console.log("[Warning] There was an error sending the packet!");
+        // Remove socket
+        this.emit('close');
+        this.removeAllListeners();
     }
 };
 
