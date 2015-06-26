@@ -843,10 +843,16 @@ GameServer.prototype.switchSpectator = function(player) {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    if (this.readyState == WebSocket.OPEN) {
-        this.send(packet.build(), {binary: true});
-    } else {
-        console.log("[Warning] There was an error sending the packet!");
+    try {
+        if (this.readyState == WebSocket.OPEN && packet.build) {
+            this.send(packet.build(), {binary: true});
+        } else {
+            console.log("[Warning] There was an error sending the packet!");
+            this.close();
+        }
+    } catch (e) {
+        console.log("[Warning] "+e);
+        this.close();
     }
 };
 

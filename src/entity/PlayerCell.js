@@ -115,7 +115,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
 // Override
 
 PlayerCell.prototype.getEatingRange = function() {
-    return this.getSize() * .45;
+    return this.getSize() * .4;
 };
 
 PlayerCell.prototype.onConsume = function(consumer,gameServer) {

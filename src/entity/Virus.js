@@ -31,7 +31,7 @@ Virus.prototype.feed = function(feeder,gameServer) {
 // Main Functions
 
 Virus.prototype.getEatingRange = function() {
-    return this.getSize() * .45; // 0 for ejected cells
+    return this.getSize() * .4; // 0 for ejected cells
 };
 
 Virus.prototype.onConsume = function(consumer,gameServer) {
