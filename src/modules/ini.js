@@ -95,6 +95,13 @@ function decode (str) {
         var key = unsafe(match[2]),
             value = match[3] ? unsafe((match[4] || "")) : true;
 
+        switch (value) {
+            case 'true':
+            case 'false':
+            case 'null':
+                value = JSON.parse(value);
+        }
+
         // Convert keys with '[]' suffix to an array
         if (key.length > 2 && key.slice(-2) === "[]") {
             key = key.substring(0, key.length - 2);
@@ -107,23 +114,10 @@ function decode (str) {
 
         // safeguard against resetting a previously defined
         // array by accidentally forgetting the brackets
-        if (Array.isArray(p[key])) {
-            p[key].push(value);
-        }
-        
-        if (isNaN(value)) {
-            p[key] = value;
-            if (value == 'true') { // Booleans
-                p[key] = true;
-            } else if (value == 'false') {
-                p[key] = false;
-            }
+        if (isInt(value)) {
+            p[key] = parseInt(value);
         } else {
-            if (isInt(value)) {
-                p[key] = parseInt(value);
-            } else {
-                p[key] = parseFloat(value);
-            }  
+            p[key] = parseFloat(value);
         }
     });
 
