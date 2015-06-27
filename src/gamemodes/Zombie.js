@@ -143,12 +143,12 @@ Zombie.prototype.onCellMove = function(x1,y1,cell) {
 Zombie.prototype.updateLB = function(gameServer) {
     var lb = gameServer.leaderboard;
     // Loop through all clients
-    for (var i = 0; i < this.players.length; i++) {
-        if (typeof this.players[i] == "undefined") {
+    for (var i = 0; i < gameServer.clients.length; i++) {
+        if (typeof gameServer.clients[i] == "undefined" || gameServer.clients[i].team == 0) {
             continue;
         }
 
-        var player = this.players[i].playerTracker;
+        var player = gameServer.clients[i].playerTracker;
         var playerScore = player.getScore(true);
         if (player.cells.length <= 0) {
             continue;
