@@ -144,7 +144,7 @@ Zombie.prototype.updateLB = function(gameServer) {
     var lb = gameServer.leaderboard;
     // Loop through all clients
     for (var i = 0; i < gameServer.clients.length; i++) {
-        if (typeof gameServer.clients[i] == "undefined" || gameServer.clients[i].team == 0) {
+        if (typeof gameServer.clients[i] == "undefined" || gameServer.clients[i].playerTracker.team == 0) {
             continue;
         }
 
