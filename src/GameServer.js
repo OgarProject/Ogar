@@ -845,7 +845,11 @@ GameServer.prototype.switchSpectator = function(player) {
 WebSocket.prototype.sendPacket = function(packet) {
     // Send only if the buffer is empty
     if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
-        this.send(packet.build(), {binary: true});
+        try {
+            this.send(packet.build(), {binary: true});
+        } catch (e) {
+            console.log("[Error] "+e);
+        }
     } else {
         //console.log("[Warning] There was an error sending the packet!");
         // Remove socket
