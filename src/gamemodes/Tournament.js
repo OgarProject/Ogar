@@ -7,11 +7,12 @@ function Tournament() {
     this.name = "Tournament";
     this.packetLB = 48;
 
-    // Config (1 tick = 2000 ms)
+    // Config (1 tick = 1000 ms)
     this.prepTime = 5; // Amount of ticks after the server fills up to wait until starting the game
     this.endTime = 15; // Amount of ticks after someone wins to restart the game
     this.autoFill = false;
     this.autoFillPlayers = 1;
+    this.dcTime = 0;
 
     // Gamemode Specific Variables
     this.gamePhase = 0; // 0 = Waiting for players, 1 = Prepare to start, 2 = Game in progress, 3 = End
@@ -36,6 +37,7 @@ Tournament.prototype.startGame = function(gameServer) {
     gameServer.run = true;
     this.gamePhase = 2;
     this.getSpectate(); // Gets a random person to spectate
+    gameServer.config.playerDisconnectTime = this.dcTime; // Reset config
 };
 
 Tournament.prototype.endGame = function(gameServer) {
@@ -85,6 +87,11 @@ Tournament.prototype.onServerInit = function(gameServer) {
         this.autoFill = true;
         this.autoFillPlayers = gameServer.config.tourneyAutoFillPlayers;
     }
+    // Handles disconnections
+    this.dcTime = gameServer.config.playerDisconnectTime;
+    gameServer.config.playerDisconnectTime = 0;
+    gameServer.config.MinMassDecay = gameServer.config.playerStartMass;
+
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;
     this.maxContenders = gameServer.config.tourneyMaxPlayers;
