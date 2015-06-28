@@ -837,9 +837,17 @@ GameServer.prototype.switchSpectator = function(player) {
                 oldPlayer = 0;
                 continue;
             }
+            
+            if (!this.clients[oldPlayer]) {
+                // Break out of loop in case client tries to spectate an undefined player
+                player.spectatedPlayer = -1;
+                break;
+            }
+            
             if (this.clients[oldPlayer].playerTracker.cells.length > 0) {
                 break;
             }
+            
             oldPlayer++;
             count++;
         }
