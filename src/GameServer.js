@@ -771,11 +771,6 @@ GameServer.prototype.getNearestVirus = function(cell) {
 };
 
 GameServer.prototype.updateCells = function() {
-    if (!this.run) {
-        // Dont run this function if the server is paused
-        return;
-    }
-
     // Loop through all player cells
     var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
@@ -837,9 +832,17 @@ GameServer.prototype.switchSpectator = function(player) {
                 oldPlayer = 0;
                 continue;
             }
+            
+            if (!this.clients[oldPlayer]) {
+                // Break out of loop in case client tries to spectate an undefined player
+                player.spectatedPlayer = -1;
+                break;
+            }
+            
             if (this.clients[oldPlayer].playerTracker.cells.length > 0) {
                 break;
             }
+            
             oldPlayer++;
             count++;
         }
