@@ -91,13 +91,14 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     gameServer.config.borderRight = 6400;
     gameServer.config.borderTop = 0;
     gameServer.config.borderBottom = 6400;
-    gameServer.config.foodSpawnAmount = 3; // This is hunger games
+    gameServer.config.foodSpawnAmount = 5; // This is hunger games
     gameServer.config.foodStartAmount = 100;
     gameServer.config.foodMaxAmount = 200;
     gameServer.config.foodMass = 2; // Food is scarce, but its worth more
-    gameServer.config.virusMinAmount = 0;
+    gameServer.config.virusMinAmount = 10; // We need to spawn some viruses in case someone eats them all
     gameServer.config.virusMaxAmount = 100;
     gameServer.config.ejectSpawnPlayer = 0;
+    gameServer.config.playerDisconnectTime = 10; // So that people dont disconnect and stall the game for too long
 
     // Spawn Initial Virus/Large food
     var mapWidth = gameServer.config.borderRight - gameServer.config.borderLeft;
