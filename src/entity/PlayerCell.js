@@ -6,6 +6,7 @@ function PlayerCell() {
     this.cellType = 0;
     this.recombineTicks = 0; // Ticks until the cell can recombine with other cells 
     this.ignoreCollision = false; // This is used by player cells so that they dont cause any problems when splitting
+    this.disconnect = -1;
 }
 
 module.exports = PlayerCell;

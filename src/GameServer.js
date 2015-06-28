@@ -72,6 +72,7 @@ function GameServer() {
         playerMassDecayRate: .002, // Amount of mass lost per second
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerMaxNickLength: 15, // Maximum nick length
+        playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
         tourneyEndTime: 30, // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
@@ -162,13 +163,15 @@ GameServer.prototype.start = function() {
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
             for (var i = 0; i < len; i++) {
-                var cell = this.socket.playerTracker.cells[0];
+                var cell = this.socket.playerTracker.cells[i];
 
                 if (!cell) {
                     continue;
                 }
 
-                this.server.removeNode(cell);
+                cell.disconnect = this.server.config.playerDisconnectTime;
+                cell.calcMove = function() {return;}; // Clear function so that the cell cant move
+                //this.server.removeNode(cell);
             }
 
             var index = this.server.clients.indexOf(this.socket);
@@ -320,9 +323,9 @@ GameServer.prototype.mainLoop = function() {
     if (this.tick >= 50) {
         // Loop main functions
         if (this.run) {
-	    setTimeout(this.cellTick(), 0);
-	    setTimeout(this.spawnTick(), 0);
-	    setTimeout(this.gamemodeTick(), 0);
+            setTimeout(this.cellTick(), 0);
+            setTimeout(this.spawnTick(), 0);
+            setTimeout(this.gamemodeTick(), 0);
         }
 
         // Update the client's maps
@@ -331,7 +334,7 @@ GameServer.prototype.mainLoop = function() {
         // Update cells/leaderboard loop
         this.tickMain++;
         if (this.tickMain >= 20) { // 1 Second
-	    setTimeout(this.cellUpdateTick(), 0);
+            setTimeout(this.cellUpdateTick(), 0);
 
             // Update leaderboard with the gamemode's method
             this.leaderboard = [];
@@ -782,8 +785,15 @@ GameServer.prototype.updateCells = function() {
             continue;
         }
 
-        // Recombining
-        if (cell.recombineTicks > 0) {
+        if (cell.disconnect > -1) {
+            // Player has disconnected... remove it when the timer hits -1
+            cell.disconnect--;
+            if (cell.disconnect == -1) {
+                this.removeNode(cell);
+                continue;
+            }
+        } else if (cell.recombineTicks > 0) {
+            // Recombining
             cell.recombineTicks--;
         }
 
@@ -849,6 +859,9 @@ WebSocket.prototype.sendPacket = function(packet) {
             this.send(packet.build(), {binary: true});
         } catch (e) {
             console.log("[Error] "+e);
+            // Remove socket
+            this.emit('close');
+            this.removeAllListeners();
         }
     } else {
         //console.log("[Warning] There was an error sending the packet!");

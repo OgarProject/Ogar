@@ -59,10 +59,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             break;
         case 16:
-            // Mouse Move
-            var client = this.socket.playerTracker;
-            client.mouse.x = view.getFloat64(1, true);
-            client.mouse.y = view.getFloat64(9, true);
+            // Discard broken packets
+            if (view.byteLength == 21) {
+                // Mouse Move
+                var client = this.socket.playerTracker;
+                client.mouse.x = view.getFloat64(1, true);
+                client.mouse.y = view.getFloat64(9, true);
+            }
             break;
         case 17:
             // Space Press - Split cell
