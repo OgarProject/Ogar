@@ -866,8 +866,11 @@ WebSocket.prototype.sendPacket = function(packet) {
             this.emit('close');
             this.removeAllListeners();
         }
-    } else {
+    } else if (!packet.build) {
+        // Do nothing
         //console.log("[Warning] There was an error sending the packet!");
+    } else {
+        //console.log("[Warning] There was an error sending the packet to "+this.playerTracker.name);
         // Remove socket
         this.emit('close');
         this.removeAllListeners();
