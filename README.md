@@ -4,10 +4,10 @@ A fully functional open source Agar.io server implementation, written in Node.js
 ## Obtaining and Using
 If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. The rest of this section is for non Windows users.
 
-As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (Unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
+As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
 
 ```sh
-~$ git clone git://github.com/vram4/Ogar.git Ogar
+~$ git clone git://github.com/forairan/Ogar.git Ogar
 ~$ npm install ./Ogar
 ~$ node Ogar
 ```
