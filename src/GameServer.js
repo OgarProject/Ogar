@@ -170,15 +170,12 @@ GameServer.prototype.start = function() {
                     continue;
                 }
 
-                cell.disconnect = this.server.config.playerDisconnectTime;
                 cell.calcMove = function() {return;}; // Clear function so that the cell cant move
                 //this.server.removeNode(cell);
             }
 
-            var index = this.server.clients.indexOf(this.socket);
-            if (index != -1) {
-                this.server.clients.splice(index, 1);
-            }
+            client.disconnect = this.server.config.playerDisconnectTime * 20;
+            this.socket.sendPacket = function() {return;}; // Clear function so no packets are sent
         }
 
         // console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
@@ -780,15 +777,8 @@ GameServer.prototype.updateCells = function() {
         if (!cell) {
             continue;
         }
-
-        if (cell.disconnect > -1) {
-            // Player has disconnected... remove it when the timer hits -1
-            cell.disconnect--;
-            if (cell.disconnect == -1) {
-                this.removeNode(cell);
-                continue;
-            }
-        } else if (cell.recombineTicks > 0) {
+        
+        if (cell.recombineTicks > 0) {
             // Recombining
             cell.recombineTicks--;
         }
@@ -869,10 +859,8 @@ WebSocket.prototype.sendPacket = function(packet) {
         }
     } else if (!packet.build) {
         // Do nothing
-        //console.log("[Warning] There was an error sending the packet!");
     } else {
-        //console.log("[Warning] There was an error sending the packet to "+this.playerTracker.name);
-        // Remove socket
+        // This will cause a memory leak so we need to remove the socket
         this.emit('close');
         this.removeAllListeners();
     }
