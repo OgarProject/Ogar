@@ -69,6 +69,8 @@ The current available console commands are listed here. Command names are not ca
    * Shows a list of connected players, their IP, player ID, the amount of cells they have, total mass, and their position. 
  - Pause
    * Pauses/Unpauses the game.
+ - Reload
+   * Reloads the config file used by the server. However, the following values are not affected: serverPort, serverGamemode, serverBots.
  - Status
    * Shows the amount of players currently connected, time elapsed, memory usage (memory used/memory allocated), and the current gamemode.
  - Tp [Player ID] [X position] [Y position]
