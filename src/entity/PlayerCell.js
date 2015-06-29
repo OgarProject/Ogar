@@ -21,9 +21,11 @@ PlayerCell.prototype.visibleCheck = function(box,centerPos) {
     }
 
     // Checks if this cell is visible to the player
-    var len = this.getSize() + box.width >> 0; // Width of cell + width of the box (Int)
+    var cellSize = this.getSize();
+    var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
+    var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
 
-    return (this.abs(this.position.x - centerPos.x) < len) && (this.abs(this.position.y - centerPos.y) < len);
+    return (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
 };
 
 PlayerCell.prototype.simpleCollide = function(check,d) {
