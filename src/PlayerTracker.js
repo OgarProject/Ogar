@@ -3,6 +3,7 @@ var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
+    this.disconnect = -1; // Disconnection
     this.name = "";
     this.gameServer = gameServer;
     this.socket = socket;
@@ -163,6 +164,25 @@ PlayerTracker.prototype.update = function() {
         this.tickLeaderboard = 20; // 20 ticks = 1 second
     } else {
         this.tickLeaderboard--;
+    }
+
+    // Handles disconnections
+    if (this.disconnect > -1) {
+        // Player has disconnected... remove it when the timer hits -1
+        this.disconnect--;
+        if (this.disconnect == -1) {
+            // Remove all client cells
+            var len = this.cells.length;
+            for (var i = 0; i < len; i++) {
+                var cell = this.socket.playerTracker.cells[0];
+
+                if (!cell) {
+                    continue;
+                }
+
+                this.gameServer.removeNode(cell);
+            }
+        }
     }
 };
 
