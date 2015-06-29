@@ -2,9 +2,10 @@ var Mode = require('./Mode');
 
 function FFA() {
     Mode.apply(this, Array.prototype.slice.call(arguments));
-	
+
     this.ID = 0;
     this.name = "Free For All";
+    this.specByLeaderboard = true;
 }
 
 module.exports = FFA;
@@ -28,14 +29,50 @@ FFA.prototype.leaderboardAddSort = function(player,leaderboard) {
         // Add to top of the list because no spots were found
         leaderboard.splice(0, 0,player);
     }
-}
+};
 
 // Override
 
+FFA.prototype.onPlayerSpawn = function(gameServer,player) {
+    // Random color
+    player.color = gameServer.getRandomColor();
+    
+    // Set up variables
+    var pos = gameServer.getRandomPosition();
+    var startMass = gameServer.config.playerStartMass;
+    
+    // Check if there are ejected mass in the world.
+    if (gameServer.nodesEjected.length > 0) {
+        var index = Math.floor(Math.random() * 100) + 1;
+        if (index <= gameServer.config.ejectSpawnPlayer) {
+            // Get ejected cell
+            var index = Math.floor(Math.random() * gameServer.nodesEjected.length);
+            var e = gameServer.nodesEjected[index];
+
+            // Remove ejected mass
+            gameServer.removeNode(e);
+
+            // Inherit
+            pos = {x: e.position.x, y: e.position.y};
+            startMass = e.mass;
+
+            var color = e.getColor();
+            player.setColor({
+                'r': color.r,
+                'g': color.g,
+                'b': color.b
+            });
+        }
+    }
+    
+    // Spawn player
+    gameServer.spawnPlayer(player,pos,startMass);
+}
+
 FFA.prototype.updateLB = function(gameServer) {
-	var lb = gameServer.leaderboard;
-	// Loop through all clients
-	for (var i = 0; i < gameServer.clients.length; i++) {
+    var lb = gameServer.leaderboard;
+    // Loop through all clients
+    for (var i = 0; i < gameServer.clients.length; i++) {
         if (typeof gameServer.clients[i] == "undefined") {
             continue;
         }
@@ -45,7 +82,7 @@ FFA.prototype.updateLB = function(gameServer) {
         if (player.cells.length <= 0) {
             continue;
         }
-        
+
         if (lb.length == 0) {
             // Initial player
             lb.push(player);
@@ -60,7 +97,7 @@ FFA.prototype.updateLB = function(gameServer) {
             }
         }
     }
-	
-	this.rankOne = lb[0];
-}
+
+    this.rankOne = lb[0];
+};
 
