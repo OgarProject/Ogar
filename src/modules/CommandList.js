@@ -285,6 +285,10 @@ Commands.list = {
         var s = gameServer.run ? "Unpaused" : "Paused";
         console.log("[Console] " + s + " the game.");
     },
+    reload: function(gameServer) {
+        gameServer.loadConfig();
+        console.log("[Console] Reloaded the config file successfully");
+    },
     status: function(gameServer,split) {
         // Get amount of humans/bots
         var humans = 0, bots = 0;
