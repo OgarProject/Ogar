@@ -19,7 +19,8 @@ BotLoader.prototype.getName = function() {
         name = this.randomNames[index];
         this.randomNames.splice(index,1);
     } else {
-        name = "bot" + ++this.nameIndex;
+        var names = ["4chan","8","anonymous","basketball","batman","bluh","china","chrome","cookie","creeper","deal with it","doge","earth","facebook","facepunch","github","gonzo","hitler","japan","linux","mars","moon","nasa","nazi","node","origin","pi","pirate","russia","sir","skype","skyrim","slack","snapchat","usa","denmark","windows","playstation","xbox"];
+        name = names[Math.floor(Math.random() * names.length)];
     }
 
     return name;
