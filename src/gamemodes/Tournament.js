@@ -184,6 +184,8 @@ Tournament.prototype.updateLB = function(gameServer) {
                 // Respawn starting food
                 gameServer.startingFood();
             } else {
+                lb[3] = "Game restarting in";
+				lb[4] = this.timer.toString();
                 this.timer--;
             }
             break;
