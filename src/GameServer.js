@@ -565,23 +565,20 @@ GameServer.prototype.splitCells = function(client) {
         var angle = Math.atan2(deltaX,deltaY);
 
         // Get starting position
-        var size = cell.getSize() * .2; // 1/5 starting position
+        var size = cell.getSize()/2;
         var startPos = {
             x: cell.position.x + ( size * Math.sin(angle) ),
             y: cell.position.y + ( size * Math.cos(angle) )
         };
         // Calculate mass and speed of splitting cell
-        var splitSpeed = 80 + (cell.mass / 100); // 75 - 150 ... 125 - 100
+        var splitSpeed = cell.getSpeed() * 6;
         var newMass = cell.mass / 2;
         cell.mass = newMass;
         // Create cell
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
-        split.setMoveEngineData(splitSpeed, 30, 0.9); 
+        split.setMoveEngineData(splitSpeed, 32, 0.85); 
         split.calcMergeTime(this.config.playerRecombineTime);
-
-        split.ignoreCollision = true; // Remove collision checks
-        split.parentCell = cell; // Only remove collision with parent cell
 
         // Add to moving cells list
         this.setAsMovingNode(split);
@@ -640,9 +637,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
     newCell.setAngle(angle);
     newCell.setMoveEngineData(speed, 15);
     newCell.calcMergeTime(this.config.playerRecombineTime);
-
     newCell.ignoreCollision = true; // Remove collision checks
-    newCell.parentCell = parent; // Only remove collision with parent cell
 
     // Add to moving cells list
     this.addNode(newCell);
