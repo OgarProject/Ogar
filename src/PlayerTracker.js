@@ -182,6 +182,12 @@ PlayerTracker.prototype.update = function() {
 
                 this.gameServer.removeNode(cell);
             }
+
+            // Remove from client list
+            var index = this.gameServer.clients.indexOf(this.socket);
+            if (index != -1) {
+                this.gameServer.clients.splice(index,1);
+            }
         }
     }
 };

@@ -37,40 +37,6 @@ Commands.list = {
         }
         console.log("[Console] Added "+add+" player bots");
     },
-    ban: function(gameServer,split) {
-        var ip = split[1]; // Get ip
-        if (gameServer.banned.indexOf(ip) == -1) {
-            gameServer.banned.push(ip);
-            console.log("[Console] Added "+ip+" to the banlist");
-
-            // Remove from game
-            for (var i in gameServer.clients) {
-                var c = gameServer.clients[i];
-
-                if (!c.remoteAddress) {
-                    continue; 
-                }
-
-                if (c.remoteAddress == ip) {
-                    c.close(); // Kick out
-                }
-            }
-        } else {
-            console.log("[Console] That IP is already banned");
-        }
-    },
-    banlist: function(gameServer,split) {
-        if ((typeof split[1] != 'undefined') && (split[1].toLowerCase() == "clear")) {
-            gameServer.banned = [];
-            console.log("[Console] Cleared ban list");
-            return;
-        }
-
-        console.log("[Console] Current banned IPs ("+gameServer.banned.length+")");
-        for (var i in gameServer.banned) {
-            console.log(gameServer.banned[i]);
-        }
-    },
     board: function(gameServer,split) {
         var newLB = [];
         for (var i = 1; i < split.length; i++) {
@@ -332,16 +298,6 @@ Commands.list = {
                 console.log("[Console] Teleported "+client.name+" to ("+pos.x+" , "+pos.y+")");
                 break;
             }
-        }
-    },
-    unban: function(gameServer,split) {
-        var ip = split[1]; // Get ip
-        var index = gameServer.banned.indexOf(ip);
-        if (index > -1) {
-            gameServer.banned.splice(index,1);
-            console.log("[Console] Unbanned "+ip);
-        } else {
-            console.log("[Console] That IP is not banned");
         }
     },
     virus: function(gameServer,split) {
