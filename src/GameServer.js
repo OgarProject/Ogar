@@ -31,7 +31,6 @@ function GameServer() {
 
     this.bots = new BotLoader(this);
     this.commands; // Command handler
-    this.banned = []; // List of banned IPs
 
     // Main loop tick
     this.time = new Date();
@@ -159,11 +158,7 @@ GameServer.prototype.start = function() {
     });
 
     function connectionEstablished(ws) {
-        if (this.clients.length > this.config.serverMaxConnections) { // Server full
-            ws.close();
-            console.log("[Game] Client tried to connect, but server player limit has been reached!");
-            return;
-        } else if (this.banned.indexOf(ws._socket.remoteAddress) != -1) { // Banned
+        if (this.clients.length >= this.config.serverMaxConnections) { // Server full
             ws.close();
             return;
         }
@@ -188,7 +183,7 @@ GameServer.prototype.start = function() {
             this.socket.sendPacket = function() {return;}; // Clear function so no packets are sent
         }
 
-        // console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
+        //console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
         ws.playerTracker = new PlayerTracker(this, ws);

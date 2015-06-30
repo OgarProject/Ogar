@@ -41,10 +41,6 @@ The current available console commands are listed here. Command names are not ca
 
  - Addbot [Number]
    * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
- - Ban [IP]
-   * Prevents anyone with the banned IP from joining.
- - Banlist {clear}
-   * Shows a list of currently banned IPs. You can clear the banlist by typing "clear" as the 2nd parameter.
  - Board [String 1] [String 2] [String 3] ...
    * Replaces the text on the leaderboard with the string text.
  - Boardreset
@@ -75,8 +71,6 @@ The current available console commands are listed here. Command names are not ca
    * Shows the amount of players currently connected, time elapsed, memory usage (memory used/memory allocated), and the current gamemode.
  - Tp [Player ID] [X position] [Y position]
    * Teleports the specified player to the specified coordinates.
- - Unban [IP]
-   * Unbans the specified IP.
  - Virus [X position] [Y position] [Mass]
    * Spawns a virus cell at those coordinates. If a mass value is not specified, then the server will default to "virusStartMass" in the config.
 
