@@ -1,5 +1,6 @@
 // Library imports
 var WebSocket = require('ws');
+var http = require('http');
 var fs = require("fs");
 var ini = require('./modules/ini.js');
 
@@ -44,9 +45,10 @@ function GameServer() {
         serverPort: 443, // Server port
         serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0, // Amount of player bots to spawn
-        serverBotsIgnoreViruses: false,
         serverViewBaseX: 1024, // Base view distance of players. Warning: high values may cause lag
-		serverViewBaseY: 592,
+        serverViewBaseY: 592,
+        serverStatsPort: 88, // Port for stats server
+        serverStatsUpdate: 60, // Amount of seconds per update for the server stats
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
         borderTop: 0, // Top border of map (Vanilla value: 0)
@@ -86,6 +88,10 @@ function GameServer() {
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
 
+    // Stats server
+    this.stats = "Test";
+    this.getStats();
+
     // Colors
     this.colors = [
         {'r':235, 'g': 75, 'b':  0},
@@ -116,6 +122,9 @@ GameServer.prototype.start = function() {
 
         // Start Main Loop
         setInterval(this.mainLoop.bind(this), 1);
+
+        // Stats server
+        setInterval(this.getStats.bind(this), this.config.serverStatsUpdate * 1000);
 
         // Done
         console.log("[Game] Listening on port %d", this.config.serverPort);
@@ -190,6 +199,17 @@ GameServer.prototype.start = function() {
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
     }
+
+    // Show stats
+    this.httpServer = http.createServer(function(req, res) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.writeHead(200);
+        res.end(this.stats);
+    }.bind(this));
+
+    this.httpServer.listen(this.config.serverStatsPort, function() {
+        //
+    }.bind(this));
 };
 
 GameServer.prototype.getMode = function() {
@@ -455,7 +475,7 @@ GameServer.prototype.updateMoveEngine = function() {
         var cell = this.nodesPlayer[i];
 
         // Do not move cells that have already been eaten or have collision turned off
-        if ((!cell) || (cell.ignoreCollision)){
+        if (!cell){
             continue;
         }
 
@@ -544,20 +564,23 @@ GameServer.prototype.splitCells = function(client) {
         var angle = Math.atan2(deltaX,deltaY);
 
         // Get starting position
-        var size = cell.getSize()/2;
+        var size = cell.getSize() * .2; // 1/5 starting position
         var startPos = {
             x: cell.position.x + ( size * Math.sin(angle) ),
             y: cell.position.y + ( size * Math.cos(angle) )
         };
         // Calculate mass and speed of splitting cell
-        var splitSpeed = cell.getSpeed() * 6;
+        var splitSpeed = 80 + (cell.mass / 100); // 75 - 150 ... 125 - 100
         var newMass = cell.mass / 2;
         cell.mass = newMass;
         // Create cell
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
-        split.setMoveEngineData(splitSpeed, 32, 0.85); 
+        split.setMoveEngineData(splitSpeed, 30, 0.9); 
         split.calcMergeTime(this.config.playerRecombineTime);
+
+        split.ignoreCollision = true; // Remove collision checks
+        split.parentCell = cell; // Only remove collision with parent cell
 
         // Add to moving cells list
         this.setAsMovingNode(split);
@@ -614,9 +637,11 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
     // Create cell
     newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(speed, 10);
+    newCell.setMoveEngineData(speed, 15);
     newCell.calcMergeTime(this.config.playerRecombineTime);
-    newCell.ignoreCollision = true;  // Turn off collision
+
+    newCell.ignoreCollision = true; // Remove collision checks
+    newCell.parentCell = parent; // Only remove collision with parent cell
 
     // Add to moving cells list
     this.addNode(newCell);
@@ -843,6 +868,16 @@ GameServer.prototype.switchSpectator = function(player) {
             player.spectatedPlayer = oldPlayer;
         }
     }
+};
+
+GameServer.prototype.getStats = function() {
+    var s = {
+        'current_players': this.clients.length,
+        'max_players': this.config.serverMaxConnections,
+        'gamemode': this.gameMode.name,
+        'uptime': process.uptime()
+    };
+    this.stats = JSON.stringify(s);
 };
 
 // Custom prototype functions
