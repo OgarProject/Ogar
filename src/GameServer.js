@@ -35,6 +35,7 @@ function GameServer() {
 
     // Main loop tick
     this.time = new Date();
+    this.startTime = this.time;
     this.tick = 0; // 1 second ticks of mainLoop
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
     this.tickSpawn = 0; // Used with spawning food
@@ -875,7 +876,7 @@ GameServer.prototype.getStats = function() {
         'current_players': this.clients.length,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
-        'uptime': process.uptime()
+        'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);
 };
