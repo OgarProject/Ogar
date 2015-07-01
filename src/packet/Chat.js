@@ -1,5 +1,6 @@
 function Chat(sender, message) {
     this.sender = sender;
+    this.message = message;
 }
 
 module.exports = Chat;
@@ -42,5 +43,4 @@ Chat.prototype.build = function () {
     offset += 2;
     return buf;
 };
-
 
