@@ -74,13 +74,15 @@ function GameServer() {
         playerRecombineTime: 30, // Base amount of seconds before a cell is allowed to recombine
         playerMassDecayRate: .002, // Amount of mass lost per second
         playerMinMassDecay: 9, // Minimum mass for decay to occur
-        playerMaxNickLength: 15, // Maximum nick length
+        playerMaxNickLength: 20, // Maximum nick length
         playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
         tourneyEndTime: 30, // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
         tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1, // The timer for filling the server with bots will not count down unless there is this amount of real players
+    	chatMaxMessageLength: 200, // Maximum message length
+        chatDelay: 80, // The amount of ticks a user has to wait before making another chat message (1 tick = 50 ms)
     };
     // Parse config
     this.loadConfig();
