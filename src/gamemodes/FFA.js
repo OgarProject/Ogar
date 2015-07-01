@@ -38,8 +38,7 @@ FFA.prototype.onPlayerSpawn = function(gameServer,player) {
     player.color = gameServer.getRandomColor();
     
     // Set up variables
-    var pos = gameServer.getRandomPosition();
-    var startMass = gameServer.config.playerStartMass;
+    var pos, startMass;
     
     // Check if there are ejected mass in the world.
     if (gameServer.nodesEjected.length > 0) {

@@ -235,6 +235,37 @@ GameServer.prototype.getRandomPosition = function() {
     };
 };
 
+GameServer.prototype.getRandomSpawn = function() {
+    // Random spawns for players
+    var pos;
+
+    if (this.currentFood > 0) {
+        // Spawn from food
+        var node;
+        for (var i = (this.nodes.length - 1); i > -1; i--) {
+            // Find random food
+            node = this.nodes[i];
+
+            if (!node || node.inRange) {
+                // Skip if food is about to be eaten/undefined
+                continue;
+            }
+
+            if (node.getType() == 1) {
+                pos = {x: node.position.x,y: node.position.y};
+                break;
+            }
+        }
+    }
+
+    if (!pos) {
+        // Get random spawn if no food cell is found
+        pos = this.getRandomPosition();
+    }
+
+    return pos;
+};
+
 GameServer.prototype.getRandomColor = function() {
     var index = Math.floor(Math.random() * this.colors.length);
     var color = this.colors[index];
@@ -401,7 +432,7 @@ GameServer.prototype.spawnFood = function() {
 
 GameServer.prototype.spawnPlayer = function(player,pos,mass) {
 	if (pos == null) { // Get random pos
-		pos = this.getRandomPosition();
+		pos = this.getRandomSpawn();
 	}
 	if (mass == null) { // Get starting mass
 		mass = this.config.playerStartMass;
