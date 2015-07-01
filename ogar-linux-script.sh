@@ -35,11 +35,11 @@ fi
 
 if [ ! -f master.zip ]; then
         echo "No local master.zip found, downloading with curl."
-        curl -O -L https://github.com/vram4/Ogar/archive/master.zip
+        curl -O -L https://github.com/forairan/Ogar/archive/master.zip
 fi
 if [ ! -f master.zip ]; then
 	echo "curl failed to download master.zip, trying wget."
-	wget https://github.com/vram4/Ogar/archive/master.zip
+	wget https://github.com/forairan/Ogar/archive/master.zip
 		if [ ! -f master.zip ]; then
 		       	echo "wget failed as well. Aborting!"
 	       		exit 1
@@ -112,11 +112,11 @@ esac
 
 if [ ! -f master.zip ]; then
         echo "No local master.zip found, downloading with curl."
-        curl -O -L https://github.com/vram4/Ogar/archive/master.zip
+        curl -O -L https://github.com/forairan/Ogar/archive/master.zip
 fi
 if [ ! -f master.zip ]; then
 	echo "curl failed to download master.zip, trying wget."
-	wget https://github.com/vram4/Ogar/archive/master.zip
+	wget https://github.com/forairan/Ogar/archive/master.zip
 		if [ ! -f master.zip ]; then
 		       	echo "wget failed as well. Aborting!"
 	       		exit 1
