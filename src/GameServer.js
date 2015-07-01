@@ -33,7 +33,7 @@ function GameServer() {
     this.commands; // Command handler
 
     // Main loop tick
-    this.time = new Date();
+    this.time = +new Date;
     this.startTime = this.time;
     this.tick = 0; // 1 second ticks of mainLoop
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
@@ -47,7 +47,7 @@ function GameServer() {
         serverBots: 0, // Amount of player bots to spawn
         serverViewBaseX: 1024, // Base view distance of players. Warning: high values may cause lag
         serverViewBaseY: 592,
-        serverStatsPort: 88, // Port for stats server
+        serverStatsPort: 88, // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60, // Amount of seconds per update for the server stats
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
@@ -88,10 +88,6 @@ function GameServer() {
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
 
-    // Stats server
-    this.stats = "Test";
-    this.getStats();
-
     // Colors
     this.colors = [
         {'r':235, 'g': 75, 'b':  0},
@@ -122,9 +118,6 @@ GameServer.prototype.start = function() {
 
         // Start Main Loop
         setInterval(this.mainLoop.bind(this), 1);
-
-        // Stats server
-        setInterval(this.getStats.bind(this), this.config.serverStatsUpdate * 1000);
 
         // Done
         console.log("[Game] Listening on port %d", this.config.serverPort);
@@ -196,16 +189,7 @@ GameServer.prototype.start = function() {
         this.clients.push(ws);
     }
 
-    // Show stats
-    this.httpServer = http.createServer(function(req, res) {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.writeHead(200);
-        res.end(this.stats);
-    }.bind(this));
-
-    this.httpServer.listen(this.config.serverStatsPort, function() {
-        //
-    }.bind(this));
+    this.startStatsServer(this.config.serverStatsPort);
 };
 
 GameServer.prototype.getMode = function() {
@@ -253,6 +237,7 @@ GameServer.prototype.getRandomSpawn = function() {
 
             if (node.getType() == 1) {
                 pos = {x: node.position.x,y: node.position.y};
+                this.removeNode(node);
                 break;
             }
         }
@@ -891,6 +876,30 @@ GameServer.prototype.switchSpectator = function(player) {
         }
     }
 };
+
+GameServer.prototype.startStatsServer = function(port) {
+    // Do not start the server if the port is negative
+    if (port < 1) {
+        return;
+    }
+
+    // Create stats
+    this.stats = "Test";
+    this.getStats();
+
+    // Show stats
+    this.httpServer = http.createServer(function(req, res) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.writeHead(200);
+        res.end(this.stats);
+    }.bind(this));
+
+    this.httpServer.listen(port, function() {
+        // Stats server
+        console.log("[Game] Loaded stats server on port " + port);
+        setInterval(this.getStats.bind(this), this.config.serverStatsUpdate * 1000);
+    }.bind(this));
+}
 
 GameServer.prototype.getStats = function() {
     var s = {
