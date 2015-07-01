@@ -61,10 +61,6 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
         bigSplits++;
         numSplits--;
     }
-    if ((endMass > 3000) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
 
     // Splitting
     var angle = 0; // Starting angle
