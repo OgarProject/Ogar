@@ -104,8 +104,10 @@ Commands.list = {
             }
         }
     },
-    debug: function(gameServer,split) {
-        parseName(split,1);
+    exit: function(gameServer,split) {
+        console.log("[Console] Closing server...");
+        gameServer.socketServer.close();
+        process.exit(1);
     },
     food: function(gameServer,split) {
         var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
@@ -198,10 +200,37 @@ Commands.list = {
             }
         }
     },
+    name: function(gameServer,split) {
+        // Validation checks
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
+            return;
+        }
+        
+        var name = split[2];
+        if (typeof name == 'undefined') {
+            console.log("[Console] Please type a valid name");
+            return;
+        }
+
+        // Change name
+        for (var i = 0; i < gameServer.clients.length; i++) {
+            var client = gameServer.clients[i].playerTracker;
+
+            if (client.pID == id) {
+                console.log("[Console] Changing "+client.name+" to "+name);
+                client.name = name;
+                return;
+            }
+        }
+
+        // Error
+        console.log("[Console] Player "+id+" was not found");
+    },
     playerlist: function(gameServer,split) {
         console.log("[Console] Showing " + gameServer.clients.length + " players: ");
-        console.log(" ID         | IP              | %s | CELLS | SCORE  | POSITION    ",
-            fillChar('NICK', ' ', gameServer.config.playerMaxNickLength)); // Fill space
+        console.log(" ID         | IP              | "+fillChar('NICK', ' ', gameServer.config.playerMaxNickLength)+" | CELLS | SCORE  | POSITION    "); // Fill space
         console.log(fillChar('', '-', ' ID         | IP              |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
         for (var i = 0; i < gameServer.clients.length; i++) {
             var client = gameServer.clients[i].playerTracker;
@@ -232,17 +261,17 @@ Commands.list = {
                 }
                 nick = (nick == "") ? "An unnamed cell" : nick;
                 data = fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(" %s | %s | %s", id, ip, data);
+                console.log(""+id+" | "+ip+" | "+data);
             } else if (client.cells.length > 0) {
                 nick = fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', gameServer.config.playerMaxNickLength);
                 cells = fillChar(client.cells.length, ' ', 5, true);
                 score = fillChar(client.getScore(true), ' ', 6, true);
                 position = fillChar(client.centerPos.x, ' ', 5, true) + ', ' + fillChar(client.centerPos.y, ' ', 5, true);
-                console.log(" %s | %s | %s | %s | %s | %s", id, ip, nick, cells, score, position);
+                console.log(" "+id+" | "+ip+" | "+nick+" | "+cells+" | "+score+" | "+position);
             } else { 
                 // No cells = dead player or in-menu
                 data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(" %s | %s | %s", id, ip, data);
+                console.log(""+id+" | "+ip+" | "+data);
             }
         }
     },
