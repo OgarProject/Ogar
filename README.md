@@ -1,13 +1,13 @@
 # Ogar
-A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client (as of 6/13/15).
+A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client (as of 6/26/15).
 
 ## Obtaining and Using
-If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. This is a beta feature, and if there are any problems, switch back to using Ogar with node.js. The rest of this section is for non Windows users.
+If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. The rest of this section is for non Windows users.
 
-As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (Unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
+As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
 
 ```sh
-~$ git clone git://github.com/vram4/Ogar.git Ogar
+~$ git clone git://github.com/forairan/Ogar.git Ogar
 ~$ npm install ./Ogar
 ~$ node Ogar
 ```
@@ -33,6 +33,7 @@ Id   | Name
 2    | Experimental (As of 6/13/15)
 10   | Tournament
 11   | Hunger Games
+12   | Zombie Mode
 20   | Rainbow FFA - Hint: Use with "setAcid(true)"
 
 ## Console Commands
@@ -40,10 +41,6 @@ The current available console commands are listed here. Command names are not ca
 
  - Addbot [Number]
    * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
- - Ban [IP]
-   * Prevents anyone with the banned IP from joining.
- - Banlist {clear}
-   * Shows a list of currently banned IPs. You can clear the banlist by typing "clear" as the 2nd parameter.
  - Board [String 1] [String 2] [String 3] ...
    * Replaces the text on the leaderboard with the string text.
  - Boardreset
@@ -54,6 +51,8 @@ The current available console commands are listed here. Command names are not ca
    * Clears the console output
  - Color [Player ID] [Red] [Green] [Blue]
    * Replaces the color of the specified player with this color.
+ - Exit
+   * Closes the server.
  - Food [X position] [Y position] [Mass]
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
@@ -64,16 +63,18 @@ The current available console commands are listed here. Command names are not ca
    * Kills all player cells on the map.
  - Mass [Player ID] [Number]
    * Sets the mass of all cells belonging to the specified player to [Number].
+ - Name [Player ID] [New Name]
+   * Changes the name of the player with the specified id with [New Name].
  - Playerlist
    * Shows a list of connected players, their IP, player ID, the amount of cells they have, total mass, and their position. 
  - Pause
    * Pauses/Unpauses the game.
+ - Reload
+   * Reloads the config file used by the server. However, the following values are not affected: serverPort, serverGamemode, serverBots, serverStatsPort, serverStatsUpdate.
  - Status
    * Shows the amount of players currently connected, time elapsed, memory usage (memory used/memory allocated), and the current gamemode.
  - Tp [Player ID] [X position] [Y position]
    * Teleports the specified player to the specified coordinates.
- - Unban [IP]
-   * Unbans the specified IP.
  - Virus [X position] [Y position] [Mass]
    * Spawns a virus cell at those coordinates. If a mass value is not specified, then the server will default to "virusStartMass" in the config.
 

@@ -3,6 +3,8 @@ var Packet = require('./packet');
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
+    // Detect protocol version - we can do something about it later
+    this.protocol = 0;
 
     this.pressQ = false;
     this.pressW = false;
@@ -24,12 +26,22 @@ PacketHandler.prototype.handleMessage = function(message) {
         return view.buffer;
     }
 
+    // Discard empty messages
+    if (message.length == 0) {
+        return;
+    }
+
     var buffer = stobuf(message);
     var view = new DataView(buffer);
     var packetId = view.getUint8(0, true);
 
     switch (packetId) {
         case 0:
+            // Check for invalid packets
+            if ((view.byteLength + 1) % 2 == 1) {
+                break;
+            }
+
             // Set Nickname
             var nick = "";
             var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
@@ -52,10 +64,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             break;
         case 16:
-            // Mouse Move
-            var client = this.socket.playerTracker;
-            client.mouse.x = view.getFloat64(1, true);
-            client.mouse.y = view.getFloat64(9, true);
+            // Discard broken packets
+            if (view.byteLength == 21) {
+                // Mouse Move
+                var client = this.socket.playerTracker;
+                client.mouse.x = view.getFloat64(1, true);
+                client.mouse.y = view.getFloat64(9, true);
+            }
             break;
         case 17:
             // Space Press - Split cell
@@ -73,9 +88,13 @@ PacketHandler.prototype.handleMessage = function(message) {
             this.pressW = true;
             break;
         case 255:
-            // Connection Start - Send SetBorder packet first
-            var c = this.gameServer.config;
-            this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+            // Connection Start 
+            if (view.byteLength == 5) {
+                this.protocol = view.getUint32(1, true);
+                // Send SetBorder packet first
+                var c = this.gameServer.config;
+                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+            }
             break;
         default:
             break;
