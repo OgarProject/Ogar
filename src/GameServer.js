@@ -916,7 +916,6 @@ GameServer.prototype.getStats = function() {
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
     // Buffer memory leak detection
-    console.log(this._socket.bufferSize+" - "+this.lastbuffer);
     if (this._socket.bufferSize > this.lastbuffer) {
         // Buffer size increased from last time
         if (this.lastbufferCount < 4) {
