@@ -4,16 +4,14 @@ var http = require('http');
 var fs = require("fs");
 var ini = require('./modules/ini.js');
 
-// Log
-var util = require('util');
-
 // Project imports
 var Packet = require('./packet');
 var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
-var BotLoader = require('./ai/BotLoader.js');
+var BotLoader = require('./ai/BotLoader');
+var Logger = require('./modules/log');
 
 // GameServer implementation
 function GameServer() {
@@ -33,6 +31,7 @@ function GameServer() {
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
     this.bots = new BotLoader(this);
+    this.log = new Logger();
     this.commands; // Command handler
 
     // Main loop tick
@@ -113,7 +112,7 @@ module.exports = GameServer;
 
 GameServer.prototype.start = function() {
     // Logging
-    this.setupLogs();
+    this.log.setup(this);
 
     // Gamemode configurations
     this.gameMode.onServerInit(this);
@@ -166,7 +165,7 @@ GameServer.prototype.start = function() {
 
         function close(error) {
             // Log disconnections
-            this.logDisconnect(this.remoteAddress);
+            this.server.log.onDisconnect(this.socket.remoteAddress);
 
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
@@ -187,7 +186,7 @@ GameServer.prototype.start = function() {
 
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
-        this.logConnect(ws.remoteAddress); // Log connections
+        this.log.onConnect(ws.remoteAddress); // Log connections
 
         // For memory leak detection
         ws.lastbuffer = 0; 
@@ -925,46 +924,6 @@ GameServer.prototype.getStats = function() {
         'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);
-};
-
-// Logging
-
-GameServer.prototype.setupLogs = function() {
-    switch (this.config.serverLogLevel) {
-        case 2:
-            var ip_log = fs.createWriteStream('./connections.log', {flags : 'w'});
-
-            // Override
-            this.logConnect = function(ip) {
-                ip_log.write("Connect: " + ip + '\r\n');
-            };
-
-            this.logDisconnect = function(ip) {
-                ip_log.write("Disconnect: " + ip + '\r\n');
-            };
-        case 1:
-            var console_log = fs.createWriteStream('./server.log', {flags : 'w'});
-
-            process.on('uncaughtException', function(err) {
-                console.log(err);
-            });
-
-            console.log = function(d) { //
-                console_log.write(util.format(d) + '\r\n');
-                process.stdout.write(util.format(d) + '\r\n');
-            };
-            break;
-        default:
-            break;
-    }
-};
-
-GameServer.prototype.logConnect = function() {
-    // Nothing
-};
-
-GameServer.prototype.logDisconnect = function() {
-    // Nothing
 };
 
 // Custom prototype functions

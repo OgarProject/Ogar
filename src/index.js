@@ -43,6 +43,9 @@ function prompt() {
 };
 
 function parseCommands(str) {
+    // Log the string
+    gameServer.log.onCommand(str);
+
     // Splits the string
     var split = str.split(" ");
 
