@@ -33,7 +33,7 @@ function GameServer() {
     this.commands; // Command handler
 
     // Main loop tick
-    this.time = new Date();
+    this.time = new Date;
     this.startTime = this.time;
     this.tick = 0; // 1 second ticks of mainLoop
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
@@ -198,17 +198,8 @@ GameServer.prototype.start = function() {
         this.clients.push(ws);
     }
 
-    // Show stats
-    this.httpServer = http.createServer(function(req, res) {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        res.writeHead(200);
-        res.end(this.stats);
-    }.bind(this));
+    this.startStatsServer(this.config.serverStatsPort);
 
-    this.httpServer.listen(this.config.serverStatsPort, function() {
-        //
-    }.bind(this));
-};
 
 GameServer.prototype.getMode = function() {
     return this.gameMode;
@@ -255,6 +246,7 @@ GameServer.prototype.getRandomSpawn = function() {
 
             if (node.getType() == 1) {
                 pos = {x: node.position.x,y: node.position.y};
+				this.removeNode(node);
                 break;
             }
         }
@@ -894,6 +886,31 @@ GameServer.prototype.switchSpectator = function(player) {
     }
 };
 
+GameServer.prototype.startStatsServer = function(port) {
+    // Do not start the server if the port is negative
+    if (port < 1) {
+        return;
+    }
+
+    // Create stats
+    this.stats = "Test";
+    this.getStats();
+
+    // Show stats
+    this.httpServer = http.createServer(function(req, res) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.writeHead(200);
+        res.end(this.stats);
+    }.bind(this));
+
+    this.httpServer.listen(port, function() {
+        // Stats server
+        console.log("[Game] Loaded stats server on port " + port);
+        setInterval(this.getStats.bind(this), this.config.serverStatsUpdate * 1000);
+    }.bind(this));
+}
+
+
 GameServer.prototype.getStats = function() {
     var s = {
         'current_players': this.clients.length,
@@ -906,8 +923,27 @@ GameServer.prototype.getStats = function() {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    // Send only if the buffer is empty
-    if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
+    // Buffer memory leak detection
+    if (this._socket.bufferSize > this.lastbuffer) {
+        // Buffer size increased from last time
+        if (this.lastbufferCount < 4) {
+            // Buffer increased size 
+            this.lastbuffer = this._socket.bufferSize;
+            this.lastbufferCount++;
+        } else {
+            // Prievous buffer was not cleared... probably a memory leak
+            this.emit('close');
+            this.removeAllListeners();
+            return;
+        }
+    } else {
+        // Reset
+        this.lastbuffer = 0;
+        this.lastbufferCount = 0;
+    }
+    
+    //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
+    if (this.readyState == WebSocket.OPEN && packet.build) {
         try {
             this.send(packet.build(), {binary: true});
         } catch (e) {
@@ -919,9 +955,7 @@ WebSocket.prototype.sendPacket = function(packet) {
     } else if (!packet.build) {
         // Do nothing
     } else {
-        // This will cause a memory leak so we need to remove the socket
         this.emit('close');
         this.removeAllListeners();
     }
 };
-
