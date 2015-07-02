@@ -29,10 +29,6 @@ Log.prototype.setup = function(gameServer) {
         case 1:
             console_log = fs.createWriteStream('./logs/console.log', {flags : 'w'});
 
-            process.on('uncaughtException', function(err) {
-                console.log(err.stack);
-            });
-
             console.log = function(d) { //
                 console_log.write(util.format(d) + EOL);
                 process.stdout.write(util.format(d) + EOL);
@@ -42,7 +38,11 @@ Log.prototype.setup = function(gameServer) {
             this.onCommand = function(command) {
                 console_log.write(">" + command + EOL);
             };
-            break;
+        case 0:
+            // Prevent crashes
+            process.on('uncaughtException', function(err) {
+                console.log(err.stack);
+            });
         default:
             break;
     }
