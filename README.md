@@ -51,6 +51,8 @@ The current available console commands are listed here. Command names are not ca
    * Clears the console output
  - Color [Player ID] [Red] [Green] [Blue]
    * Replaces the color of the specified player with this color.
+ - Exit
+   * Closes the server.
  - Food [X position] [Y position] [Mass]
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
@@ -61,12 +63,14 @@ The current available console commands are listed here. Command names are not ca
    * Kills all player cells on the map.
  - Mass [Player ID] [Number]
    * Sets the mass of all cells belonging to the specified player to [Number].
+ - Name [Player ID] [New Name]
+   * Changes the name of the player with the specified id with [New Name].
  - Playerlist
    * Shows a list of connected players, their IP, player ID, the amount of cells they have, total mass, and their position. 
  - Pause
    * Pauses/Unpauses the game.
  - Reload
-   * Reloads the config file used by the server. However, the following values are not affected: serverPort, serverGamemode, serverBots.
+   * Reloads the config file used by the server. However, the following values are not affected: serverPort, serverGamemode, serverBots, serverStatsPort, serverStatsUpdate.
  - Status
    * Shows the amount of players currently connected, time elapsed, memory usage (memory used/memory allocated), and the current gamemode.
  - Tp [Player ID] [X position] [Y position]
