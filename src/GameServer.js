@@ -4,6 +4,9 @@ var http = require('http');
 var fs = require("fs");
 var ini = require('./modules/ini.js');
 
+// Log
+var util = require('util');
+
 // Project imports
 var Packet = require('./packet');
 var PlayerTracker = require('./PlayerTracker');
@@ -49,6 +52,7 @@ function GameServer() {
         serverViewBaseY: 592,
         serverStatsPort: 88, // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60, // Amount of seconds per update for the server stats
+        serverLogLevel: 1, // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
         borderTop: 0, // Top border of map (Vanilla value: 0)
@@ -108,6 +112,9 @@ function GameServer() {
 module.exports = GameServer;
 
 GameServer.prototype.start = function() {
+    // Logging
+    this.setupLogs();
+
     // Gamemode configurations
     this.gameMode.onServerInit(this);
 
@@ -120,8 +127,8 @@ GameServer.prototype.start = function() {
         setInterval(this.mainLoop.bind(this), 1);
 
         // Done
-        console.log("[Game] Listening on port %d", this.config.serverPort);
-        console.log("[Game] Current game mode is "+this.gameMode.name);
+        console.log("[Game] Listening on port " + this.config.serverPort);
+        console.log("[Game] Current game mode is " + this.gameMode.name);
 
         // Player bots (Experimental)
         if (this.config.serverBots > 0) {
@@ -130,6 +137,7 @@ GameServer.prototype.start = function() {
             }
             console.log("[Game] Loaded "+this.config.serverBots+" player bots");
         }
+
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -157,7 +165,8 @@ GameServer.prototype.start = function() {
         }
 
         function close(error) {
-            //console.log("[Game] Disconnect: "+error);
+            // Log disconnections
+            this.logDisconnect(this.remoteAddress);
 
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
@@ -176,11 +185,14 @@ GameServer.prototype.start = function() {
             this.socket.sendPacket = function() {return;}; // Clear function so no packets are sent
         }
 
-        //console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
-        ws.lastbuffer = 0; // For memory leak detection
+        this.logConnect(ws.remoteAddress); // Log connections
+
+        // For memory leak detection
+        ws.lastbuffer = 0; 
         ws.lastbufferCount = 0;
+
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
@@ -879,6 +891,8 @@ GameServer.prototype.switchSpectator = function(player) {
     }
 };
 
+// Stats server
+
 GameServer.prototype.startStatsServer = function(port) {
     // Do not start the server if the port is negative
     if (port < 1) {
@@ -911,6 +925,46 @@ GameServer.prototype.getStats = function() {
         'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);
+};
+
+// Logging
+
+GameServer.prototype.setupLogs = function() {
+    switch (this.config.serverLogLevel) {
+        case 2:
+            var ip_log = fs.createWriteStream('./connections.log', {flags : 'w'});
+
+            // Override
+            this.logConnect = function(ip) {
+                ip_log.write("Connect: " + ip + '\r\n');
+            };
+
+            this.logDisconnect = function(ip) {
+                ip_log.write("Disconnect: " + ip + '\r\n');
+            };
+        case 1:
+            var console_log = fs.createWriteStream('./server.log', {flags : 'w'});
+
+            process.on('uncaughtException', function(err) {
+                console.log(err);
+            });
+
+            console.log = function(d) { //
+                console_log.write(util.format(d) + '\r\n');
+                process.stdout.write(util.format(d) + '\r\n');
+            };
+            break;
+        default:
+            break;
+    }
+};
+
+GameServer.prototype.logConnect = function() {
+    // Nothing
+};
+
+GameServer.prototype.logDisconnect = function() {
+    // Nothing
 };
 
 // Custom prototype functions
