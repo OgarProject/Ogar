@@ -89,10 +89,12 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 255:
             // Connection Start 
-            this.protocol = view.getUint32(1, true);
-            // Send SetBorder packet first
-            var c = this.gameServer.config;
-            this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+            if (view.byteLength == 5) {
+                this.protocol = view.getUint32(1, true);
+                // Send SetBorder packet first
+                var c = this.gameServer.config;
+                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+            }
             break;
         default:
             break;
