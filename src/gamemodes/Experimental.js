@@ -103,6 +103,8 @@ Experimental.prototype.onServerInit = function(gameServer) {
         }
     };
 
+    // Override this
+    gameServer.getRandomSpawn = gameServer.getRandomPosition;
 };
 
 Experimental.prototype.onTick = function(gameServer) {
@@ -128,8 +130,9 @@ Experimental.prototype.onChange = function(gameServer) {
     for (var i in this.nodesMother) {
         gameServer.removeNode(this.nodesMother[i]);
     }
-    // Add back default virus function
+    // Add back default functions
     Virus.prototype.feed = VirusFeed;
+    gameServer.getRandomSpawn = require('../GameServer').prototype.getRandomSpawn;
 };
 
 // New cell type

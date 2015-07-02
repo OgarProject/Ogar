@@ -51,35 +51,11 @@ HungerGames.prototype.spawnVirus = function(gameServer,pos) {
 // Override
 
 HungerGames.prototype.onServerInit = function(gameServer) {
-    // Remove all cells
-    var len = gameServer.nodes.length;
-    for (var i = 0; i < len; i++) {
-        var node = gameServer.nodes[0];
-
-        if (!node) {
-            continue;
-        }
-
-        gameServer.removeNode(node);
-    }
-    
-    gameServer.bots.loadNames();
+    // Prepare
+    this.prepare(gameServer);
 
     // Resets spawn points
     this.contenderSpawnPoints = this.baseSpawnPoints.slice();
-
-    // Pauses the server
-    gameServer.run = false;
-    this.gamePhase = 0;
-
-    // Get config values
-    if (gameServer.config.tourneyAutoFill > 0) {
-        this.timer = gameServer.config.tourneyAutoFill;
-        this.autoFill = true;
-        this.autoFillPlayers = gameServer.config.tourneyAutoFillPlayers;
-    }
-    this.prepTime = gameServer.config.tourneyPrepTime;
-    this.endTime = gameServer.config.tourneyEndTime;
 
     // Override config values
     if (gameServer.config.serverBots > this.maxContenders) {
@@ -91,13 +67,14 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     gameServer.config.borderRight = 6400;
     gameServer.config.borderTop = 0;
     gameServer.config.borderBottom = 6400;
-    gameServer.config.foodSpawnAmount = 3; // This is hunger games
+    gameServer.config.foodSpawnAmount = 5; // This is hunger games
     gameServer.config.foodStartAmount = 100;
     gameServer.config.foodMaxAmount = 200;
     gameServer.config.foodMass = 2; // Food is scarce, but its worth more
-    gameServer.config.virusMinAmount = 0;
+    gameServer.config.virusMinAmount = 10; // We need to spawn some viruses in case someone eats them all
     gameServer.config.virusMaxAmount = 100;
     gameServer.config.ejectSpawnPlayer = 0;
+    gameServer.config.playerDisconnectTime = 10; // So that people dont disconnect and stall the game for too long
 
     // Spawn Initial Virus/Large food
     var mapWidth = gameServer.config.borderRight - gameServer.config.borderLeft;
