@@ -179,6 +179,8 @@ GameServer.prototype.start = function() {
         //console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
+        ws.lastbuffer = 0; // For memory leak detection
+        ws.lastbufferCount = 0;
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
@@ -913,8 +915,28 @@ GameServer.prototype.getStats = function() {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    // Send only if the buffer is empty
-    if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
+    // Buffer memory leak detection
+    console.log(this._socket.bufferSize+" - "+this.lastbuffer);
+    if (this._socket.bufferSize > this.lastbuffer) {
+        // Buffer size increased from last time
+        if (this.lastbufferCount < 4) {
+            // Buffer increased size 
+            this.lastbuffer = this._socket.bufferSize;
+            this.lastbufferCount++;
+        } else {
+            // Prievous buffer was not cleared... probably a memory leak
+            this.emit('close');
+            this.removeAllListeners();
+            return;
+        }
+    } else {
+        // Reset
+        this.lastbuffer = 0;
+        this.lastbufferCount = 0;
+    }
+    
+    //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
+    if (this.readyState == WebSocket.OPEN && packet.build) {
         try {
             this.send(packet.build(), {binary: true});
         } catch (e) {
@@ -926,7 +948,6 @@ WebSocket.prototype.sendPacket = function(packet) {
     } else if (!packet.build) {
         // Do nothing
     } else {
-        // This will cause a memory leak so we need to remove the socket
         this.emit('close');
         this.removeAllListeners();
     }
