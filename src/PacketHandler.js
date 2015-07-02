@@ -37,6 +37,11 @@ PacketHandler.prototype.handleMessage = function(message) {
 
     switch (packetId) {
         case 0:
+            // Check for invalid packets
+            if ((view.byteLength + 1) % 2 == 1) {
+                break;
+            }
+
             // Set Nickname
             var nick = "";
             var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
