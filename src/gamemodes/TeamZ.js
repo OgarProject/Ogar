@@ -16,32 +16,36 @@ var GameState = { WF_PLAYERS: 0, WF_START: 1, IN_PROGRESS: 2 };
 // new Cell Type IDs of HERO and BRAIN are calculated based on Game Mode ID
 var CellType = { PLAYER: 0, FOOD: 1, VIRUS: 2, EJECTED_MASS: 3, HERO: 130, BRAIN: 131 };
 
+var localLB = [];
+
 function TeamZ() {
     Mode.apply(this, Array.prototype.slice.call(arguments));
 
     this.ID = 13;
-    this.name = "Zombie Team";
+    this.name = 'Zombie Team';
     this.packetLB = 48;
     this.haveTeams = true;
 
     // configurations:
     this.minPlayer = 2;                 // game is auto started if there are at least 2 players
-    this.gameDuration = 36000;          // ticks, 1 tick = 50 ms (20 ticks = 1 s)
-    this.warmUpDuration = 200;         // ticks, time to wait between games 1200
+    this.gameDuration = 18000;          // ticks, 1 tick = 50 ms (20 ticks = 1 s)
+    this.warmUpDuration = 600;          // ticks, time to wait between games
     this.crazyDuration = 200;           // ticks
-    this.heroEffectDuration = 200;     // ticks 1200
+    this.heroEffectDuration = 1000;     // ticks
     this.brainEffectDuration = 200;     // ticks
-    this.spawnBrainInterval = 20;       // ticks
-    this.spawnHeroInterval = 40;        // ticks
+    this.spawnBrainInterval = 1200;     // ticks
+    this.spawnHeroInterval = 600;       // ticks
+    this.defaultColor = { r: 0x9b, g: 0x30, b: 0xff };
     
     this.colorFactorStep = 5;
     this.colorLower = 50;               // Min 0
     this.colorUpper = 225;              // Max 255
-    this.maxBrain = 20;                 // set this param to any negative number to keep the number of brains not exceed number of humans
-    this.maxHero = 50;                   // set this param to any negative number to keep the number of heroes not exceed number of zombies
+    this.maxBrain = -1;                 // set this param to any negative number to keep the number of brains not exceed number of humans
+    this.maxHero = 4;                   // set this param to any negative number to keep the number of heroes not exceed number of zombies
     
     // game mode data:
     this.state = GameState.WF_PLAYERS;
+    this.winTeam = -1;
     this.gameTimer = 0;
     this.zombies = [];                  // the clients of zombie players
     this.humans = [];                   // the clients of human players
@@ -52,7 +56,7 @@ function TeamZ() {
     this.spawnHeroTimer = 0;
     this.spawnBrainTimer = 0;
 }
-
+1
 module.exports = TeamZ;
 TeamZ.prototype = new Mode();
 
@@ -181,6 +185,76 @@ TeamZ.prototype.turnToZombie = function (client) {
     this.zombies.push(client);
 };
 
+TeamZ.prototype.startGame = function (gameServer) {
+    for (var i = 0; i < this.humans.length; i++) {
+        var client = this.humans[i];
+        client.team = client.pID;
+        client.color = gameServer.getRandomColor();
+        for (var j = 0; j < client.cells.length; j++) {
+            var cell = client.cells[j];
+            if (cell) {
+                cell.setColor(client.color);
+                cell.mass = gameServer.config.playerStartMass;
+            }
+        }
+    }
+    
+    // Select random human to be the zombie
+    var zombie = this.humans[(Math.random() * this.humans.length) >> 0];
+    this.turnToZombie(zombie);
+    
+    this.winTeam = -1;
+    this.state = GameState.IN_PROGRESS;
+    this.gameTimer = this.gameDuration;
+};
+
+TeamZ.prototype.endGame = function (gameServer) {
+    // reset game
+    for (var i = 0; i < this.zombies.length; i++) {
+        var client = this.zombies[i];
+        var index = this.humans.indexOf(client);
+        if (index < 0) {
+            this.humans.push(client);
+        }
+    }
+    this.zombies = [];
+    this.spawnHeroTimer = 0;
+    this.spawnBrainTimer = 0;
+    localLB = []; // reset leader board
+    
+    for (var i = 0; i < this.humans.length; i++) {
+        var client = this.humans[i];
+        client.color = this.defaultColor;
+        client.team = 1;
+        for (var j = 0; j < client.cells.length; j++) {
+            var cell = client.cells[j];
+            cell.setColor(this.defaultColor);
+        }
+    }
+
+    this.state = GameState.WF_PLAYERS;
+    this.gameTimer = 0;
+};
+
+TeamZ.prototype.leaderboardAddSort = function (player, leaderboard) {
+    // Adds the player and sorts the leaderboard
+    var len = leaderboard.length - 1;
+    var loop = true;
+    
+    while ((len >= 0) && (loop)) {
+        // Start from the bottom of the leaderboard
+        if (player.getScore(false) <= leaderboard[len].getScore(false)) {
+            leaderboard.splice(len + 1, 0, player);
+            loop = false; // End the loop if a spot is found
+        }
+        len--;
+    }
+    if (loop) {
+        // Add to top of the list because no spots were found
+        leaderboard.splice(0, 0, player);
+    }
+};
+
 // Override
 
 TeamZ.prototype.onServerInit = function (gameServer) {
@@ -272,6 +346,10 @@ TeamZ.prototype.onServerInit = function (gameServer) {
     // this is almost same to the legacy function
     GameServer.prototype.getCellsInRange = function (cell) {
         var list = new Array();
+        
+        if (this.gameMode.state != GameState.IN_PROGRESS)
+            return list;
+
         var r = cell.getSize(); // Get cell radius (Cell size = radius)
         
         var topY = cell.position.y - r;
@@ -544,7 +622,6 @@ TeamZ.prototype.onChange = function (gameServer) {
 
 TeamZ.prototype.onTick = function (gameServer) {
     // Called on every game tick
-    //console.log("zombies: %d\thumans: %d",this.zombies.length, this.humans.length);
     
     switch (this.state) {
         case GameState.WF_PLAYERS:
@@ -558,22 +635,7 @@ TeamZ.prototype.onTick = function (gameServer) {
             if (this.gameTimer == 0) {
                 if (this.humans.length >= this.minPlayer) {
                     // proceed:
-                    for (var i = 0; i < this.humans.length; i++) {
-                        var client = this.humans[i];
-                        client.color = gameServer.getRandomColor();
-                        client.team = client.pID;
-                        for (var j = 0; j < client.cells.length; j++) {
-                            var cell = client.cells[j];
-                            cell.setColor(client.color);
-                        }
-                    }
-                    
-                    // Select random human to be the zombie
-                    var zombie = this.humans[(Math.random() * this.humans.length) >> 0];
-                    this.turnToZombie(zombie);
-
-                    this.state = GameState.IN_PROGRESS;
-                    this.gameTimer = this.gameDuration;
+                    this.startGame(gameServer);
                 }
                 else {
                     // back to previous state:
@@ -583,36 +645,23 @@ TeamZ.prototype.onTick = function (gameServer) {
             break;
         case GameState.IN_PROGRESS:
             this.gameTimer--;
-            var gameEnd = false;
             if (this.gameTimer == 0) {
                 // human wins
-                gameEnd = true;
+                this.winTeam = 1;
             }
             else {
                 if (this.humans.length == 0) { // no human left
                     // zombie wins
-                    gameEnd = true;
+                    this.winTeam = 0;
                 }
                 else if (this.zombies.length == 0) { // no zombie left
                     // human wins
-                    gameEnd = true;
+                    this.winTeam = 1;
                 }
             }
             
-            if (gameEnd) {
-                // update LB
-
-                // reset game
-                for (var i = 0; i < this.zombies.length; i++) {
-                    var client = this.zombies[i];
-                    var index = this.humans.indexOf(client);
-                    if (index < 0) {
-                        this.humans.push(client);
-                    }
-                }
-                this.zombies = [];
-                this.spawnHeroTimer = 0;
-                this.spawnBrainTimer = 0;
+            if (this.winTeam >= 0) {
+                this.endGame(gameServer);
             }
 
             break;
@@ -742,10 +791,18 @@ TeamZ.prototype.onCellAdd = function (cell) {
     if (client.cells.length == 1) { // first cell
         client.team = client.pID;
         client.color = { r: cell.color.r, g: cell.color.g, b: cell.color.b };
+        client.eatenBrainTimer = 0;
+        client.eatenHeroTimer = 0;
+        client.crazyTimer = 0;
         this.humans.push(client);
 
         if (this.state == GameState.IN_PROGRESS) {
             this.turnToZombie(client);
+        }
+        else {
+            client.color = this.defaultColor;
+            cell.setColor(this.defaultColor);
+            client.team = 1; // game not started yet
         }
     }
 };
@@ -838,29 +895,74 @@ TeamZ.prototype.onCellMove = function (x1, y1, cell) {
     }
 };
 
-/*TeamZ.prototype.updateLB = function (gameServer) {
+TeamZ.prototype.updateLB = function (gameServer) {
     var lb = gameServer.leaderboard;
     
+    if (this.winTeam == 0) {
+        lb.push('ZOMBIE WINS');
+        lb.push('_______________');
+    }
+    else if (this.winTeam > 0) {
+        lb.push('HUMAN WINS');
+        lb.push('_______________');
+    }
+
     switch (this.state) {
         case GameState.WF_PLAYERS:
-            lb[0] = "Waiting for players: ";
-            lb[1] = this.humans.length + "/" + this.minPlayer;
+            lb.push('WAITING FOR');
+            lb.push('PLAYERS...');
+            lb.push(this.humans.length + '/' + this.minPlayer);
             break;
         case GameState.WF_START:
-            lb[0] = "Game starting in";
-            lb[1] = ((this.gameTimer / 20) >> 0).toString();
-            lb[2] = "Good luck!";
+            lb.push('GAME STARTS IN:');
+            var secs = (this.gameTimer / 20) >> 0;
+            lb.push(((secs / 60) >> 0) + ':' + (secs % 60));
             break;
         case GameState.IN_PROGRESS:
-            lb[0] = "Players Remaining";
-            lb[1] = this.humans.length;
+            var secs = (this.gameTimer / 20) >> 0;
+            lb.push(((secs / 60) >> 0) + ':' + (secs % 60));
+            lb.push('HUMAN: ' + this.humans.length);
+            lb.push('ZOMBIE: ' + this.zombies.length);
+            lb.push('_______________');
+            
+            // Loop through all clients
+            localLB = [];
+            for (var i = 0; i < gameServer.clients.length; i++) {
+                if (typeof gameServer.clients[i] == 'undefined' || gameServer.clients[i].playerTracker.team == 0) {
+                    continue;
+                }
+                
+                var player = gameServer.clients[i].playerTracker;
+                if (player.cells.length <= 0) {
+                    continue;
+                }
+                var playerScore = player.getScore(true);
+
+                if (localLB.length == 0) {
+                    // Initial player
+                    localLB.push(player);
+                    continue;
+                } else if (localLB.length < 6) {
+                    this.leaderboardAddSort(player, localLB);
+                } else {
+                    // 6 in leaderboard already
+                    if (playerScore > localLB[5].getScore(false)) {
+                        localLB.pop();
+                        this.leaderboardAddSort(player, localLB);
+                    }
+                }
+            }
+            for (var i = 0; i < localLB.length && lb.length < 10; i++) {
+                lb.push(localLB[i].getName());
+            }
+
             break;
         default:
-            lb[0] = "TEST";
+            lb.push('ERROR STATE');
             break;
     }
 
-};*/
+};
 
 // ----------------------------------------------------------------------------
 // Game mode entities:
@@ -870,7 +972,7 @@ function Hero() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
     
     this.cellType = CellType.HERO;
-    this.spiked = 1;
+    //this.spiked = 1;
     this.color = { r: 255, g: 255, b: 7 };
     this.mass = 20;
 }
@@ -878,7 +980,7 @@ function Hero() {
 Hero.prototype = new Cell();
 
 Hero.prototype.getName = function () {
-    return "HERO";
+    return 'HERO';
 };
 
 Hero.prototype.calcMove = null;
@@ -892,7 +994,7 @@ Hero.prototype.onRemove = function (gameServer) {
     if (index != -1) {
         gameServer.gameMode.heroes.splice(index, 1);
     } else {
-        console.log("[Warning] Tried to remove a non existing HERO node!");
+        console.log('[Warning] Tried to remove a non existing HERO node!');
     }
 };
 
@@ -938,7 +1040,7 @@ function Brain() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
     
     this.cellType = CellType.BRAIN;
-    this.spiked = 1;
+    //this.spiked = 1;
     this.color = { r: 255, g: 7, b: 255 };
     this.mass = 20;
 }
@@ -946,7 +1048,7 @@ function Brain() {
 Brain.prototype = new Cell();
 
 Brain.prototype.getName = function () {
-    return "BRAIN";
+    return 'BRAIN';
 };
 
 Brain.prototype.calcMove = null;
@@ -960,7 +1062,7 @@ Brain.prototype.onRemove = function (gameServer) {
     if (index != -1) {
         gameServer.gameMode.brains.splice(index, 1);
     } else {
-        console.log("[Warning] Tried to remove a non existing BRAIN node!");
+        console.log('[Warning] Tried to remove a non existing BRAIN node!');
     }
 };
 
