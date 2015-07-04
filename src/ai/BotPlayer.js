@@ -54,7 +54,8 @@ BotPlayer.prototype.updateSightRange = function() { // For view distance
         range += this.cells[0].getSize() * 2.5;
     }
 
-    this.sightRange = range;
+    this.sightRangeX = range;
+    this.sightRangeY = range;
 };
 
 BotPlayer.prototype.update = function() { // Overrides the update function from player tracker
