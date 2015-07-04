@@ -1,5 +1,5 @@
 # Ogar
-A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client (as of 6/26/15).
+A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client (as of 7/4/15).
 
 ## Obtaining and Using
 If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. The rest of this section is for non Windows users.
@@ -33,7 +33,7 @@ Id   | Name
 2    | Experimental (As of 6/13/15)
 10   | Tournament
 11   | Hunger Games
-12   | Zombie Mode
+13   | Zombie Mode
 20   | Rainbow FFA - Hint: Use with "setAcid(true)"
 
 ## Console Commands
