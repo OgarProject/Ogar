@@ -261,7 +261,7 @@ Commands.list = {
                 }
                 nick = (nick == "") ? "An unnamed cell" : nick;
                 data = fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(""+id+" | "+ip+" | "+data);
+                console.log(" " + id + " | " + ip + " | " + data);
             } else if (client.cells.length > 0) {
                 nick = fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', gameServer.config.playerMaxNickLength);
                 cells = fillChar(client.cells.length, ' ', 5, true);
@@ -271,7 +271,7 @@ Commands.list = {
             } else { 
                 // No cells = dead player or in-menu
                 data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(""+id+" | "+ip+" | "+data);
+                console.log(" " + id + " | " + ip + " | " + data);
             }
         }
     },

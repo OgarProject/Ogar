@@ -306,6 +306,8 @@ TeamZ.prototype.onServerInit = function (gameServer) {
     GS_getCellsInRange = GameServer.prototype.getCellsInRange;
     GS_splitCells = GameServer.prototype.splitCells;
     GS_newCellVirused = GameServer.prototype.newCellVirused;
+    
+    //OVERWRITE GLOBAL FUNCTIONs to adapt Zombie Team mode
 
     // Change to AGARIO colorful scheme 
     GameServer.prototype.getRandomColor = function () {
@@ -376,6 +378,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             
             // Add to list of cells nearby
             virus = check;
+            break; // stop checking when a virus found
         }
         return virus;
     };
@@ -570,7 +573,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         
         // boost speed if zombie eats brain
         if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
-            this.gameMode.boostSpeedCell(split);
+            this.gameMode.boostSpeedCell(newCell);
         }
         // gain effect if human eat hero
         else if (this.gameMode.hasEatenHero(client)) {
@@ -635,10 +638,53 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         else
             consumer.calcMergeTime(gameServer.config.playerRecombineTime);
     };
+
+    // Handle "gamemode" command:
+    for (var i = 0; i < gameServer.clients.length; i++) {
+        var client = gameServer.clients[i].playerTracker;
+        if (!client)
+            continue;
+
+        if (client.cells.length > 0) {
+            client.eatenBrainTimer = 0;
+            client.eatenHeroTimer = 0;
+            client.crazyTimer = 0;
+            client.color = this.defaultColor;
+            client.team = 1;
+            for (var j = 0; j < client.cells.length; j++) {
+                var cell = client.cells[j];
+                cell.setColor(this.defaultColor);
+            }
+            this.humans.push(client);
+        }
+    }
 };
 
 TeamZ.prototype.onChange = function (gameServer) {
     // Called when someone changes the gamemode via console commands
+    // remove Brain and Hero
+    for (var i = 0; this.brains.length; i++) {
+        var node = this.brains[i];
+        gameServer.removeNode(node);
+    }
+    for (var i = 0; this.heroes.length; i++) {
+        var node = this.heroes[i];
+        gameServer.removeNode(node);
+    }
+    
+    // discard all boost:
+    for (var i = 0; i < this.humans.length; i++) {
+        var client = this.humans[i];
+        if (this.isCrazy(client)) {
+            this.resetSpeed(client);
+        }
+    }
+    for (var i = 0; i < this.zombies.length; i++) {
+        var client = this.zombies[i];
+        if (this.hasEatenBrain(client)) {
+            this.resetSpeed(client);
+        }
+    }
 
     // revert to default:
     GameServer.prototype.getRandomColor = GS_getRandomColor;

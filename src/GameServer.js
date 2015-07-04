@@ -809,6 +809,7 @@ GameServer.prototype.getNearestVirus = function(cell) {
 
         // Add to list of cells nearby
         virus = check;
+        break; // stop checking when a virus found
     }
     return virus;
 };
