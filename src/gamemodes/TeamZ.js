@@ -102,7 +102,7 @@ TeamZ.prototype.updateZColor = function (client, mask) {
 };
 
 TeamZ.prototype.isCrazy = function (client) {
-    return (typeof(client.crazyTimer) != 'undefined' && client.crazyTimer > 0);
+    return (typeof(client.crazyTimer) != 'undefined' && client.crazyTimer > 0 && client.team > 0);
 };
 
 TeamZ.prototype.hasEatenHero = function (client) {
@@ -185,16 +185,54 @@ TeamZ.prototype.turnToZombie = function (client) {
     this.zombies.push(client);
 };
 
+TeamZ.prototype.boostSpeedCell = function (cell) {
+    if (typeof cell.originalSpeed == 'undefined' || cell.originalSpeed == null) {
+        cell.originalSpeed = cell.getSpeed;
+        cell.getSpeed = function () {
+            return 2 * this.originalSpeed();
+        };
+    }
+};
+
+TeamZ.prototype.boostSpeed = function (client) {
+    for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
+        if (typeof cell == 'undefined')
+            continue;
+        this.boostSpeedCell(cell);
+    }
+};
+
+TeamZ.prototype.resetSpeedCell = function (cell) {
+    if (typeof cell.originalSpeed != 'undefined' && cell.originalSpeed != null) {
+        cell.getSpeed = cell.originalSpeed;
+        cell.originalSpeed = null;
+    }
+};
+
+TeamZ.prototype.resetSpeed = function (client) {
+    for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
+        if (typeof cell == 'undefined')
+            continue;
+        this.resetSpeedCell(cell);
+    }
+};
+
 TeamZ.prototype.startGame = function (gameServer) {
     for (var i = 0; i < this.humans.length; i++) {
         var client = this.humans[i];
         client.team = client.pID;
+        client.crazyTimer = 0;
+        client.eatenHeroTimer = 0;
+        client.eatenBrainTimer = 0;
         client.color = gameServer.getRandomColor();
         for (var j = 0; j < client.cells.length; j++) {
             var cell = client.cells[j];
             if (cell) {
                 cell.setColor(client.color);
                 cell.mass = gameServer.config.playerStartMass;
+                this.resetSpeedCell(cell);
             }
         }
     }
@@ -322,7 +360,8 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         if (virus != null)
             return virus;
 
-        // Loop through all viruses
+        // Call base:
+        // Loop through all viruses on the map. There is probably a more efficient way of doing this but whatever
         var len = this.nodesVirus.length;
         for (var i = 0; i < len; i++) {
             var check = this.nodesVirus[i];
@@ -337,9 +376,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             
             // Add to list of cells nearby
             virus = check;
-            break;
         }
-
         return virus;
     };
     
@@ -501,11 +538,8 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             split.calcMergeTime(this.config.playerRecombineTime);
             
             // boost speed if zombie eats brain
-            if (this.gameMode.hasEatenBrain(client)) {
-                split.originalSpeed = split.getSpeed;
-                split.getSpeed = function () {
-                    return 2 * this.originalSpeed();
-                };
+            if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
+                this.gameMode.boostSpeedCell(split);
             }
             // gain effect if human eat hero
             else if (this.gameMode.hasEatenHero(client)) {
@@ -535,11 +569,8 @@ TeamZ.prototype.onServerInit = function (gameServer) {
         newCell.ignoreCollision = true;  // Turn off collision
         
         // boost speed if zombie eats brain
-        if (this.gameMode.hasEatenBrain(client)) {
-            newCell.originalSpeed = newCell.getSpeed;
-            newCell.getSpeed = function () {
-                return 2 * this.originalSpeed();
-            };
+        if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
+            this.gameMode.boostSpeedCell(split);
         }
         // gain effect if human eat hero
         else if (this.gameMode.hasEatenHero(client)) {
@@ -555,15 +586,10 @@ TeamZ.prototype.onServerInit = function (gameServer) {
     Virus.prototype.onConsume = function (consumer, gameServer) {
         var client = consumer.owner;
         
-        // DEBUG
-        if ((!client.socket._socket) && (gameServer.config.serverBotsIgnoreViruses) && (this.moveEngineTicks <= 0)) {
-            return;
-        }
-        
         var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
         var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
         numSplits = Math.min(numSplits, maxSplits);
-        var splitMass = Math.min(consumer.mass / (numSplits + 1), 32); // Maximum size of new splits
+        var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
         
         // Cell consumes mass before splitting
         consumer.addMass(this.mass);
@@ -573,7 +599,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             return;
         }
         
-        // Big cells will split into cells larger than 32 mass (1/4 of their mass)
+        // Big cells will split into cells larger than 36 mass (1/4 of their mass)
         var bigSplits = 0;
         var endMass = consumer.mass - (numSplits * splitMass);
         if ((endMass > 300) && (numSplits > 0)) {
@@ -581,6 +607,10 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             numSplits--;
         }
         if ((endMass > 1200) && (numSplits > 0)) {
+            bigSplits++;
+            numSplits--;
+        }
+        if ((endMass > 3000) && (numSplits > 0)) {
             bigSplits++;
             numSplits--;
         }
@@ -599,8 +629,7 @@ TeamZ.prototype.onServerInit = function (gameServer) {
             gameServer.newCellVirused(client, consumer, angle, splitMass, 20);
             consumer.mass -= splitMass;
         }
-        
-        // Prevent consumer cell from merging with other cells
+
         if (gameServer.gameMode.hasEatenHero(client))
             consumer.recombineTicks = 0;
         else
@@ -681,13 +710,7 @@ TeamZ.prototype.onTick = function (gameServer) {
             }
             else {
                 // reset speed:
-                for (var j = 0; j < client.cells.length; j++) {
-                    var cell = client.cells[j];
-                    if (cell.originalSpeed != undefined && cell.originalSpeed != null) {
-                        cell.getSpeed = cell.originalSpeed;
-                        cell.originalSpeed = null;
-                    }
-                }
+                this.resetSpeed(client);
             }
         }
 
@@ -702,10 +725,7 @@ TeamZ.prototype.onTick = function (gameServer) {
                 for (var j = 0; j < client.cells.length; j++) {
                     var cell = client.cells[j];
                     // reset speed:
-                    if (cell.originalSpeed != undefined && cell.originalSpeed != null) {
-                        cell.getSpeed = cell.originalSpeed;
-                        cell.originalSpeed = null;
-                    }
+                    this.resetSpeedCell(cell);
                     
                     // reset color:
                     if (client.cured == true)
@@ -867,18 +887,7 @@ TeamZ.prototype.onCellMove = function (x1, y1, cell) {
                 if (crazyClient != null && !this.isCrazy(crazyClient)) {
                     crazyClient.crazyTimer = this.crazyDuration;
                     crazyClient.colorToggle = 0;
-                    // boost speed:
-                    for (var j = 0; j < crazyClient.cells.length; j++) {
-                        var cellj = client.cells[j];
-                        if (typeof (cellj) == 'undefined')
-                            continue;
-                        if (cellj.originalSpeed == undefined || cellj.originalSpeed == null) {
-                            cellj.originalSpeed = cellj.getSpeed;
-                            cellj.getSpeed = function () {
-                                return 2 * this.originalSpeed();
-                            };
-                        }
-                    }
+                    this.boostSpeed(crazyClient);
                 }
 
                 // The moving cell pushes the colliding cell
@@ -915,12 +924,14 @@ TeamZ.prototype.updateLB = function (gameServer) {
             break;
         case GameState.WF_START:
             lb.push('GAME STARTS IN:');
-            var secs = (this.gameTimer / 20) >> 0;
-            lb.push(((secs / 60) >> 0) + ':' + (secs % 60));
+            var min = (this.gameTimer / 20 / 60) >> 0;
+            var sec = ((this.gameTimer / 20) >> 0) % 60;
+            lb.push((min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec);
             break;
         case GameState.IN_PROGRESS:
-            var secs = (this.gameTimer / 20) >> 0;
-            lb.push(((secs / 60) >> 0) + ':' + (secs % 60));
+            var min = (this.gameTimer / 20 / 60) >> 0;
+            var sec = ((this.gameTimer / 20) >> 0) % 60;
+            lb.push((min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec);
             lb.push('HUMAN: ' + this.humans.length);
             lb.push('ZOMBIE: ' + this.zombies.length);
             lb.push('_______________');
@@ -974,7 +985,7 @@ function Hero() {
     this.cellType = CellType.HERO;
     //this.spiked = 1;
     this.color = { r: 255, g: 255, b: 7 };
-    this.mass = 20;
+    this.mass = 60;
 }
 
 Hero.prototype = new Cell();
@@ -1042,7 +1053,7 @@ function Brain() {
     this.cellType = CellType.BRAIN;
     //this.spiked = 1;
     this.color = { r: 255, g: 7, b: 255 };
-    this.mass = 20;
+    this.mass = 60;
 }
 
 Brain.prototype = new Cell();
@@ -1087,13 +1098,5 @@ Brain.prototype.onConsume = function (consumer, gameServer) {
     client.eatenBrainTimer = gameServer.gameMode.brainEffectDuration;
     
     // Boost speed
-    for (var i = 0; i < client.cells.length; i++) {
-        var cell = client.cells[i];
-        if (cell.originalSpeed == undefined || cell.originalSpeed == null) {
-            cell.originalSpeed = cell.getSpeed;
-            cell.getSpeed = function () {
-                return 2 * this.originalSpeed();
-            };
-        }
-    }
+    gameServer.gameMode.boostSpeed(client);
 };
