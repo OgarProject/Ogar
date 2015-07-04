@@ -60,9 +60,7 @@ Tournament.prototype.getSpectate = function() {
     this.rankOne = this.contenders[index];
 };
 
-// Override
-
-Tournament.prototype.onServerInit = function(gameServer) {
+Tournament.prototype.prepare = function(gameServer) {
     // Remove all cells
     var len = gameServer.nodes.length;
     for (var i = 0; i < len; i++) {
@@ -95,6 +93,12 @@ Tournament.prototype.onServerInit = function(gameServer) {
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;
     this.maxContenders = gameServer.config.tourneyMaxPlayers;
+};
+
+// Override
+
+Tournament.prototype.onServerInit = function(gameServer) {
+    this.prepare(gameServer);
 };
 
 Tournament.prototype.onPlayerSpawn = function(gameServer,player) {
@@ -184,6 +188,8 @@ Tournament.prototype.updateLB = function(gameServer) {
                 // Respawn starting food
                 gameServer.startingFood();
             } else {
+                lb[3] = "Game restarting in";
+                lb[4] = this.timer.toString();
                 this.timer--;
             }
             break;

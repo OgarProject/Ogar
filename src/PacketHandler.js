@@ -37,6 +37,11 @@ PacketHandler.prototype.handleMessage = function(message) {
 
     switch (packetId) {
         case 0:
+            // Check for invalid packets
+            if ((view.byteLength + 1) % 2 == 1) {
+                break;
+            }
+
             // Set Nickname
             var nick = "";
             var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
@@ -84,10 +89,12 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 255:
             // Connection Start 
-            this.protocol = view.getUint32(1, true);
-            // Send SetBorder packet first
-            var c = this.gameServer.config;
-            this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+            if (view.byteLength == 5) {
+                this.protocol = view.getUint32(1, true);
+                // Send SetBorder packet first
+                var c = this.gameServer.config;
+                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+            }
             break;
         default:
             break;

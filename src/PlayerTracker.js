@@ -3,6 +3,7 @@ var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
+    this.disconnect = -1; // Disconnection
     this.name = "";
     this.gameServer = gameServer;
     this.socket = socket;
@@ -21,14 +22,16 @@ function PlayerTracker(gameServer, socket) {
     this.spectatedPlayer = -1; // Current player that this player is watching
 
     // Viewing box
-    this.sightRange = 0;
+    this.sightRangeX = 0;
+    this.sightRangeY = 0;
     this.centerPos = {x: 3000, y: 3000 };
     this.viewBox = {
         topY: 0,
         bottomY: 0,
         leftX: 0,
         rightX: 0,
-        width: 0 // Half-width
+        width: 0, // Half-width
+        height: 0 // Half-height
     };
 
     // Gamemode function
@@ -162,6 +165,31 @@ PlayerTracker.prototype.update = function() {
     } else {
         this.tickLeaderboard--;
     }
+
+    // Handles disconnections
+    if (this.disconnect > -1) {
+        // Player has disconnected... remove it when the timer hits -1
+        this.disconnect--;
+        if (this.disconnect == -1) {
+            // Remove all client cells
+            var len = this.cells.length;
+            for (var i = 0; i < len; i++) {
+                var cell = this.socket.playerTracker.cells[0];
+
+                if (!cell) {
+                    continue;
+                }
+
+                this.gameServer.removeNode(cell);
+            }
+
+            // Remove from client list
+            var index = this.gameServer.clients.indexOf(this.socket);
+            if (index != -1) {
+                this.gameServer.clients.splice(index,1);
+            }
+        }
+    }
 };
 
 // Viewing box
@@ -177,14 +205,17 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
 
         totalSize += this.cells[i].getSize();
     }
-    this.sightRange = this.gameServer.config.serverViewBase / Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
+	
+    var factor = Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
+    this.sightRangeX = this.gameServer.config.serverViewBaseX / factor;
+    this.sightRangeY = this.gameServer.config.serverViewBaseY / factor;
 };
 
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
     var len = this.cells.length;
 
     if (len <= 0) {
-        return; // End the function if no cells exsist
+        return; // End the function if no cells exist
     }
 
     var X = 0;
@@ -213,11 +244,12 @@ PlayerTracker.prototype.calcViewBox = function() {
     this.updateCenter();
 
     // Box
-    this.viewBox.topY = this.centerPos.y - this.sightRange;
-    this.viewBox.bottomY = this.centerPos.y + this.sightRange;
-    this.viewBox.leftX = this.centerPos.x - this.sightRange;
-    this.viewBox.rightX = this.centerPos.x + this.sightRange;
-    this.viewBox.width = this.sightRange;
+    this.viewBox.topY = this.centerPos.y - this.sightRangeY;
+    this.viewBox.bottomY = this.centerPos.y + this.sightRangeY;
+    this.viewBox.leftX = this.centerPos.x - this.sightRangeX;
+    this.viewBox.rightX = this.centerPos.x + this.sightRangeX;
+    this.viewBox.width = this.sightRangeX;
+    this.viewBox.height = this.sightRangeY;
 
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length ;i++) {

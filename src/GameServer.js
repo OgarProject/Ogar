@@ -1,5 +1,6 @@
 // Library imports
 var WebSocket = require('ws');
+var http = require('http');
 var fs = require("fs");
 var ini = require('./modules/ini.js');
 
@@ -9,7 +10,8 @@ var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
-var BotLoader = require('./ai/BotLoader.js');
+var BotLoader = require('./ai/BotLoader');
+var Logger = require('./modules/log');
 
 // GameServer implementation
 function GameServer() {
@@ -29,11 +31,12 @@ function GameServer() {
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
     this.bots = new BotLoader(this);
+    this.log = new Logger();
     this.commands; // Command handler
-    this.banned = []; // List of banned IPs
 
     // Main loop tick
-    this.time = new Date();
+    this.time = +new Date;
+    this.startTime = this.time;
     this.tick = 0; // 1 second ticks of mainLoop
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
     this.tickSpawn = 0; // Used with spawning food
@@ -44,8 +47,11 @@ function GameServer() {
         serverPort: 443, // Server port
         serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0, // Amount of player bots to spawn
-        serverBotsIgnoreViruses: false,
-        serverViewBase: 1024, // Base view distance of players. Warning: high values may cause lag
+        serverViewBaseX: 1024, // Base view distance of players. Warning: high values may cause lag
+        serverViewBaseY: 592,
+        serverStatsPort: 88, // Port for stats server. Having a negative number will disable the stats server.
+        serverStatsUpdate: 60, // Amount of seconds per update for the server stats
+        serverLogLevel: 1, // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 11180.3398875)
         borderTop: 0, // Top border of map (Vanilla value: 0)
@@ -105,6 +111,9 @@ function GameServer() {
 module.exports = GameServer;
 
 GameServer.prototype.start = function() {
+    // Logging
+    this.log.setup(this);
+
     // Gamemode configurations
     this.gameMode.onServerInit(this);
 
@@ -117,8 +126,8 @@ GameServer.prototype.start = function() {
         setInterval(this.mainLoop.bind(this), 1);
 
         // Done
-        console.log("[Game] Listening on port %d", this.config.serverPort);
-        console.log("[Game] Current game mode is "+this.gameMode.name);
+        console.log("[Game] Listening on port " + this.config.serverPort);
+        console.log("[Game] Current game mode is " + this.gameMode.name);
 
         // Player bots (Experimental)
         if (this.config.serverBots > 0) {
@@ -127,6 +136,7 @@ GameServer.prototype.start = function() {
             }
             console.log("[Game] Loaded "+this.config.serverBots+" player bots");
         }
+
     }.bind(this));
 
     this.socketServer.on('connection', connectionEstablished.bind(this));
@@ -148,17 +158,14 @@ GameServer.prototype.start = function() {
     });
 
     function connectionEstablished(ws) {
-        if (this.clients.length > this.config.serverMaxConnections) { // Server full
-            ws.close();
-            console.log("[Game] Client tried to connect, but server player limit has been reached!");
-            return;
-        } else if (this.banned.indexOf(ws._socket.remoteAddress) != -1) { // Banned
+        if (this.clients.length >= this.config.serverMaxConnections) { // Server full
             ws.close();
             return;
         }
 
         function close(error) {
-            //console.log("[Game] Disconnect: "+error);
+            // Log disconnections
+            this.server.log.onDisconnect(this.socket.remoteAddress);
 
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
@@ -169,20 +176,22 @@ GameServer.prototype.start = function() {
                     continue;
                 }
 
-                cell.disconnect = this.server.config.playerDisconnectTime;
                 cell.calcMove = function() {return;}; // Clear function so that the cell cant move
                 //this.server.removeNode(cell);
             }
 
-            var index = this.server.clients.indexOf(this.socket);
-            if (index != -1) {
-                this.server.clients.splice(index, 1);
-            }
+            client.disconnect = this.server.config.playerDisconnectTime * 20;
+            this.socket.sendPacket = function() {return;}; // Clear function so no packets are sent
         }
 
-        // console.log("[Game] Connect: %s:%d", ws._socket.remoteAddress, ws._socket.remotePort);
         ws.remoteAddress = ws._socket.remoteAddress;
         ws.remotePort = ws._socket.remotePort;
+        this.log.onConnect(ws.remoteAddress); // Log connections
+
+        // For memory leak detection
+        ws.lastbuffer = 0; 
+        ws.lastbufferCount = 0;
+
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
@@ -192,6 +201,8 @@ GameServer.prototype.start = function() {
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
     }
+
+    this.startStatsServer(this.config.serverStatsPort);
 };
 
 GameServer.prototype.getMode = function() {
@@ -219,6 +230,38 @@ GameServer.prototype.getRandomPosition = function() {
         x: Math.floor(Math.random() * (this.config.borderRight - this.config.borderLeft)) + this.config.borderLeft,
         y: Math.floor(Math.random() * (this.config.borderBottom - this.config.borderTop)) + this.config.borderTop
     };
+};
+
+GameServer.prototype.getRandomSpawn = function() {
+    // Random spawns for players
+    var pos;
+
+    if (this.currentFood > 0) {
+        // Spawn from food
+        var node;
+        for (var i = (this.nodes.length - 1); i > -1; i--) {
+            // Find random food
+            node = this.nodes[i];
+
+            if (!node || node.inRange) {
+                // Skip if food is about to be eaten/undefined
+                continue;
+            }
+
+            if (node.getType() == 1) {
+                pos = {x: node.position.x,y: node.position.y};
+                this.removeNode(node);
+                break;
+            }
+        }
+    }
+
+    if (!pos) {
+        // Get random spawn if no food cell is found
+        pos = this.getRandomPosition();
+    }
+
+    return pos;
 };
 
 GameServer.prototype.getRandomColor = function() {
@@ -387,7 +430,7 @@ GameServer.prototype.spawnFood = function() {
 
 GameServer.prototype.spawnPlayer = function(player,pos,mass) {
 	if (pos == null) { // Get random pos
-		pos = this.getRandomPosition();
+		pos = this.getRandomSpawn();
 	}
 	if (mass == null) { // Get starting mass
 		mass = this.config.playerStartMass;
@@ -457,7 +500,7 @@ GameServer.prototype.updateMoveEngine = function() {
         var cell = this.nodesPlayer[i];
 
         // Do not move cells that have already been eaten or have collision turned off
-        if ((!cell) || (cell.ignoreCollision)){
+        if (!cell){
             continue;
         }
 
@@ -616,9 +659,9 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
     // Create cell
     newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(speed, 10);
+    newCell.setMoveEngineData(speed, 15);
     newCell.calcMergeTime(this.config.playerRecombineTime);
-    newCell.ignoreCollision = true;  // Turn off collision
+    newCell.ignoreCollision = true; // Remove collision checks
 
     // Add to moving cells list
     this.addNode(newCell);
@@ -771,6 +814,11 @@ GameServer.prototype.getNearestVirus = function(cell) {
 };
 
 GameServer.prototype.updateCells = function() {
+    if (!this.run) {
+        // Server is paused
+        return;
+    }
+
     // Loop through all player cells
     var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
@@ -779,15 +827,8 @@ GameServer.prototype.updateCells = function() {
         if (!cell) {
             continue;
         }
-
-        if (cell.disconnect > -1) {
-            // Player has disconnected... remove it when the timer hits -1
-            cell.disconnect--;
-            if (cell.disconnect == -1) {
-                this.removeNode(cell);
-                continue;
-            }
-        } else if (cell.recombineTicks > 0) {
+        
+        if (cell.recombineTicks > 0) {
             // Recombining
             cell.recombineTicks--;
         }
@@ -854,10 +895,65 @@ GameServer.prototype.switchSpectator = function(player) {
     }
 };
 
+// Stats server
+
+GameServer.prototype.startStatsServer = function(port) {
+    // Do not start the server if the port is negative
+    if (port < 1) {
+        return;
+    }
+
+    // Create stats
+    this.stats = "Test";
+    this.getStats();
+
+    // Show stats
+    this.httpServer = http.createServer(function(req, res) {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.writeHead(200);
+        res.end(this.stats);
+    }.bind(this));
+
+    this.httpServer.listen(port, function() {
+        // Stats server
+        console.log("[Game] Loaded stats server on port " + port);
+        setInterval(this.getStats.bind(this), this.config.serverStatsUpdate * 1000);
+    }.bind(this));
+}
+
+GameServer.prototype.getStats = function() {
+    var s = {
+        'current_players': this.clients.length,
+        'max_players': this.config.serverMaxConnections,
+        'gamemode': this.gameMode.name,
+        'start_time': this.startTime
+    };
+    this.stats = JSON.stringify(s);
+};
+
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    // Send only if the buffer is empty
-    if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
+    // Buffer memory leak detection
+    if (this._socket.bufferSize > this.lastbuffer) {
+        // Buffer size increased from last time
+        if (this.lastbufferCount < 4) {
+            // Buffer increased size 
+            this.lastbuffer = this._socket.bufferSize;
+            this.lastbufferCount++;
+        } else {
+            // Prievous buffer was not cleared... probably a memory leak
+            this.emit('close');
+            this.removeAllListeners();
+            return;
+        }
+    } else {
+        // Reset
+        this.lastbuffer = 0;
+        this.lastbufferCount = 0;
+    }
+    
+    //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
+    if (this.readyState == WebSocket.OPEN && packet.build) {
         try {
             this.send(packet.build(), {binary: true});
         } catch (e) {
@@ -866,9 +962,9 @@ WebSocket.prototype.sendPacket = function(packet) {
             this.emit('close');
             this.removeAllListeners();
         }
+    } else if (!packet.build) {
+        // Do nothing
     } else {
-        //console.log("[Warning] There was an error sending the packet!");
-        // Remove socket
         this.emit('close');
         this.removeAllListeners();
     }
