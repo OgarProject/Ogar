@@ -6,6 +6,7 @@ var VirusFeed = Virus.prototype.feed;
 
 var GS_getRandomColor = null; // backup getRandomColor function of current gameServer
 var GS_getRandomSpawn = null;
+var GS_getCellsInRange = null;
 
 function TeamX() {
     Teams.apply(this, Array.prototype.slice.call(arguments));
@@ -14,7 +15,8 @@ function TeamX() {
     this.name = 'Experimental Team';
 
     // configurations:
-    this.colorFuzziness = 64;
+    this.teamCollision = false; // set to true to disable eating teammates
+    this.colorFuzziness = 72;
     this.motherCellMass = 200;
     this.motherUpdateInterval = 5; // How many ticks it takes to update the mother cell (1 tick = 50 ms)
     this.motherSpawnInterval = 100; // How many ticks it takes to spawn another mother cell - Currently 5 seconds
@@ -141,6 +143,12 @@ TeamX.prototype.onServerInit = function (gameServer) {
         }
     };
     
+    if (!this.teamCollision) {
+        this.onCellMove = function (x1, y1, cell) { }; // does nothing
+        if (GS_getCellsInRange == null)
+            GS_getCellsInRange = gameServer.getCellsInRange;
+    }
+    
     if (GS_getRandomColor == null)
         GS_getRandomColor = gameServer.getRandomColor; // backup
     if (GS_getRandomSpawn == null)
@@ -157,6 +165,105 @@ TeamX.prototype.onServerInit = function (gameServer) {
             g: colorRGB[2]
         };
     };
+    gameServer.getCellsInRange = function (cell) {
+        var list = new Array();
+        var r = cell.getSize(); // Get cell radius (Cell size = radius)
+        
+        var topY = cell.position.y - r;
+        var bottomY = cell.position.y + r;
+        
+        var leftX = cell.position.x - r;
+        var rightX = cell.position.x + r;
+        
+        // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
+        var len = cell.owner.visibleNodes.length;
+        for (var i = 0; i < len; i++) {
+            var check = cell.owner.visibleNodes[i];
+            
+            if (typeof check === 'undefined') {
+                continue;
+            }
+            
+            // if something already collided with this cell, don't check for other collisions
+            if (check.inRange) {
+                continue;
+            }
+            
+            // Can't eat itself
+            if (cell.nodeId == check.nodeId) {
+                continue;
+            }
+            
+            // Can't eat cells that have collision turned off
+            if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
+                continue;
+            }
+            
+            // AABB Collision
+            if (!check.collisionCheck(bottomY, topY, rightX, leftX)) {
+                continue;
+            }
+            
+            // Cell type check - Cell must be bigger than this number times the mass of the cell being eaten
+            var multiplier = 1.25;
+            
+            switch (check.getType()) {
+                case 1:// Food cell
+                    list.push(check);
+                    check.inRange = true; // skip future collision checks for this food
+                    continue;
+                case 2:// Virus
+                    multiplier = 1.33;
+                    break;
+                case 0:// Players
+                    // Can't eat self if it's not time to recombine yet
+                    if (check.owner == cell.owner) {
+                        if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
+                            continue;
+                        }
+                        
+                        multiplier = 1.00;
+                    }
+                    
+                    // Can't eat team members
+                    if (this.gameMode.haveTeams) {
+                        if (!check.owner) { // Error check
+                            continue;
+                        }
+                        
+                        if ((check.owner != cell.owner) && (check.owner.getTeam() == cell.owner.getTeam()) && check.owner.cells.length == 1) {
+                            continue;
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+            
+            // Make sure the cell is big enough to be eaten.
+            if ((check.mass * multiplier) > cell.mass) {
+                continue;
+            }
+            
+            // Eating range
+            var xs = Math.pow(check.position.x - cell.position.x, 2);
+            var ys = Math.pow(check.position.y - cell.position.y, 2);
+            var dist = Math.sqrt(xs + ys);
+            
+            var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 40% of the radius of the cell being eaten
+            if (dist > eatingRange) {
+                // Not in eating range
+                continue;
+            }
+            
+            // Add to list of cells nearby
+            list.push(check);
+            
+            // Something is about to eat this cell; no need to check for other collisions with it
+            check.inRange = true;
+        }
+        return list;
+    };
 };
 
 TeamX.prototype.onChange = function (gameServer) {
@@ -170,6 +277,10 @@ TeamX.prototype.onChange = function (gameServer) {
     gameServer.getRandomSpawn = GS_getRandomSpawn;
     GS_getRandomColor = null;
     GS_getRandomSpawn = null;
+    if (GS_getCellsInRange != null) {
+        gameServer.getCellsInRange = GS_getCellsInRange;
+        GS_getCellsInRange = null;
+    }
 };
 
 TeamX.prototype.onTick = function (gameServer) {
@@ -190,7 +301,8 @@ TeamX.prototype.onTick = function (gameServer) {
     }
 };
 
-// New cell type (copied from Experimental mode)
+// -------------------------------------------------------------------------------------------
+// New cell type (exactly copied from Experimental mode)
 
 function MotherCell() { // Temporary - Will be in its own file if Zeach decides to add this to vanilla
     Cell.apply(this, Array.prototype.slice.call(arguments));
