@@ -16,6 +16,7 @@ function HungerGames() {
         {x: 1600,y: 6200},{x: 3200,y: 6200},{x: 4800,y: 6200}  // Bottom
     ];
     this.contenderSpawnPoints;
+    this.borderDec = 100; // Border shrinks by this size everytime someone dies
 }
 
 module.exports = HungerGames;
@@ -46,6 +47,39 @@ HungerGames.prototype.spawnFood = function(gameServer,mass,pos) {
 HungerGames.prototype.spawnVirus = function(gameServer,pos) {
     var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass);
     gameServer.addNode(v);
+};
+
+HungerGames.prototype.onPlayerDeath = function(gameServer) {
+    var config = gameServer.config;
+    config.borderLeft += this.borderDec;
+    config.borderRight -= this.borderDec;
+    config.borderTop += this.borderDec;
+    config.borderBottom -= this.borderDec;
+
+    // Remove all cells
+    var len = gameServer.nodes.length;
+    for (var i = 0; i < len; i++) {
+        var node = gameServer.nodes[i];
+
+        if ((!node) || (node.getType() == 0)) {
+            continue;
+        }
+
+        // Move
+        if (node.position.x < config.borderLeft) {
+            gameServer.removeNode(node);
+            i--;
+        } else if (node.position.x > config.borderRight) {
+            gameServer.removeNode(node);
+            i--;
+        } else if (node.position.y < config.borderTop) {
+            gameServer.removeNode(node);
+            i--;
+        } else if (node.position.y > config.borderBottom) {
+            gameServer.removeNode(node);
+            i--;
+        }
+    }
 };
 
 // Override
