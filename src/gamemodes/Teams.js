@@ -53,6 +53,18 @@ Teams.prototype.onServerInit = function(gameServer) {
     for (var i = 0; i < this.teamAmount; i++) {
         this.nodes[i] = [];
     }
+
+    // migrate current players to team mode
+    for (var i = 0; i < gameServer.clients.length; i++) {
+        var client = gameServer.clients[i].playerTracker;
+        this.onPlayerInit(client);
+        client.color = this.getTeamColor(client.team);
+        for (var j = 0; j < client.cells.length; j++) {
+            var cell = client.cells[j];
+            cell.setColor(client.color);
+            this.nodes[client.team].push(cell);
+        }
+    }
 };
 
 Teams.prototype.onPlayerInit = function(player) {

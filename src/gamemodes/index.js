@@ -8,7 +8,8 @@ module.exports = {
 	Rainbow: require('./Rainbow'),
     Debug: require('./Debug'),
     Zombie: require('./Zombie'),
-    TeamZ: require('./TeamZ.js')
+    TeamZ: require('./TeamZ.js'),
+    TeamX: require('./TeamX.js')
 };
 
 var get = function(id) {
@@ -31,6 +32,9 @@ var get = function(id) {
             break;
         case 13: // Zombie Team
             mode = new module.exports.TeamZ();
+            break;
+        case 14: // Experimental Team
+            mode = new module.exports.TeamX();
             break;
         case 20: // Rainbow
             mode = new module.exports.Rainbow();
