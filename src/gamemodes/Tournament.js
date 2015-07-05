@@ -21,6 +21,7 @@ function Tournament() {
 
     this.winner;
     this.timer;
+    this.timeLimit = 3600; // in seconds
 }
 
 module.exports = Tournament;
@@ -93,7 +94,25 @@ Tournament.prototype.prepare = function(gameServer) {
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;
     this.maxContenders = gameServer.config.tourneyMaxPlayers;
+
+    // Time limit
+    this.timeLimit = gameServer.config.tourneyTimeLimit * 60; // in seconds
 };
+
+Tournament.prototype.onPlayerDeath = function(gameServer) {
+    // Nothing
+}
+
+Tournament.prototype.formatTime = function(time) {
+    if (time < 0) {
+        return "Restarting...";
+    }
+    // Format
+    var min = Math.floor(this.timeLimit/60);
+    var sec = this.timeLimit%60;
+    sec = (sec > 9) ? sec : "0" + sec.toString() ; 
+    return min+":"+sec;
+}
 
 // Override
 
@@ -143,6 +162,9 @@ Tournament.prototype.onCellRemove = function(cell) {
         // 3) the last-but-one human just died
         if ((this.contenders.length == 1 || humans == 0 || (humans == 1 && human_just_died)) && this.gamePhase == 2) {
             this.endGame(cell.owner.gameServer);
+        } else {
+            // Do stuff
+            this.onPlayerDeath(cell.owner.gameServer);
         }
     }
 };
@@ -177,6 +199,16 @@ Tournament.prototype.updateLB = function(gameServer) {
         case 2:
             lb[0] = "Players Remaining";
             lb[1] = this.contenders.length+"/"+this.maxContenders;
+            lb[2] = "Time Limit:";
+            lb[3] = this.formatTime(this.timeLimit);
+            if (this.timeLimit < 0) {
+                // Reset the game
+                this.onServerInit(gameServer);
+                // Respawn starting food
+                gameServer.startingFood();
+            } else {
+                this.timeLimit--;
+            }
             break;
         case 3:
             lb[0] = "Congratulations";
