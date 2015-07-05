@@ -47,6 +47,12 @@ Tournament.prototype.endGame = function(gameServer) {
     this.timer = this.endTime; // 30 Seconds
 };
 
+Tournament.prototype.endGameTimeout = function(gameServer) {
+    gameServer.run = false;
+    this.gamePhase = 4;
+    this.timer = this.endTime; // 30 Seconds
+};
+
 Tournament.prototype.fillBots = function(gameServer) {
     // Fills the server with bots if there arent enough players
     var fill = this.maxContenders - this.contenders.length;
@@ -105,7 +111,7 @@ Tournament.prototype.onPlayerDeath = function(gameServer) {
 
 Tournament.prototype.formatTime = function(time) {
     if (time < 0) {
-        return "Restarting...";
+        return "0:00";
     }
     // Format
     var min = Math.floor(this.timeLimit/60);
@@ -202,10 +208,8 @@ Tournament.prototype.updateLB = function(gameServer) {
             lb[2] = "Time Limit:";
             lb[3] = this.formatTime(this.timeLimit);
             if (this.timeLimit < 0) {
-                // Reset the game
-                this.onServerInit(gameServer);
-                // Respawn starting food
-                gameServer.startingFood();
+                // Timed out
+                this.endGameTimeout(gameServer);
             } else {
                 this.timeLimit--;
             }
@@ -225,6 +229,19 @@ Tournament.prototype.updateLB = function(gameServer) {
                 this.timer--;
             }
             break;
+        case 4:
+            lb[0] = "Time Limit"; 
+            lb[1] = "Reached!";
+            if (this.timer <= 0) {
+                // Reset the game
+                this.onServerInit(gameServer);
+                // Respawn starting food
+                gameServer.startingFood();
+            } else {
+                lb[2] = "Game restarting in";
+                lb[3] = this.timer.toString();
+                this.timer--;
+            }
         default:
             break;
     }
