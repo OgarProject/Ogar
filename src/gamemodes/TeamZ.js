@@ -56,7 +56,7 @@ function TeamZ() {
     this.spawnHeroTimer = 0;
     this.spawnBrainTimer = 0;
 }
-1
+
 module.exports = TeamZ;
 TeamZ.prototype = new Mode();
 
