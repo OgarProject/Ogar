@@ -132,7 +132,7 @@ PlayerTracker.prototype.update = function() {
         
         this.visibleNodes = newVisible;
         // Reset Ticks
-        this.tickViewBox = 10;
+        this.tickViewBox = 2;
     } else {
         this.tickViewBox--;
         // Add nodes to screen
@@ -161,7 +161,7 @@ PlayerTracker.prototype.update = function() {
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
         this.socket.sendPacket(this.gameServer.lb_packet);
-        this.tickLeaderboard = 20; // 20 ticks = 1 second
+        this.tickLeaderboard = 10; // 20 ticks = 1 second
     } else {
         this.tickLeaderboard--;
     }
@@ -229,8 +229,8 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
         Y += this.cells[i].position.y;
     }
 
-    this.centerPos.x = X / len >> 0;
-    this.centerPos.y = Y / len >> 0;
+    this.centerPos.x = X / len;
+    this.centerPos.y = Y / len;
 };
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -287,7 +287,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
 
         // Get spectated player's location and calculate zoom amount
         var specZoom = Math.sqrt(100 * specPlayer.score);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.75;
+        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
         // TODO: Send packet elsewhere so it is send more often
         this.socket.sendPacket(new Packet.UpdatePosition(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom));
         // TODO: Recalculate visible nodes for spectator to match specZoom
