@@ -48,7 +48,12 @@ Cell.prototype.getSize = function() {
 };
 
 Cell.prototype.addMass = function(n) {
-    this.mass = Math.min(this.mass + n,this.owner.gameServer.config.playerMaxMass);
+    if(this.mass + n > this.owner.gameServer.config.playerMaxMass && this.owner.cells.length < this.owner.gameServer.config.playerMaxCells) {
+        this.mass = (this.mass + n) / 2;
+        this.owner.gameServer.newCellVirused(this.owner, this, 0, this.mass, 150);
+    } else {
+        this.mass = Math.min(this.mass + n,this.owner.gameServer.config.playerMaxMass);
+    }
 };
 
 Cell.prototype.getSpeed = function() {
