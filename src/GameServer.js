@@ -173,7 +173,9 @@ GameServer.prototype.start = function() {
         // AGAINST YOU. THIS SECTION OF CODE WAS ADDED ON JULY 9, 2015 AT THE REQUEST
         // OF THE AGAR.IO DEVELOPERS.
         var origin = ws.upgradeReq.headers.origin;
-        if (origin != 'http://agar.io' && origin != 'https://agar.io' && origin != 'http://localhost' && origin != 'http://127.0.0.1') {
+        if (origin != 'http://agar.io' && origin != 'https://agar.io'
+            && origin != 'http://localhost' && origin != 'https://localhost'
+            && origin != 'http://127.0.0.1' && origin != 'https://127.0.0.1') {
             ws.close();
             return;
         }
