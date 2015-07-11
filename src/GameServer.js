@@ -206,10 +206,6 @@ GameServer.prototype.start = function() {
         ws.remotePort = ws._socket.remotePort;
         this.log.onConnect(ws.remoteAddress); // Log connections
 
-        // For memory leak detection
-        ws.lastbuffer = 0; 
-        ws.lastbufferCount = 0;
-
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
@@ -952,25 +948,6 @@ GameServer.prototype.getStats = function() {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    // Buffer memory leak detection
-    if (this._socket.bufferSize > this.lastbuffer) {
-        // Buffer size increased from last time
-        if (this.lastbufferCount < 1) {
-            // Buffer increased size 
-            this.lastbuffer = this._socket.bufferSize;
-            this.lastbufferCount++;
-        } else {
-            // Prievous buffer was not cleared... probably a memory leak
-            this.emit('close');
-            this.removeAllListeners();
-            return;
-        }
-    } else {
-        // Reset
-        this.lastbuffer = 0;
-        this.lastbufferCount = 0;
-    }
-    
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN && packet.build) {
         try {
@@ -984,6 +961,7 @@ WebSocket.prototype.sendPacket = function(packet) {
     } else if (!packet.build) {
         // Do nothing
     } else {
+    	this.readyState = WebSocket.CLOSED;
         this.emit('close');
         this.removeAllListeners();
     }
