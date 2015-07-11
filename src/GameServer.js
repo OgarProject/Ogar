@@ -948,10 +948,24 @@ GameServer.prototype.getStats = function() {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
+    function getbuf(data) {
+        var array = new Uint8Array(data.buffer || data);
+        var l = data.byteLength || data.length;
+        var o = data.byteOffset || 0;
+        var buffer = new Buffer(l);
+
+        for (var i = 0; i < l; i++) {
+            buffer[i] = array[o + i];
+        }
+
+        return buffer;
+    }
+    
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN && packet.build) {
         try {
-            this.send(packet.build(), {binary: true});
+            var buf = packet.build();
+            this.send(getBuf(buf), {binary: true});
         } catch (e) {
             console.log("[Error] "+e);
             // Remove socket
