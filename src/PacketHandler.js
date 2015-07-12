@@ -65,11 +65,11 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 16:
             // Discard broken packets
-            if (view.byteLength == 21) {
+            if (view.byteLength == 9) {
                 // Mouse Move
                 var client = this.socket.playerTracker;
-                client.mouse.x = view.getFloat64(1, true);
-                client.mouse.y = view.getFloat64(9, true);
+                client.mouse.x = view.getInt16(1, true);
+                client.mouse.y = view.getInt16(3, true);
             }
             break;
         case 17:
