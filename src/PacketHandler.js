@@ -67,7 +67,6 @@ PacketHandler.prototype.handleMessage = function(message) {
             // Set Target
             // Discard broken packets
             var client = this.socket.playerTracker;
-            console.log(view.byteLength);
             if (view.byteLength == 9) {
                 client.mouse.x = view.getInt16(1, true);
                 client.mouse.y = view.getInt16(3, true);
