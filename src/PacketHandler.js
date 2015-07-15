@@ -9,6 +9,7 @@ function PacketHandler(gameServer, socket) {
     this.pressQ = false;
     this.pressW = false;
     this.pressSpace = false;
+    this.multiCells = [];
 }
 
 module.exports = PacketHandler;
@@ -65,14 +66,26 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 16:
             // Set Target
-            // Discard broken packets
+            // Discard broken packets, handle float64s or int16s depending on how Zeach feels at the time
             var client = this.socket.playerTracker;
+            var newX, newY, nodeId;
             if (view.byteLength == 9) {
-                client.mouse.x = view.getInt16(1, true);
-                client.mouse.y = view.getInt16(3, true);
+                newX = view.getInt16(1, true);
+                newY = view.getInt16(3, true);
+                nodeId = view.getUint32(5, true);
             } else if (view.byteLength == 21) {
-                client.mouse.x = view.getFloat64(1, true);
-                client.mouse.y = view.getFloat64(9, true);
+                newX = view.getFloat64(1, true);
+                newY = view.getFloat64(9, true);
+                nodeId = view.getUint32(17, true);
+            } else {
+                break;
+            }
+            if (nodeId == 0) {
+                client.mouseCells = []; // Disable individual cell movement
+                client.mouse.x = newX;
+                client.mouse.y = newY;
+            } else {
+                client.mouseCells[nodeId] = {x: newX, y: newY};
             }
             break;
         case 17:
