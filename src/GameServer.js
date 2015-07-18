@@ -943,8 +943,9 @@ GameServer.prototype.getStats = function() {
             players++
     });
     var s = {
-        'current_players': players,
-        'current_spectators': this.clients.length - players,
+        'current_players': this.clients.length,
+        'alive': players,
+        'spectators': this.clients.length - players,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
         'start_time': this.startTime
