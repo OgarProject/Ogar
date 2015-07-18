@@ -937,8 +937,14 @@ GameServer.prototype.startStatsServer = function(port) {
 }
 
 GameServer.prototype.getStats = function() {
+    var players = 0;
+    this.clients.forEach(function(client) {
+        if (client.playerTracker && client.playerTracker.cells.length > 0)
+            players++
+    });
     var s = {
-        'current_players': this.clients.length,
+        'current_players': players,
+        'current_spectators': this.clients.length - players,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
         'start_time': this.startTime
