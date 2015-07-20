@@ -61,14 +61,20 @@ The current available console commands are listed here. Command names are not ca
    * Replaces the color of the specified player with this color.
  - Exit
    * Closes the server.
+ - Freeze [id]
+   * Freeze a connected client. Note: they can still be consumed when frozen.
  - Food [X position] [Y position] [Mass]
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
    * Changes the gamemode of the server. Warning - This can cause problems.
+ - Kick [id]
+   * Forcefully kick/disconnect the client from the server.
  - Kill [Player ID]
    * Kills all cells belonging to the specified player.
  - Killall
    * Kills all player cells on the map.
+ - Killbot [id]
+   * Kills currently running bot.
  - Mass [Player ID] [Number]
    * Sets the mass of all cells belonging to the specified player to [Number].
  - Name [Player ID] [New Name]
@@ -79,10 +85,14 @@ The current available console commands are listed here. Command names are not ca
    * Pauses/Unpauses the game.
  - Reload
    * Reloads the config file used by the server. However, the following values are not affected: serverPort, serverGamemode, serverBots, serverStatsPort, serverStatsUpdate.
+ - Split [id] [amount]
+   * Split a client by [amount] of times
  - Status
    * Shows the amount of players currently connected, time elapsed, memory usage (memory used/memory allocated), and the current gamemode.
  - Tp [Player ID] [X position] [Y position]
    * Teleports the specified player to the specified coordinates.
+ - Unfreeze [id]
+   * Un-freeze a frozen client.
  - Virus [X position] [Y position] [Mass]
    * Spawns a virus cell at those coordinates. If a mass value is not specified, then the server will default to "virusStartMass" in the config.
 
