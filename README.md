@@ -6,11 +6,18 @@ If you are on Windows, Ogar no longer requires an installation of node.js to run
 
 As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
 
+Manual:
 ```sh
 ~$ git clone git://github.com/forairan/Ogar.git Ogar
 ~$ npm install ./Ogar
 ~$ node Ogar
 ```
+Using the install script:
+```sh
+~$ sudo ogar-linux-script.sh install /your/preferred/directory
+~$ sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js"
+```
+Using ```sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js" ``` to launch the server increases security by running the process as an unprivileged, dedicated user with a limited shell and it is recommended to do so.
 
 Currently, Ogar listens on the following addresses and ports:
 * *:80 - for the master server

@@ -34,7 +34,7 @@ echo "However, you may also download and extract master.tar.gz manually."
 echo "Place it in the same directory as the installer and name the extracted folder Ogar-master."
 echo "----------------------------------------------------------------------------------------------------"
 echo 'IMPORTANT: Use the following command to start the server in interactive mode for improved security:'
-echo 'sudo -u ogar -H sh -c "cd; /bin/node src/index.js"'
+echo 'sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js"'
 if [ ! "$(id -u)" = 0 ]; then
 		echo "This script must be run as root" 1>&2
 		exit 1
