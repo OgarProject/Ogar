@@ -1,9 +1,40 @@
 #!/bin/sh
+
+#Download, extract .tar.gz and clean function
+download_and_extract () { 
+if [ ! -d Ogar-master ]; then
+	if [ ! -f master.tar.gz ]; then
+			echo "No local master.tar.gz found, downloading with curl."
+			curl -O -L https://github.com/forairan/Ogar/archive/master.tar.gz
+	fi
+	if [ ! -f master.tar.gz ]; then
+		echo "curl failed to download master.tar.gz, trying wget."
+		wget https://github.com/forairan/Ogar/archive/master.tar.gz
+			if [ ! -f master.tar.gz ]; then
+					echo "wget failed as well. Aborting!"
+					exit 1
+			fi
+	fi
+	echo "master.tar.gz found!"
+	echo "Extracting master.tar.gz to /tmp."
+	tar -xzf master.tar.gz -C /tmp
+	echo "Removing master.tar.gz."
+	rm master.tar.gz
+	echo "Entering temporary directory."
+	cd /tmp || exit 1
+	echo "Organising and cleaning up the extracted files."
+	rm Ogar-master/src/Start.bat
+	rm Ogar-master/.gitignore
+fi
+}
+
 echo "OGAR INSTALL, UPDATE AND UNINSTALL SCRIPT"
 echo "Make sure you have: nodejs, npm, tar and wget/curl (for automatic downloads) installed!"
 echo "However, you may also download and extract master.tar.gz manually."
-echo "Place it in the same directory as the installer and name the folder Ogar-master."
+echo "Place it in the same directory as the installer and name the extracted folder Ogar-master."
 echo "----------------------------------------------------------------------------------------------------"
+echo 'IMPORTANT: Use the following command to start the server in interactive mode for improved security:'
+echo 'sudo -u ogar -H sh -c "cd; /bin/node src/index.js"'
 if [ ! "$(id -u)" = 0 ]; then
 		echo "This script must be run as root" 1>&2
 		exit 1
@@ -30,6 +61,12 @@ if [ ! -d "$2" ]; then
 		exit 1
 fi
 
+if [[ ! "$2" = /* ]]
+then
+   echo "$2 isn't an absolute path! This is required for proper installation."
+   exit 1
+fi
+
 if grep "Arch Linux" /etc/*-release > /dev/null; then
 	echo "You are running Arch Linux. It is recommended to use the Ogar AUR package - https://aur4.archlinux.org/packages/ogar-git/"
 	echo "Do you wish to continue? (Y/N)"
@@ -39,30 +76,7 @@ if grep "Arch Linux" /etc/*-release > /dev/null; then
 		* ) exit 1;;
 	esac
 fi
-if [ ! -d Ogar-master ]; then
-	if [ ! -f master.tar.gz ]; then
-			echo "No local master.tar.gz found, downloading with curl."
-			curl -O -L https://github.com/forairan/Ogar/archive/master.tar.gz
-	fi
-	if [ ! -f master.tar.gz ]; then
-		echo "curl failed to download master.tar.gz, trying wget."
-		wget https://github.com/forairan/Ogar/archive/master.tar.gz
-			if [ ! -f master.tar.gz ]; then
-					echo "wget failed as well. Aborting!"
-					exit 1
-			fi
-	fi
-	echo "master.tar.gz found!"
-	echo "Extracting master.tar.gz to /tmp."
-	tar -xzf master.tar.gz -C /tmp
-fi
-echo "Removing master.tar.gz."
-rm master.tar.gz
-echo "Entering temporary directory."
-cd /tmp || exit 1
-echo "Organising and cleaning up the extracted files."
-rm Ogar-master/src/Start.bat
-rm Ogar-master/.gitignore
+download_and_extract
 echo "Copying the generated ogar folder to $2."
 cp -RTf Ogar-master "$2"/ogar
 echo "Removing temporary files"
@@ -109,35 +123,23 @@ case $yn in
 esac
 
 if [ ! -f "$2/ogar/src/index.js" ]; then
-		echo "$2/ogar/src/index.js either way doesn't exist or isn't accesible. Are you sure this is an Ogar installation? Make sure you use absolute paths."
+		echo "$2/ogar/src/index.js either way doesn't exist or isn't accesible. Are you sure this is an Ogar installation?"
 		exit 1
 fi
 
-if [ ! -d Ogar-master ]; then
-	if [ ! -f master.tar.gz ]; then
-			echo "No local master.tar.gz found, downloading with curl."
-			curl -O -L https://github.com/forairan/Ogar/archive/master.tar.gz
-	fi
-	if [ ! -f master.tar.gz ]; then
-		echo "curl failed to download master.tar.gz, trying wget."
-		wget https://github.com/forairan/Ogar/archive/master.tar.gz
-			if [ ! -f master.tar.gz ]; then
-					echo "wget failed as well. Aborting!"
-					exit 1
-			fi
-	fi
-	echo "master.tar.gz found!"
-	echo "Extracting master.tar.gz to /tmp."
-	tar -xzf master.tar.gz -C /tmp
+if [[ ! "$2" = /* ]]
+then
+   echo "$2 isn't an absolute path! This is required for proper installation."
+   exit 1
 fi
-echo "Removing master.tar.gz."
-rm master.tar.gz
-echo "Entering temporary directory."
-cd /tmp || exit 1
-echo "Organising and cleaning up the extracted files."
-rm Ogar-master/src/Start.bat
-rm Ogar-master/.gitignore
-rm Ogar-master/gameserver.ini
+
+download_and_extract
+echo "Do you wish to install a fresh gamserver.ini? (Y/N)"
+read -r yn
+case $yn in
+		[Yy]* ) ;;
+		 * ) rm Ogar-master/gameserver.ini;;
+esac
 echo "Copying the generated ogar folder to $2."
 cp -RTf Ogar-master "$2"/ogar
 echo "Removing temporary files"
@@ -165,7 +167,7 @@ if [ "$2" = "" ]; then
 fi
 
 if [ ! -f "$2/ogar/src/index.js" ]; then
-		echo "$2/ogar/src/index.js either way doesn't exist or isn't accesible. Are you sure this is an Ogar installation? Make sure you use absolute paths."
+		echo "$2/ogar/src/index.js either way doesn't exist or isn't accesible. Are you sure this is an Ogar installation?"
 		exit 1
 fi
 
