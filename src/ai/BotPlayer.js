@@ -22,6 +22,8 @@ function BotPlayer() {
 
     this.ejectMass = 0; // Amount of times to eject mass
     this.oldPos = {x: 0, y:0};
+
+    this.isBot = true;
 }
 
 module.exports = BotPlayer;

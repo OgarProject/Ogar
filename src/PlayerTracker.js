@@ -21,6 +21,7 @@ function PlayerTracker(gameServer, socket) {
     this.team = 0;
     this.spectate = false;
     this.spectatedPlayer = -1; // Current player that this player is watching
+    this.isBot = false;
 
     // Viewing box
     this.sightRangeX = 0;
@@ -45,6 +46,27 @@ function PlayerTracker(gameServer, socket) {
 module.exports = PlayerTracker;
 
 // Setters/Getters
+
+PlayerTracker.prototype.freeze = function() {
+    for (var i = 0; i < this.cells.length; i++) {
+        this.cells[i].freezeCell();
+    }
+}
+
+PlayerTracker.prototype.unfreeze = function() {
+    for (var i = 0; i < this.cells.length; i++) {
+        this.cells[i].unfreezeCell();
+    }
+}
+
+// Could be removed? Not sure if I use it anymore :/
+PlayerTracker.prototype.setDisconnect = function(disconnect) {
+    this.disconnect = disconnect;
+}
+
+PlayerTracker.prototype.isBot = function() {
+    return this.isBot;
+}
 
 PlayerTracker.prototype.setName = function(name) {
     this.name = name;
@@ -99,7 +121,7 @@ PlayerTracker.prototype.update = function() {
     // Remove nodes from visible nodes if possible
     var d = 0;
     while (d < this.nodeDestroyQueue.length) {
-    	var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
+        var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
             d++; // Increment
@@ -206,7 +228,7 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
 
         totalSize += this.cells[i].getSize();
     }
-	
+    
     var factor = Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
     this.sightRangeX = this.gameServer.config.serverViewBaseX / factor;
     this.sightRangeY = this.gameServer.config.serverViewBaseY / factor;

@@ -14,11 +14,21 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.moveEngineSpeed = 0;
     this.moveDecay = .75;
     this.angle = 0; // Angle of movement
+
+    this.frozen = false;
 }
 
 module.exports = Cell;
 
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
+
+Cell.prototype.freezeCell = function() {
+    this.frozen = true;
+}
+
+Cell.prototype.unfreezeCell = function() {
+    this.frozen = false;
+}
 
 Cell.prototype.getName = function() {
 if (this.owner) {
