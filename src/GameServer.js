@@ -443,13 +443,13 @@ GameServer.prototype.spawnFood = function() {
 };
 
 GameServer.prototype.spawnPlayer = function(player,pos,mass) {
-	if (pos == null) { // Get random pos
-		pos = this.getRandomSpawn();
-	}
-	if (mass == null) { // Get starting mass
-		mass = this.config.playerStartMass;
-	}
-	
+    if (pos == null) { // Get random pos
+        pos = this.getRandomSpawn();
+    }
+    if (mass == null) { // Get starting mass
+        mass = this.config.playerStartMass;
+    }
+    
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
     this.addNode(cell);
@@ -975,7 +975,7 @@ WebSocket.prototype.sendPacket = function(packet) {
     } else if (!packet.build) {
         // Do nothing
     } else {
-    	this.readyState = WebSocket.CLOSED;
+        this.readyState = WebSocket.CLOSED;
         this.emit('close');
         this.removeAllListeners();
     }

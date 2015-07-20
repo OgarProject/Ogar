@@ -9,7 +9,7 @@ As Ogar is written in Node.js, you must have Node.js and its "ws" module install
 Manual:
 ```sh
 ~$ git clone git://github.com/forairan/Ogar.git Ogar
-~$ npm install ./Ogar
+~$ npm install ws
 ~$ node Ogar
 ```
 Using the install script:
@@ -65,6 +65,8 @@ The current available console commands are listed here. Command names are not ca
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
    * Changes the gamemode of the server. Warning - This can cause problems.
+ - Kick [Player ID]
+   * Kicks the specified player or bot from the server.
  - Kill [Player ID]
    * Kills all cells belonging to the specified player.
  - Killall
