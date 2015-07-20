@@ -443,13 +443,13 @@ GameServer.prototype.spawnFood = function() {
 };
 
 GameServer.prototype.spawnPlayer = function(player,pos,mass) {
-	if (pos == null) { // Get random pos
-		pos = this.getRandomSpawn();
-	}
-	if (mass == null) { // Get starting mass
-		mass = this.config.playerStartMass;
-	}
-	
+    if (pos == null) { // Get random pos
+        pos = this.getRandomSpawn();
+    }
+    if (mass == null) { // Get starting mass
+        mass = this.config.playerStartMass;
+    }
+    
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
     this.addNode(cell);
@@ -618,9 +618,15 @@ GameServer.prototype.splitCells = function(client) {
         split.setMoveEngineData(splitSpeed, 32, 0.85); 
         split.calcMergeTime(this.config.playerRecombineTime);
 
+        if(cell.frozen){
+            split.freezeCell();  
+        }
+
         // Add to moving cells list
         this.setAsMovingNode(split);
         this.addNode(split);
+
+
     }
 };
 
@@ -936,7 +942,7 @@ GameServer.prototype.startStatsServer = function(port) {
     }.bind(this));
 }
 
-GameServer.prototype.getStats = function() {
+/*GameServer.prototype.getStats = function() {
     var players = 0;
     this.clients.forEach(function(client) {
         if (client.playerTracker && client.playerTracker.cells.length > 0)
@@ -951,6 +957,101 @@ GameServer.prototype.getStats = function() {
         'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);
+};*/
+
+GameServer.prototype.convertSeconds = function(seconds) {
+    var temp = seconds;
+    var years = Math.floor(temp / 31536000);
+    if (years) {
+        return years + ' year' + this.numberEnding(years);
+    }
+    //TODO: Months! Maybe weeks? 
+    var days = Math.floor((temp %= 31536000) / 86400);
+    if (days) {
+        return days + ' day' + this.numberEnding(days);
+    }
+    var hours = Math.floor((temp %= 86400) / 3600);
+    if (hours) {
+        return hours + ' hour' + this.numberEnding(hours);
+    }
+    var minutes = Math.floor((temp %= 3600) / 60);
+    if (minutes) {
+        return minutes + ' minute' + this.numberEnding(minutes);
+    }
+    var seconds = temp % 60;
+    if (seconds) {
+        return seconds + ' second' + this.numberEnding(seconds);
+    }
+    return 'less than a second'; //'just now' //or other string you like;
+}
+
+GameServer.prototype.numberEnding = function(number) {
+     return (number > 1) ? 's' : '';
+}
+
+GameServer.prototype.getStats = function() {
+    var s = "";
+    s+= "[Players] " + this.clients.length + "/" + this.config.serverMaxConnections + " [GameMode] " + this.gameMode.name + " [Uptime] " + this.convertSeconds(process.uptime().toFixed(2));
+    s+= "\n\n ID         | IP              | "+this.fillChar('NICK', ' ', this.config.playerMaxNickLength)+" | CELLS | SCORE  | POSITION    "; // Fill space
+    s+= "\n" + this. fillChar('', '-', ' ID         | IP              |  | CELLS | SCORE  | POSITION    '.length + this.config.playerMaxNickLength);
+    
+    for (var i = 0; i < this.clients.length; i++) {
+        var client = this.clients[i].playerTracker;
+
+        // ID with 3 digits length
+        var id = this.fillChar((client.pID), ' ', 10, true);
+
+        // Get ip (15 digits length)
+        var ip = "BOT";
+        if (typeof this.clients[i].remoteAddress != 'undefined' ) {
+            ip = this.clients[i].remoteAddress;
+        }
+        ip = this.fillChar(ip, ' ', 15);
+
+        // Get name and data
+        var nick = '', cells = '', score = '', position = '', data = '';
+        if (client.spectate) {
+            try { 
+                // Get spectated player
+                if (this.getMode().specByLeaderboard) { // Get spec type
+                    nick = this.leaderboard[client.spectatedPlayer].name;
+                } else {
+                    nick = this.clients[client.spectatedPlayer].playerTracker.name;
+                }
+            } catch (e) { 
+                // Specating nobody
+                nick = "";
+            }
+            nick = (nick == "") ? "An unnamed cell" : nick;
+            data = this.fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + this.config.playerMaxNickLength, true);
+            s+= "\n " + id + " | " + ip + " | " + data;
+        } else if (client.cells.length > 0) {
+            nick = this.fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', this.config.playerMaxNickLength);
+            cells = this.fillChar(client.cells.length, ' ', 5, true);
+            score = this.fillChar(client.getScore(true), ' ', 6, true);
+            position = this.fillChar(client.centerPos.x.toFixed(1), ' ', 5, true) + ' ' + this.fillChar(client.centerPos.y.toFixed(1), ' ', 5, true);
+            s+= "\n "+id+" | "+ip+" | "+nick+" | "+cells+" | "+score+" | "+position;
+        } else { 
+            // No cells = dead player or in-menu
+            data = this.fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + this.config.playerMaxNickLength, true);
+            s+= "\n" + id + " | " + ip + " | " + data;
+        }
+    }
+
+    this.stats = s;
+}
+
+GameServer.prototype.fillChar = function (data, char, fieldLength, rTL) {
+    var result = data.toString();
+    if (rTL === true) {
+        for (var i = result.length; i < fieldLength; i++)
+            result = char.concat(result);
+    }
+    else {
+        for (var i = result.length; i < fieldLength; i++)
+            result = result.concat(char);
+    }
+    return result;
 };
 
 // Custom prototype functions
@@ -975,7 +1076,7 @@ WebSocket.prototype.sendPacket = function(packet) {
     } else if (!packet.build) {
         // Do nothing
     } else {
-    	this.readyState = WebSocket.CLOSED;
+        this.readyState = WebSocket.CLOSED;
         this.emit('close');
         this.removeAllListeners();
     }
