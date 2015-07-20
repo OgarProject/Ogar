@@ -943,6 +943,11 @@ GameServer.prototype.startStatsServer = function(port) {
 }
 
 /*GameServer.prototype.getStats = function() {
+    var players = 0;
+    this.clients.forEach(function(client) {
+        if (client.playerTracker && client.playerTracker.cells.length > 0)
+            players++
+    });
     var s = {
         'current_players': this.clients.length,
         'alive': players,
