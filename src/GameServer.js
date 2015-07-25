@@ -463,6 +463,7 @@ GameServer.prototype.virusCheck = function() {
     if (this.nodesVirus.length < this.config.virusMinAmount) {
         // Spawns a virus
         var pos = this.getRandomPosition();
+        var virusSquareSize = (this.config.virusStartMass * 100) >> 0;
 
         // Check for players
         for (var i = 0; i < this.nodesPlayer.length; i++) {
@@ -472,33 +473,13 @@ GameServer.prototype.virusCheck = function() {
                 continue;
             }
 
-            var r = check.getSize(); // Radius of checking player cell
-
-            // Collision box
-            var topY = check.position.y - r;
-            var bottomY = check.position.y + r;
-            var leftX = check.position.x - r;
-            var rightX = check.position.x + r;
-
-            // Check for collisions
-            if (pos.y > bottomY) {
-                continue;
-            }
-
-            if (pos.y < topY) {
-                continue;
-            }
-
-            if (pos.x > rightX) {
-                continue;
-            }
-
-            if (pos.x < leftX) {
-                continue;
-            }
-
-            // Collided
-            return;
+            var squareR = check.getSquareSize(); // squared Radius of checking player cell
+            
+            var dx = check.position.x - pos.x;
+            var dy = check.position.y - pos.y;
+            
+            if (dx * dx + dy * dy + virusSquareSize <= squareR)
+                return; // Collided
         }
 
         // Spawn if no cells are colliding
@@ -699,13 +680,7 @@ GameServer.prototype.shootVirus = function(parent) {
 
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
-    var r = cell.getSize(); // Get cell radius (Cell size = radius)
-
-    var topY = cell.position.y - r;
-    var bottomY = cell.position.y + r;
-
-    var leftX = cell.position.x - r;
-    var rightX = cell.position.x + r;
+    var squareR = cell.getSquareSize(); // Get cell squared radius
 
     // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
     var len = cell.owner.visibleNodes.length;
@@ -732,7 +707,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // AABB Collision
-        if (!check.collisionCheck(bottomY,topY,rightX,leftX)) {
+        if (!check.collisionCheck2(squareR, cell.position)) {
             continue;
         }
 

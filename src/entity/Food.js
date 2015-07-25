@@ -5,6 +5,7 @@ function Food() {
 
     this.cellType = 1;
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
+    this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
 }
 
 module.exports = Food;
@@ -12,6 +13,10 @@ Food.prototype = new Cell();
 
 Food.prototype.getSize = function() {
     return this.size;
+};
+
+Food.prototype.getSquareSize = function () {
+    return this.squareSize;
 };
 
 Food.prototype.calcMove = null; // Food has no need to move
