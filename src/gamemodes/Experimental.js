@@ -186,9 +186,16 @@ MotherCell.prototype.checkEat = function(gameServer) {
     	// Calculations
         var len = r - (check.getSize() / 2) >> 0; 
         if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
-            // Eats the cell
-            gameServer.removeNode(check);
-            this.mass += check.mass;
+            // A second, more precise check
+            var xs = Math.pow(check.position.x - this.position.x, 2);
+            var ys = Math.pow(check.position.y - this.position.y, 2);
+            var dist = Math.sqrt( xs + ys );
+            
+            if (r > dist) {
+                // Eats the cell
+                gameServer.removeNode(check);
+                this.mass += check.mass;
+            }
         }
     }
     for (var i in gameServer.movingNodes) {
@@ -249,4 +256,13 @@ MotherCell.prototype.onRemove = function(gameServer) {
     if (index != -1) {
     	gameServer.gameMode.nodesMother.splice(index,1);
     }
+};
+
+MotherCell.prototype.visibleCheck = function(box,centerPos) {
+    // Checks if this cell is visible to the player
+    var cellSize = this.getSize();
+    var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
+    var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
+
+    return (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
 };

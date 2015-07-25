@@ -45,12 +45,18 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
     var config = gameServer.config;
     var r = this.getSize(); // Cell radius
 
+    if (this.owner.mouseCells[this.nodeId]) {
+        var specialPos = this.owner.mouseCells[this.nodeId];
+        x2 = specialPos.x;
+        y2 = specialPos.y;
+    }
+    
     // Get angle
     var deltaY = y2 - this.position.y;
     var deltaX = x2 - this.position.x;
     var angle = Math.atan2(deltaX,deltaY);
     if(isNaN(angle)) {
-	return;
+        return;
     }
 
     // Distance between mouse pointer and cell
@@ -145,6 +151,7 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     }
     // Gamemode actions
     gameServer.gameMode.onCellRemove(this);
+    delete this.owner.mouseCells[this.nodeId];
 };
 
 PlayerCell.prototype.moveDone = function(gameServer) {

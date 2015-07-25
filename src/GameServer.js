@@ -206,10 +206,6 @@ GameServer.prototype.start = function() {
         ws.remotePort = ws._socket.remotePort;
         this.log.onConnect(ws.remoteAddress); // Log connections
 
-        // For memory leak detection
-        ws.lastbuffer = 0; 
-        ws.lastbufferCount = 0;
-
         ws.playerTracker = new PlayerTracker(this, ws);
         ws.packetHandler = new PacketHandler(this, ws);
         ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
@@ -447,13 +443,13 @@ GameServer.prototype.spawnFood = function() {
 };
 
 GameServer.prototype.spawnPlayer = function(player,pos,mass) {
-	if (pos == null) { // Get random pos
-		pos = this.getRandomSpawn();
-	}
-	if (mass == null) { // Get starting mass
-		mass = this.config.playerStartMass;
-	}
-	
+    if (pos == null) { // Get random pos
+        pos = this.getRandomSpawn();
+    }
+    if (mass == null) { // Get starting mass
+        mass = this.config.playerStartMass;
+    }
+    
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
     this.addNode(cell);
@@ -941,8 +937,15 @@ GameServer.prototype.startStatsServer = function(port) {
 }
 
 GameServer.prototype.getStats = function() {
+    var players = 0;
+    this.clients.forEach(function(client) {
+        if (client.playerTracker && client.playerTracker.cells.length > 0)
+            players++
+    });
     var s = {
         'current_players': this.clients.length,
+        'alive': players,
+        'spectators': this.clients.length - players,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
         'start_time': this.startTime
@@ -952,38 +955,27 @@ GameServer.prototype.getStats = function() {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    // Buffer memory leak detection
-    if (this._socket.bufferSize > this.lastbuffer) {
-        // Buffer size increased from last time
-        if (this.lastbufferCount < 1) {
-            // Buffer increased size 
-            this.lastbuffer = this._socket.bufferSize;
-            this.lastbufferCount++;
-        } else {
-            // Prievous buffer was not cleared... probably a memory leak
-            this.emit('close');
-            this.removeAllListeners();
-            return;
+    function getBuf(data) {
+        var array = new Uint8Array(data.buffer || data);
+        var l = data.byteLength || data.length;
+        var o = data.byteOffset || 0;
+        var buffer = new Buffer(l);
+
+        for (var i = 0; i < l; i++) {
+            buffer[i] = array[o + i];
         }
-    } else {
-        // Reset
-        this.lastbuffer = 0;
-        this.lastbufferCount = 0;
+
+        return buffer;
     }
     
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN && packet.build) {
-        try {
-            this.send(packet.build(), {binary: true});
-        } catch (e) {
-            console.log("[Error] "+e);
-            // Remove socket
-            this.emit('close');
-            this.removeAllListeners();
-        }
+        var buf = packet.build();
+        this.send(getBuf(buf), {binary: true});
     } else if (!packet.build) {
         // Do nothing
     } else {
+        this.readyState = WebSocket.CLOSED;
         this.emit('close');
         this.removeAllListeners();
     }

@@ -1,16 +1,29 @@
 # Ogar
-A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client (as of 7/4/15).
+A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client.
+
+### Official Website
+The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
+
+### Purchased Ogar?
+If you've purchased a copy of Ogar, you've probably been ripped off. [This post on our website explains why.](http://ogarproject.com/threads/psa-if-you-purchased-ogar-youve-been-ripped-off.6/)
 
 ## Obtaining and Using
-If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. The rest of this section is for non Windows users.
+If you are on Windows, you can download the latest binary build of Ogar [from this page](http://dl.ogarproject.com/). The binary is the easiest way to get started running an Ogar server. If you'd like to tinker with the source code, you can follow the instructions below (and slightly modify them) to run the source on Windows.
 
 As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
 
+Manual:
 ```sh
-~$ git clone git://github.com/forairan/Ogar.git Ogar
-~$ npm install ./Ogar
+~$ git clone git://github.com/OgarProject/Ogar.git Ogar
+~$ npm install ws
 ~$ node Ogar
 ```
+Using the install script:
+```sh
+~$ sudo ogar-linux-script.sh install /your/preferred/directory
+~$ sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js"
+```
+Using ```sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js" ``` to launch the server increases security by running the process as an unprivileged, dedicated user with a limited shell and it is recommended to do so.
 
 Currently, Ogar listens on the following addresses and ports:
 * *:80 - for the master server
@@ -18,7 +31,7 @@ Currently, Ogar listens on the following addresses and ports:
 
 Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports. **If you are getting an EADDRINUSE error, it means that the port required to run Ogar is being used. Usually, Skype is the culprit. To solve this, either close out skype, or change the serverPort value in gameserver.ini to a different port. You will have to change your connection ip to "127.0.0.1:PORT"**
 
-Once the game server is running, you can connect (locally) by going to the agar.io website. Once the game is loaded, in your address bar, replace agar.io with javascript:connect("ws://127.0.0.1:443",""); and press enter.
+Once the game server is running, you can connect (locally) by typing `agar.io/?ip=127.0.0.1:443` into your browser's address bar.
 
 ## Configuring Ogar
 Use "gameserver.ini" to modify Ogar's configurations field. Player bots are currently basic and for testing purposes. To use them, change "serverBots" to a value higher than zero in the configuration file. To add/remove bot names, edit the file named "botnames.txt" which is in the same folder as "gameserver.ini". Names should be separated by using the enter key.
@@ -58,6 +71,8 @@ The current available console commands are listed here. Command names are not ca
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
    * Changes the gamemode of the server. Warning - This can cause problems.
+ - Kick [Player ID]
+   * Kicks the specified player or bot from the server.
  - Kill [Player ID]
    * Kills all cells belonging to the specified player.
  - Killall
@@ -80,7 +95,7 @@ The current available console commands are listed here. Command names are not ca
    * Spawns a virus cell at those coordinates. If a mass value is not specified, then the server will default to "virusStartMass" in the config.
 
 ## Contributing
-Please see [CONTRIBUTING.md](https://github.com/forairan/Ogar/blob/master/CONTRIBUTING.md) for contribution guidelines.
+Please see [CONTRIBUTING.md](https://github.com/OgarProject/Ogar/blob/master/CONTRIBUTING.md) for contribution guidelines.
 
 ## License
-Please see [LICENSE.md](https://github.com/forairan/Ogar/blob/master/LICENSE.md).
+Please see [LICENSE.md](https://github.com/OgarProject/Ogar/blob/master/LICENSE.md).

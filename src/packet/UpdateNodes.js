@@ -16,7 +16,7 @@ UpdateNodes.prototype.build = function() {
             continue;
         }
 
-        nodesLength = nodesLength + 16 + (node.getName().length * 2);
+        nodesLength = nodesLength + 20 + (node.getName().length * 2);
     }
 
     var buf = new ArrayBuffer(3 + (this.destroyQueue.length * 12) + (this.nonVisibleNodes.length * 4) + nodesLength + 8);
@@ -52,14 +52,14 @@ UpdateNodes.prototype.build = function() {
         }
 
         view.setUint32(offset, node.nodeId, true); // Node ID
-        view.setUint16(offset + 4, node.position.x, true); // X position
-        view.setUint16(offset + 6, node.position.y, true); // Y position
-        view.setUint16(offset + 8, node.getSize(), true); // Mass formula: Radius (size) = (mass * mass) / 100
-        view.setUint8(offset + 10, node.color.r, true); // Color (R)
-        view.setUint8(offset + 11, node.color.g, true); // Color (G)
-        view.setUint8(offset + 12, node.color.b, true); // Color (B)
-        view.setUint8(offset + 13, node.spiked, true); // Flags
-        offset += 14;
+        view.setInt32(offset + 4, node.position.x, true); // X position
+        view.setInt32(offset + 8, node.position.y, true); // Y position
+        view.setUint16(offset + 12, node.getSize(), true); // Mass formula: Radius (size) = (mass * mass) / 100
+        view.setUint8(offset + 14, node.color.r, true); // Color (R)
+        view.setUint8(offset + 15, node.color.g, true); // Color (G)
+        view.setUint8(offset + 16, node.color.b, true); // Color (B)
+        view.setUint8(offset + 17, node.spiked, true); // Flags
+        offset += 18;
 
         var name = node.getName();
         if (name) {

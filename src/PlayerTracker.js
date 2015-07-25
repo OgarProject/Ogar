@@ -14,6 +14,7 @@ function PlayerTracker(gameServer, socket) {
     this.score = 0; // Needed for leaderboard
 
     this.mouse = {x: 0, y: 0};
+    this.mouseCells = []; // For individual cell movement
     this.tickLeaderboard = 0; //
     this.tickViewBox = 0;
 
