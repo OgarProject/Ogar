@@ -578,9 +578,18 @@ GameServer.prototype.splitCells = function(client) {
             continue;
         }
 
+        // Get individual cell coords if they exist
+        var y2 = client.mouse.y;
+        var x2 = client.mouse.x;
+        if (client.socket.packetHandler.mouseCells[cell.nodeId]) {
+            var specialPos = client.socket.packetHandler.mouseCells[cell.nodeId];
+            x2 = specialPos.x;
+            y2 = specialPos.y;
+        }
+        
         // Get angle
-        var deltaY = client.mouse.y - cell.position.y;
-        var deltaX = client.mouse.x - cell.position.x;
+        var deltaY = y2 - cell.position.y;
+        var deltaX = x2 - cell.position.x;
         var angle = Math.atan2(deltaX,deltaY);
 
         // Get starting position
@@ -617,8 +626,17 @@ GameServer.prototype.ejectMass = function(client) {
             continue;
         }
 
-        var deltaY = client.mouse.y - cell.position.y;
-        var deltaX = client.mouse.x - cell.position.x;
+        // Get individual cell coords if they exist
+        var y2 = client.mouse.y;
+        var x2 = client.mouse.x;
+        if (client.socket.packetHandler.mouseCells[cell.nodeId]) {
+            var specialPos = client.socket.packetHandler.mouseCells[cell.nodeId];
+            x2 = specialPos.x;
+            y2 = specialPos.y;
+        }
+        
+        var deltaY = y2 - cell.position.y;
+        var deltaX = x2 - cell.position.x;
         var angle = Math.atan2(deltaX,deltaY);
 
         // Get starting position
