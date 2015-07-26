@@ -5,6 +5,7 @@ function EjectedMass() {
 
     this.cellType = 3;
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
+    this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
 }
 
 module.exports = EjectedMass;
@@ -12,6 +13,10 @@ EjectedMass.prototype = new Cell();
 
 EjectedMass.prototype.getSize = function() {
     return this.size;
+};
+
+EjectedMass.prototype.getSquareSize = function () {
+    return this.squareSize;
 };
 
 EjectedMass.prototype.calcMove = null; // Only for player controlled movement

@@ -47,6 +47,11 @@ Cell.prototype.getSize = function() {
     return Math.ceil(Math.sqrt(100 * this.mass));
 };
 
+Cell.prototype.getSquareSize = function () {
+    // R * R
+    return (100 * this.mass) >> 0;
+};
+
 Cell.prototype.addMass = function(n) {
     if(this.mass + n > this.owner.gameServer.config.playerMaxMass && this.owner.cells.length < this.owner.gameServer.config.playerMaxCells) {
         this.mass = (this.mass + n) / 2;
@@ -112,6 +117,18 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
     return true;
 };
 
+// This collision checking function is based on CIRCLE shape
+Cell.prototype.collisionCheck2 = function (objectSquareSize, objectPosition) {
+    // IF (O1O2 + r <= R) THEN collided. (O1O2: distance b/w 2 centers of cells)
+    // (O1O2 + r)^2 <= R^2
+    // approximately, remove 2*O1O2*r because it requires sqrt(): O1O2^2 + r^2 <= R^2
+
+    var dx = this.position.x - objectPosition.x;
+    var dy = this.position.y - objectPosition.y;
+
+    return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
+};
+
 Cell.prototype.visibleCheck = function(box,centerPos) {
     // Checks if this cell is visible to the player
     return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
@@ -130,22 +147,22 @@ Cell.prototype.calcMovePhys = function(config) {
     var radius = 40;
     if ((this.position.x - radius) < config.borderLeft) {
         // Flip angle horizontally - Left side
-        this.angle = Math.abs(3.14 - this.angle);
+        this.angle = 6.28 - this.angle;
         X = config.borderLeft + radius;
     }
     if ((this.position.x + radius) > config.borderRight) {
         // Flip angle horizontally - Right side
-        this.angle = 1 - this.angle;
+        this.angle = 6.28 - this.angle;
         X = config.borderRight - radius;
     }
     if ((this.position.y - radius) < config.borderTop) {
         // Flip angle vertically - Top side
-        this.angle = Math.abs(this.angle - 3.14);
+        this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
         Y = config.borderTop + radius;
     }
     if ((this.position.y + radius) > config.borderBottom) {
         // Flip angle vertically - Bottom side
-        this.angle = Math.abs(this.angle - 3.14);
+        this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
         Y = config.borderBottom - radius;
     }
 
