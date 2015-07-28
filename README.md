@@ -4,20 +4,32 @@ A fully functional open source Agar.io server implementation, written in Node.js
 ## Obtaining and Using
 If you are on Windows, Ogar no longer requires an installation of node.js to run. Simply launch the batch file that is included to run the server. The rest of this section is for non Windows users.
 
-As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
+As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". 
 
-Manual:
 ```sh
-~$ git clone git://github.com/forairan/Ogar.git Ogar
+~$ git clone git://github.com/OgarProject/Ogar.git Ogar
 ~$ npm install ./Ogar
 ~$ node Ogar
 ```
-Using the install script:
+
+### Linux
+You can use the install script or one of the automatically-generated nightlies for your distribution. See [this forum thread](http://ogarproject.com/threads/beta-ogar-v1-debian-ubuntu-package-arch-linux-package-and-buildbot.9/) for more information about the nightlies.
+
+If you want to use the generic install script, make sure you have npm and nodejs installed prior to running the install script.
+
 ```sh
 ~$ sudo ogar-linux-script.sh install /your/preferred/directory
-~$ sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js"
 ```
-Using ```sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js" ``` to launch the server increases security by running the process as an unprivileged, dedicated user with a limited shell and it is recommended to do so.
+Then, use one of the following commands to launch Ogar in the foreground.
+
+``` ~$ sudo -u ogar -H /bin/sh -c "cd; /usr/bin/node src/index.js"```
+
+``` ~$ sudo -H /bin/sh -c "cd /your/preferred/directory; /usr/bin/node src/index.js"```
+
+The first command is preferred, since it launches Ogar as an unprivileged user, which is more secure. However, some distributions may require root privileges to launch Ogar, and the first command will thus not work.
+
+Also note that some distributions may use ``` /usr/bin/nodejs ``` instead of ``` /usr/bin/node ```
+
 
 Currently, Ogar listens on the following addresses and ports:
 * *:80 - for the master server
