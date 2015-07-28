@@ -12,12 +12,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/forairan/Ogar"
+    "url": "https://github.com/OgarProject/Ogar"
   },
   "author": "Devin Ryan <devin@forairan.com> (http://devin.codes/)",
   "license": "Apache License 2.0",
   "bugs": {
-    "url": "https://github.com/forairan/Ogar/issues"
+    "url": "https://github.com/OgarProject/Ogar/issues"
   },
-  "homepage": "https://github.com/forairan/Ogar"
+  "homepage": "https://github.com/OgarProject/Ogar"
 }
