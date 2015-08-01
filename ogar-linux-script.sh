@@ -199,24 +199,26 @@ if [ ! "$(id -u)" = 0 ]; then
 		exit 1
 fi
 
-#Install
-if [ "$1" = "install" ]; then
-ogar_install
-exit 0
-fi
 
-#Update
-if [ "$1" = "update" ]; then
-ogar_update
-exit 0
-fi
+case "$1" in
+	install)
+		ogar_install
+		;;
+	update)
+		ogar_update
+		;;
+	uninstall)
+		ogar_uninstall
+		;;
+	"")
+		echo "Blank sub-command. Please specify if you want to install, update or uninstall."
+		exit 1
+		;;
+	*)
+		echo "Invalid sub-command. Please specify if you want to install, update or uninstall."
+		exit 1
+		;;
+esac
 
-#Uninstall
-if [ "$1" = "uninstall" ]; then
-ogar_uninstall
+#If I havn't exited abnormally yet, exit normally normally now
 exit 0
-fi
-
-#If no install/update/uninstall parameter is specified
-echo "Please specify if you want to install, update or uninstall."
-exit 1
