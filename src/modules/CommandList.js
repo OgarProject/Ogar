@@ -252,7 +252,7 @@ Commands.list = {
             return;
         }
         
-        var name = split[2];
+        var name = split.slice(2, split.length).join(' ');
         if (typeof name == 'undefined') {
             console.log("[Console] Please type a valid name");
             return;
@@ -310,7 +310,7 @@ Commands.list = {
                 nick = fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', gameServer.config.playerMaxNickLength);
                 cells = fillChar(client.cells.length, ' ', 5, true);
                 score = fillChar(client.getScore(true), ' ', 6, true);
-                position = fillChar(client.centerPos.x, ' ', 5, true) + ', ' + fillChar(client.centerPos.y, ' ', 5, true);
+                position = fillChar(client.centerPos.x >> 0, ' ', 5, true) + ', ' + fillChar(client.centerPos.y >> 0, ' ', 5, true);
                 console.log(" "+id+" | "+ip+" | "+nick+" | "+cells+" | "+score+" | "+position);
             } else { 
                 // No cells = dead player or in-menu
