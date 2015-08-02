@@ -581,8 +581,8 @@ GameServer.prototype.splitCells = function(client) {
         // Get individual cell coords if they exist
         var y2 = client.mouse.y;
         var x2 = client.mouse.x;
-        if (client.socket.packetHandler.mouseCells[cell.nodeId]) {
-            var specialPos = client.socket.packetHandler.mouseCells[cell.nodeId];
+        if (client.mouseCells[cell.nodeId]) {
+            var specialPos = client.mouseCells[cell.nodeId];
             x2 = specialPos.x;
             y2 = specialPos.y;
         }
@@ -629,8 +629,8 @@ GameServer.prototype.ejectMass = function(client) {
         // Get individual cell coords if they exist
         var y2 = client.mouse.y;
         var x2 = client.mouse.x;
-        if (client.socket.packetHandler.mouseCells[cell.nodeId]) {
-            var specialPos = client.socket.packetHandler.mouseCells[cell.nodeId];
+        if (client.mouseCells[cell.nodeId]) {
+            var specialPos = client.mouseCells[cell.nodeId];
             x2 = specialPos.x;
             y2 = specialPos.y;
         }
