@@ -50,6 +50,7 @@ Commands.list = {
     },
     help: function(gameServer,split) {
         console.log("[Console] ======================== HELP ======================");
+        console.log("[Console] merge      : force player to merge cells");
         console.log("[Console] addbot     : add bot to the server");
         console.log("[Console] board      : set scoreboard text");
         console.log("[Console] boardreset : reset scoreboard text");
