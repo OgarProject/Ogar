@@ -95,7 +95,7 @@ Tournament.prototype.prepare = function(gameServer) {
     // Handles disconnections
     this.dcTime = gameServer.config.playerDisconnectTime;
     gameServer.config.playerDisconnectTime = 0;
-    gameServer.config.MinMassDecay = gameServer.config.playerStartMass;
+    gameServer.config.minMassDecay = gameServer.config.playerStartMass;
 
     this.prepTime = gameServer.config.tourneyPrepTime;
     this.endTime = gameServer.config.tourneyEndTime;

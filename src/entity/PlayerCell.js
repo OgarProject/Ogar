@@ -15,7 +15,7 @@ PlayerCell.prototype = new Cell();
 
 PlayerCell.prototype.visibleCheck = function(box,centerPos) {
     // Use old fashioned checking method if cell is small
-    if (this.mass < 150) {
+    if (this.mass < 100) {
         return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
     }
 
@@ -27,12 +27,12 @@ PlayerCell.prototype.visibleCheck = function(box,centerPos) {
     return (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
 };
 
-PlayerCell.prototype.simpleCollide = function(check,d) {
+PlayerCell.prototype.simpleCollide = function(x1,y1,check,d) {
     // Simple collision check
-    var len = 2 * d >> 0; // Width of cell + width of the box (Int)
+    var len = d >> 0; // Width of cell + width of the box (Int)
 
-    return (this.abs(this.position.x - check.x) < len) &&
-           (this.abs(this.position.y - check.y) < len);
+    return (this.abs(x1 - check.position.x) < len) &&
+           (this.abs(y1 - check.position.y) < len);
 };
 
 PlayerCell.prototype.calcMergeTime = function(base) {
@@ -44,17 +44,12 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
     var config = gameServer.config;
     var r = this.getSize(); // Cell radius
-
-    if (this.owner.mouseCells[this.nodeId]) {
-        var specialPos = this.owner.mouseCells[this.nodeId];
-        x2 = specialPos.x;
-        y2 = specialPos.y;
-    }
     
     // Get angle
     var deltaY = y2 - this.position.y;
     var deltaX = x2 - this.position.x;
     var angle = Math.atan2(deltaX,deltaY);
+    
     if(isNaN(angle)) {
         return;
     }
@@ -77,7 +72,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
         if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
             // Cannot recombine - Collision with your own cells
             var collisionDist = cell.getSize() + r; // Minimum distance between the 2 cells
-            if (this.simpleCollide(cell, collisionDist)) {
+            if (!this.simpleCollide(x1,y1,cell,collisionDist)) {
                 // Skip
                 continue;
             }
@@ -151,7 +146,6 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     }
     // Gamemode actions
     gameServer.gameMode.onCellRemove(this);
-    delete this.owner.mouseCells[this.nodeId];
 };
 
 PlayerCell.prototype.moveDone = function(gameServer) {

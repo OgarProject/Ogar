@@ -9,7 +9,6 @@ function PacketHandler(gameServer, socket) {
     this.pressQ = false;
     this.pressW = false;
     this.pressSpace = false;
-    this.multiCells = [];
 }
 
 module.exports = PacketHandler;
