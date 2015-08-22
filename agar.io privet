@@ -3,12 +3,17 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.owner = owner; // playerTracker that owns this cell
     this.color = {r: 0, g: 255, b: 0};
     this.position = position;
-    this.mass = mass; // Starting mass of the cell
-    this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
+    
+    
+    this.mass = mass; //
+    Starting mass of the cell350
+    this.cellType = -1; // 0 = Player Cell, 
+    1 = Food50
+    , 2 = Virus, 3 = Ejected Mass500
     this.spiked = 0; // If 1, then this cell has spikes around it
 
     this.killedBy; // Cell that ate this cell
-    this.gameServer = gameServer;
+    this.gameServer = gameServer;privet
 
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
