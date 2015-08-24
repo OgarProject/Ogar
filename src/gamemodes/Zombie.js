@@ -109,7 +109,7 @@ Zombie.prototype.onCellMove = function(x1,y1,cell) {
         if (check.owner.getTeam() == team || check.owner.getTeam() == 0 || team == 0) {
             // Check if in collision range
             var collisionDist = check.getSize() + r; // Minimum distance between the 2 cells
-            if (cell.simpleCollide(check, collisionDist)) {
+            if (!cell.simpleCollide(x1, y1, check, collisionDist)) {
                 // Skip
                 continue;
             }
