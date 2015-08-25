@@ -133,7 +133,7 @@ Commands.list = {
         gameServer.socketServer.close();
         process.exit(1);
     },
-    food: function(gameServer,split) {
+    food: function(gameServer,split,mass,pos) {
         var pos = {x: parseInt(split[1]), y: parseInt(split[2])};
         var mass = parseInt(split[3]);
 
