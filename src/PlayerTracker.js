@@ -175,7 +175,7 @@ PlayerTracker.prototype.update = function() {
             // Remove all client cells
             var len = this.cells.length;
             for (var i = 0; i < len; i++) {
-                var cell = this.socket.playerTracker.cells[0];
+                var cell = this.socket.playerTracker.cells[i];
 
                 if (!cell) {
                     continue;
