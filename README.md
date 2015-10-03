@@ -74,8 +74,12 @@ The current available console commands are listed here. Command names are not ca
    * Changes the gamemode of the server. Warning - This can cause problems.
  - Kick [Player ID]
    * Kicks the specified player or bot from the server.
+ - KickRange [Start] [End]
+   * Kicks the specified players and/or bots from the server with an ID that is equal to or between start and end.
  - Kill [Player ID]
    * Kills all cells belonging to the specified player.
+  - KickRange [Start] [End]
+   * Kills the specified players and/or bots from the server with an ID that is equal to or between start and end
  - Killall
    * Kills all player cells on the map.
  - Mass [Player ID] [Number]
