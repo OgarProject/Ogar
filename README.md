@@ -78,7 +78,7 @@ The current available console commands are listed here. Command names are not ca
    * Kicks the specified players and/or bots from the server with an ID that is equal to or between start and end.
  - Kill [Player ID]
    * Kills all cells belonging to the specified player.
- - KickRange [Start] [End]
+ - KillRange [Start] [End]
    * Kills the specified players and/or bots from the server with an ID that is equal to or between start and end
  - Killall
    * Kills all player cells on the map.
