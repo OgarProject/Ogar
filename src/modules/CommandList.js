@@ -186,6 +186,16 @@ Commands.list = {
             }
         }
     },
+    kickrange: function(gameServer,split) {
+        var start = parseInt(split[0]);
+        var end = parseInt(split[0]);
+        if (isNaN(start) || isNaN(end)) {
+            console.log("[Console] Please specify a valid range!");
+        }
+        for (var i = split[0]; i < split[1]]; i++) {
+            this.kick(gameServer, split[i]);
+        }
+    }
     kill: function(gameServer,split) {
         var id = parseInt(split[1]);
         if (isNaN(id)) {
@@ -208,6 +218,16 @@ Commands.list = {
             }
         }
     },
+    killrange: function(gameServer,split) {
+        var start = parseInt(split[0]);
+        var end = parseInt(split[0]);
+        if (isNaN(start) || isNaN(end)) {
+            console.log("[Console] Please specify a valid range!");
+        }
+        for (var i = split[0]; i < split[1]]; i++) {
+            this.kill(gameServer, split[i]);
+        }
+    }
     killall: function(gameServer,split) {
         var count = 0;
         var len = gameServer.nodesPlayer.length;
