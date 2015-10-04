@@ -195,7 +195,7 @@ Commands.list = {
         for (var i = start; i < end; i++) {
             this.kick(gameServer, i);
         }
-    }
+    },
     kill: function(gameServer,split) {
         var id = parseInt(split[1]);
         if (isNaN(id)) {
@@ -227,7 +227,7 @@ Commands.list = {
         for (var i = start; i < end; i++) {
             this.kill(gameServer, i);
         }
-    }
+    },
     killall: function(gameServer,split) {
         var count = 0;
         var len = gameServer.nodesPlayer.length;
