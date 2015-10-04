@@ -192,7 +192,7 @@ Commands.list = {
         if (isNaN(start) || isNaN(end)) {
             console.log("[Console] Please specify a valid range!");
         }
-        for (var i = start; i < end]; i++) {
+        for (var i = start; i < end; i++) {
             this.kick(gameServer, i);
         }
     }
@@ -224,7 +224,7 @@ Commands.list = {
         if (isNaN(start) || isNaN(end)) {
             console.log("[Console] Please specify a valid range!");
         }
-        for (var i = start; i < end]; i++) {
+        for (var i = start; i < end; i++) {
             this.kill(gameServer, i);
         }
     }
