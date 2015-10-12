@@ -186,6 +186,21 @@ Commands.list = {
             }
         }
     },
+    kickbots: function(gameServer) {
+        for (var i = 0; i < gameServer.clients.length;) {
+            if (typeof gameServer.clients[i].remoteAddress == 'undefined') {
+                var client = gameServer.clients[i].playerTracker;
+                var len = client.cells.length;
+                for (var j = 0; j < len; j++) {
+                    gameServer.removeNode(client.cells[0]);
+                }
+                client.socket.close();
+            } else {
+                i++;
+            }
+        }
+        console.log("[Console] Kicked all bots");
+    },
     kill: function(gameServer,split) {
         var id = parseInt(split[1]);
         if (isNaN(id)) {
