@@ -31,7 +31,7 @@ UpdateLeaderboard.prototype.build = function() {
             var view = new DataView(buf);
 
             // Set packet data
-            view.setUint8(0, 49, true); // Packet ID
+            view.setUint8(0, this.packetLB, true); // Packet ID
             view.setUint32(1, validElements, true); // Number of elements
             var offset = 5;
 
