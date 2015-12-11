@@ -1,53 +1,112 @@
-Bacteria
-Spore
-Macrophage
-Satanist
-Earth
-Nazi
-Moon
-Poland
-sanik
-ayy lmao
-Reddit
-CIA
-wojak
-doge
-sir
-facepunch
+2ch.hk
+4chan
 8
 8ch
-Russia
-Circle
-Blob
-4chan
-Mars
-Ogar
-NASA
-Helper
-Parasite
-Square
-Round
-Bug
-Splitting
-Ice
-South Korea
-Japan
-IRS
-Stussy
-Yeast
-USA
-China
 9gag
-Hong Kong
-Qing Dynasty
-Prodota
-Steam
-Pokerface
-Ireland
-Tumblr
-Hitler
-Canada
-Yaranaika
-Vinesauce
-Sun
-Pluto
+argentina
+australia
+austria
+ayy lmao
+bait
+bangladesh
+Belarus (removed)
+belgium
+bosnia
+botswana
+brazil
+bulgaria
+byzantium
+cambodia
+canada
+chile
+china
+cia
+confederate
+Croatia
+cuba
+denmark
+doge
+ea
+earth
+estonia
+european union
+facebook
+facepunch
+feminism
+finland
+france
+french kingdom
+german empire
+germany
+greece
+hitler (removed)
+hong kong
+hungary
+imperial japan
+india
+indiana
+indonesia
+iran
+iraq
+ireland
+irs
+italy
+jamaica
+japan
+kc
+latvia
+lithuania
+luxembourg
+maldivas
+mars
+matriarchy
+mexico
+moon
+nasa
+Nazi (removed)
+netherlands
+nigeria
+north korea
+norway
+origin
+pakistan
+patriarchy
+peru
+piccolo
+pokerface
+poland
+portugal
+prodota
+prussia
+qing dynasty
+quebec
+receita federal
+reddit
+romania
+russia
+sanik
+satanist
+scotland
+sealand
+sir
+somalia
+south korea
+spain
+stalin
+steam
+stussy
+sweden
+switzerland
+taiwan
+texas
+thailand
+tsarist russia
+tumblr
+turkey
+ukraine
+united kingdom
+usa
+ussr
+vinesauce
+wojak
+yaranaika
