@@ -1,3 +1,5 @@
+// Ogar Linux Script
+
 #!/bin/sh
 
 #Download, extract .tar.gz and clean function
