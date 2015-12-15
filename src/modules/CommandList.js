@@ -26,8 +26,31 @@ var fillChar = function (data, char, fieldLength, rTL) {
 // Commands
 
 Commands.list = {
+    
+	merge: function(gameServer,split) {
+        // Validation checks
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
+            return;
+        }
+
+        // Sets merge time
+        for (var i in gameServer.clients) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
+                var client = gameServer.clients[i].playerTracker;
+                for (var j in client.cells) {
+                    client.cells[j].calcMergeTime(0);
+                }
+
+                console.log("[Console] Forced " + client.name + " to merge cells");
+                break;
+            }
+        }
+    },
     help: function(gameServer,split) {
         console.log("[Console] ======================== HELP ======================");
+        console.log("[Console] merge      : force player to merge cells");
         console.log("[Console] addbot     : add bot to the server");
         console.log("[Console] board      : set scoreboard text");
         console.log("[Console] boardreset : reset scoreboard text");
