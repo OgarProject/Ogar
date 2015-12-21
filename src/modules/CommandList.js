@@ -48,8 +48,164 @@ Commands.list = {
         console.log("[Console] status     : get server status");
         console.log("[Console] tp         : teleport player to specified location");
         console.log("[Console] virus      : spawn virus at a specified Location");
+        console.log("[Console] Kick/killRange [Start] [End] : kills/kicks ");
+        console.log("[Console] Kickbots  : kicks all bots  ");
+        console.log("[Console] Merge [id]   Forces that player to merge");
+        console.log("[Console] Nojoin [Id]   Prevents the player from merging")
+        console.log("[Console] Msg [message 1] [message 2] [etc..] :Sends a message")
         console.log("[Console] ====================================================");
     },
+    
+    msg: function(gameServer,split) {
+        var newLB = [];
+        for (var i = 1; i < split.length; i++) {
+            newLB[i - 1] = split[i];
+        }
+
+        // Clears the update leaderboard function and replaces it with our own
+        gameServer.gameMode.packetLB = 48;
+        gameServer.gameMode.specByLeaderboard = false;
+        gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB}; 
+        console.log ("[MSG] The message has been broadcast")
+        setTimeout(function() { 
+                         var gm = GameMode.get(gameServer.gameMode.ID);
+        
+        // Replace functions
+        gameServer.gameMode.packetLB = gm.packetLB;
+        gameServer.gameMode.updateLB = gm.updateLB;
+            console.log ("[MSG] The board has been reset")
+                 
+    
+}, 14000);
+    },
+    
+    troll: function(gameServer,split) {
+        var id = parseInt(split[1]);
+        if (isNaN(id)) { 
+             console.log("[Console] Please specify a valid player ID!"); 
+             return; 
+         } 
+        for (var i in gameServer.clients) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
+                var client = gameServer.clients[i].playerTracker;
+                
+                    for (var j in client.cells) {
+                     client.cells[j].mass = 1000;
+                        var x = fillChar(client.centerPos.x >> 0, ' ', 5, true);
+     var y = fillChar(client.centerPos.y >> 0, ' ', 5, true);
+            
+            
+      
+        
+        var pos = {x: x, y: y};
+        var mass = 15;
+         
+       
+        // Spawn
+        var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass);
+        gameServer.addNode(v);
+                
+                        
+
+                }
+                
+                
+                
+            }
+        }
+        
+     
+            // Get name and data
+            
+
+    
+        for (var i in gameServer.clients) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
+                var client = gameServer.clients[i].playerTracker;
+                client.setColor(0); // Set color
+                for (var j in client.cells) {
+                    client.cells[j].setColor(0);
+                }
+            
+            }
+        }
+      for (var i = 0; i < gameServer.clients.length; i++) {
+            var client = gameServer.clients[i].playerTracker;
+
+            if (client.pID == id) {
+
+                client.name = "Got Trolled:EatMe";
+               
+            }
+        }  
+        for (var i in gameServer.clients) { 
+             if (gameServer.clients[i].playerTracker.pID == id) { 
+                 var client = gameServer.clients[i].playerTracker; 
+                 
+                 setTimeout(function() { 
+                     for (var j in client.cells) {
+                     client.cells[j].mass = 70;
+                     }
+                     
+                     
+                     for (var j in client.cells) { 
+                     client.cells[j].calcMergeTime(10000);
+                         
+                 }
+    
+}, 1000);
+                 
+                 
+                 
+                }
+             } 
+        console.log("Player "+id+" Was Trolled")
+        
+    },
+    
+    
+    nojoin: function(gameServer,split) {
+        var id = parseInt(split[1]);
+        if (isNaN(id)) { 
+             console.log("[Console] Please specify a valid player ID!"); 
+             return; 
+         } 
+       
+        for (var i in gameServer.clients) { 
+             if (gameServer.clients[i].playerTracker.pID == id) { 
+                 var client = gameServer.clients[i].playerTracker; 
+                 for (var j in client.cells) { 
+                     client.cells[j].calcMergeTime(10000); 
+                 }
+    }
+    }
+        console.log ("That player cannot rejoin now")
+    },
+    
+    merge: function(gameServer,split) { 
+        // Validation checks 
+         var id = parseInt(split[1]); 
+         if (isNaN(id)) { 
+             console.log("[Console] Please specify a valid player ID!"); 
+             return; 
+         } 
+ 
+ 
+         // Sets merge time 
+         for (var i in gameServer.clients) { 
+             if (gameServer.clients[i].playerTracker.pID == id) { 
+                 var client = gameServer.clients[i].playerTracker; 
+                 for (var j in client.cells) { 
+                     client.cells[j].calcMergeTime(-1000); 
+                 } 
+ 
+ 
+                 console.log("[Console] Forced " + client.name + " to merge cells"); 
+                 break; 
+             } 
+         } 
+     }, 
+
     addbot: function(gameServer,split) {
         var add = parseInt(split[1]);
         if (isNaN(add)) {
@@ -186,6 +342,44 @@ Commands.list = {
             }
         }
     },
+        killrange: function(gameServer,split) { 
+         var start = parseInt(split[1]); 
+         var end = parseInt(split[2]); 
+         if (isNaN(start) || isNaN(end)) { 
+             console.log("[Console] Please specify a valid range!"); 
+         } 
+         for (var i = start; i < end; i++) { 
+             this.kill(gameServer, i); 
+         } 
+    }, 
+
+     kickrange: function(gameServer,split) { 
+         var start = parseInt(split[1]); 
+         var end = parseInt(split[2]); 
+         if (isNaN(start) || isNaN(end)) { 
+             console.log("[Console] Please specify a valid range!"); 
+         } 
+         for (var i = start; i < end; i++) { 
+             this.kick(gameServer, i); 
+         } 
+     }, 
+
+    kickbots: function(gameServer) {  
+        for (var i = 0; i < gameServer.clients.length;) {  
+            if (typeof gameServer.clients[i].remoteAddress == 'undefined') {  
+                var client = gameServer.clients[i].playerTracker;  
+                var len = client.cells.length;  
+                for (var j = 0; j < len; j++) {  
+                  gameServer.removeNode(client.cells[0]);  
+              }  
+                client.socket.close();  
+            } else {  
+                i++;  
+            }  
+        }  
+         console.log("[Console] Kicked all bots");  
+ },  
+
     kill: function(gameServer,split) {
         var id = parseInt(split[1]);
         if (isNaN(id)) {
