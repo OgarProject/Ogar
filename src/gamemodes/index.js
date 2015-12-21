@@ -9,7 +9,12 @@ module.exports = {
     Debug: require('./Debug'),
     Zombie: require('./Zombie'),
     TeamZ: require('./TeamZ.js'),
-    TeamX: require('./TeamX.js')
+    TeamX: require('./TeamX.js'),
+	NCTeams: require('./NoCollisionTeams.js'),
+	NCTeamZ: require('./NoCollisionTeamZ.js'),
+	NCTeamX: require('./NoCollisionTeamX.js'),
+    Unlimitpvp: require('./Unlimitpvp.js'),
+    UnlimitFFA: require('./Unlimitffa.js'),
 };
 
 var get = function(id) {
@@ -21,6 +26,12 @@ var get = function(id) {
         case 2: // Experimental
             mode = new module.exports.Experimental();
             break;
+        case 5: // unlimitpvp
+            mode = new module.exports.Unlimitpvp();
+            break;
+        case 6: // unlimitFFA
+            mode = new module.exports.UnlimitFFA();
+            break;    
         case 10: // Tournament
             mode = new module.exports.Tournament();
             break;
@@ -36,6 +47,15 @@ var get = function(id) {
         case 14: // Experimental Team
             mode = new module.exports.TeamX();
             break;
+	    case 15: // No Collision Team
+            mode = new module.exports.NCTeams();
+            break;
+	    case 16: // No Collision Zombie Team
+            mode = new module.exports.NCTeamZ();
+            break;
+	    case 17: // No Collision Experimental Team
+            mode = new module.exports.NCTeamX();
+            break;			
         case 20: // Rainbow
             mode = new module.exports.Rainbow();
             break;
@@ -44,7 +64,7 @@ var get = function(id) {
             break;
         default: // FFA is default
             mode = new module.exports.FFA();
-            break;
+            break;			
     }
     return mode;
 };
