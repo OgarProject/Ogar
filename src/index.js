@@ -6,7 +6,7 @@ var GameServer = require('./GameServer');
 var showConsole = true;
 
 // Start msg
-console.log("[Game] Ogar - An open source Agar.io server implementation");
+console.log("[Game] Andrews Version of Ogar - An open source Agar.io server implementation");
 
 // Handle arguments
 process.argv.forEach(function(val) {
