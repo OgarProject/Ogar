@@ -1,5 +1,5 @@
-# Ogar
-A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client.
+# Andrews Version of Ogar
+A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client. THIS IS A FORK OF THE ORIGINAL OGAR BUT THIS HAS MORE FEATURES, also, I borrowed from other forks: Kickbots,merge (editedbyme),killrange(editedbyme),kickrange(editedbyme) commands and the nocollision game modes. Every other Extra feature I created
 
 ### Official Website
 The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
@@ -12,22 +12,10 @@ If you are on Windows, you can download the latest binary build of Ogar [from th
 
 As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
 
-Manual:
-```sh
-~$ git clone git://github.com/OgarProject/Ogar.git Ogar
-~$ npm install ws
-~$ node Ogar
-```
-Using the install script:
-```sh
-~$ sudo ogar-linux-script.sh install /your/preferred/directory
-~$ sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js"
-```
-Using ```sudo -u ogar -H /bin/sh -c "cd; /bin/node src/index.js" ``` to launch the server increases security by running the process as an unprivileged, dedicated user with a limited shell and it is recommended to do so.
 
 Currently, Ogar listens on the following addresses and ports:
 * *:80 - for the master server
-* *:443 - for the game server
+* *:333 - for the game server
 
 Please note that on some systems, you may have to run the process as root or otherwise elevate your privileges to allow the process to listen on the needed ports. **If you are getting an EADDRINUSE error, it means that the port required to run Ogar is being used. Usually, Skype is the culprit. To solve this, either close out skype, or change the serverPort value in gameserver.ini to a different port. You will have to change your connection ip to "127.0.0.1:PORT"**
 
@@ -50,10 +38,24 @@ Id   | Name
 13   | Team Z
 14   | Team X
 20   | Rainbow FFA - Hint: Use with "setAcid(true)"
-
+5    | UnlimitPVP - where you split can split indefinitly and rejoin instantly - 1v1 game (created by me)
+6    | UnlimitFFA - same as above in ffa (created by me)
+15   | NoCollision teams
+16   | NoCollision Zteam
+17   | NoCollision Xteam
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
 
+ - Troll [id]
+   * You figure out this one, Its a suprise!
+ - Msg [message1] [message2] [etc...]
+   * Changes the leaderboard to a message for a short time
+ - kick/killrange [Start] [End]
+   * Kicks/kills in a range (eg: killrange 1 10 will kill players whos ids are between them)
+ - Nojoin [id]
+   * Makes person unable to join
+ - Merge [id]
+   * forces user to merge
  - Addbot [Number]
    * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
  - Board [String 1] [String 2] [String 3] ...
