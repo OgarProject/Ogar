@@ -29,6 +29,7 @@ Commands.list = {
     help: function(gameServer,split) {
         console.log("[Console] ======================== HELP ======================");
         console.log("[Console] addbot [number]              : add bot to the server");
+        console.log("[Console] kickbot [number]             : kick an amount of bots");
         console.log("[Console] board [string] [string] ...  : set scoreboard text");
         console.log("[Console] boardreset                   : reset scoreboard text");
         console.log("[Console] change [setting] [value]     : change specified settings");
@@ -60,6 +61,33 @@ Commands.list = {
             gameServer.bots.addBot();
         }
         console.log("[Console] Added "+add+" player bots");
+    },
+    kickbot: function(gameServer,split) {
+        var toRemove = parseInt(split[1]);
+        if (isNaN(toRemove)) {
+            toRemove = -1; // Kick all bots if user doesnt specify a number
+        }
+
+	var removed = 0;
+	var i = 0;
+        while (i < gameServer.clients.length && removed != toRemove) {
+	    if (typeof gameServer.clients[i].remoteAddress == 'undefined'){ // if client i is a bot kick him
+		var client = gameServer.clients[i].playerTracker;
+		var len = client.cells.length;
+		for (var j = 0; j < len; j++) {
+		    gameServer.removeNode(client.cells[0]);
+		}
+		client.socket.close();
+		removed++;
+	    } else
+		i++;
+        }
+	if (toRemove == -1)
+            console.log("[Console] Kicked all bots ("+removed+")");
+	else if (toRemove == removed)
+            console.log("[Console] Kicked "+toRemove+" bots");
+	else
+	    console.log("[Console] Only "+removed+" bots could be kicked");
     },
     board: function(gameServer,split) {
         var newLB = [];
