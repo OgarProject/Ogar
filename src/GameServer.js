@@ -485,11 +485,36 @@ GameServer.prototype.virusCheck = function() {
     }
 };
 
+GameServer.prototype.getDist = function(x1, y1, x2, y2){ // Use Pythagoras theorem
+    var deltaX = Math.abs(x1 - x2);
+    var deltaY = Math.abs(y1 - y2);
+    return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+}
+
 GameServer.prototype.updateMoveEngine = function() {
     // Move player cells
     var len = this.nodesPlayer.length;
+
+    // Sort cells to move the cells close to the mouse first
+    var srt = [];
+    for (var i = 0; i < len; i++)
+	srt[i] = i;
+
+    for (var i = 0; i < len; i++){
+	for (var j = i + 1; j < len; j++){
+	    var clientI = this.nodesPlayer[srt[i]].owner;
+	    var clientJ = this.nodesPlayer[srt[j]].owner;
+	    if (this.getDist( this.nodesPlayer[srt[i]].position.x, this.nodesPlayer[srt[i]].position.y, clientI.mouse.x, clientI.mouse.y ) >
+		this.getDist( this.nodesPlayer[srt[j]].position.x, this.nodesPlayer[srt[j]].position.y, clientJ.mouse.x, clientJ.mouse.y )){
+		var aux = srt[i];
+		srt[i] = srt[j];
+		srt[j] = aux;
+	    }
+	}
+    }
+
     for (var i = 0; i < len; i++) {
-        var cell = this.nodesPlayer[i];
+        var cell = this.nodesPlayer[srt[i]];
 
         // Do not move cells that have already been eaten or have collision turned off
         if (!cell){
