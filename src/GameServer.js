@@ -92,22 +92,6 @@ function GameServer() {
 
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
-
-    // Colors
-    this.colors = [
-        {'r':235, 'g': 75, 'b':  0},
-        {'r':225, 'g':125, 'b':255},
-        {'r':180, 'g':  7, 'b': 20},
-        {'r': 80, 'g':170, 'b':240},
-        {'r':180, 'g': 90, 'b':135},
-        {'r':195, 'g':240, 'b':  0},
-        {'r':150, 'g': 18, 'b':255},
-        {'r': 80, 'g':245, 'b':  0},
-        {'r':165, 'g': 25, 'b':  0},
-        {'r': 80, 'g':145, 'b':  0},
-        {'r': 80, 'g':170, 'b':240},
-        {'r': 55, 'g': 92, 'b':255},
-    ];
 }
 
 module.exports = GameServer;
@@ -280,13 +264,25 @@ GameServer.prototype.getRandomSpawn = function() {
 };
 
 GameServer.prototype.getRandomColor = function() {
-    var index = Math.floor(Math.random() * this.colors.length);
-    var color = this.colors[index];
-    return {
-        r: color.r,
-        b: color.b,
-        g: color.g
-    };
+    var rand = Math.floor(Math.random() * 3);
+    if(rand == 0)
+	return {
+	     r: 255,
+	     b: Math.random() * 255,
+	     g: 0
+	};
+    else if(rand == 1)
+	return {
+	     r: 0,
+	     b: 255,
+	     g: Math.random() * 255
+	};
+    else
+	return {
+	     r: Math.random() * 255,
+	     b: 0,
+	     g: 255
+	};
 };
 
 GameServer.prototype.addNode = function(node) {
