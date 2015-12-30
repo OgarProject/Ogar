@@ -1,6 +1,6 @@
 # Andrews Version of Ogar
 A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client. THIS IS A FORK OF THE ORIGINAL OGAR BUT THIS HAS MORE FEATURES, also, I borrowed from other forks: Kickbots,merge (editedbyme),killrange(editedbyme),kickrange(editedbyme) commands and the nocollision game modes. Every other Extra feature I created.
-This Modified copy was created to help those who want to open their server to the public. I will add more features like sending a message periodicaly (so you can also remind people of the rules) and remote control like pocket dock console in pocketmine (mabye) 
+This Modified copy was created to help those who want to open their server to the public. I will add more features like banning and remote control like pocket dock console in pocketmine (mabye) 
 
 ### Official Website
 The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
@@ -46,7 +46,16 @@ Id   | Name
 17   | NoCollision Xteam
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
+ 
 
+- Pfmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
+   * Periodically sends a force message
+ - Spmsg []
+   * stops pfmsg
+- Pmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
+   * Periodically sends a message
+ - Spmsg []
+   * stops `pmsg
  - Troll [id]
    * You figure out this one, Its a suprise!
  - Fmsg [message 1] [message 2] [etc...]
