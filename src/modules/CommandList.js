@@ -54,9 +54,144 @@ Commands.list = {
         console.log("[Console] Nojoin [Id]   Prevents the player from merging")
         console.log("[Console] Msg [message 1] [message 2] [etc..] :Sends a message")
         console.log("[Console] Fmsg [Msg1] [Msg2] [Etc..] forces people to look at msg");
+        console.log("[Console] Pmsg [Delay] [Duration] [repeat times] [MSG1] [MSG2] [etc...] Periodically sends a message");
+        console.log("[Console] Spmsg [] Stops any Pmsg proccess");
+        console.log("[Console] Pfmsg [Delay] [Duration] [repeat times] [MSG1] [MSG2] [etc...] Periodically sends a force message");
+        console.log("[Console] Sfpmsg [] Stops any Pfmsg proccess");
         console.log("[Console] ====================================================");
     },
+    spmsg: function(gameServer,split) {
+        var pmsgt = 0
+        clearInterval(pmsgt);
+        console.log("Stopped any periodicMSG process")
+    },
+    pmsg: function(gameServer,split) {
+    var delay = parseInt(split[1]*1000);
+    var dur = parseInt(split[2]*1000);
+    var re = parseInt(split[3]);
+    var newLB = [];
+    if (isNaN(delay)) { 
+             console.log("[Console] Please specify a valid delay!"); 
+             return; 
+         } 
+        if (isNaN(dur)) { 
+             console.log("[Console] Please specify a valid duration!"); 
+             return; 
+         } 
+        if (isNaN(re)) { 
+             console.log("[Console] Please specify a valid times to repeat!"); 
+             return; 
+         }
+        for (var i = 4; i < split.length; i++) {
+            newLB[i - 4] = split[i];
+        }
+console.log("[PMSG] Your request has been sent" )
+  console.log (delay+" "+ dur+" "+ re);
+        var r=1;
+    var pmsgt = setInterval(function() {
+       gameServer.gameMode.packetLB = 48;
+        gameServer.gameMode.specByLeaderboard = false;
+        gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB};   
+         console.log ("[PMSG] The message has been broadcast " + r+ "/" + re);
+        var gm = GameMode.get(gameServer.gameMode.ID);
+        setTimeout(function() {
+        // Replace functions
+        gameServer.gameMode.packetLB = gm.packetLB;
+        gameServer.gameMode.updateLB = gm.updateLB;
+            console.log ("[PMSG] The board has been reset");
+       r++;
+         if (r > re) {
+             console.log("[PMSG] Done");
+             clearInterval(pmsgt);
+         } 
+        
     
+    },dur);     
+         
+     }, delay );
+
+
+ 
+  
+    
+},
+  
+    
+    spfmsg: function(gameServer,split) {
+        var pfmsgt = 0
+        clearInterval(pfmsgt);
+        console.log("Stopped any periodicForceMSG process")
+    },
+    pfmsg: function(gameServer,split) {
+    var delay = parseInt(split[1]*1000);
+    var dur = parseInt(split[2]*1000);
+    var re = parseInt(split[3]);
+    var newLB = [];
+    var n = [];
+        if (isNaN(delay)) { 
+             console.log("[Console] Please specify a valid delay!"); 
+             return; 
+         } 
+        if (isNaN(dur)) { 
+             console.log("[Console] Please specify a valid duration!"); 
+             return; 
+         } 
+        if (isNaN(re)) { 
+             console.log("[Console] Please specify a valid times to repeat!"); 
+             return; 
+         } 
+        for (var i = 4; i < split.length; i++) {
+            newLB[i - 4] = split[i];
+        }
+console.log("[PFMSG] Your request has been sent" )
+  console.log (delay+" "+ dur+" "+ re);
+        var r=1;
+    var pfmsgt = setInterval(function() {
+       gameServer.gameMode.packetLB = 48;
+        gameServer.gameMode.specByLeaderboard = false;
+        gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB};   
+        for (var i = 0; i < gameServer.clients.length; i++) {
+                 var client = gameServer.clients[i].playerTracker; 
+            n[i] = client.name;
+            
+            if (client.pID == i+1) {
+                client.name = "Look At Leaderboard";
+            }
+            
+        }
+        gameServer.run = !gameServer.run;
+         console.log ("[PFMSG] The message has been broadcast " + r+ "/" + re);
+        var gm = GameMode.get(gameServer.gameMode.ID);
+        setTimeout(function() {
+        // Replace functions
+        gameServer.gameMode.packetLB = gm.packetLB;
+        gameServer.gameMode.updateLB = gm.updateLB;
+             for (var i = 0; i < gameServer.clients.length; i++) {
+                 var client = gameServer.clients[i].playerTracker; 
+            
+            if (client.pID == i+1) {
+                client.name = n[i];
+            }
+            
+        }
+            gameServer.run = !gameServer.run;
+            console.log ("[PFMSG] The game has been reset");
+       r++;
+         if (r > re) {
+             console.log("[PFMSG] Done");
+             clearInterval(pfmsgt);
+         } 
+        
+    
+    },dur);     
+         
+     }, delay );
+
+
+ 
+  
+    
+},
     fmsg: function(gameServer,split) {
         var newLB = [];
         var n = [];
