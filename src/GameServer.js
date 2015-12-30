@@ -35,7 +35,7 @@ function GameServer() {
     this.commands; // Command handler
 
     // Main loop tick
-    this.time = +new Date;
+    this.time = Date.now();
     this.startTime = this.time;
     this.tick = 0; // 1 second ticks of mainLoop
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
