@@ -28,26 +28,27 @@ var fillChar = function (data, char, fieldLength, rTL) {
 Commands.list = {
     help: function(gameServer,split) {
         console.log("[Console] ======================== HELP ======================");
-        console.log("[Console] addbot     : add bot to the server");
-        console.log("[Console] board      : set scoreboard text");
-        console.log("[Console] boardreset : reset scoreboard text");
-        console.log("[Console] change     : change specified settings");
-        console.log("[Console] clear      : clear console output");
-        console.log("[Console] color      : set cell(s) color by client ID");
-        console.log("[Console] exit       : stop the server");
-        console.log("[Console] food       : spawn food at specified Location");
-        console.log("[Console] gamemode   : change server gamemode");
-        console.log("[Console] kick       : kick player or bot by client ID");
-        console.log("[Console] kill       : kill cell(s) by client ID");
-        console.log("[Console] killall    : kill everyone");
-        console.log("[Console] mass       : set cell(s) mass by client ID");
-        console.log("[Console] name       : change cell(s) name by client ID");
-        console.log("[Console] playerlist : get list of players and bots");
-        console.log("[Console] pause      : pause game , freeze all cells");
-        console.log("[Console] reload     : reload config");
-        console.log("[Console] status     : get server status");
-        console.log("[Console] tp         : teleport player to specified location");
-        console.log("[Console] virus      : spawn virus at a specified Location");
+        console.log("[Console] addbot [number]              : add bot to the server");
+        console.log("[Console] kickbot [number]             : kick an amount of bots");
+        console.log("[Console] board [string] [string] ...  : set scoreboard text");
+        console.log("[Console] boardreset                   : reset scoreboard text");
+        console.log("[Console] change [setting] [value]     : change specified settings");
+        console.log("[Console] clear                        : clear console output");
+        console.log("[Console] color [PlayerID] [R] [G] [B] : set cell(s) color by client ID");
+        console.log("[Console] exit                         : stop the server");
+        console.log("[Console] food [X] [Y] [mass]          : spawn food at specified Location");
+        console.log("[Console] gamemode [id]                : change server gamemode");
+        console.log("[Console] kick [PlayerID]              : kick player or bot by client ID");
+        console.log("[Console] kill [PlayerID]              : kill cell(s) by client ID");
+        console.log("[Console] killall                      : kill everyone");
+        console.log("[Console] mass [PlayerID] [mass]       : set cell(s) mass by client ID");
+        console.log("[Console] name [PlayerID] [name]       : change cell(s) name by client ID");
+        console.log("[Console] playerlist                   : get list of players and bots");
+        console.log("[Console] pause                        : pause game , freeze all cells");
+        console.log("[Console] reload                       : reload config");
+        console.log("[Console] status                       : get server status");
+        console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
+        console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
         console.log("[Console] ====================================================");
     },
     addbot: function(gameServer,split) {
@@ -60,6 +61,33 @@ Commands.list = {
             gameServer.bots.addBot();
         }
         console.log("[Console] Added "+add+" player bots");
+    },
+    kickbot: function(gameServer,split) {
+        var toRemove = parseInt(split[1]);
+        if (isNaN(toRemove)) {
+            toRemove = -1; // Kick all bots if user doesnt specify a number
+        }
+
+	var removed = 0;
+	var i = 0;
+        while (i < gameServer.clients.length && removed != toRemove) {
+	    if (typeof gameServer.clients[i].remoteAddress == 'undefined'){ // if client i is a bot kick him
+		var client = gameServer.clients[i].playerTracker;
+		var len = client.cells.length;
+		for (var j = 0; j < len; j++) {
+		    gameServer.removeNode(client.cells[0]);
+		}
+		client.socket.close();
+		removed++;
+	    } else
+		i++;
+        }
+	if (toRemove == -1)
+            console.log("[Console] Kicked all bots ("+removed+")");
+	else if (toRemove == removed)
+            console.log("[Console] Kicked "+toRemove+" bots");
+	else
+	    console.log("[Console] Only "+removed+" bots could be kicked");
     },
     board: function(gameServer,split) {
         var newLB = [];
