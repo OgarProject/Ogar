@@ -48,6 +48,8 @@ The current available console commands are listed here. Command names are not ca
 
  - Troll [id]
    * You figure out this one, Its a suprise!
+ - Fmsg [message 1] [message 2] [etc...]
+   * Forces players to read a message, This is done by changeing leaderboard to msg, freezing players, and change their name temporarily
  - Msg [message1] [message2] [etc...]
    * Changes the leaderboard to a message for a short time
  - kick/killrange [Start] [End]
