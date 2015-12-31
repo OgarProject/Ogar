@@ -61,6 +61,10 @@ function GameServer() {
         foodStartAmount: 100, // The starting amount of food in the map
         foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
+        foodMassGrow: 0, // Enable food mass grow ?
+        foodMassGrowPossiblity: 50, // Chance for a food to has the ability to be self growing
+        foodMassLimit: 5,  // Maximum mass for a food can grow
+        foodMassTimeout: 120, // The amount of interval for a food to grow its mass (in seconds)
         virusMinAmount: 10, // Minimum amount of viruses on the map.
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100, // Starting virus size (In mass)
@@ -433,7 +437,7 @@ GameServer.prototype.updateFood = function() {
 };
 
 GameServer.prototype.spawnFood = function() {
-    var f = new Entity.Food(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMass);
+    var f = new Entity.Food(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMass, this);
     f.setColor(this.getRandomColor());
 
     this.addNode(f);
