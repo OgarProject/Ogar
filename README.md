@@ -49,11 +49,11 @@ The current available console commands are listed here. Command names are not ca
  
 
 - Pfmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
-   * Periodically sends a force message
+   * Periodically sends a force message (seconds)
  - Spmsg []
    * stops pfmsg
 - Pmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
-   * Periodically sends a message
+   * Periodically sends a message (seconds)
  - Spmsg []
    * stops `pmsg
  - Troll [id]
