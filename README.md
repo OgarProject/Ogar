@@ -50,12 +50,12 @@ The current available console commands are listed here. Command names are not ca
 
 - Pfmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
    * Periodically sends a force message (seconds)
- - Spmsg []
+ - Spfmsg []
    * stops pfmsg
 - Pmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
    * Periodically sends a message (seconds)
- - Spfmsg []
-   * stops `pmsg
+ - Spmsg []
+   * stops pmsg
  - Troll [id]
    * You figure out this one, Its a suprise!
  - Fmsg [message 1] [message 2] [etc...]
