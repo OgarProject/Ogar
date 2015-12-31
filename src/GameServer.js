@@ -66,6 +66,7 @@ function GameServer() {
         virusStartMass: 100, // Starting virus size (In mass)
         virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
         ejectMass: 12, // Mass of ejected cells
+	ejectMassCooldown: 200, // Time until a player can eject mass again
         ejectMassLoss: 16, // Mass lost when ejecting cells
         ejectSpeed: 160, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
@@ -92,22 +93,6 @@ function GameServer() {
 
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
-
-    // Colors
-    this.colors = [
-        {'r':235, 'g': 75, 'b':  0},
-        {'r':225, 'g':125, 'b':255},
-        {'r':180, 'g':  7, 'b': 20},
-        {'r': 80, 'g':170, 'b':240},
-        {'r':180, 'g': 90, 'b':135},
-        {'r':195, 'g':240, 'b':  0},
-        {'r':150, 'g': 18, 'b':255},
-        {'r': 80, 'g':245, 'b':  0},
-        {'r':165, 'g': 25, 'b':  0},
-        {'r': 80, 'g':145, 'b':  0},
-        {'r': 80, 'g':170, 'b':240},
-        {'r': 55, 'g': 92, 'b':255},
-    ];
 }
 
 module.exports = GameServer;
@@ -280,13 +265,25 @@ GameServer.prototype.getRandomSpawn = function() {
 };
 
 GameServer.prototype.getRandomColor = function() {
-    var index = Math.floor(Math.random() * this.colors.length);
-    var color = this.colors[index];
-    return {
-        r: color.r,
-        b: color.b,
-        g: color.g
-    };
+    var rand = Math.floor(Math.random() * 3);
+    if(rand == 0)
+	return {
+	     r: 255,
+	     b: Math.random() * 255,
+	     g: 0
+	};
+    else if(rand == 1)
+	return {
+	     r: 0,
+	     b: 255,
+	     g: Math.random() * 255
+	};
+    else
+	return {
+	     r: Math.random() * 255,
+	     b: 0,
+	     g: 255
+	};
 };
 
 GameServer.prototype.addNode = function(node) {
@@ -489,11 +486,36 @@ GameServer.prototype.virusCheck = function() {
     }
 };
 
+GameServer.prototype.getDist = function(x1, y1, x2, y2){ // Use Pythagoras theorem
+    var deltaX = Math.abs(x1 - x2);
+    var deltaY = Math.abs(y1 - y2);
+    return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+}
+
 GameServer.prototype.updateMoveEngine = function() {
     // Move player cells
     var len = this.nodesPlayer.length;
+
+    // Sort cells to move the cells close to the mouse first
+    var srt = [];
+    for (var i = 0; i < len; i++)
+	srt[i] = i;
+
+    for (var i = 0; i < len; i++){
+	for (var j = i + 1; j < len; j++){
+	    var clientI = this.nodesPlayer[srt[i]].owner;
+	    var clientJ = this.nodesPlayer[srt[j]].owner;
+	    if (this.getDist( this.nodesPlayer[srt[i]].position.x, this.nodesPlayer[srt[i]].position.y, clientI.mouse.x, clientI.mouse.y ) >
+		this.getDist( this.nodesPlayer[srt[j]].position.x, this.nodesPlayer[srt[j]].position.y, clientJ.mouse.x, clientJ.mouse.y )){
+		var aux = srt[i];
+		srt[i] = srt[j];
+		srt[j] = aux;
+	    }
+	}
+    }
+
     for (var i = 0; i < len; i++) {
-        var cell = this.nodesPlayer[i];
+        var cell = this.nodesPlayer[srt[i]];
 
         // Do not move cells that have already been eaten or have collision turned off
         if (!cell){
@@ -606,7 +628,17 @@ GameServer.prototype.splitCells = function(client) {
     }
 };
 
+GameServer.prototype.canEjectMass = function(client){
+    if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown){
+	client.lastEject = this.time;
+	return true;
+    } else
+	return false;
+}
+
 GameServer.prototype.ejectMass = function(client) {
+    if (!this.canEjectMass(client))
+	return ;
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
 
@@ -956,4 +988,5 @@ WebSocket.prototype.sendPacket = function(packet) {
         this.removeAllListeners();
     }
 };
+
 
