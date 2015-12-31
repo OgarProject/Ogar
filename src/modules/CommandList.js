@@ -61,7 +61,6 @@ Commands.list = {
         console.log("[Console] ====================================================");
     },
     spmsg: function(gameServer,split) {
-        var pmsgt = 0
         clearInterval(pmsgt);
         console.log("Stopped any periodicMSG process")
     },
@@ -88,7 +87,7 @@ Commands.list = {
 console.log("[PMSG] Your request has been sent" )
   console.log (delay+" "+ dur+" "+ re);
         var r=1;
-    var pmsgt = setInterval(function() {
+    pmsgt = setInterval(function() {
        gameServer.gameMode.packetLB = 48;
         gameServer.gameMode.specByLeaderboard = false;
         gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB};   
@@ -118,7 +117,6 @@ console.log("[PMSG] Your request has been sent" )
   
     
     spfmsg: function(gameServer,split) {
-        var pfmsgt = 0
         clearInterval(pfmsgt);
         console.log("Stopped any periodicForceMSG process")
     },
@@ -146,7 +144,7 @@ console.log("[PMSG] Your request has been sent" )
 console.log("[PFMSG] Your request has been sent" )
   console.log (delay+" "+ dur+" "+ re);
         var r=1;
-    var pfmsgt = setInterval(function() {
+    pfmsgt = setInterval(function() {
        gameServer.gameMode.packetLB = 48;
         gameServer.gameMode.specByLeaderboard = false;
         gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB};   
