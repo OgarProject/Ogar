@@ -27,14 +27,6 @@ PlayerCell.prototype.visibleCheck = function(box,centerPos) {
     return (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
 };
 
-PlayerCell.prototype.simpleCollide = function(x1,y1,check,d) {
-    // Simple collision check
-    var len = d >> 0; // Width of cell + width of the box (Int)
-
-    return (this.abs(x1 - check.position.x) < len) &&
-           (this.abs(y1 - check.position.y) < len);
-};
-
 PlayerCell.prototype.calcMergeTime = function(base) {
     this.recombineTicks = base + ((0.02 * this.mass) >> 0); // Int (30 sec + (.02 * mass))
 };
@@ -72,25 +64,19 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
         if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
             // Cannot recombine - Collision with your own cells
             var collisionDist = cell.getSize() + r; // Minimum distance between the 2 cells
-            if (!this.simpleCollide(x1,y1,cell,collisionDist)) {
-                // Skip
-                continue;
-            }
-
-            // First collision check passed... now more precise checking
-            dist = this.getDist(this.position.x,this.position.y,cell.position.x,cell.position.y);
+            dist = this.getDist(x1,y1,cell.position.x,cell.position.y); // Distance between these two cells
             
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
-                var newDeltaY = cell.position.y - y1;
-                var newDeltaX = cell.position.x - x1;
+                var newDeltaY = y1 - cell.position.y;
+                var newDeltaX = x1 - cell.position.x;
                 var newAngle = Math.atan2(newDeltaX,newDeltaY);
 
-                var move = collisionDist - dist + 5;
+                var move = collisionDist - dist;
 
-                cell.position.x = cell.position.x + ( move * Math.sin(newAngle) ) >> 0;
-                cell.position.y = cell.position.y + ( move * Math.cos(newAngle) ) >> 0;
+                x1 = x1 + ( move * Math.sin(newAngle) ) >> 0;
+                y1 = y1 + ( move * Math.cos(newAngle) ) >> 0;
             }
         }
     }
@@ -167,4 +153,5 @@ PlayerCell.prototype.getDist = function(x1, y1, x2, y2) {
 
     return Math.sqrt(xs + ys);
 }
+
 
