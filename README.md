@@ -54,7 +54,7 @@ The current available console commands are listed here. Command names are not ca
    * stops pfmsg
 - Pmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
    * Periodically sends a message (seconds)
- - Spmsg []
+ - Spfmsg []
    * stops `pmsg
  - Troll [id]
    * You figure out this one, Its a suprise!
