@@ -3,6 +3,9 @@ These bots are designed to be used for testing new commits of Ogar. To install t
 
 
 [Changelog]
+(1/1/16)
+- Bot will now actively target the biggest prey
+
 (6/24/15)
 -Bots will now consider threats when splitting
 -Bots now passively gain mass when running away

@@ -92,7 +92,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     this.clearLists();
 
     // Ignores targeting cells below this mass
-    var ignoreMass = Math.min((cell.mass / 10), 150); 
+    var ignoreMass = Math.min((cell.mass / 10), 150);
 
     // Loop
     for (i in this.visibleNodes) {
@@ -262,7 +262,7 @@ BotPlayer.prototype.decide = function(cell) {
             // Cheating
             if (cell.mass < 250) {
                 cell.mass += 1;
-            } 
+            }
 
             if (this.juke) {
                 // Juking
@@ -272,7 +272,7 @@ BotPlayer.prototype.decide = function(cell) {
             break;
         case 3: // Target prey
             if ((!this.target) || (cell.mass < (this.target.mass * 1.25)) || (this.visibleNodes.indexOf(this.target) == -1)) {
-                this.target = this.getRandom(this.prey);
+                this.target = this.getBiggest(this.prey);
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
 
@@ -360,12 +360,12 @@ BotPlayer.prototype.decide = function(cell) {
                 r++;
             }
         }
-        // Merge 
+        // Merge
         if (r >= 2) {
             this.mouse.x = this.centerPos.x;
             this.mouse.y = this.centerPos.y;
         }
-    } 
+    }
 };
 
 // Finds the nearest cell in list
@@ -468,7 +468,7 @@ BotPlayer.prototype.checkPath = function(cell,check) {
     if ((v1 <= (v2 + inRange)) && (v1 >= (v2 - inRange))) {
         // Path collides
         return true;
-    } 
+    }
 
     // No collide
     return false;
