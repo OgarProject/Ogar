@@ -1,5 +1,4 @@
 
-
 // Imports
 var GameMode = require('../gamemodes');
 var Entity = require('../entity');
@@ -144,8 +143,8 @@ console.log("[PMSG] Your request has been sent" )
         }
 console.log("[PFMSG] Your request has been sent" )
   console.log (delay+" "+ dur+" "+ re);
+  var n = []
         var r=1;
-        var n=[]
     pfmsgt = setInterval(function() {
        gameServer.gameMode.packetLB = 48;
         gameServer.gameMode.specByLeaderboard = false;
@@ -154,9 +153,9 @@ console.log("[PFMSG] Your request has been sent" )
                  var client = gameServer.clients[i].playerTracker; 
             n[i] = client.name;
             
-         
+            if (client.pID == i+1) {
                 client.name = "Look At Leaderboard";
-            
+            }
             
         }
         gameServer.run = !gameServer.run;
@@ -169,9 +168,9 @@ console.log("[PFMSG] Your request has been sent" )
              for (var i = 0; i < gameServer.clients.length; i++) {
                  var client = gameServer.clients[i].playerTracker; 
             
-           
+            if (client.pID == i+1) {
                 client.name = n[i];
-            
+            }
             
         }
             gameServer.run = !gameServer.run;
@@ -205,9 +204,9 @@ console.log("[PFMSG] Your request has been sent" )
                  var client = gameServer.clients[i].playerTracker; 
             n[i] = client.name;
             
-           
+            if (client.pID == i+1) {
                 client.name = "Look At Leaderboard";
-            
+            }
             
         }
         gameServer.gameMode.packetLB = 48;
@@ -224,9 +223,9 @@ console.log("[PFMSG] Your request has been sent" )
             for (var i = 0; i < gameServer.clients.length; i++) {
                  var client = gameServer.clients[i].playerTracker; 
             
-            
+            if (client.pID == i+1) {
                 client.name = n[i];
-            
+            }
             
         }
            gameServer.run = !gameServer.run; 
