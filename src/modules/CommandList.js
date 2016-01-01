@@ -143,6 +143,7 @@ console.log("[PMSG] Your request has been sent" )
         }
 console.log("[PFMSG] Your request has been sent" )
   console.log (delay+" "+ dur+" "+ re);
+  var n = []
         var r=1;
     pfmsgt = setInterval(function() {
        gameServer.gameMode.packetLB = 48;
