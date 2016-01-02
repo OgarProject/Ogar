@@ -231,17 +231,17 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     };
 
     // Spawn food
-    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMass);
+    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMass, gameServer);
     f.setColor(gameServer.getRandomColor());
 
     gameServer.addNode(f);
     gameServer.currentFood++;
-    
+
     // Move engine
     f.angle = angle;
     var dist = (Math.random() * 10) + 22; // Random distance
     f.setMoveEngineData(dist,15);
-	
+
     gameServer.setAsMovingNode(f);
 };
 
