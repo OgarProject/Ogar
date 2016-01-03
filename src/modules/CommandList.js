@@ -62,7 +62,7 @@ Commands.list = {
     },
     spmsg: function(gameServer,split) {
         clearInterval(pmsgt);
-        console.log("Stopped any periodicMSG process")
+        console.log("Stopped any periodicMSG process");
     },
     pmsg: function(gameServer,split) {
     var delay = parseInt(split[1]*1000);
@@ -84,7 +84,7 @@ Commands.list = {
         for (var i = 4; i < split.length; i++) {
             newLB[i - 4] = split[i];
         }
-console.log("[PMSG] Your request has been sent" )
+console.log("[PMSG] Your request has been sent" );
   console.log (delay+" "+ dur+" "+ re);
         var r=1;
     pmsgt = setInterval(function() {
@@ -118,7 +118,7 @@ console.log("[PMSG] Your request has been sent" )
     
     spfmsg: function(gameServer,split) {
         clearInterval(pfmsgt);
-        console.log("Stopped any periodicForceMSG process")
+        console.log("Stopped any periodicForceMSG process");
     },
     pfmsg: function(gameServer,split) {
     var delay = parseInt(split[1]*1000);
@@ -141,9 +141,9 @@ console.log("[PMSG] Your request has been sent" )
         for (var i = 4; i < split.length; i++) {
             newLB[i - 4] = split[i];
         }
-console.log("[PFMSG] Your request has been sent" )
+console.log("[PFMSG] Your request has been sent" );
   console.log (delay+" "+ dur+" "+ re);
-  var n = []
+  var n = [];
         var r=1;
     pfmsgt = setInterval(function() {
        gameServer.gameMode.packetLB = 48;
