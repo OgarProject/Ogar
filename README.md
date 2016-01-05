@@ -15,7 +15,7 @@ As Ogar is written in Node.js, you must have Node.js and its "ws" module install
 Manual:
 ```sh
 ~$ git clone git://github.com/OgarProject/Ogar.git Ogar
-~$ npm install ws
+~$ npm install
 ~$ node Ogar
 ```
 Using the install script:
