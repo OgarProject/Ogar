@@ -48,11 +48,11 @@ Id   | Name
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
  
 
-- Pfmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
+ - Pfmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
    * Periodically sends a force message (seconds)
  - Spfmsg []
    * stops pfmsg
-- Pmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
+ - Pmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
    * Periodically sends a message (seconds)
  - Spmsg []
    * stops pmsg
