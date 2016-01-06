@@ -1,7 +1,9 @@
-function UpdateNodes(destroyQueue, nodes, nonVisibleNodes) {
+function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, scrambleX, scrambleY) {
     this.destroyQueue = destroyQueue;
     this.nodes = nodes;
     this.nonVisibleNodes = nonVisibleNodes;
+    this.scrambleX = scrambleX;
+    this.scrambleY = scrambleY;
 }
 
 module.exports = UpdateNodes;
@@ -52,8 +54,8 @@ UpdateNodes.prototype.build = function() {
         }
 
         view.setUint32(offset, node.nodeId, true); // Node ID
-        view.setInt32(offset + 4, node.position.x, true); // X position
-        view.setInt32(offset + 8, node.position.y, true); // Y position
+        view.setInt32(offset + 4, node.position.x + this.scrambleX, true); // X position
+        view.setInt32(offset + 8, node.position.y + this.scrambleY, true); // Y position
         view.setUint16(offset + 12, node.getSize(), true); // Mass formula: Radius (size) = (mass * mass) / 100
         view.setUint8(offset + 14, node.color.r, true); // Color (R)
         view.setUint8(offset + 15, node.color.g, true); // Color (G)
