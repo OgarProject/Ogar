@@ -36,13 +36,20 @@ function PlayerTracker(gameServer, socket) {
     };
 
     // Scramble the coordinate system for anti-raga
-    this.scrambleX = Math.floor((1<<15) * Math.random());
-    this.scrambleY = Math.floor((1<<15) * Math.random());
+    this.scrambleX = 0;
+    this.scrambleY = 0;
 
     // Gamemode function
     if (gameServer) {
+        // Player id
         this.pID = gameServer.getNewPlayerID();
+        // Gamemode function
         gameServer.gameMode.onPlayerInit(this);
+        // Only scramble if enabled in config
+        if (gameServer.config.serverScrambleCoords == 1) {
+            this.scrambleX = Math.floor((1<<15) * Math.random());
+            this.scrambleY = Math.floor((1<<15) * Math.random());
+        }
     }
 }
 
