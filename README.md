@@ -6,6 +6,8 @@ This Modified copy was created to help those who want to open their server to th
  2. msg,fmsg commands
  3. max ip connections
  4. troll command ;)
+ 5. more gamemodes
+ 5. and other features such as merge or nojoin or kick/killrange
 
 ### Official Website (for official ogar)
 The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
