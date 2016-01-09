@@ -9,7 +9,7 @@ function Food() {
     this.shouldSendUpdate = false;
 
     if (this.gameServer.config.foodMassGrow &&
-        Math.floor(Math.random()*101) > this.gameServer.config.foodMassGrowPossiblity) {
+        this.gameServer.config.foodMassGrowPossiblity > Math.floor(Math.random()*101)) {
         this.grow();
     }
 }
@@ -37,7 +37,7 @@ Food.prototype.grow = function() {
     this.shouldSendUpdate = true;
 
     if (this.mass < this.gameServer.config.foodMassLimit) {
-      this.grow();
+        this.grow();
     }
   }.bind(this), this.gameServer.config.foodMassTimeout * 1000);
 };
@@ -48,8 +48,8 @@ Food.prototype.sendUpdate = function() {
         return false;
     }
     if (this.shouldSendUpdate) {
-      this.shouldSendUpdate = false;
-      return true;
+        this.shouldSendUpdate = false;
+        return true;
     }
     return true;
 };
