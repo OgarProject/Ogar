@@ -43,6 +43,7 @@ function GameServer() {
 
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
+        serverMaxConnectionsPerIp: 5,
         serverMaxConnections: 64, // Maximum amount of connections to the server.
         serverPort: 443, // Server port
         serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
@@ -171,7 +172,16 @@ GameServer.prototype.start = function() {
             return;
         }
         // -----/Client authenticity check code -----
-
+if(this.ipCounts[ws._socket.remoteAddress] >= this.config.serverMaxConnectionsPerIp) {
+            ws.close();
+            return;
+        }
+        if(this.ipCounts[ws._socket.remoteAddress]) {
+            this.ipCounts[ws._socket.remoteAddress]++;
+        } else {
+            this.ipCounts[ws._socket.remoteAddress] = 1;
+        }
+        
         function close(error) {
             // Log disconnections
             this.server.log.onDisconnect(this.socket.remoteAddress);
