@@ -1,4 +1,4 @@
-// Leap gamemode by ogarServ implemented in andrew's ogar
+// Leap gamemode by ogarPlus implemented in andrew's ogar
 
 var FFA = require('./FFA') //Base Gamemode
 var Entity = require('../entity'); //You can delete if your gamemode doesn't modify entities
