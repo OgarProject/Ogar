@@ -51,6 +51,7 @@ Id   | Name
 15   | NoCollision teams
 16   | NoCollision Zteam
 17   | NoCollision Xteam
+18   | Leap - Where you leap instead of split, made by Ogarplus
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
  
