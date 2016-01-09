@@ -67,8 +67,8 @@ PacketHandler.prototype.handleMessage = function(message) {
             // Set Target
             if (view.byteLength == 13) {
                 var client = this.socket.playerTracker;
-                client.mouse.x = view.getInt32(1, true);
-                client.mouse.y = view.getInt32(5, true);
+                client.mouse.x = view.getInt32(1, true) - client.scrambleX;
+                client.mouse.y = view.getInt32(5, true) - client.scrambleY;
             }
             break;
         case 17:
@@ -87,12 +87,17 @@ PacketHandler.prototype.handleMessage = function(message) {
             this.pressW = true;
             break;
         case 255:
-            // Connection Start 
+            // Connection Start
             if (view.byteLength == 5) {
                 this.protocol = view.getUint32(1, true);
                 // Send SetBorder packet first
                 var c = this.gameServer.config;
-                this.socket.sendPacket(new Packet.SetBorder(c.borderLeft, c.borderRight, c.borderTop, c.borderBottom));
+                this.socket.sendPacket(new Packet.SetBorder(
+                        c.borderLeft + this.socket.playerTracker.scrambleX,
+                        c.borderRight + this.socket.playerTracker.scrambleX,
+                        c.borderTop + this.socket.playerTracker.scrambleY,
+                        c.borderBottom + this.socket.playerTracker.scrambleY
+                ));
             }
             break;
         default:
@@ -104,7 +109,7 @@ PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // Set name first
-        client.setName(newNick); 
+        client.setName(newNick);
 
         // If client has no cells... then spawn a player
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer,client);
@@ -113,4 +118,3 @@ PacketHandler.prototype.setNickname = function(newNick) {
         client.spectate = false;
     }
 };
-
