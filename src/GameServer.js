@@ -727,6 +727,21 @@ GameServer.prototype.shootVirus = function(parent) {
     this.setAsMovingNode(newVirus);
 };
 
+GameServer.prototype.ejectVirus = function(parent) {
+    var parentPos = {
+        x: parent.position.x,
+        y: parent.position.y,
+    };
+
+    var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.ejectMass);
+    newVirus.setAngle(parent.getAngle());
+    newVirus.setMoveEngineData(200, 20);
+
+    // Add to moving cells list
+    this.addNode(newVirus);
+    this.setAsMovingNode(newVirus);
+};
+
 GameServer.prototype.getCellsInRange = function(cell) {
     var list = new Array();
     var squareR = cell.getSquareSize(); // Get cell squared radius
