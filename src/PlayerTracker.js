@@ -35,10 +35,21 @@ function PlayerTracker(gameServer, socket) {
         height: 0 // Half-height
     };
 
+    // Scramble the coordinate system for anti-raga
+    this.scrambleX = 0;
+    this.scrambleY = 0;
+
     // Gamemode function
     if (gameServer) {
+        // Player id
         this.pID = gameServer.getNewPlayerID();
+        // Gamemode function
         gameServer.gameMode.onPlayerInit(this);
+        // Only scramble if enabled in config
+        if (gameServer.config.serverScrambleCoords == 1) {
+            this.scrambleX = Math.floor((1<<15) * Math.random());
+            this.scrambleY = Math.floor((1<<15) * Math.random());
+        }
     }
 }
 
@@ -154,7 +165,13 @@ PlayerTracker.prototype.update = function() {
     }
 
     // Send packet
-    this.socket.sendPacket(new Packet.UpdateNodes(this.nodeDestroyQueue, updateNodes, nonVisibleNodes));
+    this.socket.sendPacket(new Packet.UpdateNodes(
+            this.nodeDestroyQueue,
+            updateNodes,
+            nonVisibleNodes,
+            this.scrambleX,
+            this.scrambleY
+    ));
 
     this.nodeDestroyQueue = []; // Reset destroy queue
     this.nodeAdditionQueue = []; // Reset addition queue
@@ -290,11 +307,14 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         var specZoom = Math.sqrt(100 * specPlayer.score);
         specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
         // TODO: Send packet elsewhere so it is send more often
-        this.socket.sendPacket(new Packet.UpdatePosition(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom));
+        this.socket.sendPacket(new Packet.UpdatePosition(
+                specPlayer.centerPos.x + this.scrambleX,
+                specPlayer.centerPos.y + this.scrambleY,
+                specZoom
+        ));
         // TODO: Recalculate visible nodes for spectator to match specZoom
         return specPlayer.visibleNodes.slice(0,specPlayer.visibleNodes.length);
     } else {
         return []; // Nothing
     }
 };
-
