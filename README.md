@@ -1,6 +1,11 @@
 # Andrews Version of Ogar - THE FEATURE HAS ARRIVED, PERIODIC MESSAGE SENDING 
 A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client. THIS IS A FORK OF THE ORIGINAL OGAR BUT THIS HAS MORE FEATURES, also, I borrowed from other forks: Kickbots,merge (editedbyme),killrange(editedbyme),kickrange(editedbyme) commands and the nocollision game modes. Every other Extra feature I created.
 This Modified copy was created to help those who want to open their server to the public. I will add more features like banning and remote control like pocket dock console in pocketmine (mabye) im also probably going to add virus mode and also might add OP/ingameadmin/staff
+### Highlight features in this modified copy
+ 1. PMSG command, to periodically send a message (no need for admin to be online to explain rules)
+ 2. msg,fmsg commands
+ 3. max ip connections
+ 4. troll command ;)
 
 ### Official Website (for official ogar)
 The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
