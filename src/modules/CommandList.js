@@ -486,7 +486,7 @@ console.log("[PFMSG] Your request has been sent" );
         }
 
         // Spawn
-        var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass);
+        var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass,gameServer);
         f.setColor(gameServer.getRandomColor());
         gameServer.addNode(f);
         gameServer.currentFood++; 
