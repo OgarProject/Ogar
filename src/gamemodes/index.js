@@ -15,6 +15,7 @@ module.exports = {
 	NCTeamX: require('./NoCollisionTeamX.js'),
     Unlimitpvp: require('./Unlimitpvp.js'),
     UnlimitFFA: require('./Unlimitffa.js'),
+    Leap: require('./Leap.js')
 };
 
 var get = function(id) {
@@ -47,15 +48,18 @@ var get = function(id) {
         case 14: // Experimental Team
             mode = new module.exports.TeamX();
             break;
-	    case 15: // No Collision Team
+	case 15: // No Collision Team
             mode = new module.exports.NCTeams();
             break;
-	    case 16: // No Collision Zombie Team
+	case 16: // No Collision Zombie Team
             mode = new module.exports.NCTeamZ();
             break;
-	    case 17: // No Collision Experimental Team
+	case 17: // No Collision Experimental Team
             mode = new module.exports.NCTeamX();
-            break;			
+            break;
+        case 18: // leap
+            mode = new module.exports.Leap();
+            break;
         case 20: // Rainbow
             mode = new module.exports.Rainbow();
             break;
