@@ -16,6 +16,7 @@ var Logger = require('./modules/log');
 // GameServer implementation
 function GameServer() {
     // Startup 
+    this.ipCounts = [];
     this.run = true;
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
