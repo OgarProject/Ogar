@@ -1,19 +1,23 @@
-# Andrews Version of Ogar - THE FEATURE HAS ARRIVED, PERIODIC MESSAGE SENDING 
+# Andrews Version of Ogar - OP HAS ARRIVED!
 A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client. THIS IS A FORK OF THE ORIGINAL OGAR BUT THIS HAS MORE FEATURES, also, I borrowed from other forks: Kickbots,merge (editedbyme),killrange(editedbyme),kickrange(editedbyme) commands and the nocollision game modes. Every other Extra feature I created.
 This Modified copy was created to help those who want to open their server to the public. I will add more features like banning and remote control like pocket dock console in pocketmine (mabye) im also probably going to add virus mode and also might add OP/ingameadmin/staff (Soon)
 ### Highlight features in this modified copy
  1. PMSG command, to periodically send a message (no need for admin to be online to explain rules)
- 2. msg,fmsg commands
- 3. max ip connections
- 4. troll command ;)
- 5. more gamemodes
- 5. and other features such as merge or nojoin or kick/killrange
+ 2. OP , to do stuff in game, see below
+ 3. msg,fmsg commands
+ 4. max ip connections
+ 5. troll command ;)
+ 6. more gamemodes
+ 7. and other features such as merge or nojoin or kick/killrange
 
 ### Official Website (for official ogar)
 The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
 
 ### Purchased Ogar?
 If you've purchased a copy of Ogar, you've probably been ripped off. [This post on our website explains why.](http://ogarproject.com/threads/psa-if-you-purchased-ogar-youve-been-ripped-off.6/)
+
+### OP(Beta) - Guide,
+You use OP by first doing op [id] in console. Then, the player can use the op features in game by pressing q. Then a c will appear next to your name. If you press w in this state, it gives you 100 more mass. If you press space in this state, you will be able to rejoin instantly. You will find out that if you press q again, two c's will appear next to your name. if you press w in this state, you shoot viruses. You can exit op by pressing q again and the two c's will dissappear.
 
 ## Obtaining and Using
 If you are on Windows, you can download the latest binary build of Ogar [from this page](http://dl.ogarproject.com/). The binary is the easiest way to get started running an Ogar server. If you'd like to tinker with the source code, you can follow the instructions below (and slightly modify them) to run the source on Windows.
@@ -56,7 +60,10 @@ Id   | Name
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
  
-
+ - Op [ID]
+   * Makes player OP
+ - Nop
+   * Disable op
  - Pfmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
    * Periodically sends a force message (seconds)
  - Spfmsg []
