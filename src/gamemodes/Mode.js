@@ -127,23 +127,23 @@ Mode.prototype.pressSpace = function(gameServer,player) {
                      client.cells[j].calcMergeTime(-1000); 
                  } 
                 
-    } else if (Mode.opc[client.pID] == 2) { 
+   // } else if (Mode.opc[client.pID] == ) { 
         
         
- client.name = "Specify Player (W or Space)";
-        Mode.opc[client.pID] = 4;
-        Mode.tid = 0;
-    } else if (Mode.opc[client.pID] == 4) {
-            setTimeout(function() {
-                if (Mode.tid == gameServer.clients.length) {
-                    Mode.tid --;
-                }
-     Mode.tid ++;
-         var client = gameServer.clients[Mode.tid].playerTracker;
-            Mode.tnam = client.name;
-                var client = gameServer.clients[Mode.op].playerTracker;
-                client.name = Mode.tnam;
-            },1);
+// client.name = "Specify Player (W or Space)";
+    //    Mode.opc[client.pID] = 4;
+       // Mode.tid = 0;
+    //} else if (Mode.opc[client.pID] == 4) {
+           // setTimeout(function() {
+               // if (Mode.tid == gameServer.clients.length) {
+                //    Mode.tid --;
+  //              }
+    // Mode.tid ++;
+       //  var client = gameServer.clients[Mode.tid].playerTracker;
+           // Mode.tnam = client.name;
+              //  var client = gameServer.clients[Mode.op].playerTracker;
+               // client.name = Mode.tnam;
+           // },1);
     } else {
     gameServer.splitCells(player);
     }
