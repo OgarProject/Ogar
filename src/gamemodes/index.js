@@ -63,7 +63,7 @@ var get = function(id) {
             break;
             
         case 19:
-            mode = new.module.exports.Virus();
+            mode = new module.exports.Virus();
             break;
         case 20: // Rainbow
             mode = new module.exports.Rainbow();
