@@ -1,5 +1,6 @@
 
 // Imports
+var Mode = require('../gamemodes/Mode.js');
 var GameMode = require('../gamemodes');
 var Entity = require('../entity');
 
@@ -58,8 +59,22 @@ Commands.list = {
         console.log("[Console] Spmsg [] Stops any Pmsg proccess");
         console.log("[Console] Pfmsg [Delay] [Duration] [repeat times] [MSG1] [MSG2] [etc...] Periodically sends a force message");
         console.log("[Console] Sfpmsg [] Stops any Pfmsg proccess");
+        console.log("[Console] Op [id] makes person OP");
+        console.log("[Console] Nop : disable op");
         console.log("[Console] ====================================================");
     },
+    op: function(gameServer,split) {
+Mode.op = parseInt(split[1]);
+console.log("Made " + Mode.op + " OP");
+
+},
+ nop: function(gameServer,split) {
+Mode.op = 0;
+Mode.opc = [];
+console.log("disabled op");
+
+},
+   
     spmsg: function(gameServer,split) {
         clearInterval(pmsgt);
         console.log("Stopped any periodicMSG process");
