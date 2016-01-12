@@ -103,7 +103,7 @@ for (var i = 0; i < client.cells.length; i++) {
         angle += (Math.random() * .4) - .2;
 
         // Create cell
-        var ejected = new Entity.Virus(gameServer.getNextNodeId(), null, startPos, 15);
+        var ejected = new Entity.Virus(gameServer.getNextNodeId(), null, startPos, 2);
         ejected.setAngle(angle);
         ejected.setMoveEngineData(160, 20);
 
