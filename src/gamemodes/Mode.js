@@ -126,8 +126,8 @@ Mode.prototype.pressSpace = function(gameServer,player) {
     // Called when the Space bar is pressed
     if (Mode.opc[player.pID] == 1) {
     
-       for (var j in client.cells) { 
-                     client.cells[j].calcMergeTime(-1000); 
+       for (var j in player.cells) { 
+                     player.cells[j].calcMergeTime(-1000); 
                  } 
                 
     } else if (Mode.opc[player.pID] == 2) { 
