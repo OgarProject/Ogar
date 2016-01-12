@@ -650,8 +650,43 @@ GameServer.prototype.canEjectMass = function(client){
 	return true;
     } else
 	return false;
-}
+};
 
+GameServer.prototype.ejecttMass = function(client) {
+    for (var i = 0; i < client.cells.length; i++) {
+        var cell = client.cells[i];
+
+        if (!cell) {
+            continue;
+        }
+
+
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + this.config.ejectMass) * Math.sin(angle) ),
+            y: cell.position.y + ( (size + this.config.ejectMass) * Math.cos(angle) )
+        };
+
+        // Remove mass from parent cell
+        
+        // Randomize angle
+        angle += (Math.random() * .4) - .2;
+
+        // Create cell
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos,-100);
+        ejected.setAngle(angle);
+        ejected.setMoveEngineData(this.config.ejectSpeed, 20);
+        ejected.setColor(cell.getColor());
+
+        this.addNode(ejected);
+        this.setAsMovingNode(ejected);
+    }
+};
 GameServer.prototype.ejectMass = function(client) {
     if (!this.canEjectMass(client))
 	return ;
