@@ -680,7 +680,7 @@ GameServer.prototype.ejecttMass = function(client) {
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos,-100);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(this.config.ejectSpeed, 20);
+        ejected.setMoveEngineData(90, 20);
         ejected.setColor(cell.getColor());
 
         this.addNode(ejected);
