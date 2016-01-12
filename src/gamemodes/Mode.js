@@ -43,7 +43,7 @@ Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
    
      if (player.pID == Mode.op) {
-         console.log(3);
+      
         if (Mode.opc[player.pID] === undefined) {
             Mode.opc[player.pID] = 1;
         } else {
