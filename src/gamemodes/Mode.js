@@ -129,7 +129,7 @@ Mode.prototype.pressSpace = function(gameServer,player) {
                 
    } else if (Mode.opc[client.pID] == 2) { 
         
-        
+        gameServer.ejecttMass(player);
 
     } else {
     gameServer.splitCells(player);
