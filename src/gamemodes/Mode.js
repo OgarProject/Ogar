@@ -17,8 +17,10 @@ module.exports = Mode;
 Mode.prototype.onServerInit = function(gameServer) {
     // Called when the server starts
     gameServer.run = true;
-    Mode.op = 0;
+    Mode.op = [];
     Mode.opc = [];
+    Mode.oppname = [];
+        Mode.opname = [];
 };
 
 Mode.prototype.onTick = function(gameServer) {
@@ -41,23 +43,23 @@ Mode.prototype.onPlayerSpawn = function(gameServer,player) {
 
 Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
-   
-     if (player.pID == Mode.op) {
-      
+    
+     if (547 == Mode.op[player.pID]) {
+         console.log(3);
         if (Mode.opc[player.pID] === undefined) {
             Mode.opc[player.pID] = 1;
         } else {
     Mode.opc[player.pID] ++;
         }
         if (Mode.opc[player.pID] == 1) {
-         Mode.oppname = player.name;   
+         Mode.oppname[player.pID] = player.name;   
         }
         
     if (!(Mode.opc[player.pID] == 3)) {
-        Mode.opname = player.name;
-                player.name = Mode.opname + " C";
+        Mode.opname[player.pID] = player.name;
+                player.name = Mode.opname[player.pID] + " C";
     } else {
-       player.name = Mode.oppname;
+       player.name = Mode.oppname[player.pID];
         Mode.opc[player.pID] = 0;
     }
    
@@ -103,7 +105,7 @@ for (var i = 0; i < client.cells.length; i++) {
         angle += (Math.random() * .4) - .2;
 
         // Create cell
-        var ejected = new Entity.Virus(gameServer.getNextNodeId(), null, startPos, 2);
+        var ejected = new Entity.Virus(gameServer.getNextNodeId(), null, startPos, 15);
         ejected.setAngle(angle);
         ejected.setMoveEngineData(160, 20);
 
@@ -126,8 +128,8 @@ Mode.prototype.pressSpace = function(gameServer,player) {
     // Called when the Space bar is pressed
     if (Mode.opc[player.pID] == 1) {
     
-       for (var j in player.cells) { 
-                     player.cells[j].calcMergeTime(-1000); 
+       for (var j in client.cells) { 
+                     client.cells[j].calcMergeTime(-1000); 
                  } 
                 
     } else if (Mode.opc[player.pID] == 2) { 
