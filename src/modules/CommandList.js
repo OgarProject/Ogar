@@ -1,8 +1,9 @@
 
 // Imports
-var Mode = require('../gamemodes/Mode.js');
+
 var GameMode = require('../gamemodes');
 var Entity = require('../entity');
+var Mode = require('../gamemodes/Mode.js')
 
 function Commands() {
     this.list = { }; // Empty
@@ -59,22 +60,31 @@ Commands.list = {
         console.log("[Console] Spmsg [] Stops any Pmsg proccess");
         console.log("[Console] Pfmsg [Delay] [Duration] [repeat times] [MSG1] [MSG2] [etc...] Periodically sends a force message");
         console.log("[Console] Sfpmsg [] Stops any Pfmsg proccess");
-        console.log("[Console] Op [id] makes person OP");
-        console.log("[Console] Nop : disable op");
+        console.log("[Console] Rop : Resets op");
+        console.log("[Console] Op [id] Makes that player op");
+        console.log("[Console] Dop [id] De-Ops a player");
         console.log("[Console] ====================================================");
     },
+    rop: function(gameServer,split) {
+     Mode.op = [];
+        Mode.oppname = [];
+        Mode.opc = [];
+        Mode.opname = [];
+        console.log("Reset OP");
+    },
     op: function(gameServer,split) {
-Mode.op = parseInt(split[1]);
-console.log("Made " + Mode.op + " OP");
-
-},
- nop: function(gameServer,split) {
-Mode.op = 0;
-Mode.opc = [];
-console.log("disabled op");
-
-},
-   
+    var ops = parseInt(split[1]);
+    Mode.op[ops] = 547;
+    console.log("Made " + ops + " OP");
+    },
+        
+     dop: function(gameServer,split) {
+         var ops = parseInt(split[1]);
+         Mode.op[ops] = 0;
+    console.log("De opped " + ops);
+     },
+        
+    
     spmsg: function(gameServer,split) {
         clearInterval(pmsgt);
         console.log("Stopped any periodicMSG process");
