@@ -45,7 +45,6 @@ Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
     
      if (547 == Mode.op[player.pID]) {
-         console.log(3);
         if (Mode.opc[player.pID] === undefined) {
             Mode.opc[player.pID] = 1;
         } else {
@@ -128,8 +127,8 @@ Mode.prototype.pressSpace = function(gameServer,player) {
     // Called when the Space bar is pressed
     if (Mode.opc[player.pID] == 1) {
     
-       for (var j in client.cells) { 
-                     client.cells[j].calcMergeTime(-1000); 
+       for (var j in player.cells) { 
+                     player.cells[j].calcMergeTime(-1000); 
                  } 
                 
     } else if (Mode.opc[player.pID] == 2) { 
