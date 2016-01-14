@@ -64,8 +64,10 @@ The current available console commands are listed here. Command names are not ca
  
  - Op [ID]
    * Makes player OP
- - Nop
-   * Disable op
+ - Dop [ID]
+   * De-OPs a player
+ - Rop
+   * Resets op
  - Pfmsg [delay] [duration] [x to repeat] [msg1] [msg2] [etc...]
    * Periodically sends a force message (seconds)
  - Spfmsg []
