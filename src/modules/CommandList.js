@@ -63,9 +63,7 @@ Commands.list = {
          console.log("[Console] Rop : Resets op");
         console.log("[Console] Op [id] Makes that player op");
         console.log("[Console] Dop [id] De-Ops a player");
-        
         console.log("[Console] Ban [IP] Bans an IP");
-        console.log("[Console] Dop [id] De-Ops a player");
         console.log("[Console] Banlist Lists banned IPs");
         console.log("[Console] Clearban , Resets Ban list");
         console.log("[Console] ====================================================");
