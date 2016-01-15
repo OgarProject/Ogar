@@ -18,6 +18,10 @@ function GameServer() {
     // Startup 
     this.ipCounts = [];
     this.run = true;
+    this.op = [];
+    this.opc = [];
+    this.oppname = [];
+        this.opname = [];
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
     this.clients = [];
@@ -25,7 +29,7 @@ function GameServer() {
     this.nodesVirus = []; // Virus nodes
     this.nodesEjected = []; // Ejected mass nodes
     this.nodesPlayer = []; // Nodes controlled by players
-
+    this.banned = [];
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
@@ -44,6 +48,7 @@ function GameServer() {
 
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
+        autoban: 0,
         serverMaxConnectionsPerIp: 5,
         serverMaxConnections: 64, // Maximum amount of connections to the server.
         serverPort: 443, // Server port
@@ -173,8 +178,39 @@ GameServer.prototype.start = function() {
             return;
         }
         // -----/Client authenticity check code -----
-if(this.ipCounts[ws._socket.remoteAddress] >= this.config.serverMaxConnectionsPerIp) {
+        
+        if (this.banned.indexOf(ws._socket.remoteAddress) != -1) { // Banned
+            console.log("Client " + ws._socket.remoteAddress + ", tried to connect but is banned!");
             ws.close();
+            return;
+        }
+        
+if(this.ipCounts[ws._socket.remoteAddress] >= this.config.serverMaxConnectionsPerIp) {
+    
+            ws.close();
+    
+    if (this.autoban == 1) {
+        
+         console.log("Added "+ws._socket.remoteAddress+" to the banlist because he/she was useing bots");
+        
+    
+    this.banned.push(ws._socket.remoteAddress);
+    
+           
+            // Remove from game
+            for (var i in this.clients) {
+                var c = this.clients[i];
+                if (!c.remoteAddress) {
+                    continue; 
+                }
+                if (c.remoteAddress == ws._socket.remoteAddress) {
+                   
+                    //this.socket.close();
+                    c.close(); // Kick out
+                }
+            }
+    }
+    
             return;
         }
         if(this.ipCounts[ws._socket.remoteAddress]) {
@@ -182,6 +218,9 @@ if(this.ipCounts[ws._socket.remoteAddress] >= this.config.serverMaxConnectionsPe
         } else {
             this.ipCounts[ws._socket.remoteAddress] = 1;
         }
+        
+        
+        
         
         function close(error) {
             // Log disconnections
@@ -680,13 +719,14 @@ GameServer.prototype.ejecttMass = function(client) {
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos,-100);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(90, 20);
+        ejected.setMoveEngineData(100, 20);
         ejected.setColor(cell.getColor());
 
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
     }
 };
+
 GameServer.prototype.ejectMass = function(client) {
     if (!this.canEjectMass(client))
 	return ;
