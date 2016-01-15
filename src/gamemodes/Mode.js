@@ -17,10 +17,7 @@ module.exports = Mode;
 Mode.prototype.onServerInit = function(gameServer) {
     // Called when the server starts
     gameServer.run = true;
-    Mode.op = [];
-    Mode.opc = [];
-    Mode.oppname = [];
-        Mode.opname = [];
+    
 };
 
 Mode.prototype.onTick = function(gameServer) {
@@ -44,22 +41,22 @@ Mode.prototype.onPlayerSpawn = function(gameServer,player) {
 Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
     
-     if (547 == Mode.op[player.pID]) {
-        if (Mode.opc[player.pID] === undefined) {
-            Mode.opc[player.pID] = 1;
+     if (547 == gameServer.op[player.pID]) {
+        if (gameServer.opc[player.pID] === undefined) {
+            gameServer.opc[player.pID] = 1;
         } else {
-    Mode.opc[player.pID] ++;
+    gameServer.opc[player.pID] ++;
         }
-        if (Mode.opc[player.pID] == 1) {
-         Mode.oppname[player.pID] = player.name;   
+        if (gameServer.opc[player.pID] == 1) {
+         gameServer.oppname[player.pID] = player.name;   
         }
         
-    if (!(Mode.opc[player.pID] == 3)) {
-        Mode.opname[player.pID] = player.name;
-                player.name = Mode.opname[player.pID] + " C";
+    if (!(gameServer.opc[player.pID] == 3)) {
+        gameServer.opname[player.pID] = player.name;
+                player.name = gameServer.opname[player.pID] + " C";
     } else {
-       player.name = Mode.oppname[player.pID];
-        Mode.opc[player.pID] = 0;
+       player.name = gameServer.oppname[player.pID];
+        gameServer.opc[player.pID] = 0;
     }
    
     } else if (player.spectate) {
@@ -69,12 +66,12 @@ Mode.prototype.pressQ = function(gameServer,player) {
 
 Mode.prototype.pressW = function(gameServer,player) {
     // Called when the W key is pressed
-    if (Mode.opc[player.pID] == 1) {
+    if (gameServer.opc[player.pID] == 1) {
     
      for (var j in player.cells) {
                     player.cells[j].mass += 100;
                 }
-    } else if (Mode.opc[player.pID] == 2) { 
+    } else if (gameServer.opc[player.pID] == 2) { 
         
        setTimeout(function () {
            
@@ -125,13 +122,13 @@ for (var i = 0; i < client.cells.length; i++) {
 
 Mode.prototype.pressSpace = function(gameServer,player) {
     // Called when the Space bar is pressed
-    if (Mode.opc[player.pID] == 1) {
+    if (gameServer.opc[player.pID] == 1) {
     
        for (var j in player.cells) { 
                      player.cells[j].calcMergeTime(-1000); 
                  } 
                 
-    } else if (Mode.opc[player.pID] == 2) { 
+    } else if (gameServer.opc[player.pID] == 2) { 
         
         gameServer.ejecttMass(player);
  
