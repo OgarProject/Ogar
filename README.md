@@ -8,6 +8,8 @@ This Modified copy was created to help those who want to open their server to th
  4. max ip connections
  5. troll command ;)
  6. more gamemodes
+ 7. ban
+ 8. autoban option (see gameserver.ini)
  7. and other features such as merge or nojoin or kick/killrange
 
 ### Official Website (for official ogar)
@@ -20,7 +22,6 @@ If you've purchased a copy of Ogar, you've probably been ripped off. [This post 
 You use OP by first setting who has op by doing op [id] in console. Then, that player can use the op features in game by pressing q. Then a c will appear next to your name. If you press w in this state, it gives you 100 more mass. If you press space in this state, you will be able to rejoin instantly. You will find out that if you press q again, two c's will appear next to your name. if you press w in this state, you shoot viruses. If you press space in this state, you shoot tiny things (almost invisible) that if someone eats, their mass is reduced by 100. You can exit op by pressing q again and the two c's will dissappear.
 
 * Note: This is still in beta so there might be problems (most concerned one is that the names (CC's) dont work when player name is blank) also, it doesnt work on Virus and Leap gamemodes
-* Note: in expiramental mode, you need to do command rop before doing anything
 
 ## Obtaining and Using
 If you are on Windows, you can download the latest binary build of Ogar [from this page](http://dl.ogarproject.com/). The binary is the easiest way to get started running an Ogar server. If you'd like to tinker with the source code, you can follow the instructions below (and slightly modify them) to run the source on Windows.
@@ -63,6 +64,12 @@ Id   | Name
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
  
+ - Ban [IP]
+   * Bans a IP
+ - Banlist
+   * Lists banned IPs
+ - Clearban
+   * Clears ban list
  - Op [ID]
    * Makes player OP
  - Dop [ID]
