@@ -3,7 +3,7 @@
 
 var GameMode = require('../gamemodes');
 var Entity = require('../entity');
-var Mode = require('../gamemodes/Mode.js')
+
 
 function Commands() {
     this.list = { }; // Empty
@@ -60,27 +60,71 @@ Commands.list = {
         console.log("[Console] Spmsg [] Stops any Pmsg proccess");
         console.log("[Console] Pfmsg [Delay] [Duration] [repeat times] [MSG1] [MSG2] [etc...] Periodically sends a force message");
         console.log("[Console] Sfpmsg [] Stops any Pfmsg proccess");
-        console.log("[Console] Rop : Resets op");
+         console.log("[Console] Rop : Resets op");
         console.log("[Console] Op [id] Makes that player op");
         console.log("[Console] Dop [id] De-Ops a player");
+        
+        console.log("[Console] Ban [IP] Bans an IP");
+        console.log("[Console] Dop [id] De-Ops a player");
+        console.log("[Console] Banlist Lists banned IPs");
+        console.log("[Console] Clearban , Resets Ban list");
         console.log("[Console] ====================================================");
     },
+    
+     ban: function(gameServer,split) {
+         // Get ip
+          var ip = split[1];
+            
+
+        if (gameServer.banned.indexOf(ip) == -1) {
+            gameServer.banned.push(ip);
+            console.log("Added "+ip+" to the banlist");
+            // Remove from game
+            for (var i in gameServer.clients) {
+                var c = gameServer.clients[i];
+                if (!c.remoteAddress) {
+                    continue; 
+                }
+                if (c.remoteAddress == ip) {
+                   
+                    //this.socket.close();
+                    c.close(); // Kick out
+                }
+            }
+        } else {
+            console.log("That IP is already banned");
+        }
+    },
+    banlist: function(gameServer,split) {
+        console.log("Current banned IPs ("+gameServer.banned.length+")");
+        for (var i in gameServer.banned) {
+            console.log(gameServer.banned[i]);
+        }
+    },
+    
+    clearban: function(gameServer,split) {
+        console.log("Cleared " + gameServer.banned.length + " IP's");
+    gameServer.banned = [];
+        
+    },
+    
+    
     rop: function(gameServer,split) {
-     Mode.op = [];
-        Mode.oppname = [];
-        Mode.opc = [];
-        Mode.opname = [];
+     gameServer.op = [];
+        gameServer.oppname = [];
+        gameServer.opc = [];
+        gameServer.opname = [];
         console.log("Reset OP");
     },
     op: function(gameServer,split) {
     var ops = parseInt(split[1]);
-    Mode.op[ops] = 547;
+    gameServer.op[ops] = 547;
     console.log("Made " + ops + " OP");
     },
         
      dop: function(gameServer,split) {
          var ops = parseInt(split[1]);
-         Mode.op[ops] = 0;
+         gameServer.op[ops] = 0;
     console.log("De opped " + ops);
      },
         
