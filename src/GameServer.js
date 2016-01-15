@@ -189,7 +189,7 @@ if(this.ipCounts[ws._socket.remoteAddress] >= this.config.serverMaxConnectionsPe
     
             ws.close();
     
-    if (this.autoban == 1) {
+    if (this.config.autoban == 1) {
         
          console.log("Added "+ws._socket.remoteAddress+" to the banlist because he/she was useing bots");
         
