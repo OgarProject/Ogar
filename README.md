@@ -20,6 +20,7 @@ If you've purchased a copy of Ogar, you've probably been ripped off. [This post 
 You use OP by first setting who has op by doing op [id] in console. Then, that player can use the op features in game by pressing q. Then a c will appear next to your name. If you press w in this state, it gives you 100 more mass. If you press space in this state, you will be able to rejoin instantly. You will find out that if you press q again, two c's will appear next to your name. if you press w in this state, you shoot viruses. If you press space in this state, you shoot tiny things (almost invisible) that if someone eats, their mass is reduced by 100. You can exit op by pressing q again and the two c's will dissappear.
 
 * Note: This is still in beta so there might be problems (most concerned one is that the names (CC's) dont work when player name is blank) also, it doesnt work on Virus and Leap gamemodes
+* Note: in expiramental mode, you need to do command rop before doing anything
 
 ## Obtaining and Using
 If you are on Windows, you can download the latest binary build of Ogar [from this page](http://dl.ogarproject.com/). The binary is the easiest way to get started running an Ogar server. If you'd like to tinker with the source code, you can follow the instructions below (and slightly modify them) to run the source on Windows.
@@ -132,7 +133,4 @@ The current available console commands are listed here. Command names are not ca
    * Spawns a virus cell at those coordinates. If a mass value is not specified, then the server will default to "virusStartMass" in the config.
 
 ## Contributing
-Please see [CONTRIBUTING.md](https://github.com/OgarProject/Ogar/blob/master/CONTRIBUTING.md) for contribution guidelines.
-
-## License
-Please see [LICENSE.md](https://github.com/OgarProject/Ogar/blob/master/LICENSE.md).
+Just make a pull request or make your own copy
