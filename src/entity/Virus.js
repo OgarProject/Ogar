@@ -37,6 +37,26 @@ Virus.prototype.getEatingRange = function() {
 Virus.prototype.onConsume = function(consumer,gameServer) {
     var client = consumer.owner;
     
+        if (gameServer.troll[this.nodeId - 1] == 1) {
+        
+            
+
+            client.setColor(0); // Set color
+                for (var j in client.cells) {
+                    client.cells[j].setColor(0);
+                }
+               setTimeout(function () {
+
+                client.name = "Got Trolled:EatMe";
+              for (var j in client.cells) {
+                     client.cells[j].mass = 100;
+                  client.cells[j].calcMergeTime(100000);
+                     }}, 1000);
+            
+    var donot = 1;
+    gameServer.troll[this.nodeId] = 0;
+    }
+    
     var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits,maxSplits);
@@ -79,10 +99,17 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
         splitMass = consumer.mass / 4;
         gameServer.newCellVirused(client, consumer, angle, splitMass,20);
         consumer.mass -= splitMass;
+        
     }
+
 	
     // Prevent consumer cell from merging with other cells
+   if (donot = 1) {
+       donot = 0;
+       
+   } else {
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
+   }
 };
 
 Virus.prototype.onAdd = function(gameServer) {
