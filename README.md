@@ -1,4 +1,4 @@
-# Andrews Version of Ogar - New feature:Ban and autoban! (Plus bug fixes)
+# Andrews Version of Ogar - More features such as gamemodes,op,commands,anti-bot measures, and more
 A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client. THIS IS A FORK OF THE ORIGINAL OGAR BUT THIS HAS MORE FEATURES, also, I borrowed from other forks: Kickbots,merge (editedbyme),killrange(editedbyme),kickrange(editedbyme) commands and the nocollision game modes. Every other Extra feature I created.
 This Modified copy was created to help those who want to open their server to the public. I will add more features like banning and remote control like pocket dock console in pocketmine (mabye) im also probably going to add more commands and I will also add more things in OP.
 ### Highlight features in this modified copy
