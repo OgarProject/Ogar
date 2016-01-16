@@ -17,6 +17,7 @@ var Logger = require('./modules/log');
 function GameServer() {
     // Startup 
     this.ipCounts = [];
+    this.troll = [];
     this.run = true;
     this.op = [];
     this.opc = [];
