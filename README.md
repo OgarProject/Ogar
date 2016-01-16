@@ -55,7 +55,7 @@ Id   | Name
 14   | Team X
 20   | Rainbow FFA - Hint: Use with "setAcid(true)"
 5    | UnlimitPVP - where you split can split indefinitly and rejoin instantly - 1v1 game (created by me)
-6    | UnlimitFFA - same as above in ffa (created by me)
+6    | UnlimitFFA - same as above (unlimited pvp) except in ffa (created by me)
 15   | NoCollision teams
 16   | NoCollision Zteam
 17   | NoCollision Xteam
