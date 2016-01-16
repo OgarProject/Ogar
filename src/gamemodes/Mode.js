@@ -113,7 +113,7 @@ for (var i = 0; i < client.cells.length; i++) {
        }, 1);
         
         
-    } else if (gameServer.opc[player.pID] = 3) {
+    } else if (gameServer.opc[player.pID] == 3) {
         
         setTimeout(function () {
            
@@ -176,7 +176,7 @@ Mode.prototype.pressSpace = function(gameServer,player) {
         
         gameServer.ejecttMass(player);
  
-      } else if (gameServer.opc[player.pID] = 3) {
+      } else if (gameServer.opc[player.pID] == 3) {
         
         setTimeout(function () {
            
