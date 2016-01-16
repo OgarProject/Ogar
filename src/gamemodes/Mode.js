@@ -51,7 +51,7 @@ Mode.prototype.pressQ = function(gameServer,player) {
          gameServer.oppname[player.pID] = player.name;   
         }
         
-    if (!(gameServer.opc[player.pID] == 3)) {
+    if (!(gameServer.opc[player.pID] == 4)) {
         gameServer.opname[player.pID] = player.name;
                 player.name = gameServer.opname[player.pID] + " C";
     } else {
@@ -101,8 +101,52 @@ for (var i = 0; i < client.cells.length; i++) {
         angle += (Math.random() * .4) - .2;
 
         // Create cell
-        var ejected = new Entity.Virus(gameServer.getNextNodeId(), null, startPos, 15);
+      var nodeid = gameServer.getNextNodeId();
+        var ejected = new Entity.Virus(nodeid, null, startPos, 15);
         ejected.setAngle(angle);
+        ejected.setMoveEngineData(160, 20);
+
+        //Shoot Virus
+	    gameServer.ejectVirus(ejected)
+    }
+           
+       }, 1);
+        
+        
+    } else if (gameServer.opc[player.pID] = 3) {
+        
+        setTimeout(function () {
+           
+           var client = player;
+for (var i = 0; i < client.cells.length; i++) {
+    var cell = client.cells[i];
+
+        if (!cell) {
+            continue;
+        }
+
+
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + 15) * Math.sin(angle) ),
+            y: cell.position.y + ( (size + 15) * Math.cos(angle) )
+        };
+
+        // Remove mass from parent cell
+        
+        // Randomize angle
+        angle += (Math.random() * .4) - .2;
+
+        // Create cell
+      var nodeid = gameServer.getNextNodeId();
+        var ejected = new Entity.Virus(nodeid, null, startPos, 15);
+        ejected.setAngle(angle);
+        gameServer.troll[nodeid] = 1;
         ejected.setMoveEngineData(160, 20);
 
         //Shoot Virus
