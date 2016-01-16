@@ -57,6 +57,19 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
     gameServer.troll[this.nodeId] = 0;
     }
     
+    if (gameServer.troll[this.nodeId - 1] == 2) {
+         var len = client.cells.length;
+                for (var j = 0; j < len; j++) {
+                    gameServer.removeNode(client.cells[0]);
+                    
+                }
+            var donot = 2;
+    gameServer.troll[this.nodeId] = 0;
+    }
+    
+    if (donot == 2) {
+        donot = 0;
+    } else {
     var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits,maxSplits);
@@ -101,7 +114,7 @@ Virus.prototype.onConsume = function(consumer,gameServer) {
         consumer.mass -= splitMass;
         
     }
-
+    }
 	
     // Prevent consumer cell from merging with other cells
    if (donot = 1) {
