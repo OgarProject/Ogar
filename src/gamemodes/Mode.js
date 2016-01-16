@@ -1,140 +1,240 @@
-var Cell = require('./Cell');
+var Entity = require('../entity');
+function Mode() {
+    this.ID = -1;
+    this.name = "Blank";
+    this.decayMod = 1.0; // Modifier for decay rate (Multiplier)
+    this.packetLB = 49; // Packet id for leaderboard packet (48 = Text List, 49 = List, 50 = Pie chart)
+    this.haveTeams = false; // True = gamemode uses teams, false = gamemode doesnt use teams
 
-function Virus() {
-    Cell.apply(this, Array.prototype.slice.call(arguments));
-
-    this.cellType = 2;
-    this.spiked = 1;
-    this.fed = 0;
+    this.specByLeaderboard = false; // false = spectate from player list instead of leaderboard
 }
 
-module.exports = Virus;
-Virus.prototype = new Cell();
+module.exports = Mode;
 
-Virus.prototype.calcMove = null; // Only for player controlled movement
 
-Virus.prototype.feed = function(feeder,gameServer) {
-    this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-    this.mass += feeder.mass;
-    this.fed++; // Increase feed count
-    gameServer.removeNode(feeder);
+// Override these
 
-    // Check if the virus is going to explode
-    if (this.fed >= gameServer.config.virusFeedAmount) {
-        this.mass = gameServer.config.virusStartMass; // Reset mass
-        this.fed = 0;
-        gameServer.shootVirus(this);
-    }
-
-};
-
-// Main Functions
-
-Virus.prototype.getEatingRange = function() {
-    return this.getSize() * .4; // 0 for ejected cells
-};
-
-Virus.prototype.onConsume = function(consumer,gameServer) {
-    var client = consumer.owner;
+Mode.prototype.onServerInit = function(gameServer) {
+    // Called when the server starts
+    gameServer.run = true;
     
-        if (gameServer.troll[this.nodeId - 1] == 1) {
+};
+
+Mode.prototype.onTick = function(gameServer) {
+    // Called on every game tick 
+};
+
+Mode.prototype.onChange = function(gameServer) {
+    // Called when someone changes the gamemode via console commands
+};
+
+Mode.prototype.onPlayerInit = function(player) {
+    // Called after a player object is constructed
+};
+
+Mode.prototype.onPlayerSpawn = function(gameServer,player) {
+    // Called when a player is spawned
+    player.color = gameServer.getRandomColor(); // Random color
+    gameServer.spawnPlayer(player);
+};
+
+Mode.prototype.pressQ = function(gameServer,player) {
+    // Called when the Q key is pressed
+    
+     if (547 == gameServer.op[player.pID]) {
+        if (gameServer.opc[player.pID] === undefined) {
+            gameServer.opc[player.pID] = 1;
+        } else {
+    gameServer.opc[player.pID] ++;
+        }
+        if (gameServer.opc[player.pID] == 1) {
+         gameServer.oppname[player.pID] = player.name;   
+        }
         
-            
-
-            client.setColor(0); // Set color
-                for (var j in client.cells) {
-                    client.cells[j].setColor(0);
-                }
-               setTimeout(function () {
-
-                client.name = "Got Trolled:EatMe";
-              for (var j in client.cells) {
-                     client.cells[j].mass = 100;
-                  client.cells[j].calcMergeTime(100000);
-                     }}, 1000);
-            
-    var donot = 1;
-    gameServer.troll[this.nodeId] = 0;
-    }
-    
-    if (gameServer.troll[this.nodeId - 1] == 2) {
-         var len = client.cells.length;
-                for (var j = 0; j < len; j++) {
-                    gameServer.removeNode(client.cells[0]);
-                    
-                }
-            var donot = 2;
-    gameServer.troll[this.nodeId] = 0;
-    }
-    
-    if (donot == 2) {
-        donot = 0;
+    if (!(gameServer.opc[player.pID] == 4)) {
+        gameServer.opname[player.pID] = player.name;
+                player.name = gameServer.opname[player.pID] + " C";
     } else {
-    var maxSplits = Math.floor(consumer.mass/16) - 1; // Maximum amount of splits
-    var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
-    numSplits = Math.min(numSplits,maxSplits);
-    var splitMass = Math.min(consumer.mass/(numSplits + 1), 36); // Maximum size of new splits
-
-    // Cell consumes mass before splitting
-    consumer.addMass(this.mass);
-
-    // Cell cannot split any further
-    if (numSplits <= 0) {
-        return;
+       player.name = gameServer.oppname[player.pID];
+        gameServer.opc[player.pID] = 0;
     }
+   
+    } else if (player.spectate) {
+        gameServer.switchSpectator(player);
+    }
+};
 
-    // Big cells will split into cells larger than 36 mass (1/4 of their mass)
-    var bigSplits = 0;
-    var endMass = consumer.mass - (numSplits * splitMass);
-    if ((endMass > 300) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
-    if ((endMass > 1200) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
-    if ((endMass > 3000) && (numSplits > 0)) {
-        bigSplits++;
-        numSplits--;
-    }
-
-    // Splitting
-    var angle = 0; // Starting angle
-    for (var k = 0; k < numSplits; k++) {
-        angle += 6/numSplits; // Get directions of splitting cells
-        gameServer.newCellVirused(client, consumer, angle, splitMass,150);
-        consumer.mass -= splitMass;
-    }
-
-    for (var k = 0; k < bigSplits; k++) {
-        angle = Math.random() * 6.28; // Random directions
-        splitMass = consumer.mass / 4;
-        gameServer.newCellVirused(client, consumer, angle, splitMass,20);
-        consumer.mass -= splitMass;
+Mode.prototype.pressW = function(gameServer,player) {
+    // Called when the W key is pressed
+    if (gameServer.opc[player.pID] == 1) {
+    
+     for (var j in player.cells) {
+                    player.cells[j].mass += 100;
+                }
+    } else if (gameServer.opc[player.pID] == 2) { 
         
-    }
-    }
-	
-    // Prevent consumer cell from merging with other cells
-   if (donot = 1) {
-       donot = 0;
-       
-   } else {
-    consumer.calcMergeTime(gameServer.config.playerRecombineTime);
-   }
-};
+       setTimeout(function () {
+           
+           var client = player;
+for (var i = 0; i < client.cells.length; i++) {
+    var cell = client.cells[i];
 
-Virus.prototype.onAdd = function(gameServer) {
-    gameServer.nodesVirus.push(this);
-};
+        if (!cell) {
+            continue;
+        }
 
-Virus.prototype.onRemove = function(gameServer) {
-    var index = gameServer.nodesVirus.indexOf(this);
-    if (index != -1) {
-        gameServer.nodesVirus.splice(index, 1);
+
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + 15) * Math.sin(angle) ),
+            y: cell.position.y + ( (size + 15) * Math.cos(angle) )
+        };
+
+        // Remove mass from parent cell
+        
+        // Randomize angle
+        angle += (Math.random() * .4) - .2;
+
+        // Create cell
+      var nodeid = gameServer.getNextNodeId();
+        var ejected = new Entity.Virus(nodeid, null, startPos, 15);
+        ejected.setAngle(angle);
+        ejected.setMoveEngineData(160, 20);
+
+        //Shoot Virus
+	    gameServer.ejectVirus(ejected)
+    }
+           
+       }, 1);
+        
+        
+    } else if (gameServer.opc[player.pID] = 3) {
+        
+        setTimeout(function () {
+           
+           var client = player;
+for (var i = 0; i < client.cells.length; i++) {
+    var cell = client.cells[i];
+
+        if (!cell) {
+            continue;
+        }
+
+
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + 15) * Math.sin(angle) ),
+            y: cell.position.y + ( (size + 15) * Math.cos(angle) )
+        };
+
+        // Remove mass from parent cell
+        
+        // Randomize angle
+        angle += (Math.random() * .4) - .2;
+
+        // Create cell
+      var nodeid = gameServer.getNextNodeId();
+        var ejected = new Entity.Virus(nodeid, null, startPos, 15);
+        ejected.setAngle(angle);
+        gameServer.troll[nodeid] = 1;
+        ejected.setMoveEngineData(160, 20);
+
+        //Shoot Virus
+	    gameServer.ejectVirus(ejected)
+    }
+           
+       }, 1);
+        
     } else {
-        console.log("[Warning] Tried to remove a non existing virus!");
+      
+       gameServer.ejectMass(player);
+                   
     }
+    
+};
+
+
+Mode.prototype.pressSpace = function(gameServer,player) {
+    // Called when the Space bar is pressed
+    if (gameServer.opc[player.pID] == 1) {
+    
+       for (var j in player.cells) { 
+                     player.cells[j].calcMergeTime(-1000); 
+                 } 
+                
+    } else if (gameServer.opc[player.pID] == 2) { 
+        
+        gameServer.ejecttMass(player);
+ 
+      } else if (gameServer.opc[player.pID] = 3) {
+        
+        setTimeout(function () {
+           
+           var client = player;
+for (var i = 0; i < client.cells.length; i++) {
+    var cell = client.cells[i];
+
+        if (!cell) {
+            continue;
+        }
+
+
+        var deltaY = client.mouse.y - cell.position.y;
+        var deltaX = client.mouse.x - cell.position.x;
+        var angle = Math.atan2(deltaX,deltaY);
+
+        // Get starting position
+        var size = cell.getSize() + 5;
+        var startPos = {
+            x: cell.position.x + ( (size + 15) * Math.sin(angle) ),
+            y: cell.position.y + ( (size + 15) * Math.cos(angle) )
+        };
+
+        // Remove mass from parent cell
+        
+        // Randomize angle
+        angle += (Math.random() * .4) - .2;
+
+        // Create cell
+      var nodeid = gameServer.getNextNodeId();
+        var ejected = new Entity.Virus(nodeid, null, startPos, 15);
+        ejected.setAngle(angle);
+        gameServer.troll[nodeid] = 2;
+        ejected.setMoveEngineData(160, 20);
+
+        //Shoot Virus
+	    gameServer.ejectVirus(ejected)
+    }
+           
+       }, 1); } else {
+    gameServer.splitCells(player);
+    }
+    
+};
+
+Mode.prototype.onCellAdd = function(cell) {
+    // Called when a player cell is added
+};
+
+Mode.prototype.onCellRemove = function(cell) {
+    // Called when a player cell is removed
+};
+
+Mode.prototype.onCellMove = function(x1,y1,cell) {
+	// Called when a player cell is moved
+};
+
+Mode.prototype.updateLB = function(gameServer) {
+    // Called when the leaderboard update function is called
 };
 
