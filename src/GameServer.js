@@ -811,7 +811,7 @@ GameServer.prototype.ejectVirus = function(parent) {
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.ejectMass);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(200, 20);
+    newVirus.setMoveEngineData(100, 20);
 
     // Add to moving cells list
     this.addNode(newVirus);
