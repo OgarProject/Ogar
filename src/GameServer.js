@@ -856,10 +856,14 @@ GameServer.prototype.updateCells = function() {
             continue;
         }
         
-        if (cell.recombineTicks > 0) {
-            // Recombining
-            cell.recombineTicks--;
-        }
+        // Recombining
+        if (cell.owner.cells.length > 1) {
+            cell.recombineTicks += 1;
+	    cell.calcMergeTime(this.config.playerRecombineTime);
+        } else if (cell.owner.cells.length == 1 && cell.recombineTicks > 0) {
+	    cell.recombineTicks = 0;
+	    cell.shouldRecombine = false;
+	}
 
         // Mass decay
         if (cell.mass >= this.config.playerMinMassDecay) {
