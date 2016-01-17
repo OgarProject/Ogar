@@ -39,16 +39,16 @@ PlayerCell.prototype.simpleCollide = function(check,d) {
 
 PlayerCell.prototype.calcMergeTime = function(base) {
     // The recombine mechanic has been completely revamped.
-	// As time passes on, recombineTicks gets larger, instead of getting smaller.
-	// When the owner has only 1 cell, ticks and shouldRecombine will be reset by gameserver.
-	var r = false;
+    // As time passes on, recombineTicks gets larger, instead of getting smaller.
+    // When the owner has only 1 cell, ticks and shouldRecombine will be reset by gameserver.
+    var r = false;
     if (base == 0) {
-		r = true; // If base recombine time is 0, can almost instantly recombine
-	} else {
-		var rec = Math.floor(base + ((0.02 * this.mass))); // base seconds + 0.02% of mass
-		if (this.recombineTicks > rec) r = true; // Can combine with other cells
-	}
-	this.shouldRecombine = r;
+    	r = true; // If base recombine time is 0, can almost instantly recombine
+    } else {
+	    var rec = Math.floor(base + ((0.02 * this.mass))); // base seconds + 0.02% of mass
+	    if (this.recombineTicks > rec) r = true; // Can combine with other cells
+    }
+    this.shouldRecombine = r;
 };
 
 // Movement
@@ -81,7 +81,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
             continue;
         }
 
-        if ((cell.recombineTicks > 0) || (this.recombineTicks > 0)) {
+        if ((!cell.shouldRecombine) || (!this.shouldRecombine)) {
             // Cannot recombine - Collision with your own cells
             var collisionDist = cell.getSize() + r; // Minimum distance between the 2 cells
             dist = this.getDist(x1,y1,cell.position.x,cell.position.y); // Distance between these two cells
