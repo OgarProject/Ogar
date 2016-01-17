@@ -64,6 +64,8 @@ Id   | Name
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
  
+ - Resetpvirus
+   * Turns special viruses (from OP's) into normal ones
  - Ban [IP]
    * Bans a IP
  - Banlist
