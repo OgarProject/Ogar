@@ -66,9 +66,14 @@ Commands.list = {
         console.log("[Console] Ban [IP] Bans an IP");
         console.log("[Console] Banlist Lists banned IPs");
         console.log("[Console] Clearban , Resets Ban list");
+        console.log("[Console] Resetpvirus , Turns special viruses (from op's) into normal ones");
         console.log("[Console] ====================================================");
     },
-    
+    resetpvirus: function(gameServer,split) {
+        gameServer.troll = [];
+        console.log("Turned any Special Viruses (from op's) Into normal ones");
+        
+    },
      ban: function(gameServer,split) {
          // Get ip
           var ip = split[1];
