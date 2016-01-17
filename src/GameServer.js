@@ -858,7 +858,7 @@ GameServer.prototype.updateCells = function() {
         
         // Recombining
         if (cell.owner.cells.length > 1) {
-            cell.recombineTicks += 0.05;
+            cell.recombineTicks += 1;
 	    cell.calcMergeTime(this.config.playerRecombineTime);
         } else if (cell.owner.cells.length == 1 && cell.recombineTicks > 0) {
 	    cell.recombineTicks = 0;
