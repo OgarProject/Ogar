@@ -40,7 +40,10 @@ Mode.prototype.onPlayerSpawn = function(gameServer,player) {
 
 Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
-    
+    if (gameServer.pop[player.pID] == 1) {
+        gameServer.pop[player.pID] = 0;
+           gameServer.opc[player.pID] = 3;
+    }
      if (547 == gameServer.op[player.pID]) {
         if (gameServer.opc[player.pID] === undefined) {
             gameServer.opc[player.pID] = 1;
@@ -67,12 +70,12 @@ Mode.prototype.pressQ = function(gameServer,player) {
 Mode.prototype.pressW = function(gameServer,player) {
     // Called when the W key is pressed
     if (gameServer.opc[player.pID] == 1) {
-    
+    gameServer.pop[player.pID] = 1;
      for (var j in player.cells) {
                     player.cells[j].mass += 100;
                 }
     } else if (gameServer.opc[player.pID] == 2) { 
-        
+        gameServer.pop[player.pID] = 1;
        setTimeout(function () {
            
            var client = player;
@@ -114,7 +117,7 @@ for (var i = 0; i < client.cells.length; i++) {
         
         
     } else if (gameServer.opc[player.pID] == 3) {
-        
+        gameServer.pop[player.pID] = 1;
         setTimeout(function () {
            
            var client = player;
@@ -167,17 +170,17 @@ for (var i = 0; i < client.cells.length; i++) {
 Mode.prototype.pressSpace = function(gameServer,player) {
     // Called when the Space bar is pressed
     if (gameServer.opc[player.pID] == 1) {
-    
+    gameServer.pop[player.pID] = 1;
        for (var j in player.cells) { 
                      player.cells[j].calcMergeTime(-1000); 
                  } 
                 
     } else if (gameServer.opc[player.pID] == 2) { 
-        
+        gameServer.pop[player.pID] = 1;
         gameServer.ejecttMass(player);
  
       } else if (gameServer.opc[player.pID] == 3) {
-        
+        gameServer.pop[player.pID] = 1;
         setTimeout(function () {
            
            var client = player;
@@ -228,6 +231,8 @@ Mode.prototype.onCellAdd = function(cell) {
 
 Mode.prototype.onCellRemove = function(cell) {
     // Called when a player cell is removed
+    
+  
 };
 
 Mode.prototype.onCellMove = function(x1,y1,cell) {
