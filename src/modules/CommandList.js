@@ -48,6 +48,7 @@ Commands.list = {
     
     help: function(gameServer,split) {
         console.log("[Console] ======================== HELP ======================");
+        console.log("[Console] ophelp     : Shows OP help");
         console.log("[Console] addbot     : add bot to the server");
         console.log("[Console] board      : set scoreboard text");
         console.log("[Console] boardreset : reset scoreboard text");
@@ -68,23 +69,24 @@ Commands.list = {
         console.log("[Console] status     : get server status");
         console.log("[Console] tp         : teleport player to specified location");
         console.log("[Console] virus      : spawn virus at a specified Location");
-        console.log("[Console] Kick/killRange [Start] [End] : kills/kicks ");
-        console.log("[Console] Kickbots  : kicks all bots  ");
-        console.log("[Console] Merge [id]   Forces that player to merge");
-        console.log("[Console] Nojoin [Id]   Prevents the player from merging")
-        console.log("[Console] Msg [message 1] [message 2] [etc..] :Sends a message")
-        console.log("[Console] Fmsg [Msg1] [Msg2] [Etc..] forces people to look at msg");
-        console.log("[Console] Pmsg [Delay] [Duration] [repeat times] [MSG1] [MSG2] [etc...] Periodically sends a message");
-        console.log("[Console] Spmsg [] Stops any Pmsg proccess");
-        console.log("[Console] Pfmsg [Delay] [Duration] [repeat times] [MSG1] [MSG2] [etc...] Periodically sends a force message");
-        console.log("[Console] Sfpmsg [] Stops any Pfmsg proccess");
-         console.log("[Console] Rop : Resets op");
-        console.log("[Console] Op [id] Makes that player op");
-        console.log("[Console] Dop [id] De-Ops a player");
-        console.log("[Console] Ban [IP] Bans an IP");
-        console.log("[Console] Banlist Lists banned IPs");
-        console.log("[Console] Clearban , Resets Ban list");
-        console.log("[Console] Resetpvirus , Turns special viruses (from op's) into normal ones");
+        console.log("[Console] Kickrange  : kicks in a ID range");
+        console.log("[Console] Killrange  : kills in a ID range");
+        console.log("[Console] Kickbots   : kicks all bots  ");
+        console.log("[Console] Merge      : Forces that player to merge");
+        console.log("[Console] Nojoin     : Prevents the player from merging")
+        console.log("[Console] Msg        : Sends a message")
+        console.log("[Console] Fmsg       : Sends a Force Message");
+        console.log("[Console] Pmsg       : Periodically sends a message");
+        console.log("[Console] Spmsg      : Stops any Pmsg proccess");
+        console.log("[Console] Pfmsg      : Periodically sends a force message");
+        console.log("[Console] Sfpmsg     : Stops any Pfmsg proccess");
+        console.log("[Console] Rop        : Resets op");
+        console.log("[Console] Op         : Makes that player OP");
+        console.log("[Console] Dop        : De-Ops a player");
+        console.log("[Console] Ban        : Bans an IP");
+        console.log("[Console] Banlist    : Lists banned IPs");
+        console.log("[Console] Clearban   : Resets Ban list");
+        console.log("[Console] Resetpvirus: Turns special viruses (from op's) into normal ones");
         console.log("[Console] ====================================================");
     },
     resetpvirus: function(gameServer,split) {
