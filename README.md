@@ -64,6 +64,10 @@ Id   | Name
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
  
+ - Help
+   * Shows List Of Commands
+ - Ophelp
+   * Shows how to use OP
  - Resetpvirus
    * Turns special viruses (from OP's) into normal ones
  - Ban [IP]
@@ -116,8 +120,6 @@ The current available console commands are listed here. Command names are not ca
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
  - Gamemode [Id]
    * Changes the gamemode of the server. Warning - This can cause problems.
- - Help
-   * Shows List Of Commands
  - Kick [Player ID]
    * Kicks the specified player or bot from the server.
  - Kill [Player ID]
