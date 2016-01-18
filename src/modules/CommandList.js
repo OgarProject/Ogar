@@ -87,8 +87,34 @@ Commands.list = {
         console.log("[Console] Banlist    : Lists banned IPs");
         console.log("[Console] Clearban   : Resets Ban list");
         console.log("[Console] Resetpvirus: Turns special viruses (from op's) into normal ones");
+        console.log("[Console] Split      : Splits a player");
         console.log("[Console] ====================================================");
     },
+    
+    split: function(gameServer,split) {
+		// Validation checks
+		var id = parseInt(split[1]);
+		var count = parseInt(split[2]);
+        if (isNaN(id)) {
+            console.log("Please specify a valid player ID!");
+            return;
+        }
+        if (isNaN(count)) {
+            console.log("Since you did not specify split count, We will split the person into 16 cells");
+			count = 4;
+        }
+        for (var i in gameServer.clients) {
+            if (gameServer.clients[i].playerTracker.pID == id) {
+                var client = gameServer.clients[i].playerTracker;
+				for(var i =0;i<count;i++){
+				gameServer.splitCells(client);
+				}
+                console.log("Forced " + client.name + " to split cells");
+                break;
+            }
+        }
+    },
+    
     resetpvirus: function(gameServer,split) {
         gameServer.troll = [];
         console.log("Turned any Special Viruses (from op's) Into normal ones");
