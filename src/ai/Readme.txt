@@ -3,6 +3,9 @@ These bots are designed to be used for testing new commits of Ogar. To install t
 
 
 [Changelog]
+(1/18/16)
+- Bots won't recognize mother cells as viruses anymore
+
 (1/1/16)
 - Bot will now actively target the biggest prey
 
