@@ -6,6 +6,7 @@ function Virus() {
     this.cellType = 2;
     this.spiked = 1;
     this.fed = 0;
+    this.isMotherCell = false; // Not to confuse bots
 }
 
 module.exports = Virus;
