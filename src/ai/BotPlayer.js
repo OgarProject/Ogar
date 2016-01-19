@@ -135,7 +135,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
                 this.food.push(check);
                 break;
             case 2: // Virus
-                this.virus.push(check);
+                if (!check.isMotherCell) this.virus.push(check); // Only real viruses! No mother cells;
                 break;
             case 3: // Ejected mass
                 if (cell.mass > 20) {
