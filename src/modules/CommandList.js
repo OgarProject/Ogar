@@ -214,6 +214,16 @@ Commands.list = {
             }
         }
     },
+    kickrange: function(gameServer,split) {
+        var start = parseInt(split[0]);
+        var end = parseInt(split[0]);
+        if (isNaN(start) || isNaN(end)) {
+            console.log("[Console] Please specify a valid range!");
+        }
+        for (var i = start; i < end; i++) {
+            this.kick(gameServer, i);
+        }
+    },
     kill: function(gameServer,split) {
         var id = parseInt(split[1]);
         if (isNaN(id)) {
@@ -234,6 +244,16 @@ Commands.list = {
                 console.log("[Console] Removed " + count + " cells");
                 break;
             }
+        }
+    },
+    killrange: function(gameServer,split) {
+        var start = parseInt(split[0]);
+        var end = parseInt(split[0]);
+        if (isNaN(start) || isNaN(end)) {
+            console.log("[Console] Please specify a valid range!");
+        }
+        for (var i = start; i < end; i++) {
+            this.kill(gameServer, i);
         }
     },
     killall: function(gameServer,split) {
