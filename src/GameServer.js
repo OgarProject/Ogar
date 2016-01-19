@@ -763,7 +763,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
             case 0: // Players
                 // Can't eat self if it's not time to recombine yet
                 if (check.owner == cell.owner) {
-                    if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
+                    if ((!cell.shouldRecombine) || (!check.shouldRecombine)) {
                         continue;
                     }
 
