@@ -29,25 +29,25 @@ Mode.prototype.onPlayerInit = function(player) {
     // Called after a player object is constructed
 };
 
-Mode.prototype.onPlayerSpawn = function(gameServer,player) {
+Mode.prototype.onPlayerSpawn = function(gameServer, player) {
     // Called when a player is spawned
     player.color = gameServer.getRandomColor(); // Random color
     gameServer.spawnPlayer(player);
 };
 
-Mode.prototype.pressQ = function(gameServer,player) {
+Mode.prototype.pressQ = function(gameServer, player) {
     // Called when the Q key is pressed
     if (player.spectate) {
         gameServer.switchSpectator(player);
     }
 };
 
-Mode.prototype.pressW = function(gameServer,player) {
+Mode.prototype.pressW = function(gameServer, player) {
     // Called when the W key is pressed
     gameServer.ejectMass(player);
 };
 
-Mode.prototype.pressSpace = function(gameServer,player) {
+Mode.prototype.pressSpace = function(gameServer, player) {
     // Called when the Space bar is pressed
     gameServer.splitCells(player);
 };
@@ -60,11 +60,10 @@ Mode.prototype.onCellRemove = function(cell) {
     // Called when a player cell is removed
 };
 
-Mode.prototype.onCellMove = function(x1,y1,cell) {
-	// Called when a player cell is moved
+Mode.prototype.onCellMove = function(x1, y1, cell) {
+    // Called when a player cell is moved
 };
 
 Mode.prototype.updateLB = function(gameServer) {
     // Called when the leaderboard update function is called
 };
-

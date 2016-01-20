@@ -12,11 +12,19 @@ function Teams() {
 
     // Special
     this.teamAmount = 3; // Amount of teams. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue).
-    this.colors = [
-        {'r': 223, 'g': 0, 'b': 0},
-        {'r': 0, 'g': 223, 'b': 0},
-        {'r': 0, 'g': 0, 'b': 223},
-    ]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
+    this.colors = [{
+        'r': 223,
+        'g': 0,
+        'b': 0
+    }, {
+        'r': 0,
+        'g': 223,
+        'b': 0
+    }, {
+        'r': 0,
+        'g': 0,
+        'b': 223
+    }, ]; // Make sure you add extra colors here if you wish to increase the team amount [Default colors are: Red, Green, Blue]
     this.nodes = []; // Teams
 }
 
@@ -41,7 +49,7 @@ Teams.prototype.getTeamColor = function(team) {
 
 // Override
 
-Teams.prototype.onPlayerSpawn = function(gameServer,player) {
+Teams.prototype.onPlayerSpawn = function(gameServer, player) {
     // Random color based on team
     player.color = this.getTeamColor(player.team);
     // Spawn player
@@ -85,16 +93,16 @@ Teams.prototype.onCellRemove = function(cell) {
     }
 };
 
-Teams.prototype.onCellMove = function(x1,y1,cell) {
+Teams.prototype.onCellMove = function(x1, y1, cell) {
     var team = cell.owner.getTeam();
     var r = cell.getSize();
 
     // Find team
-    for (var i = 0; i < cell.owner.visibleNodes.length;i++) {
+    for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
         // Only collide with player cells
         var check = cell.owner.visibleNodes[i];
 
-        if ((check.getType() != 0) || (cell.owner == check.owner)){
+        if ((check.getType() != 0) || (cell.owner == check.owner)) {
             continue;
         }
 
@@ -102,25 +110,25 @@ Teams.prototype.onCellMove = function(x1,y1,cell) {
         if (check.owner.getTeam() == team) {
             // Check if in collision range
             var collisionDist = check.getSize() + r; // Minimum distance between the 2 cells
-            if (!cell.simpleCollide(x1,y1,check, collisionDist)) {
+            if (!cell.simpleCollide(x1, y1, check, collisionDist)) {
                 // Skip
                 continue;
             }
 
             // First collision check passed... now more precise checking
-            dist = cell.getDist(cell.position.x,cell.position.y,check.position.x,check.position.y);
+            dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
 
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
                 var newDeltaY = check.position.y - y1;
                 var newDeltaX = check.position.x - x1;
-                var newAngle = Math.atan2(newDeltaX,newDeltaY);
+                var newAngle = Math.atan2(newDeltaX, newDeltaY);
 
                 var move = collisionDist - dist;
 
-                check.position.x = check.position.x + ( move * Math.sin(newAngle) ) >> 0;
-                check.position.y = check.position.y + ( move * Math.cos(newAngle) ) >> 0;
+                check.position.x = check.position.x + (move * Math.sin(newAngle)) >> 0;
+                check.position.y = check.position.y + (move * Math.cos(newAngle)) >> 0;
             }
         }
     }
@@ -135,7 +143,7 @@ Teams.prototype.updateLB = function(gameServer) {
         teamMass[i] = 0;
 
         // Loop through cells
-        for (var j = 0; j < this.nodes[i].length;j++) {
+        for (var j = 0; j < this.nodes[i].length; j++) {
             var cell = this.nodes[i][j];
 
             if (!cell) {
@@ -153,7 +161,6 @@ Teams.prototype.updateLB = function(gameServer) {
             continue;
         }
 
-        gameServer.leaderboard[i] = teamMass[i]/total;
+        gameServer.leaderboard[i] = teamMass[i] / total;
     }
 };
-

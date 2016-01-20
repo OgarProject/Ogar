@@ -19,4 +19,3 @@ SetBorder.prototype.build = function() {
 
     return buf;
 };
-

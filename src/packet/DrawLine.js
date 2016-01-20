@@ -15,4 +15,3 @@ DrawLine.prototype.build = function() {
 
     return buf;
 };
-

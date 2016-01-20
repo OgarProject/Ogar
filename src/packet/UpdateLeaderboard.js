@@ -21,7 +21,7 @@ UpdateLeaderboard.prototype.build = function() {
 
                 var item = lb[i];
                 bufferSize += 4; // Empty ID
-                bufferSize += item.length * 2 ; // String length
+                bufferSize += item.length * 2; // String length
                 bufferSize += 2; // Name terminator
 
                 validElements++;
@@ -118,7 +118,7 @@ UpdateLeaderboard.prototype.build = function() {
             view.setUint32(1, validElements, true); // Number of elements
 
             var offset = 5;
-            for (var i = 0; i < validElements;i++) {
+            for (var i = 0; i < validElements; i++) {
                 view.setFloat32(offset, lb[i], true); // Number of elements
                 offset += 4;
             }
@@ -128,4 +128,3 @@ UpdateLeaderboard.prototype.build = function() {
             break;
     }
 };
-

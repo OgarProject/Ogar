@@ -1,7 +1,7 @@
 // A fake socket for bot players
 
 function FakeSocket(gameServer) {
-this.server = gameServer;
+    this.server = gameServer;
 }
 
 module.exports = FakeSocket;
@@ -31,4 +31,3 @@ FakeSocket.prototype.close = function(error) {
         this.server.clients.splice(index, 1);
     }
 };
-
