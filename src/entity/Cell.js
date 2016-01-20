@@ -1,7 +1,11 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    this.color = {r: 0, g: 255, b: 0};
+    this.color = {
+        r: 0,
+        g: 255,
+        b: 0
+    };
     this.position = position;
     this.mass = mass; // Starting mass of the cell
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
@@ -21,7 +25,7 @@ module.exports = Cell;
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 
 Cell.prototype.getName = function() {
-if (this.owner) {
+    if (this.owner) {
         return this.owner.name;
     } else {
         return "";
@@ -47,17 +51,17 @@ Cell.prototype.getSize = function() {
     return Math.ceil(Math.sqrt(100 * this.mass));
 };
 
-Cell.prototype.getSquareSize = function () {
+Cell.prototype.getSquareSize = function() {
     // R * R
     return (100 * this.mass) >> 0;
 };
 
 Cell.prototype.addMass = function(n) {
-    if(this.mass + n > this.owner.gameServer.config.playerMaxMass && this.owner.cells.length < this.owner.gameServer.config.playerMaxCells) {
+    if (this.mass + n > this.owner.gameServer.config.playerMaxMass && this.owner.cells.length < this.owner.gameServer.config.playerMaxCells) {
         this.mass = (this.mass + n) / 2;
         this.owner.gameServer.newCellVirused(this.owner, this, 0, this.mass, 150);
     } else {
-        this.mass = Math.min(this.mass + n,this.owner.gameServer.config.playerMaxMass);
+        this.mass = Math.min(this.mass + n, this.owner.gameServer.config.playerMaxMass);
     }
 };
 
@@ -96,7 +100,7 @@ Cell.prototype.setKiller = function(cell) {
 
 // Functions
 
-Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
+Cell.prototype.collisionCheck = function(bottomY, topY, rightX, leftX) {
     // Collision checking
     if (this.position.y > bottomY) {
         return false;
@@ -118,7 +122,7 @@ Cell.prototype.collisionCheck = function(bottomY,topY,rightX,leftX) {
 };
 
 // This collision checking function is based on CIRCLE shape
-Cell.prototype.collisionCheck2 = function (objectSquareSize, objectPosition) {
+Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
     // IF (O1O2 + r <= R) THEN collided. (O1O2: distance b/w 2 centers of cells)
     // (O1O2 + r)^2 <= R^2
     // approximately, remove 2*O1O2*r because it requires sqrt(): O1O2^2 + r^2 <= R^2
@@ -129,15 +133,15 @@ Cell.prototype.collisionCheck2 = function (objectSquareSize, objectPosition) {
     return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
 };
 
-Cell.prototype.visibleCheck = function(box,centerPos) {
+Cell.prototype.visibleCheck = function(box, centerPos) {
     // Checks if this cell is visible to the player
-    return this.collisionCheck(box.bottomY,box.topY,box.rightX,box.leftX);
+    return this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
 };
 
 Cell.prototype.calcMovePhys = function(config) {
     // Movement for ejected cells
-    var X = this.position.x + ( this.moveEngineSpeed * Math.sin(this.angle) );
-    var Y = this.position.y + ( this.moveEngineSpeed * Math.cos(this.angle) );
+    var X = this.position.x + (this.moveEngineSpeed * Math.sin(this.angle));
+    var Y = this.position.y + (this.moveEngineSpeed * Math.cos(this.angle));
 
     // Movement engine
     this.moveEngineSpeed *= this.moveDecay; // Decaying speed
@@ -176,9 +180,9 @@ Cell.prototype.calcMovePhys = function(config) {
 Cell.prototype.sendUpdate = function() {
     // Whether or not to include this cell in the update packet
     return true;
-}
+};
 
-Cell.prototype.onConsume = function(consumer,gameServer) {
+Cell.prototype.onConsume = function(consumer, gameServer) {
     // Called when the cell is consumed
 };
 
@@ -197,4 +201,3 @@ Cell.prototype.onAutoMove = function(gameServer) {
 Cell.prototype.moveDone = function(gameServer) {
     // Called when this cell finished moving with the auto move engine
 };
-

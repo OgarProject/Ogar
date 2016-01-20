@@ -5,7 +5,7 @@ module.exports = {
     Experimental: require('./Experimental'),
     Tournament: require('./Tournament'),
     HungerGames: require('./HungerGames'),
-	Rainbow: require('./Rainbow'),
+    Rainbow: require('./Rainbow'),
     Debug: require('./Debug'),
     Zombie: require('./Zombie'),
     TeamZ: require('./TeamZ.js'),
@@ -50,4 +50,3 @@ var get = function(id) {
 };
 
 module.exports.get = get;
-

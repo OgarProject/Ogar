@@ -9,11 +9,46 @@ function HungerGames() {
 
     // Gamemode Specific Variables
     this.maxContenders = 12;
-    this.baseSpawnPoints = [
-        {x: 1600,y: 200},{x: 3200,y: 200},{x: 4800,y: 200}, // Top
-        {x: 200,y: 1600},{x: 200,y: 3200},{x: 200,y: 4800}, // Left
-        {x: 6200,y: 1600},{x: 6200,y: 3200},{x: 6200,y: 4800}, // Right
-        {x: 1600,y: 6200},{x: 3200,y: 6200},{x: 4800,y: 6200}  // Bottom
+    this.baseSpawnPoints = [{
+            x: 1600,
+            y: 200
+        }, {
+            x: 3200,
+            y: 200
+        }, {
+            x: 4800,
+            y: 200
+        }, // Top
+        {
+            x: 200,
+            y: 1600
+        }, {
+            x: 200,
+            y: 3200
+        }, {
+            x: 200,
+            y: 4800
+        }, // Left
+        {
+            x: 6200,
+            y: 1600
+        }, {
+            x: 6200,
+            y: 3200
+        }, {
+            x: 6200,
+            y: 4800
+        }, // Right
+        {
+            x: 1600,
+            y: 6200
+        }, {
+            x: 3200,
+            y: 6200
+        }, {
+            x: 4800,
+            y: 6200
+        } // Bottom
     ];
     this.contenderSpawnPoints;
     this.borderDec = 100; // Border shrinks by this size everytime someone dies
@@ -25,26 +60,32 @@ HungerGames.prototype = new Tournament();
 // Gamemode Specific Functions
 
 HungerGames.prototype.getPos = function() {
-    var pos = {x: 0, y: 0};
+    var pos = {
+        x: 0,
+        y: 0
+    };
 
     // Random Position
     if (this.contenderSpawnPoints.length > 0) {
         var index = Math.floor(Math.random() * this.contenderSpawnPoints.length);
         pos = this.contenderSpawnPoints[index];
-        this.contenderSpawnPoints.splice(index,1);
+        this.contenderSpawnPoints.splice(index, 1);
     }
 
-    return {x: pos.x, y: pos.y};
+    return {
+        x: pos.x,
+        y: pos.y
+    };
 };
 
-HungerGames.prototype.spawnFood = function(gameServer,mass,pos) {
+HungerGames.prototype.spawnFood = function(gameServer, mass, pos) {
     var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass);
     f.setColor(gameServer.getRandomColor());
     gameServer.addNode(f);
     gameServer.currentFood++;
 };
 
-HungerGames.prototype.spawnVirus = function(gameServer,pos) {
+HungerGames.prototype.spawnVirus = function(gameServer, pos) {
     var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass);
     gameServer.addNode(v);
 };
@@ -115,49 +156,148 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     var mapHeight = gameServer.config.borderBottom - gameServer.config.borderTop;
 
     // Food
-    this.spawnFood(gameServer,200,{x: mapWidth * .5,y: mapHeight * .5}); // Center
-    this.spawnFood(gameServer,80,{x: mapWidth * .4,y: mapHeight * .6}); //
-    this.spawnFood(gameServer,80,{x: mapWidth * .6,y: mapHeight * .6});
-    this.spawnFood(gameServer,80,{x: mapWidth * .4,y: mapHeight * .4});
-    this.spawnFood(gameServer,80,{x: mapWidth * .6,y: mapHeight * .4});
-    this.spawnFood(gameServer,50,{x: mapWidth * .7,y: mapHeight * .5}); //
-    this.spawnFood(gameServer,50,{x: mapWidth * .3,y: mapHeight * .5});
-    this.spawnFood(gameServer,50,{x: mapWidth * .5,y: mapHeight * .7});
-    this.spawnFood(gameServer,50,{x: mapWidth * .5,y: mapHeight * .3});
-    this.spawnFood(gameServer,30,{x: mapWidth * .7,y: mapHeight * .625}); // Corner
-    this.spawnFood(gameServer,30,{x: mapWidth * .625,y: mapHeight * .7});
-    this.spawnFood(gameServer,30,{x: mapWidth * .3,y: mapHeight * .4});
-    this.spawnFood(gameServer,30,{x: mapWidth * .4,y: mapHeight * .3});
-    this.spawnFood(gameServer,30,{x: mapWidth * .6,y: mapHeight * .3});
-    this.spawnFood(gameServer,30,{x: mapWidth * .7,y: mapHeight * .4});
-    this.spawnFood(gameServer,30,{x: mapWidth * .3,y: mapHeight * .6});
-    this.spawnFood(gameServer,30,{x: mapWidth * .4,y: mapHeight * .7});
+    this.spawnFood(gameServer, 200, {
+        x: mapWidth * .5,
+        y: mapHeight * .5
+    }); // Center
+    this.spawnFood(gameServer, 80, {
+        x: mapWidth * .4,
+        y: mapHeight * .6
+    }); //
+    this.spawnFood(gameServer, 80, {
+        x: mapWidth * .6,
+        y: mapHeight * .6
+    });
+    this.spawnFood(gameServer, 80, {
+        x: mapWidth * .4,
+        y: mapHeight * .4
+    });
+    this.spawnFood(gameServer, 80, {
+        x: mapWidth * .6,
+        y: mapHeight * .4
+    });
+    this.spawnFood(gameServer, 50, {
+        x: mapWidth * .7,
+        y: mapHeight * .5
+    }); //
+    this.spawnFood(gameServer, 50, {
+        x: mapWidth * .3,
+        y: mapHeight * .5
+    });
+    this.spawnFood(gameServer, 50, {
+        x: mapWidth * .5,
+        y: mapHeight * .7
+    });
+    this.spawnFood(gameServer, 50, {
+        x: mapWidth * .5,
+        y: mapHeight * .3
+    });
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .7,
+        y: mapHeight * .625
+    }); // Corner
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .625,
+        y: mapHeight * .7
+    });
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .3,
+        y: mapHeight * .4
+    });
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .4,
+        y: mapHeight * .3
+    });
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .6,
+        y: mapHeight * .3
+    });
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .7,
+        y: mapHeight * .4
+    });
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .3,
+        y: mapHeight * .6
+    });
+    this.spawnFood(gameServer, 30, {
+        x: mapWidth * .4,
+        y: mapHeight * .7
+    });
 
     // Virus
-    this.spawnVirus(gameServer,{x: mapWidth * .6,y: mapHeight * .5}); //
-    this.spawnVirus(gameServer,{x: mapWidth * .4,y: mapHeight * .5});
-    this.spawnVirus(gameServer,{x: mapWidth * .5,y: mapHeight * .4});
-    this.spawnVirus(gameServer,{x: mapWidth * .5,y: mapHeight * .6});
-    this.spawnVirus(gameServer,{x: mapWidth * .3,y: mapHeight * .3}); //
-    this.spawnVirus(gameServer,{x: mapWidth * .3,y: mapHeight * .7});
-    this.spawnVirus(gameServer,{x: mapWidth * .7,y: mapHeight * .3});
-    this.spawnVirus(gameServer,{x: mapWidth * .7,y: mapHeight * .7});
-    this.spawnVirus(gameServer,{x: mapWidth * .25,y: mapHeight * .6}); //
-    this.spawnVirus(gameServer,{x: mapWidth * .25,y: mapHeight * .4});
-    this.spawnVirus(gameServer,{x: mapWidth * .75,y: mapHeight * .6});
-    this.spawnVirus(gameServer,{x: mapWidth * .75,y: mapHeight * .4});
-    this.spawnVirus(gameServer,{x: mapWidth * .6,y: mapHeight * .25});
-    this.spawnVirus(gameServer,{x: mapWidth * .4,y: mapHeight * .25});
-    this.spawnVirus(gameServer,{x: mapWidth * .6,y: mapHeight * .75});
-    this.spawnVirus(gameServer,{x: mapWidth * .4,y: mapHeight * .75});
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .6,
+        y: mapHeight * .5
+    }); //
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .4,
+        y: mapHeight * .5
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .5,
+        y: mapHeight * .4
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .5,
+        y: mapHeight * .6
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .3,
+        y: mapHeight * .3
+    }); //
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .3,
+        y: mapHeight * .7
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .7,
+        y: mapHeight * .3
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .7,
+        y: mapHeight * .7
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .25,
+        y: mapHeight * .6
+    }); //
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .25,
+        y: mapHeight * .4
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .75,
+        y: mapHeight * .6
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .75,
+        y: mapHeight * .4
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .6,
+        y: mapHeight * .25
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .4,
+        y: mapHeight * .25
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .6,
+        y: mapHeight * .75
+    });
+    this.spawnVirus(gameServer, {
+        x: mapWidth * .4,
+        y: mapHeight * .75
+    });
 };
 
-HungerGames.prototype.onPlayerSpawn = function(gameServer,player) {
+HungerGames.prototype.onPlayerSpawn = function(gameServer, player) {
     // Only spawn players if the game hasnt started yet
     if ((this.gamePhase == 0) && (this.contenders.length < this.maxContenders)) {
         player.color = gameServer.getRandomColor(); // Random color
         this.contenders.push(player); // Add to contenders list
-        gameServer.spawnPlayer(player,this.getPos());
+        gameServer.spawnPlayer(player, this.getPos());
 
         if (this.contenders.length == this.maxContenders) {
             // Start the game once there is enough players
@@ -165,5 +305,3 @@ HungerGames.prototype.onPlayerSpawn = function(gameServer,player) {
         }
     }
 };
-
-

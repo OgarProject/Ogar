@@ -5,4 +5,3 @@ module.exports = {
     Virus: require('./Virus'),
     EjectedMass: require('./EjectedMass'),
 };
-

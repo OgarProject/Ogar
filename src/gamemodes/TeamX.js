@@ -24,11 +24,19 @@ function TeamX() {
     this.motherMinAmount = 5;
 
     // game mode data:
-    this.colors = [
-        { 'r': 255, 'g': 7, 'b': 7 },
-        { 'r': 7, 'g': 255, 'b': 7 },
-        { 'r': 7, 'g': 7, 'b': 255 },
-    ];
+    this.colors = [{
+        'r': 255,
+        'g': 7,
+        'b': 7
+    }, {
+        'r': 7,
+        'g': 255,
+        'b': 7
+    }, {
+        'r': 7,
+        'g': 7,
+        'b': 255
+    }, ];
     this.nodesMother = [];
     this.tickMother = 0;
     this.tickMotherS = 0;
@@ -39,7 +47,7 @@ TeamX.prototype = new Teams();
 
 // Gamemode Specific Functions
 
-TeamX.prototype.updateMotherCells = function (gameServer) {
+TeamX.prototype.updateMotherCells = function(gameServer) {
     for (var i in this.nodesMother) {
         var mother = this.nodesMother[i];
 
@@ -47,9 +55,9 @@ TeamX.prototype.updateMotherCells = function (gameServer) {
         mother.update(gameServer);
         mother.checkEat(gameServer);
     }
-}
+};
 
-TeamX.prototype.spawnMotherCell = function (gameServer) {
+TeamX.prototype.spawnMotherCell = function(gameServer) {
     // Checks if there are enough mother cells on the map
     if (this.nodesMother.length < this.motherMinAmount) {
         // Spawns a mother cell
@@ -94,7 +102,7 @@ TeamX.prototype.spawnMotherCell = function (gameServer) {
     }
 };
 
-TeamX.prototype.countNotInRange = function (client) {
+TeamX.prototype.countNotInRange = function(client) {
     var count = 0;
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
@@ -107,14 +115,14 @@ TeamX.prototype.countNotInRange = function (client) {
 
 // Overwrite:
 
-TeamX.prototype.fuzzColorComponent = function (component) {
+TeamX.prototype.fuzzColorComponent = function(component) {
     if (component != 255) {
         component = Math.random() * (this.colorFuzziness - 7) + 7;
     }
     return component;
 };
 
-TeamX.prototype.getTeamColor = function (team) {
+TeamX.prototype.getTeamColor = function(team) {
     var color = this.colors[team];
     return {
         r: this.fuzzColorComponent(color.r),
@@ -123,7 +131,7 @@ TeamX.prototype.getTeamColor = function (team) {
     };
 };
 
-TeamX.prototype.onServerInit = function (gameServer) {
+TeamX.prototype.onServerInit = function(gameServer) {
     // Set up teams
     for (var i = 0; i < this.teamAmount; i++) {
         this.nodes[i] = [];
@@ -131,7 +139,7 @@ TeamX.prototype.onServerInit = function (gameServer) {
 
     // Special virus mechanics
     if (this.pushVirus) {
-        Virus.prototype.feed = function (feeder, gameServer) {
+        Virus.prototype.feed = function(feeder, gameServer) {
             gameServer.removeNode(feeder);
             // Pushes the virus
             this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
@@ -146,11 +154,11 @@ TeamX.prototype.onServerInit = function (gameServer) {
     }
 
     if (!this.teamCollision) {
-        this.onCellMove = function (x1, y1, cell) { }; // does nothing
+        this.onCellMove = function(x1, y1, cell) {}; // does nothing
         if (GS_getCellsInRange == null)
             GS_getCellsInRange = gameServer.getCellsInRange;
 
-        gameServer.getCellsInRange = function (cell) {
+        gameServer.getCellsInRange = function(cell) {
             var list = new Array();
             var squareR = cell.getSquareSize(); // Get cell squared radius
 
@@ -187,14 +195,14 @@ TeamX.prototype.onServerInit = function (gameServer) {
                 var multiplier = 1.25;
 
                 switch (check.getType()) {
-                    case 1:// Food cell
+                    case 1: // Food cell
                         list.push(check);
                         check.inRange = true; // skip future collision checks for this food
                         continue;
-                    case 2:// Virus
+                    case 2: // Virus
                         multiplier = 1.33;
                         break;
-                    case 0:// Players
+                    case 0: // Players
                         // Can't eat self if it's not time to recombine yet
                         if (check.owner == cell.owner) {
                             if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
@@ -252,9 +260,11 @@ TeamX.prototype.onServerInit = function (gameServer) {
 
     // Override this
     gameServer.getRandomSpawn = gameServer.getRandomPosition;
-    gameServer.getRandomColor = function () {
+    gameServer.getRandomColor = function() {
         var colorRGB = [0xFF, 0x07, (Math.random() * 256) >> 0];
-        colorRGB.sort(function () { return 0.5 - Math.random() });
+        colorRGB.sort(function() {
+            return 0.5 - Math.random();
+        });
         return {
             r: colorRGB[0],
             b: colorRGB[1],
@@ -275,7 +285,7 @@ TeamX.prototype.onServerInit = function (gameServer) {
     }
 };
 
-TeamX.prototype.onChange = function (gameServer) {
+TeamX.prototype.onChange = function(gameServer) {
     // Remove all mother cells
     for (var i in this.nodesMother) {
         gameServer.removeNode(this.nodesMother[i]);
@@ -293,7 +303,7 @@ TeamX.prototype.onChange = function (gameServer) {
     }
 };
 
-TeamX.prototype.onTick = function (gameServer) {
+TeamX.prototype.onTick = function(gameServer) {
     // Mother Cell updates
     if (this.tickMother >= this.motherUpdateInterval) {
         this.updateMotherCells(gameServer);
@@ -318,17 +328,21 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2; // Copies virus cell
-    this.color = { r: 205, g: 85, b: 100 };
+    this.color = {
+        r: 205,
+        g: 85,
+        b: 100
+    };
     this.spiked = 1;
 }
 
 MotherCell.prototype = new Cell(); // Base
 
-MotherCell.prototype.getEatingRange = function () {
+MotherCell.prototype.getEatingRange = function() {
     return this.getSize() * .5;
 };
 
-MotherCell.prototype.update = function (gameServer) {
+MotherCell.prototype.update = function(gameServer) {
     // Add mass
     this.mass += .25;
 
@@ -345,9 +359,9 @@ MotherCell.prototype.update = function (gameServer) {
         this.mass--;
         i++;
     }
-}
+};
 
-MotherCell.prototype.checkEat = function (gameServer) {
+MotherCell.prototype.checkEat = function(gameServer) {
     var safeMass = this.mass * .9;
     var r = this.getSize(); // The box area that the checked cell needs to be in to be considered eaten
 
@@ -384,14 +398,14 @@ MotherCell.prototype.checkEat = function (gameServer) {
             this.mass += check.mass;
         }
     }
-}
+};
 
-MotherCell.prototype.abs = function (n) {
+MotherCell.prototype.abs = function(n) {
     // Because Math.abs is slow
-    return (n < 0) ? -n: n;
-}
+    return (n < 0) ? -n : n;
+};
 
-MotherCell.prototype.spawnFood = function (gameServer) {
+MotherCell.prototype.spawnFood = function(gameServer) {
     // Get starting position
     var angle = Math.random() * 6.28; // (Math.PI * 2) ??? Precision is not our greatest concern here
     var r = this.getSize();
@@ -417,11 +431,11 @@ MotherCell.prototype.spawnFood = function (gameServer) {
 
 MotherCell.prototype.onConsume = Virus.prototype.onConsume; // Copies the virus prototype function
 
-MotherCell.prototype.onAdd = function (gameServer) {
+MotherCell.prototype.onAdd = function(gameServer) {
     gameServer.gameMode.nodesMother.push(this); // Temporary
 };
 
-MotherCell.prototype.onRemove = function (gameServer) {
+MotherCell.prototype.onRemove = function(gameServer) {
     var index = gameServer.gameMode.nodesMother.indexOf(this);
     if (index != -1) {
         gameServer.gameMode.nodesMother.splice(index, 1);

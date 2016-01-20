@@ -56,7 +56,7 @@ Tournament.prototype.endGameTimeout = function(gameServer) {
 Tournament.prototype.fillBots = function(gameServer) {
     // Fills the server with bots if there arent enough players
     var fill = this.maxContenders - this.contenders.length;
-    for (var i = 0;i < fill;i++) {
+    for (var i = 0; i < fill; i++) {
         gameServer.bots.addBot();
     }
 };
@@ -107,18 +107,18 @@ Tournament.prototype.prepare = function(gameServer) {
 
 Tournament.prototype.onPlayerDeath = function(gameServer) {
     // Nothing
-}
+};
 
 Tournament.prototype.formatTime = function(time) {
     if (time < 0) {
         return "0:00";
     }
     // Format
-    var min = Math.floor(this.timeLimit/60);
-    var sec = this.timeLimit%60;
-    sec = (sec > 9) ? sec : "0" + sec.toString() ; 
-    return min+":"+sec;
-}
+    var min = Math.floor(this.timeLimit / 60);
+    var sec = this.timeLimit % 60;
+    sec = (sec > 9) ? sec : "0" + sec.toString();
+    return min + ":" + sec;
+};
 
 // Override
 
@@ -126,7 +126,7 @@ Tournament.prototype.onServerInit = function(gameServer) {
     this.prepare(gameServer);
 };
 
-Tournament.prototype.onPlayerSpawn = function(gameServer,player) {
+Tournament.prototype.onPlayerSpawn = function(gameServer, player) {
     // Only spawn players if the game hasnt started yet
     if ((this.gamePhase == 0) && (this.contenders.length < this.maxContenders)) {
         player.color = gameServer.getRandomColor(); // Random color
@@ -151,7 +151,7 @@ Tournament.prototype.onCellRemove = function(cell) {
             if ('_socket' in this.contenders[index].socket) {
                 human_just_died = true;
             }
-            this.contenders.splice(index,1);
+            this.contenders.splice(index, 1);
         }
 
         // Victory conditions
@@ -182,7 +182,7 @@ Tournament.prototype.updateLB = function(gameServer) {
         case 0:
             lb[0] = "Waiting for";
             lb[1] = "players: ";
-            lb[2] = this.contenders.length+"/"+this.maxContenders;
+            lb[2] = this.contenders.length + "/" + this.maxContenders;
             if (this.autoFill) {
                 if (this.timer <= 0) {
                     this.fillBots(gameServer);
@@ -204,7 +204,7 @@ Tournament.prototype.updateLB = function(gameServer) {
             break;
         case 2:
             lb[0] = "Players Remaining";
-            lb[1] = this.contenders.length+"/"+this.maxContenders;
+            lb[1] = this.contenders.length + "/" + this.maxContenders;
             lb[2] = "Time Limit:";
             lb[3] = this.formatTime(this.timeLimit);
             if (this.timeLimit < 0) {
@@ -230,7 +230,7 @@ Tournament.prototype.updateLB = function(gameServer) {
             }
             break;
         case 4:
-            lb[0] = "Time Limit"; 
+            lb[0] = "Time Limit";
             lb[1] = "Reached!";
             if (this.timer <= 0) {
                 // Reset the game
@@ -246,4 +246,3 @@ Tournament.prototype.updateLB = function(gameServer) {
             break;
     }
 };
-

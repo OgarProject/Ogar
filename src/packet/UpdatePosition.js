@@ -17,4 +17,3 @@ UpdatePosition.prototype.build = function() {
 
     return buf;
 };
-

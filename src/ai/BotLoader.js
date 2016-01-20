@@ -17,7 +17,7 @@ BotLoader.prototype.getName = function() {
     if (this.randomNames.length > 0) {
         var index = Math.floor(Math.random() * this.randomNames.length);
         name = this.randomNames[index];
-        this.randomNames.splice(index,1);
+        this.randomNames.splice(index, 1);
     } else {
         name = "bot" + ++this.nameIndex;
     }
@@ -54,5 +54,3 @@ BotLoader.prototype.addBot = function() {
     // Add to world
     s.packetHandler.setNickname(this.getName());
 };
-
-

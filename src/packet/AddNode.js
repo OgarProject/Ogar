@@ -14,4 +14,3 @@ AddNode.prototype.build = function() {
 
     return buf;
 };
-

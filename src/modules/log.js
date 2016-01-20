@@ -16,18 +16,22 @@ Log.prototype.setup = function(gameServer) {
 
     switch (gameServer.config.serverLogLevel) {
         case 2:
-            ip_log = fs.createWriteStream('./logs/ip.log', {flags : 'w'});
+            ip_log = fs.createWriteStream('./logs/ip.log', {
+                flags: 'w'
+            });
 
             // Override
             this.onConnect = function(ip) {
-                ip_log.write("["+this.formatTime()+"] Connect: " + ip + EOL);
+                ip_log.write("[" + this.formatTime() + "] Connect: " + ip + EOL);
             };
 
             this.onDisconnect = function(ip) {
-                ip_log.write("["+this.formatTime()+"] Disconnect: " + ip + EOL);
+                ip_log.write("[" + this.formatTime() + "] Disconnect: " + ip + EOL);
             };
         case 1:
-            console_log = fs.createWriteStream('./logs/console.log', {flags : 'w'});
+            console_log = fs.createWriteStream('./logs/console.log', {
+                flags: 'w'
+            });
 
             console.log = function(d) { //
                 console_log.write(util.format(d) + EOL);
@@ -58,7 +62,7 @@ Log.prototype.onDisconnect = function(ip) {
 
 Log.prototype.onCommand = function(command) {
     // Nothing
-}
+};
 
 Log.prototype.formatTime = function() {
     var date = new Date();
@@ -66,8 +70,8 @@ Log.prototype.formatTime = function() {
     var hour = date.getHours();
     hour = (hour < 10 ? "0" : "") + hour;
 
-    var min  = date.getMinutes();
+    var min = date.getMinutes();
     min = (min < 10 ? "0" : "") + min;
 
     return hour + ":" + min;
-}
+};

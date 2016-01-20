@@ -93,10 +93,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // Send SetBorder packet first
                 var c = this.gameServer.config;
                 this.socket.sendPacket(new Packet.SetBorder(
-                        c.borderLeft + this.socket.playerTracker.scrambleX,
-                        c.borderRight + this.socket.playerTracker.scrambleX,
-                        c.borderTop + this.socket.playerTracker.scrambleY,
-                        c.borderBottom + this.socket.playerTracker.scrambleY
+                    c.borderLeft + this.socket.playerTracker.scrambleX,
+                    c.borderRight + this.socket.playerTracker.scrambleX,
+                    c.borderTop + this.socket.playerTracker.scrambleY,
+                    c.borderBottom + this.socket.playerTracker.scrambleY
                 ));
             }
             break;
@@ -112,7 +112,7 @@ PacketHandler.prototype.setNickname = function(newNick) {
         client.setName(newNick);
 
         // If client has no cells... then spawn a player
-        this.gameServer.gameMode.onPlayerSpawn(this.gameServer,client);
+        this.gameServer.gameMode.onPlayerSpawn(this.gameServer, client);
 
         // Turn off spectate mode
         client.spectate = false;
