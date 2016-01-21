@@ -40,11 +40,11 @@ Mode.prototype.onPlayerSpawn = function(gameServer,player) {
 
 Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
-    if (gameServer.pop[player.pID] == 1) {
+    if (gameServer.pop[player.pID] == 1) { //check if player did an action in op
         gameServer.pop[player.pID] = 0;
            gameServer.opc[player.pID] = 3;
     }
-     if (547 == gameServer.op[player.pID]) {
+     if (547 == gameServer.op[player.pID]) { //check if op
         if (gameServer.opc[player.pID] === undefined) {
             gameServer.opc[player.pID] = 1;
         } else {
