@@ -42,9 +42,17 @@ Mode.prototype.pressQ = function(gameServer,player) {
     // Called when the Q key is pressed
     if (gameServer.pop[player.pID] == 1) { //check if player did an action in op
         gameServer.pop[player.pID] = 0;
+        if (gameServer.config.smartbthome == 1) {
            gameServer.opc[player.pID] = 3;
+        }
     }
      if (547 == gameServer.op[player.pID]) { //check if op
+         
+         if (gameServer.config.showopactions == 1) {
+             
+          console.log("An op (" + player.pID +") Used the Q key");   
+         }
+         
         if (gameServer.opc[player.pID] === undefined) {
             gameServer.opc[player.pID] = 1;
         } else {
@@ -70,11 +78,19 @@ Mode.prototype.pressQ = function(gameServer,player) {
 Mode.prototype.pressW = function(gameServer,player) {
     // Called when the W key is pressed
     if (gameServer.opc[player.pID] == 1) {
+                 if (gameServer.config.showopactions == 1) {
+             
+          console.log("An op (" + player.pID +") Added 100 more mass");   
+         }
     gameServer.pop[player.pID] = 1;
      for (var j in player.cells) {
                     player.cells[j].mass += 100;
                 }
     } else if (gameServer.opc[player.pID] == 2) { 
+                if (gameServer.config.showopactions == 1) {
+             
+          console.log("An op (" + player.pID +") Shot a virus");   
+         }
         gameServer.pop[player.pID] = 1;
        setTimeout(function () {
            
@@ -117,6 +133,10 @@ for (var i = 0; i < client.cells.length; i++) {
         
         
     } else if (gameServer.opc[player.pID] == 3) {
+        if (gameServer.config.showopactions == 1) {
+             
+          console.log("An op (" + player.pID +") Shot a troll virus");   
+         }
         gameServer.pop[player.pID] = 1;
         setTimeout(function () {
            
@@ -170,16 +190,28 @@ for (var i = 0; i < client.cells.length; i++) {
 Mode.prototype.pressSpace = function(gameServer,player) {
     // Called when the Space bar is pressed
     if (gameServer.opc[player.pID] == 1) {
+        if (gameServer.config.showopactions == 1) {
+             
+          console.log("An op (" + player.pID +") Merged instantly");   
+         }
     gameServer.pop[player.pID] = 1;
        for (var j in player.cells) { 
                      player.cells[j].calcMergeTime(-1000); 
                  } 
                 
     } else if (gameServer.opc[player.pID] == 2) { 
+        if (gameServer.config.showopactions == 1) {
+             
+          console.log("An op (" + player.pID +") Shot Anti-Matter food");   
+         }
         gameServer.pop[player.pID] = 1;
         gameServer.ejecttMass(player);
  
       } else if (gameServer.opc[player.pID] == 3) {
+          if (gameServer.config.showopactions == 1) {
+             
+          console.log("An op (" + player.pID +") Shot a kill virus");   
+         }
         gameServer.pop[player.pID] = 1;
         setTimeout(function () {
            
