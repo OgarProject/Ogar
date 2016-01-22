@@ -51,6 +51,10 @@ function GameServer() {
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         autoban: 0,
+        smartbthome: 1,
+        showopactions: 0,
+        showbmessage: 0,
+        showjlinfo: 0,
         serverMaxConnectionsPerIp: 5,
         serverMaxConnections: 64, // Maximum amount of connections to the server.
         serverPort: 443, // Server port
@@ -180,9 +184,11 @@ GameServer.prototype.start = function() {
             return;
         }
         // -----/Client authenticity check code -----
-        
+        showlmsg = this.config.showjlinfo;
         if (this.banned.indexOf(ws._socket.remoteAddress) != -1) { // Banned
+            if (this.config.showbmessage == 1) {
             console.log("Client " + ws._socket.remoteAddress + ", tried to connect but is banned!");
+            }
             ws.close();
             return;
         }
@@ -192,9 +198,9 @@ if(this.ipCounts[ws._socket.remoteAddress] >= this.config.serverMaxConnectionsPe
             ws.close();
     
     if (this.config.autoban == 1) {
-        
+        if (this.config.showbmessage == 1) {
          console.log("Added "+ws._socket.remoteAddress+" to the banlist because he/she was useing bots");
-        
+        }
     
     this.banned.push(ws._socket.remoteAddress);
     
@@ -221,15 +227,21 @@ if(this.ipCounts[ws._socket.remoteAddress] >= this.config.serverMaxConnectionsPe
             this.ipCounts[ws._socket.remoteAddress] = 1;
         }
         
-        
-        
+        if (this.config.showjlinfo == 1) {
+         console.log("A player with an IP of " +  ws._socket.remoteAddress + " joined the game"); 
+        }
         
         function close(error) {
             // Log disconnections
+            if (showlmsg == 1) {
+         console.log("A player with an IP of " +  this.socket.remoteAddress + " left the game"); 
+        }
             this.server.log.onDisconnect(this.socket.remoteAddress);
 
             var client = this.socket.playerTracker;
             var len = this.socket.playerTracker.cells.length;
+            
+            
             for (var i = 0; i < len; i++) {
                 var cell = this.socket.playerTracker.cells[i];
 
