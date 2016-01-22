@@ -83,10 +83,10 @@ Commands.list = {
         console.log("[Console] Rop        : Resets op");
         console.log("[Console] Op         : Makes that player OP");
         console.log("[Console] Dop        : De-Ops a player");
-        console.log("[Console] Ban        : Bans an IP");
+        console.log("[Console] Ban        : Bans an IP and senda a msg saying that person was banned");
         console.log("[Console] Banlist    : Lists banned IPs");
         console.log("[Console] Clearban   : Resets Ban list");
-        console.log("[Console] Resetpvirus: Turns special viruses (from op's) into normal ones");
+        console.log("[Console] Resetvirus: Turns special viruses (from op's) into normal ones");
         console.log("[Console] Split      : Splits a player");
         console.log("[Console] ====================================================");
     },
@@ -115,7 +115,7 @@ Commands.list = {
         }
     },
     
-    resetpvirus: function(gameServer,split) {
+    resetvirus: function(gameServer,split) {
         gameServer.troll = [];
         console.log("Turned any Special Viruses (from op's) Into normal ones");
         
@@ -129,6 +129,23 @@ Commands.list = {
             gameServer.banned.push(ip);
             console.log("Added "+ip+" to the banlist");
             // Remove from game
+             var newLB = [];
+        newLB[0] = "A Player has been";
+        newLB[1] = "Banned with IP";
+        newLB[1] = ip;
+        // Clears the update leaderboard function and replaces it with our own
+        gameServer.gameMode.packetLB = 48;
+        gameServer.gameMode.specByLeaderboard = false;
+        gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB}; 
+        setTimeout(function() { 
+                         var gm = GameMode.get(gameServer.gameMode.ID);
+        
+        // Replace functions
+        gameServer.gameMode.packetLB = gm.packetLB;
+        gameServer.gameMode.updateLB = gm.updateLB;
+                 
+    
+}, 14000);
             for (var i in gameServer.clients) {
                 var c = gameServer.clients[i];
                 if (!c.remoteAddress) {
@@ -367,14 +384,14 @@ console.log("[PFMSG] Your request has been sent" );
         gameServer.gameMode.packetLB = 48;
         gameServer.gameMode.specByLeaderboard = false;
         gameServer.gameMode.updateLB = function(gameServer) {gameServer.leaderboard = newLB}; 
-        console.log ("[MSG] The message has been broadcast")
+        console.log ("[MSG] The message has been broadcast");
         setTimeout(function() { 
                          var gm = GameMode.get(gameServer.gameMode.ID);
         
         // Replace functions
         gameServer.gameMode.packetLB = gm.packetLB;
         gameServer.gameMode.updateLB = gm.updateLB;
-            console.log ("[MSG] The board has been reset")
+            console.log ("[MSG] The board has been reset");
                  
     
 }, 14000);
