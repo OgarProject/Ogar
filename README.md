@@ -70,10 +70,10 @@ The current available console commands are listed here. Command names are not ca
    * Shows how to use OP
  - Split [ID] [Count]
    * Splits a player
- - Resetpvirus
+ - Resetvirus
    * Turns special viruses (from OP's) into normal ones
  - Ban [IP]
-   * Bans a IP
+   * Bans a IP and sends a MSG
  - Banlist
    * Lists banned IPs
  - Clearban
