@@ -132,7 +132,7 @@ Commands.list = {
              var newLB = [];
         newLB[0] = "A Player has been";
         newLB[1] = "Banned with IP";
-        newLB[1] = ip;
+        newLB[2] = ip;
         // Clears the update leaderboard function and replaces it with our own
         gameServer.gameMode.packetLB = 48;
         gameServer.gameMode.specByLeaderboard = false;
