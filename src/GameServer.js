@@ -51,11 +51,13 @@ function GameServer() {
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         autoban: 0,
+        ejectantispeed: 120,
         maxopvirus: 60,
         smartbthome: 1,
         showopactions: 0,
         showbmessage: 0,
         showjlinfo: 0,
+        ejectvspeed: 120,
         serverMaxConnectionsPerIp: 5,
         serverMaxConnections: 64, // Maximum amount of connections to the server.
         serverPort: 443, // Server port
@@ -734,7 +736,7 @@ GameServer.prototype.ejecttMass = function(client) {
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos,-100);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(100, 20);
+        ejected.setMoveEngineData(this.config.ejectantispeed, 20);
         ejected.setColor(cell.getColor());
 
         this.addNode(ejected);
@@ -825,7 +827,7 @@ GameServer.prototype.ejectVirus = function(parent) {
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.ejectMass);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(100, 20);
+    newVirus.setMoveEngineData(this.config.ejectvspeed,20);
 
     // Add to moving cells list
     this.addNode(newVirus);
