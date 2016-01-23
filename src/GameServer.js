@@ -51,6 +51,7 @@ function GameServer() {
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         autoban: 0,
+        maxopvirus: 60,
         smartbthome: 1,
         showopactions: 0,
         showbmessage: 0,
