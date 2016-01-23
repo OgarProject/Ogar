@@ -10,7 +10,8 @@ This Modified copy was created to help those who want to open their server to th
  6. more gamemodes
  7. ban
  8. autoban option (see gameserver.ini)
- 7. and other features such as merge or nojoin or kick/killrange
+ 9. More control (gameserver.ini)
+ 10. and other features such as merge or nojoin or kick/killrange
 
 ### Official Website (for official ogar)
 The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
