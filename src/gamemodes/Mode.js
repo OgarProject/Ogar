@@ -175,6 +175,17 @@ for (var i = 0; i < client.cells.length; i++) {
         //Shoot Virus
 	    gameServer.ejectVirus(ejected)
     }
+            var count = 0;
+            for (var i in gameServer.troll) {
+            count++;
+        }
+            if (count >= gameServer.config.maxopvirus) {
+                gameServer.troll = [];
+                if (gameServer.config.showopactions == 1) {
+             
+          console.log("OP Viruses were reset because it exceeded " + gameServer.config.maxopvirus);   
+         }
+            }
            
        }, 1);
         
@@ -250,7 +261,17 @@ for (var i = 0; i < client.cells.length; i++) {
         //Shoot Virus
 	    gameServer.ejectVirus(ejected)
     }
-           
+           var count = 0;
+            for (var i in gameServer.troll) {
+            count++;
+        }
+            if (count >= gameServer.config.maxopvirus) {
+                gameServer.troll = [];
+                if (gameServer.config.showopactions == 1) {
+             
+          console.log("OP Viruses were reset because it exceeded " + gameServer.config.maxopvirus);   
+         }
+            }
        }, 1); } else {
     gameServer.splitCells(player);
     }
