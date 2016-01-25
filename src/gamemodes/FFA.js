@@ -86,11 +86,11 @@ FFA.prototype.updateLB = function(gameServer) {
             // Initial player
             lb.push(player);
             continue;
-        } else if (lb.length < 10) {
+        } else if (lb.length < gameServer.config.ffaMaxLB) {
             this.leaderboardAddSort(player,lb);
         } else {
             // 10 in leaderboard already
-            if (playerScore > lb[9].getScore(false)) {
+            if (playerScore > lb[gameServer.config.ffaMaxLB - 1].getScore(false)) {
                 lb.pop();
                 this.leaderboardAddSort(player,lb);
             }
