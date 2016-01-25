@@ -71,6 +71,8 @@ The current available console commands are listed here. Command names are not ca
    * Shows how to use OP
  - Split [ID] [Count]
    * Splits a player
+ - Team [id] [team (r,g,b)]
+   * Changes a players Team (you might have to split to see the changes though)
  - Resetvirus
    * Turns special viruses (from OP's) into normal ones
  - Ban [IP]
