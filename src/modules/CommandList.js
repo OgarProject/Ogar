@@ -112,7 +112,7 @@ Commands.list = {
             }
             
         } else {
-         console.log("Please specify a team (r,g,b)");
+         console.log("[Console] Please specify a team (r,g,b)");
             return;
         }
         if (isNaN(id)) { 
@@ -130,7 +130,7 @@ Commands.list = {
                     client.cells[j].setColor(colors[tteam]);
                 }
                break;
-                 console.log("Successivly changed the players team");
+                 console.log("[Console] Successively changed the players team");
              } 
          } 
         
@@ -141,11 +141,11 @@ Commands.list = {
 		var id = parseInt(split[1]);
 		var count = parseInt(split[2]);
         if (isNaN(id)) {
-            console.log("Please specify a valid player ID!");
+            console.log("[Console] Please specify a valid player ID!");
             return;
         }
         if (isNaN(count)) {
-            console.log("Since you did not specify split count, We will split the person into 16 cells");
+            console.log("[Console] Since you did not specify split count, We will split the person into 16 cells");
 			count = 4;
         }
         for (var i in gameServer.clients) {
@@ -154,7 +154,7 @@ Commands.list = {
 				for(var i =0;i<count;i++){
 				gameServer.splitCells(client);
 				}
-                console.log("Forced " + client.name + " to split cells");
+                console.log("[Console] Forced " + client.name + " to split cells");
                 break;
             }
         }
@@ -162,7 +162,7 @@ Commands.list = {
     
     resetvirus: function(gameServer,split) {
         gameServer.troll = [];
-        console.log("Turned any Special Viruses (from op's) Into normal ones");
+        console.log("[Console] Turned any Special Viruses (from op's) Into normal ones");
         
     },
      ban: function(gameServer,split) {
@@ -172,7 +172,7 @@ Commands.list = {
 
         if (gameServer.banned.indexOf(ip) == -1) {
             gameServer.banned.push(ip);
-            console.log("Added "+ip+" to the banlist");
+            console.log("[Console] Added "+ip+" to the banlist");
             // Remove from game
              var newLB = [];
         newLB[0] = "A Player has been";
@@ -203,18 +203,18 @@ Commands.list = {
                 }
             }
         } else {
-            console.log("That IP is already banned");
+            console.log("[Console] That IP is already banned");
         }
     },
     banlist: function(gameServer,split) {
-        console.log("Current banned IPs ("+gameServer.banned.length+")");
+        console.log("[Console] Current banned IPs ("+gameServer.banned.length+")");
         for (var i in gameServer.banned) {
             console.log(gameServer.banned[i]);
         }
     },
     
     clearban: function(gameServer,split) {
-        console.log("Cleared " + gameServer.banned.length + " IP's");
+        console.log("[Console] Cleared " + gameServer.banned.length + " IP's");
     gameServer.banned = [];
         
     },
@@ -230,7 +230,7 @@ Commands.list = {
     op: function(gameServer,split) {
     var ops = parseInt(split[1]);
     gameServer.op[ops] = 547;
-    console.log("Made " + ops + " OP");
+    console.log("[Console] Made " + ops + " OP");
     },
         
      dop: function(gameServer,split) {
@@ -243,7 +243,7 @@ Commands.list = {
     
     spmsg: function(gameServer,split) {
         clearInterval(pmsgt);
-        console.log("Stopped any periodicMSG process");
+        console.log("[Console] Stopped any periodicMSG process");
     },
     pmsg: function(gameServer,split) {
     var delay = parseInt(split[1]*1000);
@@ -299,7 +299,7 @@ console.log("[PMSG] Your request has been sent" );
     
     spfmsg: function(gameServer,split) {
         clearInterval(pfmsgt);
-        console.log("Stopped any periodicForceMSG process");
+        console.log("[Console] Stopped any periodicForceMSG process");
     },
     pfmsg: function(gameServer,split) {
     var delay = parseInt(split[1]*1000);
@@ -522,7 +522,7 @@ console.log("[PFMSG] Your request has been sent" );
                  
                 }
              } 
-        console.log("Player "+id+" Was Trolled")
+        console.log("[Console] Player "+id+" Was Trolled")
         
     },
     
