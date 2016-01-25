@@ -54,6 +54,7 @@ function GameServer() {
         ffaMaxLB: 10,
         ejectantispeed: 120,
         maxopvirus: 60,
+        SpikedCells: 0,
         smartbthome: 1,
         showopactions: 0,
         showbmessage: 0,
