@@ -3,7 +3,7 @@ var Mode = require('./Mode');
 function Teams() {
     Mode.apply(this, Array.prototype.slice.call(arguments));
 
-    this.ID = 1;
+    this.ID = 15;
     this.name = "No Collision Teams";
     this.decayMod = 1.5;
     this.packetLB = 50;
