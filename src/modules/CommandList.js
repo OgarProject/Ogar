@@ -175,9 +175,11 @@ Commands.list = {
             console.log("[Console] Added "+ip+" to the banlist");
             // Remove from game
              var newLB = [];
-        newLB[0] = "A Player has been";
-        newLB[1] = "Banned with IP";
-        newLB[2] = ip;
+newLB[0] = "The Ban Hammer";
+newLB[1] = "Has Spoken!";
+        newLB[2] = "A Player has been";
+        newLB[3] = "Banned with IP";
+        newLB[4] = ip;
         // Clears the update leaderboard function and replaces it with our own
         gameServer.gameMode.packetLB = 48;
         gameServer.gameMode.specByLeaderboard = false;
