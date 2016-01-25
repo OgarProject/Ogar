@@ -1,4 +1,3 @@
-# Andrews Version of Ogar
 
 # Andrews version of Ogar has been changed to Ogar Unlimited by AJS-Development
 You can acces it here [ogar unlimited] (https://github.com/AJS-development/Ogar-unlimited)
