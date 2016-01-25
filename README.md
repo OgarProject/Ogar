@@ -1,7 +1,7 @@
 
 # Andrews version of Ogar has been changed to Ogar Unlimited by AJS-Development
-You can acces it here [ogar unlimited] (https://github.com/AJS-development/Ogar-unlimited)
-
+ ## You can access it here [ogar unlimited] (https://github.com/AJS-development/Ogar-unlimited)
+https://github.com/AJS-development/Ogar-unlimited)
 ### Highlight features in this modified copy
  1. PMSG command, to periodically send a message (no need for admin to be online to explain rules)
  2. OP , to do stuff in game WITHOUT a illegal clone client, see below
