@@ -229,6 +229,10 @@ Commands.list = {
     },
     op: function(gameServer,split) {
     var ops = parseInt(split[1]);
+if (isNaN(ops)) { 
+             console.log("[Console] Please specify a valid player ID!"); 
+             return; 
+         }
     gameServer.op[ops] = 547;
     console.log("[Console] Made " + ops + " OP");
     },
