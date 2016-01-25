@@ -13,6 +13,8 @@ This Modified copy was created to help those who want to open their server to th
  9. More control (gameserver.ini)
  10. and other features such as merge or nojoin or kick/killrange
 
+### Note: I need a person who can code who organizes and formats my code (it is pretty messy)
+
 ### Note:
 Please note that this is updated very frequently and you should check for updates every week. I may add an auto update system but I probably won't (because I don't think it is the right thing to do, updating without your consent) Also you may copy this and modify it without giving me credit, just please make it better, that is all I care. Another note is that I am sometimes terrible in my grammar (I still cannot spell potato out loud). If there is an issue, please notify me. If there is something you want in this, just make a pull request.
 
