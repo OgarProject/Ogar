@@ -1,4 +1,4 @@
-// Library imports
+// Library imports.
 var WebSocket = require('ws');
 var http = require('http');
 var fs = require("fs");
