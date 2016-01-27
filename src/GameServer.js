@@ -85,6 +85,7 @@ function GameServer() {
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerMaxNickLength: 15, // Maximum nick length
         playerSpeed: 30, // Player base speed
+        playerSmoothSplit: 0, // Whether smooth splitting is used
         playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
@@ -637,7 +638,7 @@ GameServer.prototype.splitCells = function(client) {
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
         split.setMoveEngineData(splitSpeed, 12, 0.8);
-        split.ignoreCollision = true;
+        if (this.config.playerSmoothSplit == 1) split.ignoreCollision = true;
         split.calcMergeTime(this.config.playerRecombineTime);
 
         // Add to moving cells list
