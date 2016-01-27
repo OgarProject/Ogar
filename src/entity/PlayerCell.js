@@ -77,7 +77,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
     for (var i = 0; i < this.owner.cells.length; i++) {
         var cell = this.owner.cells[i];
 
-        if ((this.nodeId == cell.nodeId) || (this.ignoreCollision)) {
+        if ((this.nodeId == cell.nodeId) || (this.ignoreCollision) || (cell.ignoreCollision)) {
             continue;
         }
 
@@ -89,11 +89,16 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
+                // Strength however depends on cell1 speed divided by cell2 speed
+                var c1Speed = this.getSpeed();
+                var c2Speed = cell.getSpeed();
+                var mult = Math.min(Math.max(c1Speed / c2Speed, 2), 0.5); // Limit from 0.5 to 2, not to have bugs
+
                 var newDeltaY = y1 - cell.position.y;
                 var newDeltaX = x1 - cell.position.x;
-                var newAngle = Math.atan2(newDeltaX, newDeltaY);
 
-                var move = collisionDist - dist;
+                var newAngle = Math.atan2(newDeltaX, newDeltaY);
+                var move = (collisionDist - dist) * mult;
 
                 x1 = x1 + (move * Math.sin(newAngle)) >> 0;
                 y1 = y1 + (move * Math.cos(newAngle)) >> 0;
@@ -119,7 +124,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
 
     this.position.x = x1 >> 0;
     this.position.y = y1 >> 0;
-};
+}
 
 // Override
 
