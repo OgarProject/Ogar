@@ -1,8 +1,15 @@
 [Ogar player bots]
-These bots are designed to be used for testing new commits of Ogar. To install this module, set the serverBots config field in gameserver.js to an amount higher than 0 (10 is a good amount).
-
+These bots are designed to be used for testing new commits of Ogar.
+To install this module, set the serverBots config field in gameserver.js to an amount higher than 0 (10 is a good amount),
+or issue command addBots [number] in console.
 
 [Changelog]
+(1/27/16)
+- Bots' update function is triggered randomly (50 to 600 ms), to prevent massive update lag when having a lot of bots
+- Bots are a lot more aggressive
+- Bots will split even though more massive cells are near it
+[Planned] - Bots will target with their largest cell when chasing enemies, instead of smallest
+
 (1/18/16)
 - Bots won't recognize mother cells as viruses anymore
 
