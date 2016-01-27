@@ -48,8 +48,8 @@ BotPlayer.prototype.getLowestCell = function() {
     return lowest;
 };
 
-// Override
-
+// Don't override, testing to use more accurate way.
+/*
 BotPlayer.prototype.updateSightRange = function() { // For view distance
     var range = 1000; // Base sight range
 
@@ -59,7 +59,7 @@ BotPlayer.prototype.updateSightRange = function() { // For view distance
 
     this.sightRangeX = range;
     this.sightRangeY = range;
-};
+}; */
 
 BotPlayer.prototype.update = function() { // Overrides the update function from player tracker
     // Remove nodes from visible nodes if possible
@@ -68,15 +68,6 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
         if (index > -1) {
             this.visibleNodes.splice(index, 1);
         }
-    }
-
-    // Update every 500 ms
-    if ((this.tickViewBox <= 0) && (this.gameServer.run)) {
-        this.visibleNodes = this.calcViewBox();
-        this.tickViewBox = 10;
-    } else {
-        this.tickViewBox--;
-        return;
     }
 
     // Respawn if bot is dead
@@ -89,13 +80,22 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
         }
     }
 
+    // Update randomly
+    if ((this.tickViewBox <= 0) && (this.gameServer.run)) {
+        this.visibleNodes = this.calcViewBox();
+        this.tickViewBox = (Math.random() * 12) >> 0;
+    } else {
+        this.tickViewBox--;
+        return;
+    }
+
     // Calc predators/prey
     var cell = this.getLowestCell();
     var r = cell.getSize();
     this.clearLists();
 
     // Ignores targeting cells below this mass
-    var ignoreMass = Math.min((cell.mass / 10), 150);
+    var ignoreMass = cell.mass / 5;
 
     // Loop
     for (i in this.visibleNodes) {
@@ -117,10 +117,10 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
                 }
 
                 // Check for danger
-                if (cell.mass > (check.mass * 1.25)) {
+                if (cell.mass > (check.mass * 1.33)) {
                     // Add to prey list
                     this.prey.push(check);
-                } else if (check.mass > (cell.mass * 1.25)) {
+                } else if (check.mass > (cell.mass * 1.33)) {
                     // Predator
                     var dist = this.getDist(cell, check) - (r + check.getSize());
                     if (dist < 300) {
@@ -239,15 +239,12 @@ BotPlayer.prototype.decide = function(cell) {
             break;
         case 1: // Looking for food
             //console.log("[Bot] "+cell.getName()+": Getting Food");
-            if ((!this.target) || (this.visibleNodes.indexOf(this.target) == -1)) {
-                // Food is eaten/out of sight... so find a new food cell to target
-                this.target = this.findNearest(cell, this.food);
+            this.target = this.findNearest(cell, this.food);
 
-                this.mouse = {
-                    x: this.target.position.x,
-                    y: this.target.position.y
-                };
-            }
+            this.mouse = {
+                x: this.target.position.x,
+                y: this.target.position.y
+            };
             break;
         case 2: // Run from (potential) predators
             var avoid = this.combineVectors(this.predators);
@@ -282,7 +279,7 @@ BotPlayer.prototype.decide = function(cell) {
 
             break;
         case 3: // Target prey
-            if ((!this.target) || (cell.mass < (this.target.mass * 1.25)) || (this.visibleNodes.indexOf(this.target) == -1)) {
+            if ((!this.target) || (cell.mass < (this.target.mass * 1.33)) || (this.visibleNodes.indexOf(this.target) == -1)) {
                 this.target = this.getBiggest(this.prey);
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
@@ -292,14 +289,14 @@ BotPlayer.prototype.decide = function(cell) {
                 y: this.target.position.y
             };
 
-            var massReq = 1.25 * (this.target.mass * 2); // Mass required to splitkill the target
+            var massReq = 1.33 * (this.target.mass * 2); // Mass required to splitkill the target
 
-            if ((cell.mass > massReq) && (this.cells.length == 1)) { // Will not split into more than 2 cells
+            if ((cell.mass > massReq) && (this.cells.length < 3)) { // Will not split into more than 2 cells
                 var splitDist = (4 * (cell.getSpeed() * 5)) + (cell.getSize() * 1.75); // Distance needed to splitkill
                 var distToTarget = this.getAccDist(cell, this.target); // Distance between the target and this cell
 
                 if (splitDist >= distToTarget) {
-                    if ((this.threats.length > 0) && (this.getBiggest(this.threats).mass > (1.25 * (cell.mass / 2)))) {
+                    if ((this.threats.length > 0) && (this.getBiggest(this.threats).mass > (cell.mass))) {
                         // Dont splitkill when they are cells that can possibly eat you after the split
                         break;
                     }
@@ -369,7 +366,13 @@ BotPlayer.prototype.decide = function(cell) {
             break;
         default:
             //console.log("[Bot] "+cell.getName()+": Idle "+this.gameState);
-            this.gameState = 0;
+            this.target = this.findNearest(cell, this.food);
+
+            this.mouse = {
+                x: this.target.position.x,
+                y: this.target.position.y
+            };
+            this.gameState = 1;
             break;
     }
 
