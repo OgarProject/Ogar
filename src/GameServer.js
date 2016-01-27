@@ -15,7 +15,7 @@ var Logger = require('./modules/log');
 
 // GameServer implementation
 function GameServer() {
-    // Startup 
+    // Startup
     this.run = true;
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
@@ -85,6 +85,7 @@ function GameServer() {
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerMaxNickLength: 15, // Maximum nick length
         playerSpeed: 30, // Player base speed
+        playerSmoothSplit: 0, // Whether smooth splitting is used
         playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
@@ -403,9 +404,8 @@ GameServer.prototype.mainLoop = function() {
 
         // Update cells/leaderboard loop
         this.tickMain++;
-        if (this.tickMain >= 20) { // 1 Second
-            setTimeout(this.cellUpdateTick(), 0);
-
+        setTimeout(this.cellUpdateTick(), 0);
+        if (this.tickMain >= 4) { // 250 milliseconds
             // Update leaderboard with the gamemode's method
             this.leaderboard = [];
             this.gameMode.updateLB(this);
@@ -514,6 +514,7 @@ GameServer.prototype.updateMoveEngine = function() {
     var len = this.nodesPlayer.length;
 
     // Sort cells to move the cells close to the mouse first
+    /*
     var srt = [];
     for (var i = 0; i < len; i++)
         srt[i] = i;
@@ -529,10 +530,10 @@ GameServer.prototype.updateMoveEngine = function() {
                 srt[j] = aux;
             }
         }
-    }
+    }*/
 
     for (var i = 0; i < len; i++) {
-        var cell = this.nodesPlayer[srt[i]];
+        var cell = this.nodesPlayer[i];
 
         // Do not move cells that have already been eaten or have collision turned off
         if (!cell) {
@@ -636,7 +637,8 @@ GameServer.prototype.splitCells = function(client) {
         // Create cell
         var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
         split.setAngle(angle);
-        split.setMoveEngineData(splitSpeed, 32, 0.85);
+        split.setMoveEngineData(splitSpeed, 12, 0.8);
+        if (this.config.playerSmoothSplit == 1) split.ignoreCollision = true;
         split.calcMergeTime(this.config.playerRecombineTime);
 
         // Add to moving cells list
@@ -694,7 +696,7 @@ GameServer.prototype.ejectMass = function(client) {
     }
 };
 
-GameServer.prototype.newCellVirused = function(client, parent, angle, mass, speed) {
+GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
     // Starting position
     var startPos = {
         x: parent.position.x,
@@ -704,7 +706,8 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass, spee
     // Create cell
     newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(speed, 15);
+    // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
+    newCell.setMoveEngineData(newCell.getSpeed() * 6, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
     newCell.ignoreCollision = true; // Remove collision checks
 
@@ -762,7 +765,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // Cell type check - Cell must be bigger than this number times the mass of the cell being eaten
-        var multiplier = 1.25;
+        var multiplier = 1.33;
 
         switch (check.getType()) {
             case 1: // Food cell
@@ -860,7 +863,8 @@ GameServer.prototype.updateCells = function() {
     }
 
     // Loop through all player cells
-    var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
+    // Updates now occur 20 times every second, making more precision. It was 1 update by 1 second earlier
+    var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod * 0.05);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
 
@@ -870,7 +874,7 @@ GameServer.prototype.updateCells = function() {
 
         // Recombining
         if (cell.owner.cells.length > 1) {
-            cell.recombineTicks += 1;
+            cell.recombineTicks += 0.05;
             cell.calcMergeTime(this.config.playerRecombineTime);
         } else if (cell.owner.cells.length == 1 && cell.recombineTicks > 0) {
             cell.recombineTicks = 0;

@@ -17,7 +17,7 @@ function Experimental() {
     this.tickMotherS = 0;
 
     // Config
-    this.motherCellMass = 200;
+    this.motherCellMass = 222;
     this.motherUpdateInterval = 5; // How many ticks it takes to update the mother cell (1 tick = 50 ms)
     this.motherSpawnInterval = 100; // How many ticks it takes to spawn another mother cell - Currently 5 seconds
     this.motherMinAmount = 5;
@@ -94,8 +94,8 @@ Experimental.prototype.onServerInit = function(gameServer) {
         gameServer.removeNode(feeder);
         // Pushes the virus
         this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-        this.moveEngineTicks = 5; // Amount of times to loop the movement function
-        this.moveEngineSpeed = 30;
+        this.moveEngineTicks += 10; // Amount of times to loop the movement function
+        this.moveEngineSpeed += 28;
 
         var index = gameServer.movingNodes.indexOf(this);
         if (index == -1) {
@@ -109,12 +109,7 @@ Experimental.prototype.onServerInit = function(gameServer) {
 
 Experimental.prototype.onTick = function(gameServer) {
     // Mother Cell updates
-    if (this.tickMother >= this.motherUpdateInterval) {
-        this.updateMotherCells(gameServer);
-        this.tickMother = 0;
-    } else {
-        this.tickMother++;
-    }
+    this.updateMotherCells(gameServer);
 
     // Mother Cell Spawning
     if (this.tickMotherS >= this.motherSpawnInterval) {
@@ -153,30 +148,40 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
 MotherCell.prototype = new Cell(); // Base
 
 MotherCell.prototype.getEatingRange = function() {
-    return this.getSize() * .5;
+    return this.getSize() / 3.14;
 };
 
 MotherCell.prototype.update = function(gameServer) {
-    // Add mass
-    this.mass += .25;
+    if (Math.random() * 100 > 97) {
+        var maxFood = Math.random() * 2; // Max food spawned per tick
+        var i = 0; // Food spawn counter
+        while (i < maxFood)  {
+            // Only spawn if food cap hasn't been reached
+            if (gameServer.currentFood < gameServer.config.foodMaxAmount * 1.5) {
+                this.spawnFood(gameServer);
+            }
 
-    // Spawn food
-    var maxFood = 10; // Max food spawned per tick
-    var i = 0; // Food spawn counter
-    while ((this.mass > gameServer.gameMode.motherCellMass) && (i < maxFood)) {
-        // Only spawn if food cap hasn been reached
-        if (gameServer.currentFood < gameServer.config.foodMaxAmount) {
-            this.spawnFood(gameServer);
+            // Increment
+            i++;
         }
-
-        // Incrementers
-        this.mass--;
-        i++;
+    }
+    if (this.mass > 222) {
+        // Always spawn food if the mother cell is larger than 222
+        var cellSize = gameServer.config.foodMass;
+        if (this.mass > 222 + cellSize * 2) { // Spawn it twice if possible
+            this.spawnFood(gameServer);
+            this.spawnFood(gameServer);
+            this.mass -= cellSize;
+            this.mass -= cellSize;
+        } else if (this.mass > 222 + cellSize) {
+            this.spawnFood(gameServer);
+            this.mass -= cellSize;
+        }
     }
 };
 
 MotherCell.prototype.checkEat = function(gameServer) {
-    var safeMass = this.mass * .9;
+    var safeMass = this.mass * .78;
     var r = this.getSize(); // The box area that the checked cell needs to be in to be considered eaten
 
     // Loop for potential prey

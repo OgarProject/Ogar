@@ -110,22 +110,21 @@ Teams.prototype.onCellMove = function(x1, y1, cell) {
         if (check.owner.getTeam() == team) {
             // Check if in collision range
             var collisionDist = check.getSize() + r; // Minimum distance between the 2 cells
-            if (!cell.simpleCollide(x1, y1, check, collisionDist)) {
-                // Skip
-                continue;
-            }
-
-            // First collision check passed... now more precise checking
-            dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
+            var dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
 
             // Calculations
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
+                // Strength however depends on cell1 speed divided by cell2 speed
+                var speed1 = cell.getSpeed();
+                var speed2 = check.getSpeed();
+                var mult = Math.min(Math.max(speed1 / speed2, 2), 0.5); // Limit from 0.5 to 2 not to have bugs
+
                 var newDeltaY = check.position.y - y1;
                 var newDeltaX = check.position.x - x1;
                 var newAngle = Math.atan2(newDeltaX, newDeltaY);
 
-                var move = collisionDist - dist;
+                var move = (collisionDist - dist) * mult;
 
                 check.position.x = check.position.x + (move * Math.sin(newAngle)) >> 0;
                 check.position.y = check.position.y + (move * Math.cos(newAngle)) >> 0;
