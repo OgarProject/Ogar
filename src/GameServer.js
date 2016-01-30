@@ -20,6 +20,7 @@ function GameServer() {
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
     this.clients = [];
+    this.largestClient; // Required for spectators
     this.nodes = [];
     this.nodesVirus = []; // Virus nodes
     this.nodesEjected = []; // Ejected mass nodes
@@ -411,6 +412,20 @@ GameServer.prototype.mainLoop = function() {
             this.leaderboard = [];
             this.gameMode.updateLB(this);
             this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
+            
+            if (!this.gameMode.specByLeaderboard) {
+                // Get client with largest score if gamemode doesn't have a leaderboard
+                var lC;
+                var lCScore = 0;
+                for (var i = 0; i < this.clients.length; i++) {
+                    // if (typeof this.clients[i].getScore == 'undefined') continue;
+                    if (this.clients[i].playerTracker.getScore(true) > lCScore) {
+                        lC = this.clients[i];
+                        lCScore = this.clients[i].playerTracker.getScore(true);
+                    }
+                }
+                this.largestClient = lC;
+            } else this.largestClient = this.leaderboard[0];
 
             this.tickMain = 0; // Reset
         }

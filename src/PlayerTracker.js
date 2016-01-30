@@ -18,17 +18,17 @@ function PlayerTracker(gameServer, socket) {
         y: 0
     };
     this.mouseCells = []; // For individual cell movement
-    this.tickLeaderboard = 0; //
+    this.tickLeaderboard = 0;
     this.tickViewBox = 0;
 
     this.team = 0;
     this.spectate = false;
-    this.spectatedPlayer = -1; // Current player that this player is watching
+    this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
 
     // Viewing box
     this.sightRangeX = 0;
     this.sightRangeY = 0;
-    this.centerPos = {
+    this.centerPos = { // Center of map
         x: 3000,
         y: 3000
     };
@@ -47,6 +47,9 @@ function PlayerTracker(gameServer, socket) {
 
     // Gamemode function
     if (gameServer) {
+        // Find center
+        this.centerPos.x = (gameServer.config.borderLeft - gameServer.config.borderRight) / 2;
+        this.centerPos.y = (gameServer.config.borderTop - gameServer.config.borderBottom) / 2;
         // Player id
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
@@ -294,33 +297,98 @@ PlayerTracker.prototype.calcViewBox = function() {
 PlayerTracker.prototype.getSpectateNodes = function() {
     var specPlayer;
 
-    if (this.gameServer.getMode().specByLeaderboard) {
-        this.spectatedPlayer = Math.min(this.gameServer.leaderboard.length - 1, this.spectatedPlayer);
-        specPlayer = this.spectatedPlayer == -1 ? null : this.gameServer.leaderboard[this.spectatedPlayer];
-    } else {
-        this.spectatedPlayer = Math.min(this.gameServer.clients.length - 1, this.spectatedPlayer);
-        specPlayer = this.spectatedPlayer == -1 ? null : this.gameServer.clients[this.spectatedPlayer].playerTracker;
-    }
+    if (!this.freeRoam) {
+        specPlayer = this.gameServer.largestClient;
 
-    if (specPlayer) {
-        // If selected player has died/disconnected, switch spectator and try again next tick
-        if (specPlayer.cells.length == 0) {
-            this.gameServer.switchSpectator(this);
-            return [];
+        if (specPlayer) {
+            // If selected player has died/disconnected, switch spectator and try again next tick
+            if (specPlayer.playerTracker.cells.length == 0) {
+                this.gameServer.switchSpectator(this);
+                return [];
+            }
+            // Get spectated player's location and calculate zoom amount
+
+            this.centerPos = specPlayer.playerTracker.centerPos;
+            var specZoom = Math.sqrt(100 * specPlayer.playerTracker.score);
+            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
+            this.sendPosPacket(specZoom);
+            return specPlayer.playerTracker.visibleNodes.slice(0, specPlayer.playerTracker.visibleNodes.length);
+        } else {
+            return []; // Nothing
         }
-
-        // Get spectated player's location and calculate zoom amount
-        var specZoom = Math.sqrt(100 * specPlayer.score);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-        // TODO: Send packet elsewhere so it is send more often
-        this.socket.sendPacket(new Packet.UpdatePosition(
-            specPlayer.centerPos.x + this.scrambleX,
-            specPlayer.centerPos.y + this.scrambleY,
-            specZoom
-        ));
-        // TODO: Recalculate visible nodes for spectator to match specZoom
-        return specPlayer.visibleNodes.slice(0, specPlayer.visibleNodes.length);
     } else {
-        return []; // Nothing
+        // User is in free roam
+        // To mimic agar.io, get distance from center to mouse and apply a part of the distance
+        specPlayer = null;
+
+        var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
+        var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
+        var speed = Math.min(dist / 10, 190); // Not to break laws of universe by going faster than light speed
+
+        this.centerPos.x += speed * Math.sin(angle);
+        this.centerPos.y += speed * Math.cos(angle);
+
+        // Check if went away from borders
+        this.checkBorderPass();
+
+        // Now that we've updated center pos, get nearby cells
+        // We're going to use config's view base times 2.5
+
+        var mult = 2.5; // To simplify multiplier, in case this needs editing later on
+        this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
+        this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
+        this.viewBox.leftX = this.centerPos.x - this.gameServer.config.serverViewBaseX * mult;
+        this.viewBox.rightX = this.centerPos.x + this.gameServer.config.serverViewBaseX * mult;
+        this.viewBox.width = this.gameServer.config.serverViewBaseX * mult;
+        this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
+
+        // Use calcViewBox's way of looking for nodes
+        var newVisible = [];
+        for (var i = 0; i < this.gameServer.nodes.length; i++) {
+            node = this.gameServer.nodes[i];
+
+            if (!node) {
+                continue;
+            }
+
+            if (node.visibleCheck(this.viewBox, this.centerPos)) {
+                // Cell is in range of viewBox
+                newVisible.push(node);
+            }
+        }
+        var specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
+        this.sendPosPacket(specZoom);
+        return newVisible;
     }
+};
+
+PlayerTracker.prototype.checkBorderPass = function() {
+    // A check while in free-roam mode to avoid player going into nothingness
+    if (this.centerPos.x < this.gameServer.config.borderLeft) {
+        this.centerPos.x = this.gameServer.config.borderLeft;
+    }
+    if (this.centerPos.x > this.gameServer.config.borderRight) {
+        this.centerPos.x = this.gameServer.config.borderRight;
+    }
+    if (this.centerPos.y < this.gameServer.config.borderTop) {
+        this.centerPos.y = this.gameServer.config.borderTop;
+    }
+    if (this.centerPos.y > this.gameServer.config.borderBottom) {
+        this.centerPos.y = this.gameServer.config.borderBottom;
+    }
+};
+
+PlayerTracker.prototype.sendPosPacket = function(specZoom) {
+    // TODO: Send packet elsewhere so it is sent more often
+    this.socket.sendPacket(new Packet.UpdatePosition(
+        this.centerPos.x + this.scrambleX,
+        this.centerPos.y + this.scrambleY,
+        specZoom
+    ));
+};
+
+PlayerTracker.prototype.getAngle = function(x1, y1, x2, y2) {
+    var deltaY = y1 - y2;
+    var deltaX = x1 - x2;
+    return Math.atan2(deltaX, deltaY);
 };
