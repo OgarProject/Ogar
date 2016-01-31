@@ -133,23 +133,25 @@ PlayerTracker.prototype.update = function() {
     var nonVisibleNodes = []; // Nodes that are not visible
     if (this.tickViewBox <= 0) {
         var newVisible = this.calcViewBox();
+        try { // Add a try block in any case
 
-        // Compare and destroy nodes that are not seen
-        for (var i = 0; i < this.visibleNodes.length; i++) {
-            var index = newVisible.indexOf(this.visibleNodes[i]);
-            if (index == -1) {
-                // Not seen by the client anymore
-                nonVisibleNodes.push(this.visibleNodes[i]);
+            // Compare and destroy nodes that are not seen
+            for (var i = 0; i < this.visibleNodes.length; i++) {
+                var index = newVisible.indexOf(this.visibleNodes[i]);
+                if (index == -1) {
+                    // Not seen by the client anymore
+                    nonVisibleNodes.push(this.visibleNodes[i]);
+                }
             }
-        }
 
-        // Add nodes to client's screen if client has not seen it already
-        for (var i = 0; i < newVisible.length; i++) {
-            var index = this.visibleNodes.indexOf(newVisible[i]);
-            if (index == -1) {
-                updateNodes.push(newVisible[i]);
+            // Add nodes to client's screen if client has not seen it already
+            for (var i = 0; i < newVisible.length; i++) {
+                var index = this.visibleNodes.indexOf(newVisible[i]);
+                if (index == -1) {
+                    updateNodes.push(newVisible[i]);
+                }
             }
-        }
+        } finally {} // Catch doesn't work for some reason
 
         this.visibleNodes = newVisible;
         // Reset Ticks
@@ -298,23 +300,32 @@ PlayerTracker.prototype.getSpectateNodes = function() {
     var specPlayer;
 
     if (!this.freeRoam) {
+        // TODO: Sort out switch between playerTracker.playerTracker.x and playerTracker.x problem.
         specPlayer = this.gameServer.largestClient;
-
-        if (specPlayer) {
-            // If selected player has died/disconnected, switch spectator and try again next tick
-            if (specPlayer.playerTracker.cells.length == 0) {
-                this.gameServer.switchSpectator(this);
-                return [];
-            }
+        // Detect specByLeaderboard as player trackers are complicated
+        if (!this.gameServer.gameMode.specByLeaderboard && specPlayer) {
             // Get spectated player's location and calculate zoom amount
-
-            this.centerPos = specPlayer.playerTracker.centerPos;
             var specZoom = Math.sqrt(100 * specPlayer.playerTracker.score);
             specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-            this.sendPosPacket(specZoom);
+            
+            // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
+            this.centerPos.x = specPlayer.playerTracker.centerPos.x;
+            this.centerPos.y = specPlayer.playerTracker.centerPos.y;
+            
+            this.sendCustomPosPacket(specPlayer.playerTracker.centerPos.x, specPlayer.playerTracker.centerPos.y, specZoom);
             return specPlayer.playerTracker.visibleNodes.slice(0, specPlayer.playerTracker.visibleNodes.length);
-        } else {
-            return []; // Nothing
+            
+        } else if (this.gameServer.gameMode.specByLeaderboard && specPlayer) {
+            // Get spectated player's location and calculate zoom amount
+            var specZoom = Math.sqrt(100 * specPlayer.score);
+            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
+            
+            // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
+            this.centerPos.x = specPlayer.centerPos.x;
+            this.centerPos.y = specPlayer.centerPos.y;
+            
+            this.sendCustomPosPacket(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom);
+            return specPlayer.visibleNodes.slice(0, specPlayer.visibleNodes.length);
         }
     } else {
         // User is in free roam
@@ -356,7 +367,8 @@ PlayerTracker.prototype.getSpectateNodes = function() {
                 newVisible.push(node);
             }
         }
-        var specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
+        var specZoom = Math.sqrt(100 * 150);
+        specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
         this.sendPosPacket(specZoom);
         return newVisible;
     }
@@ -383,6 +395,15 @@ PlayerTracker.prototype.sendPosPacket = function(specZoom) {
     this.socket.sendPacket(new Packet.UpdatePosition(
         this.centerPos.x + this.scrambleX,
         this.centerPos.y + this.scrambleY,
+        specZoom
+    ));
+};
+
+PlayerTracker.prototype.sendCustomPosPacket = function(x, y, specZoom) {
+    // TODO: Send packet elsewhere so it is sent more often
+    this.socket.sendPacket(new Packet.UpdatePosition(
+        x + this.scrambleX,
+        y + this.scrambleY,
         specZoom
     ));
 };
