@@ -92,7 +92,10 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
                 // Strength however depends on cell1 speed divided by cell2 speed
                 var c1Speed = this.getSpeed();
                 var c2Speed = cell.getSpeed();
-                var mult = Math.min(Math.max(c1Speed / c2Speed, 2), 0.5); // Limit from 0.5 to 2, not to have bugs
+                
+                var mult = c1Speed / c2Speed / 2;
+                if (mult < 0.15) mult = 0.15;
+                if (mult > 0.9) mult = 0.9;
 
                 var newDeltaY = y1 - cell.position.y;
                 var newDeltaX = x1 - cell.position.x;
