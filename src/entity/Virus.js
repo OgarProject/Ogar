@@ -65,7 +65,7 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 		var m = endMass, i = 0;
 		if (m > 100) { // Threshold
 			// While can split into an even smaller cell (1000 => 500, 250, etc)
-			while (m / 3 > 24) {
+			while (m / 3.33333333 > 24) {
 				m /= 3.33333333;
 				bigSplits.push(m >> 0);
 				i++;
