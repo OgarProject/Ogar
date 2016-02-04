@@ -50,6 +50,9 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
     if (numSplits <= 0) {
         return;
     }
+    
+    var mass = consumer.mass; // Mass of the consumer
+    var bigSplits = []; // Big splits
 
     // Big cells will split into cells larger than 24 mass
 	// won't do the regular way unless it can split more than 4 times
@@ -69,8 +72,14 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 			}
 		}
 	}
-	for (var a in bigSplits) numSplits --;
-
+	numSplits -= bigSplits.length;
+    
+    for (var k = 0; k < bigSplits.length; k++) {
+        angle = Math.random() * 6.28; // Random directions
+        consumer.mass -= bigSplits[k];
+        gameServer.newCellVirused(client, consumer, angle, bigSplits[k]);
+    }
+    
     // Splitting
     var angle = 0; // Starting angle
     for (var k = 0; k < numSplits; k++) {
@@ -78,14 +87,7 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
         consumer.mass -= splitMass;
         gameServer.newCellVirused(client, consumer, angle, splitMass);
     }
-
-    for (var k = 0; k < bigSplits.Length; k++) {
-        angle = Math.random() * 6.28; // Random directions
-        splitMass = consumer.mass / 4;
-        consumer.mass -= bigSplits[k];
-        gameServer.newCellVirused(client, consumer, angle, bigSplits[k]);
-    }
-
+    
     // Prevent consumer cell from merging with other cells
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
 };
