@@ -713,17 +713,19 @@ GameServer.prototype.ejectMass = function(client) {
 };
 
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
-    // Starting position
+    // Before everything, calculate radius of the spawning cell.
+    var size = Math.ceil(Math.sqrt(100 * mass));
+    
+    // Position of parent cell + a bit ahead to make sure parent cell stays where it is
     var startPos = {
-        x: parent.position.x,
-        y: parent.position.y
+        x: parent.position.x + (size / 100) * Math.sin(angle),
+        y: parent.position.y + (size / 100) * Math.cos(angle)
     };
-
     // Create cell
     newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
     newCell.setAngle(angle);
     // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
-    newCell.setMoveEngineData(newCell.getSpeed() * 6, 12); // Instead of fixed speed, use dynamic
+    newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
     newCell.calcMergeTime(this.config.playerRecombineTime);
     newCell.ignoreCollision = true; // Remove collision checks
 
