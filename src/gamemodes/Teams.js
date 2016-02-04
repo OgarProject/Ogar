@@ -116,9 +116,15 @@ Teams.prototype.onCellMove = function(x1, y1, cell) {
             if (dist < collisionDist) { // Collided
                 // The moving cell pushes the colliding cell
                 // Strength however depends on cell1 speed divided by cell2 speed
-                var speed1 = cell.getSpeed();
-                var speed2 = check.getSpeed();
-                var mult = Math.min(Math.max(speed1 / speed2, 2), 0.5); // Limit from 0.5 to 2 not to have bugs
+                
+                // Note that the collision is actually inversed, cell we're cheking will be moved,
+                // so make sure we're looking in check's perspective
+                var c2Speed = cell.getSpeed();
+                var c1Speed = check.getSpeed();
+                
+                var mult = c1Speed / c2Speed / 2;
+                if (mult < 0.15) mult = 0.15;
+                if (mult > 0.9) mult = 0.9;
 
                 var newDeltaY = check.position.y - y1;
                 var newDeltaX = check.position.x - x1;
