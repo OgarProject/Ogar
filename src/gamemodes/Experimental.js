@@ -207,6 +207,19 @@ MotherCell.prototype.checkEat = function(gameServer) {
                 this.mass += check.mass;
             }
         }
+    if (gameServer.config.motherCellBigFSpawn == 1) {
+        // Don't let mother cells get too big, They'll just be a black hole instead
+        if (this.mass > gameServer.config.motherCellMaxMass) {
+            // Spit out bigger food if there isn't too many food cells
+            if ((gameServer.currentFood < gameServer.config.foodMaxAmount) && (this.mass > gameServer.config.motherCellStartMass)) {
+                this.spawnBigFood();
+                this.mass -= gameServer.config.bigMotherCellFoodMass; // If food cap isn't reached mothercell with spit out this sized food pellets
+            } else {
+                this.mass -= gameServer.config.mCFF; // MotherCell mass will be this is food cap is reached
+            }
+        }
+    } else {
+        this.spawnFood();
     }
     for (var i in gameServer.movingNodes) {
         var check = gameServer.movingNodes[i];
@@ -229,6 +242,30 @@ MotherCell.prototype.checkEat = function(gameServer) {
 MotherCell.prototype.abs = function(n) {
     // Because Math.abs is slow
     return (n < 0) ? -n : n;
+};
+
+MotherCell.prototype.spawnBigFood = function(gameServer) {
+    // Get starting position
+    var angle = Math.random() * 6.28; // (Math.PI * 2) ??? Precision is not our greatest concern here
+    var r = this.getSize();
+    var pos = {
+        x: this.position.x + (r * Math.sin(angle)),
+        y: this.position.y + (r * Math.cos(angle))
+    };
+
+    // Spawn food
+    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.bigMotherCellFoodMass, gameServer);
+    f.setColor(gameServer.getRandomColor());
+
+    gameServer.addNode(f);
+    gameServer.currentFood++;
+
+    // Move engine
+    f.angle = angle;
+    var dist = (Math.random() * 10) + 22; // Random distance
+    f.setMoveEngineData(dist, 15);
+
+    gameServer.setAsMovingNode(f);
 };
 
 MotherCell.prototype.spawnFood = function(gameServer) {
