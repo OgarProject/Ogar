@@ -170,7 +170,12 @@ GameServer.prototype.start = function() {
         // AGAINST YOU. THIS SECTION OF CODE WAS ADDED ON JULY 9, 2015 AT THE REQUEST
         // OF THE AGAR.IO DEVELOPERS.
         var origin = ws.upgradeReq.headers.origin;
-        if (origin != 'http://agar.io' && origin != 'https://agar.io' && origin != 'http://localhost' && origin != 'https://localhost' && origin != 'http://127.0.0.1' && origin != 'https://127.0.0.1') {
+        if (origin != 'http://agar.io' &&
+        origin != 'https://agar.io' &&
+        origin != 'http://localhost' &&
+        origin != 'https://localhost' &&
+        origin != 'http://127.0.0.1' &&
+        origin != 'https://127.0.0.1') {
             ws.close();
             return;
         }
@@ -279,7 +284,6 @@ GameServer.prototype.getRandomSpawn = function() {
         // Get random spawn if no food cell is found
         pos = this.getRandomPosition();
     }
-
     return pos;
 };
 
@@ -443,7 +447,6 @@ GameServer.prototype.updateClients = function() {
         if (typeof this.clients[i] == "undefined") {
             continue;
         }
-
         this.clients[i].playerTracker.update();
     }
 };
