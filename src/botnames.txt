@@ -123,6 +123,7 @@ turkey
 ukraine
 united kingdom
 usa
+ussr
 venezuela
 vinesauce
 wojak
