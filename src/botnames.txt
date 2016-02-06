@@ -60,7 +60,6 @@ iran
 iraq
 ireland
 irs
-isis
 italy
 jamaica
 japan
@@ -124,7 +123,6 @@ turkey
 ukraine
 united kingdom
 usa
-ussr
 venezuela
 vinesauce
 wojak
