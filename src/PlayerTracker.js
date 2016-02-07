@@ -235,7 +235,7 @@ PlayerTracker.prototype.antiTeamTick = function() {
     if (this.actionDecayMult < 1) this.actionDecayMult = 1;
     
     // Limit/reset anti-teaming effect
-    if (this.actionMult < 1 && this.massDecayMult > 1) this.actionMult = 0.6; // Speed up cooldown
+    if (this.actionMult < 1 && this.massDecayMult > 1) this.actionMult = 0.3; // Speed up cooldown
     if (this.actionMult > 1.4) this.actionMult = 1.4;
     if (this.actionMult < 0.15) this.actionMult = 0;
     
