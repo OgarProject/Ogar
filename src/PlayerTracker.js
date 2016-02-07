@@ -207,9 +207,9 @@ PlayerTracker.prototype.update = function() {
     if (this.actionDecayMult > 1.002004) this.actionDecayMult = 1.002004; // Very small differences. Don't change this.
     if (this.actionDecayMult < 1) this.actionDecayMult = 1;
     
-    // Limit anti-teaming effect
+    // Limit/reset anti-teaming effect
     if (this.actionMult > 1.4) this.actionMult = 1.4;
-    if (this.actionMult < 0.1) this.actionMult = 0;
+    if (this.actionMult < 0.49) this.actionMult = 0;
     
     // Apply anti-teaming if required
     if (this.actionMult > 1) this.massDecayMult = this.actionMult;
