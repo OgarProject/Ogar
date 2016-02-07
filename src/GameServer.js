@@ -170,7 +170,13 @@ GameServer.prototype.start = function() {
         // AGAINST YOU. THIS SECTION OF CODE WAS ADDED ON JULY 9, 2015 AT THE REQUEST
         // OF THE AGAR.IO DEVELOPERS.
         var origin = ws.upgradeReq.headers.origin;
-        if (origin != 'http://agar.io' && origin != 'https://agar.io' && origin != 'http://localhost' && origin != 'https://localhost' && origin != 'http://127.0.0.1' && origin != 'https://127.0.0.1') {
+        if (origin != 'http://agar.io' &&
+            origin != 'https://agar.io' &&
+            origin != 'http://localhost' &&
+            origin != 'https://localhost' &&
+            origin != 'http://127.0.0.1' &&
+            origin != 'https://127.0.0.1') {
+            
             ws.close();
             return;
         }
@@ -742,7 +748,7 @@ GameServer.prototype.shootVirus = function(parent) {
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(200, 20);
+    newVirus.setMoveEngineData(190, 20);
 
     // Add to moving cells list
     this.addNode(newVirus);
