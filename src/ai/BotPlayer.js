@@ -1,4 +1,5 @@
 var PlayerTracker = require('../PlayerTracker');
+var gameServer = require('../GameServer');
 
 function BotPlayer() {
     PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
@@ -338,7 +339,7 @@ BotPlayer.prototype.decide = function(cell) {
                 };
 
                 // Shoot
-                for (var v = 0; v < 7; v++) {
+                for (var v = 0; v < this.gameServer.config.virusFeedAmount; v++) {
                     this.gameServer.ejectMass(this);
                 }
 
