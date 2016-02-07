@@ -147,6 +147,36 @@ Cell.prototype.calcMovePhys = function(config) {
     // Movement engine
     this.moveEngineSpeed *= this.moveDecay; // Decaying speed
     this.moveEngineTicks--;
+    
+    // Ejected cell collision
+    for (var i = 0; i < this.gameServer.nodesEjected.length; i++) {
+        var check = this.gameServer.nodesEjected[i];
+        
+        if (check.nodeId == this.nodeId) continue; // Don't check for yourself
+        
+        var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
+        var allowDist = (this.getSize() + check.getSize()) * 0.95; // Allow cells to get in themselves a bit
+        
+        if (dist < allowDist) {
+            // Two ejected cells collided
+            var deltaX = this.position.x - check.position.x;
+            var deltaY = this.position.y - check.position.y;
+            var angle = Math.atan2(deltaX, deltaY);
+            
+            check.moveEngineTicks++;
+            if (this.gameServer.movingNodes.indexOf(check) == -1) this.gameServer.setAsMovingNode(check);
+            
+            this.moveEngineTicks++;
+            
+            // Make sure they don't become a living organism (wait, a multicellular organism simulator!)
+            var realAD = (this.getSize() + check.getSize()) * 1.05;
+            
+            var move = (realAD - dist) / 2;
+            
+            X += (Math.sin(angle) * move) >> 0;
+            Y += (Math.cos(angle) * move) >> 0;
+        }
+    }
 
     // Border check - Bouncy physics
     var radius = 40;
@@ -201,4 +231,20 @@ Cell.prototype.onAutoMove = function(gameServer) {
 
 Cell.prototype.moveDone = function(gameServer) {
     // Called when this cell finished moving with the auto move engine
+};
+
+// Lib
+
+Cell.prototype.abs = function(x) {
+    return x < 0 ? -x : x;
+};
+
+Cell.prototype.getDist = function(x1, y1, x2, y2) {
+    var xs = x2 - x1;
+    xs = xs * xs;
+
+    var ys = y2 - y1;
+    ys = ys * ys;
+
+    return Math.sqrt(xs + ys);
 };

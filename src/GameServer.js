@@ -76,7 +76,7 @@ function GameServer() {
         ejectMass: 12, // Mass of ejected cells
         ejectMassCooldown: 200, // Time until a player can eject mass again
         ejectMassLoss: 16, // Mass lost when ejecting cells
-        ejectSpeed: 160, // Base speed of ejected cells
+        ejectSpeed: 100, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
         playerMaxMass: 22500, // Maximum mass a player can have
@@ -316,8 +316,8 @@ GameServer.prototype.getRandomColor = function() {
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
 
-    // Adds to the owning player's screen
-    if (node.owner) {
+    // Adds to the owning player's screen excluding ejected cells
+    if (node.owner && node.cellType != 3) {
         node.setColor(node.owner.color);
         node.owner.cells.push(node);
         node.owner.socket.sendPacket(new Packet.AddNode(node));
@@ -488,7 +488,7 @@ GameServer.prototype.spawnPlayer = function(player, pos, mass) {
     }
 
     // Spawn player and add to world
-    var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass);
+    var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass, this);
     this.addNode(cell);
 
     // Set initial mouse coords
@@ -523,7 +523,7 @@ GameServer.prototype.virusCheck = function() {
         }
 
         // Spawn if no cells are colliding
-        var v = new Entity.Virus(this.getNextNodeId(), null, pos, this.config.virusStartMass);
+        var v = new Entity.Virus(this.getNextNodeId(), null, pos, this.config.virusStartMass, this);
         this.addNode(v);
     }
 };
@@ -661,7 +661,7 @@ GameServer.prototype.splitCells = function(client) {
         var newMass = cell.mass / 2;
         cell.mass = newMass;
         // Create cell
-        var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
+        var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass, this);
         split.setAngle(angle);
         split.setMoveEngineData(splitSpeed, 12, 0.8);
         if (this.config.playerSmoothSplit == 1) split.ignoreCollision = true;
@@ -672,7 +672,7 @@ GameServer.prototype.splitCells = function(client) {
         this.addNode(split);
         splitCells++;
     }
-    if (splitCells > 0) client.actionMult += 0.35; // Account anti-teaming
+    if (splitCells > 0) client.actionMult += 0.5; // Account anti-teaming
 };
 
 GameServer.prototype.canEjectMass = function(client) {
@@ -703,7 +703,7 @@ GameServer.prototype.ejectMass = function(client) {
         var angle = Math.atan2(deltaX, deltaY);
 
         // Get starting position
-        var size = cell.getSize() + 5;
+        var size = cell.getSize() + 1.5;
         var startPos = {
             x: cell.position.x + ((size + this.config.ejectMass) * Math.sin(angle)),
             y: cell.position.y + ((size + this.config.ejectMass) * Math.cos(angle))
@@ -712,24 +712,20 @@ GameServer.prototype.ejectMass = function(client) {
         // Remove mass from parent cell
         cell.mass -= this.config.ejectMassLoss;
         // Randomize angle
-        angle += (Math.random() * .4) - .2;
+        angle += (Math.random() * .5) - .25;
 
         // Create cell
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass);
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), client, startPos, this.config.ejectMass, this);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(this.config.ejectSpeed, 20);
+        ejected.setMoveEngineData(this.config.ejectSpeed, 20, 0.85);
         ejected.setColor(cell.getColor());
 
+        this.nodesEjected.push(ejected);
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
+        
         ejectedCells++;
     }
-    // Account for anti-teaming
-    if (ejectedCells > 0) {
-        client.actionMult += 0.02;
-        // Using W to give to a teamer is very frequent, so make sure their mult will be lost slower
-        client.actionDecayMult *= 1.0005;
-    };
 };
 
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
@@ -742,7 +738,7 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
         y: parent.position.y + (size / 100) * Math.cos(angle)
     };
     // Create cell
-    newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
+    newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass, this);
     newCell.setAngle(angle);
     // newCell.setMoveEngineData(speed, 12); Usage of speed variable is deprecated!
     newCell.setMoveEngineData(newCell.getSpeed() * 9, 12); // Instead of fixed speed, use dynamic
@@ -760,9 +756,9 @@ GameServer.prototype.shootVirus = function(parent) {
         y: parent.position.y,
     };
 
-    var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass);
+    var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, this);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(190, 20);
+    newVirus.setMoveEngineData(135, 20, 0.85);
 
     // Add to moving cells list
     this.addNode(newVirus);
