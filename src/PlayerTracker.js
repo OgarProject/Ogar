@@ -24,7 +24,11 @@ function PlayerTracker(gameServer, socket) {
     this.team = 0;
     this.spectate = false;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
-
+    
+    this.massDecayMult = 1; // Anti-teaming multiplier
+    this.actionMult = 0; // If reaches over 1, it'll account as anti-teaming
+    this.actionDecayMult = 1; // Players not teaming will lose their anti-teaming multiplier far more quickly
+    
     // Viewing box
     this.sightRangeX = 0;
     this.sightRangeY = 0;
@@ -194,6 +198,23 @@ PlayerTracker.prototype.update = function() {
     } else {
         this.tickLeaderboard--;
     }
+    
+    // ANTI-TEAMING DECAY
+    // Calculated even if anti-teaming is disabled.
+    this.actionMult *= (0.999 * this.actionDecayMult);
+    this.actionDecayMult *= 0.999;
+    
+    if (this.actionDecayMult > 1.002004) this.actionDecayMult = 1.002004; // Very small differences. Don't change this.
+    if (this.actionDecayMult < 1) this.actionDecayMult = 1;
+    
+    // Limit anti-teaming effect
+    if (this.actionMult > 1.4) this.actionMult = 1.4;
+    if (this.actionMult < 0.1) this.actionMult = 0;
+    
+    // Apply anti-teaming if required
+    if (this.actionMult > 1) this.massDecayMult = this.actionMult;
+    else this.massDecayMult = 1;
+    
 
     // Handles disconnections
     if (this.disconnect > -1) {
