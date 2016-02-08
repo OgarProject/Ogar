@@ -452,8 +452,9 @@ GameServer.prototype.updateClients = function() {
             continue;
         }
 
-        this.clients[i].playerTracker.update();
+       
         this.clients[i].playerTracker.antiTeamTick();
+ this.clients[i].playerTracker.update();
     }
 };
 
