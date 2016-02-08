@@ -40,10 +40,12 @@ Commands.list = {
         console.log("[Console] kill [PlayerID]              : kill cell(s) by client ID");
         console.log("[Console] killall                      : kill everyone");
         console.log("[Console] mass [PlayerID] [mass]       : set cell(s) mass by client ID");
+        console.log("[Console] merge [PlayerID] (state)     : merge all client's cells once by state");
         console.log("[Console] name [PlayerID] [name]       : change cell(s) name by client ID");
         console.log("[Console] playerlist                   : get list of players and bots");
         console.log("[Console] pause                        : pause game , freeze all cells");
         console.log("[Console] reload                       : reload config");
+        console.log("[Console] resetantiteam [PlayerID]     : reset anti-team effect on client");
         console.log("[Console] status                       : get server status");
         console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
         console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
@@ -279,6 +281,36 @@ Commands.list = {
             }
         }
     },
+    merge: function(gameServer, split) {
+        // Validation checks
+        var id = parseInt(split[1]) - 1;
+        var realId = id + 1;
+        var set = split[2];
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
+            return;
+        }
+
+        if (!gameServer.clients[id]) {
+            console.log("[Console] Client is nonexistent!");
+            return;
+        }
+        var client = gameServer.clients[id].playerTracker;
+
+        if (!isNaN(set)) {
+            if (set == "true") {
+                client.mergeOverride = true;
+                console.log("[Console] Player " + realId + " is now force merging");
+            }
+            if (set == "false") {
+                client.mergeOverride = false;
+                console.log("[Console] Player " + realId + " isn't force merging anymore");
+            }
+        } else {
+            client.mergeOverride = true;
+            console.log("[Console] Player " + realId + " is now force merging");
+        }
+    },
     name: function(gameServer, split) {
         // Validation checks
         var id = parseInt(split[1]);
@@ -295,7 +327,7 @@ Commands.list = {
 
         // Change name
         for (var i = 0; i < gameServer.clients.length; i++) {
-            var client = gameServer.clients[i].playerTracker;
+            var client = gameServer.clients[id + 1].playerTracker;
 
             if (client.pID == id) {
                 console.log("[Console] Changing " + client.name + " to " + name);
@@ -332,15 +364,10 @@ Commands.list = {
                 data = '';
             if (client.spectate) {
                 try {
-                    // Get spectated player
-                    if (gameServer.getMode().specByLeaderboard) { // Get spec type
-                        nick = gameServer.leaderboard[client.spectatedPlayer].name;
-                    } else {
-                        nick = gameServer.clients[client.spectatedPlayer].playerTracker.name;
-                    }
+                    nick = gameServer.largestClient.name;
                 } catch (e) {
-                    // Specating nobody
-                    nick = "";
+                    // Specating in free-roam mode
+                    nick = "in free-roam";
                 }
                 nick = (nick == "") ? "An unnamed cell" : nick;
                 data = fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
@@ -367,6 +394,24 @@ Commands.list = {
         gameServer.loadConfig();
         console.log("[Console] Reloaded the config file successfully");
     },
+    resetantiteam: function(gameServer, split) {
+        // Validation checks
+        var id = parseInt(split[1]);
+        if (isNaN(id)) {
+            console.log("[Console] Please specify a valid player ID!");
+            return;
+        }
+
+        if (!gameServer.clients[id]) {
+            console.log("[Console] Client is nonexistent!");
+            return;
+        }
+
+        gameServer.clients[id].playerTracker.massDecayMult = 1;
+        gameServer.clients[id].playerTracker.actionMult = 0;
+        gameServer.clients[id].playerTracker.actionDecayMult = 1;
+        console.log("[Console] Successfully reset client's anti-team effect");
+    },
     status: function(gameServer, split) {
         // Get amount of humans/bots
         var humans = 0,
@@ -380,8 +425,8 @@ Commands.list = {
         }
         //
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
-        console.log("[Console] Players: " + humans + " Bots: " + bots);
-        console.log("[Console] Server has been running for " + process.uptime() + " seconds.");
+        console.log("[Console] Players: " + humans + " - Bots: " + bots);
+        console.log("[Console] Server has been running for " + process.uptime() + " seconds");
         console.log("[Console] Current memory usage: " + process.memoryUsage().heapUsed / 1000 + "/" + process.memoryUsage().heapTotal / 1000 + " kb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
     },

@@ -426,9 +426,11 @@ GameServer.prototype.mainLoop = function() {
                 var lC;
                 var lCScore = 0;
                 for (var i = 0; i < this.clients.length; i++) {
-                    // if (typeof this.clients[i].getScore == 'undefined') continue;
                     if (this.clients[i].playerTracker.getScore(true) > lCScore) {
-                        lC = this.clients[i];
+
+                        if (!this.gameMode.specByLeaderboard) lC = this.clients[i].playerTracker;
+                        else lC = this.clients[i];
+
                         lCScore = this.clients[i].playerTracker.getScore(true);
                     }
                 }
@@ -452,9 +454,8 @@ GameServer.prototype.updateClients = function() {
             continue;
         }
 
-       
         this.clients[i].playerTracker.antiTeamTick();
- this.clients[i].playerTracker.update();
+        this.clients[i].playerTracker.update();
     }
 };
 
@@ -807,14 +808,13 @@ GameServer.prototype.getCellsInRange = function(cell) {
                 list.push(check);
                 check.inRange = true; // skip future collision checks for this food
                 continue;
-            case 2: // Virus
-                multiplier = 1.33;
-                break;
             case 0: // Players
                 // Can't eat self if it's not time to recombine yet
                 if (check.owner == cell.owner) {
-                    if ((!cell.shouldRecombine) || (!check.shouldRecombine)) {
-                        continue;
+                    // If one of cells can't merge
+                    if (!cell.shouldRecombine || !check.shouldRecombine) {
+                        // Check if merge command was triggered on this client
+                        if (!cell.owner.mergeOverride) continue;
                     }
 
                     multiplier = 1.00;
@@ -914,6 +914,7 @@ GameServer.prototype.updateCells = function() {
         } else if (cell.owner.cells.length == 1 && cell.recombineTicks > 0) {
             cell.recombineTicks = 0;
             cell.shouldRecombine = false;
+            cell.owner.mergeOverride = false;
         }
 
         // Mass decay
@@ -946,43 +947,6 @@ GameServer.prototype.loadConfig = function() {
 
         // Create a new config
         fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
-    }
-};
-
-GameServer.prototype.switchSpectator = function(player) {
-    if (this.gameMode.specByLeaderboard) {
-        player.spectatedPlayer++;
-        if (player.spectatedPlayer == this.leaderboard.length) {
-            player.spectatedPlayer = 0;
-        }
-    } else {
-        // Find next non-spectator with cells in the client list
-        var oldPlayer = player.spectatedPlayer + 1;
-        var count = 0;
-        while (player.spectatedPlayer != oldPlayer && count != this.clients.length) {
-            if (oldPlayer == this.clients.length) {
-                oldPlayer = 0;
-                continue;
-            }
-
-            if (!this.clients[oldPlayer]) {
-                // Break out of loop in case client tries to spectate an undefined player
-                player.spectatedPlayer = -1;
-                break;
-            }
-
-            if (this.clients[oldPlayer].playerTracker.cells.length > 0) {
-                break;
-            }
-
-            oldPlayer++;
-            count++;
-        }
-        if (count == this.clients.length) {
-            player.spectatedPlayer = -1;
-        } else {
-            player.spectatedPlayer = oldPlayer;
-        }
     }
 };
 
