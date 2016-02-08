@@ -20,7 +20,6 @@ EjectedMass.prototype.addMass = function(n) {
     return; // Do nothing, this is an ejected cell
 };
 
-
 // Cell-specific functions
 EjectedMass.prototype.getSize = function() {
     return this.size;
@@ -53,7 +52,7 @@ EjectedMass.prototype.onRemove = function(gameServer) {
         this.owner.actionMult += 0.02;
         this.owner.actionDecayMult *= 1.0005;
     };
-    
+
     // Remove from list of ejected mass
     var index = gameServer.nodesEjected.indexOf(this);
     if (index != -1) {

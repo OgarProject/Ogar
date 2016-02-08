@@ -155,7 +155,7 @@ MotherCell.prototype.update = function(gameServer) {
     if (Math.random() * 100 > 97) {
         var maxFood = Math.random() * 2; // Max food spawned per tick
         var i = 0; // Food spawn counter
-        while (i < maxFood)  {
+        while (i < maxFood) {
             // Only spawn if food cap hasn't been reached
             if (gameServer.currentFood < gameServer.config.foodMaxAmount * 1.5) {
                 this.spawnFood(gameServer);

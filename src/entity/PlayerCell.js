@@ -92,7 +92,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
                 // Strength however depends on cell1 speed divided by cell2 speed
                 var c1Speed = this.getSpeed();
                 var c2Speed = cell.getSpeed();
-                
+
                 var mult = c1Speed / c2Speed / 2;
                 if (mult < 0.15) mult = 0.15;
                 if (mult > 0.9) mult = 0.9;
@@ -137,7 +137,7 @@ PlayerCell.prototype.getEatingRange = function() {
 
 PlayerCell.prototype.onConsume = function(consumer, gameServer) {
     // Add an inefficiency for eating other players' cells
-    var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
+    var factor = (consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed);
     consumer.addMass(factor * this.mass);
 };
 
