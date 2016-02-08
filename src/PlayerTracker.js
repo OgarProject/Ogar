@@ -24,11 +24,11 @@ function PlayerTracker(gameServer, socket) {
     this.team = 0;
     this.spectate = false;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
-    
+
     this.massDecayMult = 1; // Anti-teaming multiplier
     this.actionMult = 0; // If reaches over 1, it'll account as anti-teaming
     this.actionDecayMult = 1; // Players not teaming will lose their anti-teaming multiplier far more quickly
-    
+
     // Viewing box
     this.sightRangeX = 0;
     this.sightRangeY = 0;
@@ -230,15 +230,15 @@ PlayerTracker.prototype.antiTeamTick = function() {
     // Calculated even if anti-teaming is disabled.
     this.actionMult *= (0.999 * this.actionDecayMult);
     this.actionDecayMult *= 0.999;
-    
+
     if (this.actionDecayMult > 1.002004) this.actionDecayMult = 1.002004; // Very small differences. Don't change this.
     if (this.actionDecayMult < 1) this.actionDecayMult = 1;
-    
+
     // Limit/reset anti-teaming effect
     if (this.actionMult < 1 && this.massDecayMult > 1) this.actionMult = 0.3; // Speed up cooldown
     if (this.actionMult > 1.4) this.actionMult = 1.4;
     if (this.actionMult < 0.15) this.actionMult = 0;
-    
+
     // Apply anti-teaming if required
     if (this.actionMult > 1) this.massDecayMult = this.actionMult;
     else this.massDecayMult = 1;
@@ -331,23 +331,23 @@ PlayerTracker.prototype.getSpectateNodes = function() {
             // Get spectated player's location and calculate zoom amount
             var specZoom = Math.sqrt(100 * specPlayer.playerTracker.score);
             specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-            
+
             // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
             this.centerPos.x = specPlayer.playerTracker.centerPos.x;
             this.centerPos.y = specPlayer.playerTracker.centerPos.y;
-            
+
             this.sendCustomPosPacket(specPlayer.playerTracker.centerPos.x, specPlayer.playerTracker.centerPos.y, specZoom);
             return specPlayer.playerTracker.visibleNodes.slice(0, specPlayer.playerTracker.visibleNodes.length);
-            
+
         } else if (this.gameServer.gameMode.specByLeaderboard && specPlayer) {
             // Get spectated player's location and calculate zoom amount
             var specZoom = Math.sqrt(100 * specPlayer.score);
             specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-            
+
             // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
             this.centerPos.x = specPlayer.centerPos.x;
             this.centerPos.y = specPlayer.centerPos.y;
-            
+
             this.sendCustomPosPacket(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom);
             return specPlayer.visibleNodes.slice(0, specPlayer.visibleNodes.length);
         }

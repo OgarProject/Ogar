@@ -178,7 +178,7 @@ GameServer.prototype.start = function() {
             origin != 'https://localhost' &&
             origin != 'http://127.0.0.1' &&
             origin != 'https://127.0.0.1') {
-            
+
             ws.close();
             return;
         }
@@ -420,7 +420,7 @@ GameServer.prototype.mainLoop = function() {
             this.leaderboard = [];
             this.gameMode.updateLB(this);
             this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
-            
+
             if (!this.gameMode.specByLeaderboard) {
                 // Get client with largest score if gamemode doesn't have a leaderboard
                 var lC;
@@ -723,7 +723,7 @@ GameServer.prototype.ejectMass = function(client) {
         this.nodesEjected.push(ejected);
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
-        
+
         ejectedCells++;
     }
 };
@@ -731,7 +731,7 @@ GameServer.prototype.ejectMass = function(client) {
 GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
     // Before everything, calculate radius of the spawning cell.
     var size = Math.ceil(Math.sqrt(100 * mass));
-    
+
     // Position of parent cell + a bit ahead to make sure parent cell stays where it is
     var startPos = {
         x: parent.position.x + (size / 100) * Math.sin(angle),

@@ -81,7 +81,7 @@ HungerGames.prototype.getPos = function() {
 HungerGames.prototype.spawnFood = function(gameServer, mass, pos) {
     var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
     f.setColor(gameServer.getRandomColor());
-    
+
     gameServer.addNode(f);
     gameServer.currentFood++;
 };
