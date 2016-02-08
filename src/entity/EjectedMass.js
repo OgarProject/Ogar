@@ -20,6 +20,7 @@ EjectedMass.prototype.addMass = function(n) {
     return; // Do nothing, this is an ejected cell
 };
 
+
 // Cell-specific functions
 EjectedMass.prototype.getSize = function() {
     return this.size;
@@ -41,18 +42,20 @@ EjectedMass.prototype.sendUpdate = function() {
 
 EjectedMass.prototype.onRemove = function(gameServer) {
     // Check for teaming and apply anti-teaming if required
-    if (this.gameServer.gameMode.teamAmount > 0) {
-        // Apply teaming EXCEPT when exchanging mass to same team member
-        if (this.owner.team != this.killedBy.owner.team || this.owner == this.killedBy.owner) {
+    try {
+        if (this.gameServer.gameMode.teamAmount > 0) {
+            // Apply teaming EXCEPT when exchanging mass to same team member
+            if (this.owner.team != this.killedBy.owner.team || this.owner == this.killedBy.owner) {
+                this.owner.actionMult += 0.02;
+                this.owner.actionDecayMult *= 1.0005;
+            };
+        } else {
+            // Always apply anti-teaming if there are no teams
             this.owner.actionMult += 0.02;
             this.owner.actionDecayMult *= 1.0005;
         };
-    } else {
-        // Always apply anti-teaming if there are no teams
-        this.owner.actionMult += 0.02;
-        this.owner.actionDecayMult *= 1.0005;
-    };
-
+    } catch(ex) { } // Dont do anything whatever the error is
+    
     // Remove from list of ejected mass
     var index = gameServer.nodesEjected.indexOf(this);
     if (index != -1) {
