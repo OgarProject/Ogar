@@ -11,6 +11,7 @@ function PlayerTracker(gameServer, socket) {
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
     this.cells = [];
+    this.mergeOverride = false; // Triggered by console command
     this.score = 0; // Needed for leaderboard
 
     this.mouse = {
@@ -304,10 +305,68 @@ PlayerTracker.prototype.calcViewBox = function() {
     this.viewBox.width = this.sightRangeX;
     this.viewBox.height = this.sightRangeY;
 
+    var newVisible = this.calcVisibleNodes();
+
+    return newVisible;
+};
+
+PlayerTracker.prototype.getSpectateNodes = function() {
+    var specPlayer = this.gameServer.largestClient;
+
+    if (!this.freeRoam) {
+
+        if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
+
+        // Get spectate player's location and calculate zoom amount
+        var specZoom = Math.sqrt(100 * specPlayer.score);
+        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
+
+        this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
+        this.sendPosPacket(specZoom);
+
+        return specPlayer.visibleNodes;
+    }
+    // Behave like client is in free-roam as function didn't return nodes
+    return this.moveInFreeRoam();
+};
+
+PlayerTracker.prototype.moveInFreeRoam = function() {
+    // User is in free roam
+    // To mimic agar.io, get distance from center to mouse and apply a part of the distance
+
+    var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
+    var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
+    var speed = Math.min(dist / 10, 190); // Not to break laws of universe by going faster than light speed
+
+    this.centerPos.x += speed * Math.sin(angle);
+    this.centerPos.y += speed * Math.cos(angle);
+
+    // Check if went away from borders
+    this.checkBorderPass();
+
+    // Now that we've updated center pos, get nearby cells
+    // We're going to use config's view base times 2.5
+
+    var mult = 2.5; // To simplify multiplier, in case this needs editing later on
+    this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
+    this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
+    this.viewBox.leftX = this.centerPos.x - this.gameServer.config.serverViewBaseX * mult;
+    this.viewBox.rightX = this.centerPos.x + this.gameServer.config.serverViewBaseX * mult;
+    this.viewBox.width = this.gameServer.config.serverViewBaseX * mult;
+    this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
+
+    // Use calcViewBox's way of looking for nodes
+    var newVisible = this.calcVisibleNodes();
+    var specZoom = Math.sqrt(100 * 150);
+    specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
+    this.sendPosPacket(specZoom);
+    return newVisible;
+};
+
+PlayerTracker.prototype.calcVisibleNodes = function() {
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         node = this.gameServer.nodes[i];
-
         if (!node) {
             continue;
         }
@@ -320,82 +379,10 @@ PlayerTracker.prototype.calcViewBox = function() {
     return newVisible;
 };
 
-PlayerTracker.prototype.getSpectateNodes = function() {
-    var specPlayer;
-
-    if (!this.freeRoam) {
-        // TODO: Sort out switch between playerTracker.playerTracker.x and playerTracker.x problem.
-        specPlayer = this.gameServer.largestClient;
-        // Detect specByLeaderboard as player trackers are complicated
-        if (!this.gameServer.gameMode.specByLeaderboard && specPlayer) {
-            // Get spectated player's location and calculate zoom amount
-            var specZoom = Math.sqrt(100 * specPlayer.playerTracker.score);
-            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-
-            // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
-            this.centerPos.x = specPlayer.playerTracker.centerPos.x;
-            this.centerPos.y = specPlayer.playerTracker.centerPos.y;
-
-            this.sendCustomPosPacket(specPlayer.playerTracker.centerPos.x, specPlayer.playerTracker.centerPos.y, specZoom);
-            return specPlayer.playerTracker.visibleNodes.slice(0, specPlayer.playerTracker.visibleNodes.length);
-
-        } else if (this.gameServer.gameMode.specByLeaderboard && specPlayer) {
-            // Get spectated player's location and calculate zoom amount
-            var specZoom = Math.sqrt(100 * specPlayer.score);
-            specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
-
-            // Apparently doing this.centerPos = specPlayer.centerPos will set based on reference. We don't want this
-            this.centerPos.x = specPlayer.centerPos.x;
-            this.centerPos.y = specPlayer.centerPos.y;
-
-            this.sendCustomPosPacket(specPlayer.centerPos.x, specPlayer.centerPos.y, specZoom);
-            return specPlayer.visibleNodes.slice(0, specPlayer.visibleNodes.length);
-        }
-    } else {
-        // User is in free roam
-        // To mimic agar.io, get distance from center to mouse and apply a part of the distance
-        specPlayer = null;
-
-        var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
-        var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
-        var speed = Math.min(dist / 10, 190); // Not to break laws of universe by going faster than light speed
-
-        this.centerPos.x += speed * Math.sin(angle);
-        this.centerPos.y += speed * Math.cos(angle);
-
-        // Check if went away from borders
-        this.checkBorderPass();
-
-        // Now that we've updated center pos, get nearby cells
-        // We're going to use config's view base times 2.5
-
-        var mult = 2.5; // To simplify multiplier, in case this needs editing later on
-        this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
-        this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
-        this.viewBox.leftX = this.centerPos.x - this.gameServer.config.serverViewBaseX * mult;
-        this.viewBox.rightX = this.centerPos.x + this.gameServer.config.serverViewBaseX * mult;
-        this.viewBox.width = this.gameServer.config.serverViewBaseX * mult;
-        this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
-
-        // Use calcViewBox's way of looking for nodes
-        var newVisible = [];
-        for (var i = 0; i < this.gameServer.nodes.length; i++) {
-            node = this.gameServer.nodes[i];
-
-            if (!node) {
-                continue;
-            }
-
-            if (node.visibleCheck(this.viewBox, this.centerPos)) {
-                // Cell is in range of viewBox
-                newVisible.push(node);
-            }
-        }
-        var specZoom = Math.sqrt(100 * 150);
-        specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
-        this.sendPosPacket(specZoom);
-        return newVisible;
-    }
+PlayerTracker.prototype.setCenterPos = function(x, y) {
+    this.centerPos.x = x;
+    this.centerPos.y = y;
+    if (this.freeRoam) this.checkBorderPass();
 };
 
 PlayerTracker.prototype.checkBorderPass = function() {
