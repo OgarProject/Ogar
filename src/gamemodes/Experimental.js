@@ -89,6 +89,11 @@ Experimental.prototype.onServerInit = function(gameServer) {
     // Called when the server starts
     gameServer.run = true;
 
+    var mapSize = gameServer.config.borderLeft + gameServer.config.borderRight +
+      gameServer.config.borderTop + gameServer.config.borderRight;
+
+    this.motherMinAmount = Math.ceil(mapSize / 3194.382825); // 7 mother cells for agar.io map size
+
     // Special virus mechanics
     Virus.prototype.feed = function(feeder, gameServer) {
         gameServer.removeNode(feeder);
@@ -155,7 +160,7 @@ MotherCell.prototype.update = function(gameServer) {
     if (Math.random() * 100 > 97) {
         var maxFood = Math.random() * 2; // Max food spawned per tick
         var i = 0; // Food spawn counter
-        while (i < maxFood) {
+        while (i < maxFood)  {
             // Only spawn if food cap hasn't been reached
             if (gameServer.currentFood < gameServer.config.foodMaxAmount * 1.5) {
                 this.spawnFood(gameServer);
@@ -182,47 +187,39 @@ MotherCell.prototype.update = function(gameServer) {
 
 MotherCell.prototype.checkEat = function(gameServer) {
     var safeMass = this.mass * .78;
-    var r = this.getSize(); // The box area that the checked cell needs to be in to be considered eaten
 
     // Loop for potential prey
     for (var i in gameServer.nodesPlayer) {
         var check = gameServer.nodesPlayer[i];
-
-        if (check.mass > safeMass) {
-            // Too big to be consumed
-            continue;
-        }
-
-        // Calculations
-        var len = r - (check.getSize() / 2) >> 0;
-        if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
-            // A second, more precise check
-            var xs = Math.pow(check.position.x - this.position.x, 2);
-            var ys = Math.pow(check.position.y - this.position.y, 2);
-            var dist = Math.sqrt(xs + ys);
-
-            if (r > dist) {
-                // Eats the cell
-                gameServer.removeNode(check);
-                this.mass += check.mass;
-            }
-        }
+        this.checkEatCell(check, safeMass, gameServer);
     }
+
+    // Viruses might be literally in the mother cell when it becomes large. Prevent this
+    for (var i in gameServer.nodesVirus) {
+        var check = gameServer.nodesVirus[i];
+        this.checkEatCell(check, safeMass, gameServer);
+    }
+
+    // Check moving nodes
     for (var i in gameServer.movingNodes) {
         var check = gameServer.movingNodes[i];
+        this.checkEatCell(check, safeMass, gameServer);
+    }
+};
 
-        if ((check.getType() == 1) || (check.mass > safeMass)) {
-            // Too big to be consumed/ No player cells
-            continue;
-        }
+MotherCell.prototype.checkEatCell = function(check, safeMass, gameServer) {
+    if ((check.getType() == 1) || (check.mass > safeMass)) {
+        // Too big to be consumed or check is a food cell
+        return;
+    }
 
-        // Calculations
-        var len = r >> 0;
-        if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
-            // Eat the cell
-            gameServer.removeNode(check);
-            this.mass += check.mass;
-        }
+    // Very simple yet very powerful
+    var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
+    var allowDist = this.getSize() - check.getEatingRange();
+    if (dist < allowDist) {
+        // Eat it
+        gameServer.removeNode(check);
+        this.mass += check.mass;
     }
 };
 
