@@ -672,7 +672,7 @@ GameServer.prototype.splitCells = function(client) {
         this.addNode(split);
         splitCells++;
     }
-    if (splitCells > 0) client.actionMult += 0.5; // Account anti-teaming
+    if (splitCells > 0) client.actionMult += 0.35; // Account anti-teaming
 };
 
 GameServer.prototype.canEjectMass = function(client) {
