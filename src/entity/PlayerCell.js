@@ -42,8 +42,9 @@ PlayerCell.prototype.calcMergeTime = function(base) {
     // As time passes on, recombineTicks gets larger, instead of getting smaller.
     // When the owner has only 1 cell, ticks and shouldRecombine will be reset by gameserver.
     var r = false;
-    if (base == 0) {
-        r = true; // If base recombine time is 0, can almost instantly recombine
+    if (base == 0 || this.owner.mergeOverride) {
+        // Instant recombine in config or merge command was triggered for this client
+        r = true;
     } else {
         var rec = Math.floor(base + ((0.02 * this.mass))); // base seconds + 0.02% of mass
         if (this.recombineTicks > rec) r = true; // Can combine with other cells
@@ -92,7 +93,7 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
                 // Strength however depends on cell1 speed divided by cell2 speed
                 var c1Speed = this.getSpeed();
                 var c2Speed = cell.getSpeed();
-
+                
                 var mult = c1Speed / c2Speed / 2;
                 if (mult < 0.15) mult = 0.15;
                 if (mult > 0.9) mult = 0.9;
@@ -137,7 +138,7 @@ PlayerCell.prototype.getEatingRange = function() {
 
 PlayerCell.prototype.onConsume = function(consumer, gameServer) {
     // Add an inefficiency for eating other players' cells
-    var factor = (consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed);
+    var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
     consumer.addMass(factor * this.mass);
 };
 
