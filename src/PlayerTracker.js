@@ -331,7 +331,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
 
-        return specPlayer.visibleNodes;
+        return specPlayer.visibleNodes.slice(0);
     }
     // Behave like client is in free-roam as function didn't return nodes
     return this.moveInFreeRoam();
