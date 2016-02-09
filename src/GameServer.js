@@ -736,8 +736,8 @@ GameServer.prototype.newCellVirused = function(client, parent, angle, mass) {
 
     // Position of parent cell + a bit ahead to make sure parent cell stays where it is
     var startPos = {
-        x: parent.position.x + (size / 100) * Math.sin(angle),
-        y: parent.position.y + (size / 100) * Math.cos(angle)
+        x: parent.position.x + (size / 85) * Math.sin(angle),
+        y: parent.position.y + (size / 85) * Math.cos(angle)
     };
     // Create cell
     newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass, this);
@@ -845,7 +845,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         var ys = Math.pow(check.position.y - cell.position.y, 2);
         var dist = Math.sqrt(xs + ys);
 
-        var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 40% of the radius of the cell being eaten
+        var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell - 40% of the radius of the cell being eaten
         if (dist > eatingRange) {
             // Not in eating range
             continue;
@@ -915,6 +915,7 @@ GameServer.prototype.updateCells = function() {
             cell.recombineTicks = 0;
             cell.shouldRecombine = false;
             cell.owner.mergeOverride = false;
+            cell.owner.mergeOverrideDuration = 0;
         }
 
         // Mass decay
