@@ -10,7 +10,10 @@ If you've purchased a copy of Ogar, you've probably been ripped off. [This post 
 ## Obtaining and Using
 If you are on Windows, you can download the latest binary build of Ogar [from this page](http://dl.ogarproject.com/). The binary is the easiest way to get started running an Ogar server. If you'd like to tinker with the source code, you can follow the instructions below (and slightly modify them) to run the source on Windows.
 
-As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, open up your system command line (cmd for windows, terminal for mac) and type "npm install ws". If you are on Linux, you can use the install script which would also automatically install node.js and ws. 
+As Ogar is written in Node.js, you must have Node.js and its "ws" module installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, you can:
+- for Windows, run `Install Dependecies.bat` located in the folder where this file is.
+- for Mac, open your terminal, go to this directory with `cd` and type in `npm install`.
+- for Linux, you can use the install script which would also automatically install node.js and ws. 
 
 Manual:
 ```sh

@@ -40,12 +40,12 @@ Commands.list = {
         console.log("[Console] kill [PlayerID]              : kill cell(s) by client ID");
         console.log("[Console] killall                      : kill everyone");
         console.log("[Console] mass [PlayerID] [mass]       : set cell(s) mass by client ID");
-        console.log("[Console] merge [PlayerID] (state)     : merge all client's cells once by state");
+        console.log("[Console] merge [PlayerID]             : merge all client's cells once");
         console.log("[Console] name [PlayerID] [name]       : change cell(s) name by client ID");
         console.log("[Console] playerlist                   : get list of players and bots");
         console.log("[Console] pause                        : pause game , freeze all cells");
         console.log("[Console] reload                       : reload config");
-        console.log("[Console] resetantiteam [PlayerID]     : reset anti-team effect on client");
+        console.log("[Console] resetantiteam                : reset anti-team effect on client");
         console.log("[Console] status                       : get server status");
         console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
         console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
@@ -283,33 +283,52 @@ Commands.list = {
     },
     merge: function(gameServer, split) {
         // Validation checks
-        var id = parseInt(split[1]) - 1;
-        var realId = id + 1;
+        var id = parseInt(split[1]);
         var set = split[2];
         if (isNaN(id)) {
             console.log("[Console] Please specify a valid player ID!");
             return;
         }
 
-        if (!gameServer.clients[id]) {
+        // Find client with same ID as player entered
+        var client;
+        for (var i = 0; i < gameServer.clients.length; i++) {
+            if (id == gameServer.clients[i].playerTracker.pID) {
+                client = gameServer.clients[i].playerTracker;
+                break;
+            }
+        }
+
+        if (!client) {
             console.log("[Console] Client is nonexistent!");
             return;
         }
-        var client = gameServer.clients[id].playerTracker;
 
-        if (!isNaN(set)) {
-            if (set == "true") {
-                client.mergeOverride = true;
-                console.log("[Console] Player " + realId + " is now force merging");
-            }
-            if (set == "false") {
-                client.mergeOverride = false;
-                console.log("[Console] Player " + realId + " isn't force merging anymore");
-            }
-        } else {
-            client.mergeOverride = true;
-            console.log("[Console] Player " + realId + " is now force merging");
+        if (client.cells.length == 1) {
+            console.log("[Console] Client already has one cell!");
+            return;
         }
+
+        // Set client's merge override
+        var state;
+        if (set == "true") {
+            client.mergeOverride = true;
+            client.mergeOverrideDuration = 100;
+            state = true;
+        } else if (set == "false") {
+            client.mergeOverride = false;
+            client.mergeOverrideDuration = 0;
+            state = false;
+        } else {
+            if (client.mergeOverride) { client.mergeOverride = false; client.mergeOverrideDuration = 0; }
+            else { client.mergeOverride = true; client.mergeOverrideDuration = 100; }
+
+            state = client.mergeOverride;
+        }
+
+        // Log
+        if (state) console.log("[Console] Player " + id + " is now force merging");
+        else console.log("[Console] Player " + id + " isn't force merging anymore");
     },
     name: function(gameServer, split) {
         // Validation checks

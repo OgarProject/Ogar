@@ -12,6 +12,7 @@ function PlayerTracker(gameServer, socket) {
     this.visibleNodes = [];
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
+    this.mergeOverrideDuration = 0; // Make sure merge override isn't exploited
     this.score = 0; // Needed for leaderboard
 
     this.mouse = {
@@ -191,6 +192,12 @@ PlayerTracker.prototype.update = function() {
 
     this.nodeDestroyQueue = []; // Reset destroy queue
     this.nodeAdditionQueue = []; // Reset addition queue
+
+    // Update merge override
+    if (this.mergeOverrideDuration > 0) {
+        this.mergeOverrideDuration--;
+        this.mergeOverride = true;
+    } else this.mergeOverride = false;
 
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
