@@ -28,6 +28,7 @@ var fillChar = function(data, char, fieldLength, rTL) {
 Commands.list = {
     help: function(gameServer, split) {
         console.log("[Console] ======================== HELP ======================");
+        console.log("[Console] usage                        : see resorces used by the server");
         console.log("[Console] addbot [number]              : add bot to the server");
         console.log("[Console] kickbot [number]             : kick an amount of bots");
         console.log("[Console] board [string] [string] ...  : set scoreboard text");
@@ -503,17 +504,17 @@ Commands.list = {
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },
-	status: function (gameServer, split, app){
-	    // Get process pid
-		var pid = process.pid;
-		
-		usage.lookup(pid, function(err, result) {
-			// By unknown reason the status will pe printed after that '>', so clear the line
-			process.stdout.clearLine();
-			process.stdout.cursorTo(0);
+    usage: function (gameServer, split, app){
+      // Get process pid
+      var pid = process.pid;
+	
+      usage.lookup(pid, function(err, result) {
+	// By unknown reason the status will pe printed after that '>', so clear the line
+	process.stdout.clearLine();
+	process.stdout.cursorTo(0);
 
-            // Print status
-			process.stdout.write("[Console]" + " MEMORY: " + Math.floor(result.memory / 10000) / 100 + "MB, CPU: " + Math.floor(result.cpu) + "\%\n>");
-		});
-	}
+    	// Print status
+	process.stdout.write("[Console]" + " MEMORY: " + Math.floor(result.memory / 10000) / 100 + "MB, CPU: " + Math.floor(result.cpu) + "\%\n>");
+      });
+}
 };
