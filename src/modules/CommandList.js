@@ -2,6 +2,8 @@
 var GameMode = require('../gamemodes');
 var Entity = require('../entity');
 
+var usage = require('usage');
+
 function Commands() {
     this.list = {}; // Empty
 }
@@ -501,4 +503,17 @@ Commands.list = {
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },
+	status: function (gameServer, split, app){
+	    // Get process pid
+		var pid = process.pid;
+		
+		usage.lookup(pid, function(err, result) {
+			// By unknown reason the status will pe printed after that '>', so clear the line
+			process.stdout.clearLine();
+			process.stdout.cursorTo(0);
+
+            // Print status
+			process.stdout.write("[Console]" + " MEMORY: " + Math.floor(result.memory / 10000) / 100 + "MB, CPU: " + Math.floor(result.cpu) + "\%\n>");
+		});
+	}
 };
