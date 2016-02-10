@@ -682,10 +682,13 @@ GameServer.prototype.canEjectMass = function(client) {
     if (this.config.ejectMassCooldownOption == 1) {
         if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
             client.lastEject = this.time;
-            return true;
-        } else
+			return true;
+        } else {
             return false;
-    }
+        }
+	} else {
+		return true;
+	}
 };
 
 GameServer.prototype.ejectMass = function(client) {
