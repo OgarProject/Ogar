@@ -146,10 +146,10 @@ PlayerTracker.prototype.update = function() {
                 var index = newVisible.indexOf(this.visibleNodes[i]);
                 if (index == -1) {
                     // Not seen by the client anymore
-					if(this.visibleNodes[i].owner != this)
-						nonVisibleNodes.push(this.visibleNodes[i]);
-					else 
-						newVisible.push(this.visibleNodes[i]);
+                    if(this.visibleNodes[i].owner != this)
+                        nonVisibleNodes.push(this.visibleNodes[i]);
+                    else 
+                        newVisible.push(this.visibleNodes[i]);
                 }
             }
 
