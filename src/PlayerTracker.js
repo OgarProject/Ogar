@@ -144,7 +144,7 @@ PlayerTracker.prototype.update = function() {
             // Compare and destroy nodes that are not seen
             for (var i = 0; i < this.visibleNodes.length; i++) {
                 var index = newVisible.indexOf(this.visibleNodes[i]);
-                if (index == -1) {
+                if (index == -1 && this.visibleNodes[i].owner != this) {
                     // Not seen by the client anymore
                     nonVisibleNodes.push(this.visibleNodes[i]);
                 }
