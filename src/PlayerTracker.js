@@ -146,10 +146,7 @@ PlayerTracker.prototype.update = function() {
                 var index = newVisible.indexOf(this.visibleNodes[i]);
                 if (index == -1) {
                     // Not seen by the client anymore
-                    if(this.visibleNodes[i].owner != this)
-                        nonVisibleNodes.push(this.visibleNodes[i]);
-                    else 
-                        newVisible.push(this.visibleNodes[i]);
+                    nonVisibleNodes.push(this.visibleNodes[i]);
                 }
             }
 
@@ -381,7 +378,7 @@ PlayerTracker.prototype.calcVisibleNodes = function() {
             continue;
         }
 
-        if (node.visibleCheck(this.viewBox, this.centerPos)) {
+        if (node.visibleCheck(this.viewBox, this.centerPos) || node.owner == this) {
             // Cell is in range of viewBox
             newVisible.push(node);
         }
