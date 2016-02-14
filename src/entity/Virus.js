@@ -32,7 +32,7 @@ Virus.prototype.feed = function(feeder, gameServer) {
 // Main Functions
 
 Virus.prototype.getEatingRange = function() {
-    return this.getSize() * .4; // 0 for ejected cells
+    return this.getSize() / 3.14; // 0 for ejected cells
 };
 
 Virus.prototype.onConsume = function(consumer, gameServer) {
@@ -64,10 +64,12 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
         var endMass = mass - numSplits * splitMass;
         var m = endMass,
             i = 0;
-        if (m > 100) { // Threshold
+        if (m > 466) { // Threshold
             // While can split into an even smaller cell (1000 => 500, 250, etc)
-            while (m / 3.33333333 > 24) {
-                m /= 3.33333333;
+            var mult = 3.33;
+            while (m / mult > 24) {
+                m /= mult;
+                mult = 2.5; // First mult 3.33, the next ones 2.5
                 bigSplits.push(m >> 0);
                 i++;
             }
@@ -77,16 +79,13 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 
     for (var k = 0; k < bigSplits.length; k++) {
         angle = Math.random() * 6.28; // Random directions
-        consumer.mass -= bigSplits[k];
-        gameServer.newCellVirused(client, consumer, angle, bigSplits[k]);
+        gameServer.createPlayerCell(client, consumer, angle, bigSplits[k]);
     }
 
     // Splitting
-    var angle = 0; // Starting angle
     for (var k = 0; k < numSplits; k++) {
-        angle += 6 / numSplits; // Get directions of splitting cells
-        consumer.mass -= splitMass;
-        gameServer.newCellVirused(client, consumer, angle, splitMass);
+        angle = Math.random() * 6.28; // Random directions
+        gameServer.createPlayerCell(client, consumer, angle, splitMass);
     }
 
     // Prevent consumer cell from merging with other cells
