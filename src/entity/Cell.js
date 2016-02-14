@@ -61,9 +61,9 @@ Cell.prototype.getSquareSize = function() {
 
 Cell.prototype.addMass = function(n) {
     if (this.mass + n > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
-        this.mass = (this.mass + n) / 2;
+        var splitMass = (this.mass + n) / 2;
         var randomAngle = Math.random() * 6.28 // Get random angle
-        this.gameServer.createPlayerCell(client, this, randomAngle, this.mass);
+        this.gameServer.createPlayerCell(client, this, randomAngle, splitMass);
     } else {
         this.mass = Math.min(this.mass + n, this.gameServer.config.playerMaxMass);
     }
