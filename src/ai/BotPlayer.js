@@ -382,7 +382,7 @@ BotPlayer.prototype.decide = function(cell) {
         var r = 0;
         // Get amount of cells that can merge
         for (var i in this.cells) {
-            if (this.cells[i].recombineTicks == 0) {
+            if (this.cells[i].shouldRecombine) {
                 r++;
             }
         }
