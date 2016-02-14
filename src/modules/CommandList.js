@@ -346,7 +346,7 @@ Commands.list = {
 
         // Change name
         for (var i = 0; i < gameServer.clients.length; i++) {
-            var client = gameServer.clients[id + 1].playerTracker;
+            var client = gameServer.clients[i].playerTracker;
 
             if (client.pID == id) {
                 console.log("[Console] Changing " + client.name + " to " + name);
