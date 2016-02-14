@@ -99,8 +99,9 @@ Experimental.prototype.onServerInit = function(gameServer) {
         gameServer.removeNode(feeder);
         // Pushes the virus
         this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-        this.moveEngineTicks += 10; // Amount of times to loop the movement function
-        this.moveEngineSpeed += 28;
+        this.moveEngineTicks += 20; // Amount of times to loop the movement function
+        this.moveEngineSpeed += 16;
+        this.moveDecay = 0.875;
 
         var index = gameServer.movingNodes.indexOf(this);
         if (index == -1) {
@@ -246,8 +247,8 @@ MotherCell.prototype.spawnFood = function(gameServer) {
 
     // Move engine
     f.angle = angle;
-    var dist = (Math.random() * 10) + 22; // Random distance
-    f.setMoveEngineData(dist, 15);
+    var dist = (Math.random() * 10) + 5; // Random distance
+    f.setMoveEngineData(dist, 20, 0.85);
 
     gameServer.setAsMovingNode(f);
 };

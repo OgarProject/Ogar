@@ -16,8 +16,11 @@ function Cell(nodeId, owner, position, mass, gameServer) {
 
     this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
-    this.moveDecay = .75;
+    this.moveDecay = 0.85;
     this.angle = 0; // Angle of movement
+    this.collisionRestoreTicks = 0; // Ticks left before cell starts checking for collision with client's cells
+    // NOTE: collisionRestoreTicks variable is actually ONLY used in player cells.
+    // NOTE: DO NOT REMOVE IT IN ANY WAY, IT WILL BREAK CALCMOVEPHYS!
 }
 
 module.exports = Cell;
@@ -57,12 +60,12 @@ Cell.prototype.getSquareSize = function() {
 };
 
 Cell.prototype.addMass = function(n) {
-    if (this.mass + n > this.owner.gameServer.config.playerMaxMass && this.owner.cells.length < this.owner.gameServer.config.playerMaxCells) {
+    if (this.mass + n > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
         this.mass = (this.mass + n) / 2;
         var randomAngle = Math.random() * 6.28 // Get random angle
-        this.owner.gameServer.newCellVirused(this.owner, this, randomAngle, this.mass);
+        this.gameServer.createPlayerCell(client, this, randomAngle, this.mass);
     } else {
-        this.mass = Math.min(this.mass + n, this.owner.gameServer.config.playerMaxMass);
+        this.mass = Math.min(this.mass + n, this.gameServer.config.playerMaxMass);
     }
 };
 
@@ -70,7 +73,7 @@ Cell.prototype.getSpeed = function() {
     // Old formula: 5 + (20 * (1 - (this.mass/(70+this.mass))));
     // Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
     // (should possibly have a config value for this?)
-    return this.owner.gameServer.config.playerSpeed * Math.pow(this.mass, -1.0 / 4.5) * 50 / 40;
+    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
 };
 
 Cell.prototype.setAngle = function(radians) {
@@ -145,35 +148,36 @@ Cell.prototype.calcMovePhys = function(config) {
     var Y = this.position.y + (this.moveEngineSpeed * Math.cos(this.angle));
 
     // Movement engine
+    if (this.moveEngineSpeed <= this.moveDecay * 8.5) this.moveEngineSpeed = 0;
     this.moveEngineSpeed *= this.moveDecay; // Decaying speed
     this.moveEngineTicks--;
-    
+
     // Ejected cell collision
     if (this.cellType == 3) {
         for (var i = 0; i < this.gameServer.nodesEjected.length; i++) {
             var check = this.gameServer.nodesEjected[i];
-            
+
             if (check.nodeId == this.nodeId) continue; // Don't check for yourself
-            
+
             var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
             var allowDist = (this.getSize() + check.getSize()) * 0.95; // Allow cells to get in themselves a bit
-            
+
             if (dist < allowDist) {
                 // Two ejected cells collided
                 var deltaX = this.position.x - check.position.x;
                 var deltaY = this.position.y - check.position.y;
                 var angle = Math.atan2(deltaX, deltaY);
-                
+
                 check.moveEngineTicks++;
                 if (this.gameServer.movingNodes.indexOf(check) == -1) this.gameServer.setAsMovingNode(check);
-                
+
                 this.moveEngineTicks++;
-                
+
                 // Make sure they don't become a living organism (wait, a multicellular organism simulator!)
                 var realAD = (this.getSize() + check.getSize()) * 1.2;
-                
+
                 var move = (realAD - dist) / 2;
-                
+
                 X += (Math.sin(angle) * move) >> 0;
                 Y += (Math.cos(angle) * move) >> 0;
             }
