@@ -663,7 +663,7 @@ GameServer.prototype.splitCells = function(client) {
     if (splitCells > 0) client.actionMult += 0.35; // Account anti-teaming
 };
 
-GameServer.prototype.createPlayerCell = function(client, parent, angle, mass,) {
+GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Returns boolean whether a cell has been split or not. You can use this in the future.
 
     if (client.cells.length >= this.config.playerMaxCells) {
