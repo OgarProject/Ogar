@@ -504,6 +504,6 @@ Commands.list = {
         // Spawn
         var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass);
         gameServer.addNode(v);
-        console.log("[Console] Spawned 1 virus at coordinates (" + pos.x + " , " + pos.y + ") with a mass of " + mass + " ");
+        console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ") with a mass of " + mass + " ");
     },
 };
