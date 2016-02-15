@@ -60,12 +60,13 @@ Cell.prototype.getSquareSize = function() {
 };
 
 Cell.prototype.addMass = function(n) {
-    if (this.mass + n > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
-        var splitMass = (this.mass + n) / 2;
+    this.mass += n;
+    if (this.mass > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
+        var splitMass = this.mass / 2;
         var randomAngle = Math.random() * 6.28 // Get random angle
         this.gameServer.createPlayerCell(this.owner, this, randomAngle, splitMass);
     } else {
-        this.mass = Math.min(this.mass + n, this.gameServer.config.playerMaxMass);
+        this.mass = Math.min(this.mass, this.gameServer.config.playerMaxMass);
     }
 };
 
