@@ -320,8 +320,13 @@ Commands.list = {
             client.mergeOverrideDuration = 0;
             state = false;
         } else {
-            if (client.mergeOverride) { client.mergeOverride = false; client.mergeOverrideDuration = 0; }
-            else { client.mergeOverride = true; client.mergeOverrideDuration = 100; }
+            if (client.mergeOverride) {
+                client.mergeOverride = false;
+                client.mergeOverrideDuration = 0;
+            } else {
+                client.mergeOverride = true;
+                client.mergeOverrideDuration = 100;
+            }
 
             state = client.mergeOverride;
         }
@@ -499,6 +504,6 @@ Commands.list = {
         // Spawn
         var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass);
         gameServer.addNode(v);
-        console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
+        console.log("[Console] Spawned 1 virus at coordinates (" + pos.x + " , " + pos.y + ") with a mass of " + mass + " ");
     },
 };
