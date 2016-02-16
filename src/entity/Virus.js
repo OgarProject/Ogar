@@ -90,7 +90,7 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 
     // Prevent consumer cell from merging with other cells
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
-    client.actionMult += 0.6; // Account for anti-teaming
+    client.virusMult += 0.6; // Account for anti-teaming
 };
 
 Virus.prototype.onAdd = function(gameServer) {
