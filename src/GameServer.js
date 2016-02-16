@@ -678,9 +678,15 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
 
     // Calculate customized speed for splitting cells
     var splitSpeed = Math.min(this.config.playerSpeed * Math.pow(mass, -0.085) * 50 / 40 * 6, 150);
+    
+    // Calculate new position
+    var newPos = {
+        x: parent.position.x,
+        y: parent.position.y
+    }
 
     // Create cell
-    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, parent.position, mass, this);
+    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
     newCell.setMoveEngineData(splitSpeed, 12, 0.85);
     if (this.config.playerSmoothSplit == 1) {
