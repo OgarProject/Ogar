@@ -660,7 +660,7 @@ GameServer.prototype.splitCells = function(client) {
         var angle = Math.atan2(deltaX, deltaY);
         if (this.createPlayerCell(client, cell, angle, cell.mass / 2) == true) splitCells++;
     }
-    if (splitCells > 0) client.actionMult += 0.35; // Account anti-teaming
+    if (splitCells > 0) client.splittingMult += 0.3; // Account anti-teaming
 };
 
 GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
@@ -676,17 +676,17 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
         return false;
     }
 
-    // Starting position
-    var startPos = {
-        x: parent.position.x,
-        y: parent.position.y
-    };
-
     // Calculate customized speed for splitting cells
     var splitSpeed = Math.min(this.config.playerSpeed * Math.pow(mass, -0.085) * 50 / 40 * 6, 150);
+    
+    // Calculate new position
+    var newPos = {
+        x: parent.position.x,
+        y: parent.position.y
+    }
 
     // Create cell
-    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass, this);
+    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
     newCell.setMoveEngineData(splitSpeed, 12, 0.85);
     if (this.config.playerSmoothSplit == 1) {
@@ -712,7 +712,6 @@ GameServer.prototype.canEjectMass = function(client) {
 GameServer.prototype.ejectMass = function(client) {
     if (!this.canEjectMass(client))
         return;
-    var ejectedCells = 0; // How many cells have been ejected
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
 
@@ -729,7 +728,7 @@ GameServer.prototype.ejectMass = function(client) {
         var angle = Math.atan2(deltaX, deltaY);
 
         // Get starting position
-        var size = cell.getSize() + 1.5;
+        var size = cell.getSize() + 0.5;
         var startPos = {
             x: cell.position.x + ((size + this.config.ejectMass) * Math.sin(angle)),
             y: cell.position.y + ((size + this.config.ejectMass) * Math.cos(angle))
@@ -749,8 +748,6 @@ GameServer.prototype.ejectMass = function(client) {
         this.nodesEjected.push(ejected);
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
-
-        ejectedCells++;
     }
 };
 
@@ -919,6 +916,7 @@ GameServer.prototype.updateCells = function() {
             cell.owner.mergeOverride = false;
             cell.owner.mergeOverrideDuration = 0;
         }
+        // Collision
         if (cell.collisionRestoreTicks > 0) {
             cell.collisionRestoreTicks--;
         }
@@ -927,7 +925,7 @@ GameServer.prototype.updateCells = function() {
         if (cell.mass >= this.config.playerMinMassDecay) {
             var client = cell.owner;
             if (this.config.serverTeamingAllowed == 0) {
-                var teamMult = (client.massDecayMult - 1) / 160 + 1; // Calculate anti-teaming multiplier for decay
+                var teamMult = (client.massDecayMult - 1) / 360 + 1; // Calculate anti-teaming multiplier for decay
                 var thisDecay = 1 - massDecay * (1 / teamMult); // Reverse mass decay and apply anti-teaming multiplier
                 cell.mass *= (1 - thisDecay);
             } else {

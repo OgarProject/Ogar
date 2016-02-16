@@ -27,9 +27,11 @@ function PlayerTracker(gameServer, socket) {
     this.spectate = false;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
 
+    // Anti-teaming
     this.massDecayMult = 1; // Anti-teaming multiplier
-    this.actionMult = 0; // If reaches over 1, it'll account as anti-teaming
-    this.actionDecayMult = 1; // Players not teaming will lose their anti-teaming multiplier far more quickly
+    this.Wmult = 0; // W press multiplier, which will also account on duration of effect
+    this.virusMult = 0; // Virus explosion multiplier
+    this.splittingMult = 0; // Splitting multiplier
 
     // Viewing box
     this.sightRangeX = 0;
@@ -236,21 +238,13 @@ PlayerTracker.prototype.update = function() {
 PlayerTracker.prototype.antiTeamTick = function() {
     // ANTI-TEAMING DECAY
     // Calculated even if anti-teaming is disabled.
-    this.actionMult *= (0.999 * this.actionDecayMult);
-    this.actionDecayMult *= 0.999;
-
-    if (this.actionDecayMult > 1.002004) this.actionDecayMult = 1.002004; // Very small differences. Don't change this.
-    if (this.actionDecayMult < 1) this.actionDecayMult = 1;
-
-    // Limit/reset anti-teaming effect
-    if (this.actionMult < 1 && this.massDecayMult > 1) this.actionMult = 0.3; // Speed up cooldown
-    if (this.actionMult > 1.4) this.actionMult = 1.4;
-    if (this.actionMult < 0.15) this.actionMult = 0;
-
+    var effectSum = this.Wmult / 1.5 + this.virusMult + this.splittingMult;
+    if (this.Wmult > 0) this.Wmult -= 0.0004;
+    this.virusMult *= 0.998;
+    this.splittingMult *= 0.9955;
     // Apply anti-teaming if required
-    if (this.actionMult > 1) this.massDecayMult = this.actionMult;
+    if (effectSum > 1) this.massDecayMult = Math.min(effectSum, 2.5);
     else this.massDecayMult = 1;
-
 }
 
 // Viewing box

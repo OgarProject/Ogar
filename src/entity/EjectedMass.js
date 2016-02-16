@@ -6,6 +6,7 @@ function EjectedMass() {
     this.cellType = 3;
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
+    this.addedAntiTeam = false; // Not to affect anti-teaming two times
 }
 
 module.exports = EjectedMass;
@@ -42,20 +43,19 @@ EjectedMass.prototype.sendUpdate = function() {
 
 EjectedMass.prototype.onRemove = function(gameServer) {
     // Check for teaming and apply anti-teaming if required
-    try {
-        if (this.gameServer.gameMode.teamAmount > 0) {
-            // Apply teaming EXCEPT when exchanging mass to same team member
-            if (this.owner.team != this.killedBy.owner.team || this.owner == this.killedBy.owner) {
-                this.owner.actionMult += 0.02;
-                this.owner.actionDecayMult *= 1.0005;
+    if (!this.addedAntiTeam) {
+      try {
+            if (this.gameServer.gameMode.teamAmount > 0) {
+                // Apply teaming EXCEPT when exchanging mass to same team member
+                if (this.owner.team != this.killedBy.owner.team || this.owner == this.killedBy.owner) {
+                    this.owner.Wmult += 0.02;
+                };
+            } else {
+                // Always apply anti-teaming if there are no teams
+                this.owner.Wmult += 0.02;
             };
-        } else {
-            // Always apply anti-teaming if there are no teams
-            this.owner.actionMult += 0.02;
-            this.owner.actionDecayMult *= 1.0005;
-        };
-    } catch(ex) { } // Dont do anything whatever the error is
-    
+        } catch(ex) { } // Dont do anything whatever the error is
+    }
     // Remove from list of ejected mass
     var index = gameServer.nodesEjected.indexOf(this);
     if (index != -1) {
@@ -80,8 +80,7 @@ EjectedMass.prototype.onAutoMove = function(gameServer) {
 };
 
 EjectedMass.prototype.moveDone = function(gameServer) {
-    // This was done before at GameServer.js, so ignore this
-    /*if (!this.onAutoMove(gameServer)) {
-        gameServer.nodesEjected.push(this);
-    }*/
+    // Always apply anti-teaming
+    this.owner.actionMult += 0.02;
+    this.addedAntiTeam = true;
 };
