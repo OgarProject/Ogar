@@ -30,6 +30,7 @@ function PlayerTracker(gameServer, socket) {
     // Anti-teaming
     this.massDecayMult = 1; // Anti-teaming multiplier
     this.Wmult = 0; // W press multiplier, which will also account on duration of effect
+    this.checkForWMult = false; // Prevent oveload with W multiplier
     this.virusMult = 0; // Virus explosion multiplier
     this.splittingMult = 0; // Splitting multiplier
 
@@ -115,6 +116,7 @@ PlayerTracker.prototype.update = function() {
     if (this.socket.packetHandler.pressW) { // Eject mass
         this.gameServer.gameMode.pressW(this.gameServer, this);
         this.socket.packetHandler.pressW = false;
+        this.checkForWMult = true;
     }
 
     if (this.socket.packetHandler.pressQ) { // Q Press
@@ -242,6 +244,7 @@ PlayerTracker.prototype.antiTeamTick = function() {
     if (this.Wmult > 0) this.Wmult -= 0.0004;
     this.virusMult *= 0.998;
     this.splittingMult *= 0.9955;
+
     // Apply anti-teaming if required
     if (effectSum > 1) this.massDecayMult = Math.min(effectSum, 2.5);
     else this.massDecayMult = 1;
