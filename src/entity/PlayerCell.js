@@ -98,8 +98,6 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
                 var c2Speed = cell.getSpeed();
 
                 var mult = c1Speed / c2Speed / 2;
-                if (mult < 0.15) mult = 0.15;
-                if (mult > 0.9) mult = 0.9;
 
                 var newDeltaY = y1 - cell.position.y;
                 var newDeltaX = x1 - cell.position.x;
