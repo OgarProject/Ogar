@@ -20,9 +20,10 @@ function BotPlayer() {
 
     this.target;
     this.targetVirus; // Virus used to shoot into the target
+    this.virusShots = 0; // Amount of pressed W to explode target via target virus
 
     this.ejectMass = 0; // Amount of times to eject mass
-    this.oldPos = {
+    this.targetPos = {
         x: 0,
         y: 0
     };
@@ -47,6 +48,22 @@ BotPlayer.prototype.getLowestCell = function() {
         }
     }
     return lowest;
+};
+
+BotPlayer.prototype.getHighestCell = function() {
+    // Gets the cell with the highest mass
+    if (this.cells.length <= 0) {
+        return null; // Error!
+    }
+
+    // Starting cell
+    var highest = this.cells[0];
+    for (i = 1; i < this.cells.length; i++) {
+        if (highest.mass > this.cells[i].mass) {
+            highest = this.cells[i];
+        }
+    }
+    return highest;
 };
 
 // Don't override, testing to use more accurate way.
@@ -81,14 +98,34 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
         }
     }
 
-    // Update randomly
-    if ((this.tickViewBox <= 0) && (this.gameServer.run)) {
-        this.visibleNodes = this.calcViewBox();
-        this.tickViewBox = (Math.random() * 12) >> 0;
-    } else {
-        this.tickViewBox--;
-        return;
+    // Calculate nodes
+    this.visibleNodes = this.calcViewBox();
+
+    // Should bot update?
+    var shouldUpdate = false;
+
+    if (!this.target) shouldUpdate = true; // Missing target
+    else {
+        // Target is present, update target position
+        this.targetPos = {
+            x: this.target.position.x,
+            y: this.target.position.y
+        }
     }
+    if (this.centerPos.x == this.mouse.x && this.centerPos.y == this.mouse.y) shouldUpdate = true; // Bot is at "finish"
+    if (this.gameState == 4) shouldUpdate = true; // Keep looking when trying to explode somebody
+    if (Math.random() > 0.9) shouldUpdate = true; // Update randomly
+
+    if (!this.gameServer.run) shouldUpdate = false; // Override everything as server is paused
+
+    if (!shouldUpdate) {
+        // Just update mouse and leave
+        this.mouse = {
+            x: this.targetPos.x,
+            y: this.targetPos.y
+        }
+        return;
+    };
 
     // Calc predators/prey
     var cell = this.getLowestCell();
@@ -118,7 +155,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
                 }
 
                 // Check for danger
-                if (cell.mass > (check.mass * 1.33)) {
+                if (cell.mass > (check.mass * 1.33) && check.mass > ignoreMass) {
                     // Add to prey list
                     this.prey.push(check);
                 } else if (check.mass > (cell.mass * 1.33)) {
@@ -162,11 +199,40 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     // Action
     this.decide(cell);
 
-    this.nodeDestroyQueue = []; // Empty
+    // Now update mouse
+    this.mouse = {
+        x: this.targetPos.x,
+        y: this.targetPos.y
+    }
 
+    // Reset queues
+    this.nodeDestroyQueue = [];
+    this.nodeAdditionQueue = [];
 };
 
 // Custom
+
+BotPlayer.prototype.updatePrey = function(cell) {
+    // Recalculate prey
+    this.prey = [];
+    for (var i in this.visibleNodes) {
+        var check = this.visibleNodes[i];
+        if (check.cellType == 0 && cell.mass > (check.mass * 1.33) && check.mass > cell.mass / 5) {
+            // Prey
+            this.prey.push(check);
+        }
+    }
+};
+
+BotPlayer.prototype.shouldUpdateNodes = function() {
+    if ((this.tickViewBox <= 0) && (this.gameServer.run)) {
+        this.visibleNodes = this.calcViewBox();
+        this.tickViewBox = 6;
+    } else {
+        this.tickViewBox--;
+        return;
+    }
+};
 
 BotPlayer.prototype.clearLists = function() {
     this.predators = [];
@@ -232,7 +298,7 @@ BotPlayer.prototype.decide = function(cell) {
                 }
 
                 // Set bot's mouse coords to this location
-                this.mouse = {
+                this.targetPos = {
                     x: pos.x,
                     y: pos.y
                 };
@@ -242,7 +308,7 @@ BotPlayer.prototype.decide = function(cell) {
             //console.log("[Bot] "+cell.getName()+": Getting Food");
             this.target = this.findNearest(cell, this.food);
 
-            this.mouse = {
+            this.targetPos = {
                 x: this.target.position.x,
                 y: this.target.position.y
             };
@@ -260,18 +326,13 @@ BotPlayer.prototype.decide = function(cell) {
             angle = this.reverseAngle(angle);
 
             // Direction to move
-            var x1 = cell.position.x + (500 * Math.sin(angle));
-            var y1 = cell.position.y + (500 * Math.cos(angle));
+            var x1 = cell.position.x + (700 * Math.sin(angle));
+            var y1 = cell.position.y + (700 * Math.cos(angle));
 
-            this.mouse = {
+            this.targetPos = {
                 x: x1,
                 y: y1
             };
-
-            // Cheating
-            if (cell.mass < 250) {
-                cell.mass += 1;
-            }
 
             if (this.juke) {
                 // Juking
@@ -280,12 +341,17 @@ BotPlayer.prototype.decide = function(cell) {
 
             break;
         case 3: // Target prey
+            // Recalculate prey based on bot's biggest cell
+            this.updatePrey(this.getHighestCell());
+
             if ((!this.target) || (cell.mass < (this.target.mass * 1.33)) || (this.visibleNodes.indexOf(this.target) == -1)) {
+                if (this.prey.length == 0) break; // Error!
+
                 this.target = this.getBiggest(this.prey);
             }
             //console.log("[Bot] "+cell.getName()+": Targeting "+this.target.getName());
 
-            this.mouse = {
+            this.targetPos = {
                 x: this.target.position.x,
                 y: this.target.position.y
             };
@@ -293,11 +359,13 @@ BotPlayer.prototype.decide = function(cell) {
             var massReq = 1.33 * (this.target.mass * 2); // Mass required to splitkill the target
 
             if ((cell.mass > massReq) && (this.cells.length < 3)) { // Will not split into more than 2 cells
-                var splitDist = (4 * (cell.getSpeed() * 5)) + (cell.getSize() * 1.75); // Distance needed to splitkill
+                // Fast calculation of how long will the cell go after it has been split
+                var splitDist = this.gameServer.config.playerSpeed * Math.pow(cell.mass / 2, -0.085) * 50 / 40 * 30;
+
                 var distToTarget = this.getAccDist(cell, this.target); // Distance between the target and this cell
 
                 if (splitDist >= distToTarget) {
-                    if ((this.threats.length > 0) && (this.getBiggest(this.threats).mass > (cell.mass))) {
+                    if ((this.threats.length > 0) && (this.getBiggest(this.threats).mass > (cell.mass / 1.5))) {
                         // Dont splitkill when they are cells that can possibly eat you after the split
                         break;
                     }
@@ -333,31 +401,27 @@ BotPlayer.prototype.decide = function(cell) {
             // Check if bot cell is in position
             if ((ourAngle <= (reversed + .25)) && (ourAngle >= (reversed - .25))) {
                 // In position!
-                this.mouse = {
+                this.targetPos = {
                     x: this.targetVirus.position.x,
                     y: this.targetVirus.position.y
                 };
 
                 // Shoot
-                for (var v = 0; v < this.gameServer.config.virusFeedAmount; v++) {
+                if (this.virusShots < this.gameServer.config.virusFeedAmount) {
                     this.gameServer.ejectMass(this);
+                    break;
                 }
-
-                // Back to starting pos
-                this.mouse = {
-                    x: cell.position.x,
-                    y: cell.position.y
-                };
 
                 // Cleanup
                 this.gameState = 0; // Reset
+                this.virusShots = 0;
                 this.target = null;
             } else {
                 // Move to position
                 var r = cell.getSize();
                 var x1 = this.targetVirus.position.x + ((350 + r) * Math.sin(reversed));
                 var y1 = this.targetVirus.position.y + ((350 + r) * Math.cos(reversed));
-                this.mouse = {
+                this.targetPos = {
                     x: x1,
                     y: y1
                 };
@@ -369,7 +433,7 @@ BotPlayer.prototype.decide = function(cell) {
             //console.log("[Bot] "+cell.getName()+": Idle "+this.gameState);
             this.target = this.findNearest(cell, this.food);
 
-            this.mouse = {
+            this.targetPos = {
                 x: this.target.position.x,
                 y: this.target.position.y
             };
