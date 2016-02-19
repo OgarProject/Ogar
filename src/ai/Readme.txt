@@ -4,6 +4,15 @@ To install this module, set the serverBots config field in gameserver.js to an a
 or issue command addBots [number] in console.
 
 [Changelog]
+(2/19/16)
+- Bots won't passively gain mass when running anymore
+- Bots will target with their largest cell when chasing enemies
+- Bots will update once one of three possibilities are made:
+  - Bot is staying in one place
+  - 10% random chance
+  - Target is out of range/eaten
+- Bots shoot viruses more familiar than before (UNTESTED! If they don't do it correctly all the time, report it!)
+
 (1/27/16)
 - Bots' update function is triggered randomly (50 to 600 ms), to prevent massive update lag when having a lot of bots
 - Bots are a lot more aggressive
