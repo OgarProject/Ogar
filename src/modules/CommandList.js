@@ -2,6 +2,8 @@
 var GameMode = require('../gamemodes');
 var Entity = require('../entity');
 
+var usage = require('usage');
+
 function Commands() {
     this.list = {}; // Empty
 }
@@ -442,11 +444,22 @@ Commands.list = {
                 bots++;
             }
         }
-        //
+
+	usage.lookup(process.pid, function(err, result) {
+	  // By unknown reason the usage will pe printed after that '>', so clear the line
+	  process.stdout.clearLine();
+	  process.stdout.cursorTo(0);
+
+          console.log("[Console] Current memory usage: " + Math.floor(result.memory / 10000) / 100 + "MB");
+	  console.log("[Console] Current CPU load: " + Math.floor(result.cpu) + "\%");
+
+          process.stdout.write(">");
+        });
+
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
         console.log("[Console] Players: " + humans + " - Bots: " + bots);
         console.log("[Console] Server has been running for " + process.uptime() + " seconds");
-        console.log("[Console] Current memory usage: " + process.memoryUsage().heapUsed / 1000 + "/" + process.memoryUsage().heapTotal / 1000 + " kb");
+        
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
     },
     tp: function(gameServer, split) {
@@ -501,4 +514,5 @@ Commands.list = {
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },
+}
 };
