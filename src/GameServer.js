@@ -74,6 +74,7 @@ function GameServer() {
         virusStartMass: 100, // Starting virus size (In mass)
         virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
         ejectMass: 12, // Mass of ejected cells
+        ejectMassCooldownOption: 0, // Option for eject mass cooldown (1 to enable)
         ejectMassCooldown: 200, // Time until a player can eject mass again
         ejectMassLoss: 16, // Mass lost when ejecting cells
         ejectSpeed: 100, // Base speed of ejected cells
@@ -702,11 +703,16 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
 };
 
 GameServer.prototype.canEjectMass = function(client) {
-    if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
-        client.lastEject = this.time;
-        return true;
-    } else
-        return false;
+    if (this.config.ejectMassCooldownOption == 1) {
+        if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
+            client.lastEject = this.time;
+			return true;
+        } else {
+            return false;
+        }
+	} else {
+		return true;
+	}
 };
 
 GameServer.prototype.ejectMass = function(client) {
