@@ -740,10 +740,10 @@ GameServer.prototype.ejectMass = function(client) {
         angle += (Math.random() * 0.6) - 0.3;
 
         // Create cell
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), client, startPos, this.config.ejectMass, this);
+        var ejected = new (this.config.ejectVirus ? Entity.Virus : Entity.EjectedMass)(this.getNextNodeId(), (this.config.ejectVirus ? null : client), startPos, this.config.ejectMass, this);
         ejected.setAngle(angle);
         ejected.setMoveEngineData(this.config.ejectSpeed, 20, 0.85);
-        ejected.setColor(cell.getColor());
+        if(!this.config.ejectVirus) ejected.setColor(cell.getColor());
 
         this.nodesEjected.push(ejected);
         this.addNode(ejected);
