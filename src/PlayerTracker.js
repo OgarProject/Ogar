@@ -12,7 +12,6 @@ function PlayerTracker(gameServer, socket) {
     this.visibleNodes = [];
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
-    this.mergeOverrideDuration = 0; // Make sure merge override isn't exploited
     this.score = 0; // Needed for leaderboard
 
     this.mouse = {
@@ -109,7 +108,7 @@ PlayerTracker.prototype.getTeam = function() {
 PlayerTracker.prototype.update = function() {
     // Actions buffer (So that people cant spam packets)
     if (this.socket.packetHandler.pressSpace) { // Split cell
-        this.gameServer.gameMode.pressSpace(this.gameServer, this);
+        if (!this.mergeOverride) this.gameServer.gameMode.pressSpace(this.gameServer, this);
         this.socket.packetHandler.pressSpace = false;
     }
 
@@ -197,12 +196,6 @@ PlayerTracker.prototype.update = function() {
     this.nodeDestroyQueue = []; // Reset destroy queue
     this.nodeAdditionQueue = []; // Reset addition queue
 
-    // Update merge override
-    if (this.mergeOverrideDuration > 0) {
-        this.mergeOverrideDuration--;
-        this.mergeOverride = true;
-    } else this.mergeOverride = false;
-
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
         this.socket.sendPacket(this.gameServer.lb_packet);
@@ -240,10 +233,10 @@ PlayerTracker.prototype.update = function() {
 PlayerTracker.prototype.antiTeamTick = function() {
     // ANTI-TEAMING DECAY
     // Calculated even if anti-teaming is disabled.
-    var effectSum = this.Wmult / 1.5 + this.virusMult + this.splittingMult;
-    if (this.Wmult > 0) this.Wmult -= 0.0004;
+    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
+    if (this.Wmult - 0.0007 > 0) this.Wmult -= 0.0007;
     this.virusMult *= 0.998;
-    this.splittingMult *= 0.9955;
+    this.splittingMult *= 0.996;
     // Apply anti-teaming if required
     if (effectSum > 1) this.massDecayMult = Math.min(effectSum, 2.5);
     else this.massDecayMult = 1;
