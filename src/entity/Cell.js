@@ -144,14 +144,15 @@ Cell.prototype.visibleCheck = function(box, centerPos) {
 };
 
 Cell.prototype.calcMovePhys = function(config) {
-    // Movement for ejected cells
-    var X = this.position.x + (this.moveEngineSpeed * Math.sin(this.angle));
-    var Y = this.position.y + (this.moveEngineSpeed * Math.cos(this.angle));
+    // Move, twice as slower
+    var X = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle));
+    var Y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle));
 
     // Movement engine
-    if (this.moveEngineSpeed <= this.moveDecay * 8.5) this.moveEngineSpeed = 0;
-    this.moveEngineSpeed *= this.moveDecay; // Decaying speed
-    this.moveEngineTicks--;
+    if (this.moveEngineSpeed <= this.moveDecay * 3) this.moveEngineSpeed = 0;
+    var speedDecrease = this.moveEngineSpeed - this.moveEngineSpeed * this.moveDecay;
+    this.moveEngineSpeed -= speedDecrease / 2; // Decaying speed twice as slower
+    this.moveEngineTicks -= 0.5; // Ticks passing twice as slower
 
     // Ejected cell collision
     if (this.cellType == 3) {
@@ -175,7 +176,7 @@ Cell.prototype.calcMovePhys = function(config) {
                 this.moveEngineTicks++;
 
                 // Make sure they don't become a living organism (wait, a multicellular organism simulator!)
-                var realAD = (this.getSize() + check.getSize()) * 1.2;
+                var realAD = (this.getSize() + check.getSize()) * 1.1;
 
                 var move = (realAD - dist) / 2;
 
