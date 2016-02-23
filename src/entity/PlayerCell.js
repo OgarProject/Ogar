@@ -52,25 +52,34 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 
 // Movement
 
-PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
+PlayerCell.prototype.calcMove = function(x2, y2, gameServer, moveCell) {
+    if (moveCell) {
+        // Get angle of mouse
+        var deltaY = y2 - this.position.y;
+        var deltaX = x2 - this.position.x;
+        var angle = Math.atan2(deltaX, deltaY);
+
+        if (isNaN(angle)) {
+            return;
+        }
+
+        var dist = this.getDist(this.position.x, this.position.y, x2, y2);
+        var speed = Math.min(this.getSpeed(), dist);
+
+        // Move cell
+        this.position.x += Math.sin(angle) * speed;
+        this.position.y += Math.cos(angle) * speed;
+    }
+
+    this.collision(gameServer);
+};
+
+PlayerCell.prototype.collision = function(gameServer) {
     var config = gameServer.config;
     var r = this.getSize(); // Cell radius
 
-    // Get angle
-    var deltaY = y2 - this.position.y;
-    var deltaX = x2 - this.position.x;
-    var angle = Math.atan2(deltaX, deltaY);
-
-    if (isNaN(angle)) {
-        return;
-    }
-
-    // Distance between mouse pointer and cell
-    var dist = this.getDist(this.position.x, this.position.y, x2, y2);
-    var speed = Math.min(this.getSpeed(), dist);
-
-    var x1 = this.position.x + (speed * Math.sin(angle));
-    var y1 = this.position.y + (speed * Math.cos(angle));
+    var x1 = this.position.x;
+    var y1 = this.position.y;
 
     var collidedCells = 0; // Amount of cells collided this tick
 
@@ -96,17 +105,24 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
 
                 var c1Speed = this.getSpeed();
                 var c2Speed = cell.getSpeed();
+                var Tmult = (c1Speed / c2Speed) / 2;
 
-                var mult = c1Speed / c2Speed / 2;
+                var dY = y1 - cell.position.y;
+                var dX = x1 - cell.position.x;
+                var newAngle = Math.atan2(dX, dY);
 
-                var newDeltaY = y1 - cell.position.y;
-                var newDeltaX = x1 - cell.position.x;
+                var Tmove = (collisionDist - dist) * Tmult;
 
-                var newAngle = Math.atan2(newDeltaX, newDeltaY);
-                var move = (collisionDist - dist) * mult;
+                x1 += (Tmove * Math.sin(newAngle)) >> 0;
+                y1 += (Tmove * Math.cos(newAngle)) >> 0;
 
-                x1 = x1 + (move * Math.sin(newAngle)) >> 0;
-                y1 = y1 + (move * Math.cos(newAngle)) >> 0;
+                // Also move the other cell
+                dist = this.getDist(x1, y1, cell.position.x, cell.position.y); // Recalculate distance
+                var Cmult = (c2Speed / c1Speed) / 2;
+                var Cmove = (collisionDist - dist) * Cmult;
+
+                cell.position.x -= (Cmove * Math.sin(newAngle)) >> 0;
+                cell.position.y -= (Cmove * Math.cos(newAngle)) >> 0;
             }
         }
     }
