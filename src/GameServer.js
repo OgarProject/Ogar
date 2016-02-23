@@ -401,6 +401,8 @@ GameServer.prototype.mainLoop = function() {
     var local = new Date();
     this.tick += (local - this.time);
     this.time = local;
+    
+    if (!this.run) return;
 
     if (this.tick >= 25) {
         this.fullTick++;
@@ -408,11 +410,9 @@ GameServer.prototype.mainLoop = function() {
 
         if (this.fullTick >= 2) {
             // Loop main functions
-            if (this.run) {
-                setTimeout(this.spawnTick(), 0);
-                setTimeout(this.gamemodeTick(), 0);
-                setTimeout(this.cellUpdateTick(), 0);
-            }
+            setTimeout(this.spawnTick(), 0);
+            setTimeout(this.gamemodeTick(), 0);
+            setTimeout(this.cellUpdateTick(), 0);
 
             // Update the client's maps
             this.updateClients();
