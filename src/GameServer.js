@@ -38,7 +38,8 @@ function GameServer() {
     // Main loop tick
     this.time = +new Date;
     this.startTime = this.time;
-    this.tick = 0; // 1 second ticks of mainLoop
+    this.tick = 0; // 1 ms, 25 ms - collision update, next time all update
+    this.fullTick = 0; // 2 = all update
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
     this.tickSpawn = 0; // Used with spawning food
 
@@ -65,7 +66,7 @@ function GameServer() {
         foodStartAmount: 100, // The starting amount of food in the map
         foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
-        foodMassGrow: 0, // Enable food mass grow ?
+        foodMassGrow: 1, // Enable food mass grow ?
         foodMassGrowPossiblity: 50, // Chance for a food to has the ability to be self growing
         foodMassLimit: 5, // Maximum mass for a food can grow
         foodMassTimeout: 120, // The amount of interval for a food to grow its mass (in seconds)
@@ -73,9 +74,9 @@ function GameServer() {
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100, // Starting virus size (In mass)
         virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
-        ejectMass: 12, // Mass of ejected cells
+        ejectMass: 13, // Mass of ejected cells
         ejectMassCooldown: 200, // Time until a player can eject mass again
-        ejectMassLoss: 16, // Mass lost when ejecting cells
+        ejectMassLoss: 15, // Mass lost when ejecting cells
         ejectSpeed: 100, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
         playerStartMass: 10, // Starting mass of the player cell.
@@ -369,9 +370,9 @@ GameServer.prototype.removeNode = function(node) {
     }
 };
 
-GameServer.prototype.cellTick = function() {
+GameServer.prototype.cellTick = function(moveCells) {
     // Move cells
-    this.updateMoveEngine();
+    this.updateMoveEngine(moveCells);
 };
 
 GameServer.prototype.spawnTick = function() {
@@ -401,47 +402,52 @@ GameServer.prototype.mainLoop = function() {
     this.tick += (local - this.time);
     this.time = local;
 
-    if (this.tick >= 50) {
-        // Loop main functions
-        if (this.run) {
-            setTimeout(this.cellTick(), 0);
-            setTimeout(this.spawnTick(), 0);
-            setTimeout(this.gamemodeTick(), 0);
-        }
+    if (this.tick >= 25) {
+        this.fullTick++;
+        setTimeout(this.cellTick(this.fullTick >= 2), 0);
 
-        // Update the client's maps
-        this.updateClients();
+        if (this.fullTick >= 2) {
+            // Loop main functions
+            if (this.run) {
+                setTimeout(this.spawnTick(), 0);
+                setTimeout(this.gamemodeTick(), 0);
+                setTimeout(this.cellUpdateTick(), 0);
+            }
 
-        // Update cells/leaderboard loop
-        this.tickMain++;
-        setTimeout(this.cellUpdateTick(), 0);
-        if (this.tickMain >= 4) { // 250 milliseconds
-            // Update leaderboard with the gamemode's method
-            this.leaderboard = [];
-            this.gameMode.updateLB(this);
-            this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
+            // Update the client's maps
+            this.updateClients();
 
-            if (!this.gameMode.specByLeaderboard) {
-                // Get client with largest score if gamemode doesn't have a leaderboard
-                var lC;
-                var lCScore = 0;
-                for (var i = 0; i < this.clients.length; i++) {
-                    if (this.clients[i].playerTracker.getScore(true) > lCScore) {
+            // Update cells/leaderboard loop
+            this.tickMain++;
+            if (this.tickMain >= 4) { // 250 milliseconds
+                // Update leaderboard with the gamemode's method
+                this.leaderboard = [];
+                this.gameMode.updateLB(this);
+                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
 
-                        if (!this.gameMode.specByLeaderboard) lC = this.clients[i].playerTracker;
-                        else lC = this.clients[i];
+                if (!this.gameMode.specByLeaderboard) {
+                    // Get client with largest score if gamemode doesn't have a leaderboard
+                    var lC;
+                    var lCScore = 0;
+                    for (var i = 0; i < this.clients.length; i++) {
+                        if (this.clients[i].playerTracker.getScore(true) > lCScore) {
 
-                        lCScore = this.clients[i].playerTracker.getScore(true);
+                            if (!this.gameMode.specByLeaderboard) lC = this.clients[i].playerTracker;
+                            else lC = this.clients[i];
+
+                            lCScore = this.clients[i].playerTracker.getScore(true);
+                        }
                     }
-                }
-                this.largestClient = lC;
-            } else this.largestClient = this.leaderboard[0];
+                    this.largestClient = lC;
+                } else this.largestClient = this.leaderboard[0];
 
-            this.tickMain = 0; // Reset
+                this.tickMain = 0; // Reset
+            }
+            this.fullTick = 0; // Reset
         }
 
         // Debug
-        //console.log(this.tick - 50);
+        //console.log(this.tick - 25);
 
         // Reset
         this.tick = 0;
@@ -536,7 +542,7 @@ GameServer.prototype.getDist = function(x1, y1, x2, y2) { // Use Pythagoras theo
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
-GameServer.prototype.updateMoveEngine = function() {
+GameServer.prototype.updateMoveEngine = function(moveCells) {
     // Move player cells
     var len = this.nodesPlayer.length;
 
@@ -562,14 +568,14 @@ GameServer.prototype.updateMoveEngine = function() {
     for (var i = 0; i < len; i++) {
         var cell = this.nodesPlayer[i];
 
-        // Do not move cells that have already been eaten or have collision turned off
+        // Do not move cells that have already been eaten
         if (!cell) {
             continue;
         }
 
         var client = cell.owner;
 
-        cell.calcMove(client.mouse.x, client.mouse.y, this);
+        cell.calcMove(client.mouse.x, client.mouse.y, this, moveCells);
 
         // Check if cells nearby
         var list = this.getCellsInRange(cell);
@@ -678,7 +684,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
 
     // Calculate customized speed for splitting cells
     var splitSpeed = Math.min(this.config.playerSpeed * Math.pow(mass, -0.085) * 50 / 40 * 6, 150);
-    
+
     // Calculate new position
     var newPos = {
         x: parent.position.x,
