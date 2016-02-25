@@ -158,6 +158,7 @@ PlayerCell.prototype.getEatingRange = function() {
 PlayerCell.prototype.onConsume = function(consumer, gameServer) {
     // Add an inefficiency for eating other players' cells
     var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
+    factor = (consumer.mass <= 625 && this.mass <= 17) ? 0 : factor; // Anti-bot measure
     consumer.addMass(factor * this.mass);
 };
 
