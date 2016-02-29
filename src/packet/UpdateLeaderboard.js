@@ -43,7 +43,7 @@ UpdateLeaderboard.prototype.build = function() {
 
                 var item = lb[i];
 
-                view.setUint32(offset, 1, true);
+                view.setUint32(offset, 0, true);
                 offset += 4;
 
                 for (var j = 0; j < item.length; j++) {
