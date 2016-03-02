@@ -402,17 +402,18 @@ GameServer.prototype.mainLoop = function() {
     var local = new Date();
     this.tick += (local - this.time);
     this.time = local;
-    
-    if (!this.run) return;
 
     if (this.tick >= 25) {
         this.fullTick++;
-        setTimeout(this.cellTick.bind(this, this.fullTick >= 2), 0);
+        if(this.run)
+            setTimeout(this.cellTick.bind(this, this.fullTick >= 2), 0);
 
         if (this.fullTick >= 2) {
             // Loop main functions
-            setTimeout(this.spawnTick.bind(this), 0);
-            setTimeout(this.gamemodeTick.bind(this), 0);
+            if(this.run) {  
+                setTimeout(this.spawnTick.bind(this), 0);
+                setTimeout(this.gamemodeTick.bind(this), 0);
+            }
             setTimeout(this.cellUpdateTick.bind(this), 0);
 
             // Update the client's maps
