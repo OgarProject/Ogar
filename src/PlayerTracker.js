@@ -234,9 +234,9 @@ PlayerTracker.prototype.antiTeamTick = function() {
     // ANTI-TEAMING DECAY
     // Calculated even if anti-teaming is disabled.
     var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-    if (this.Wmult - 0.0007 > 0) this.Wmult -= 0.0007;
-    this.virusMult *= 0.998;
-    this.splittingMult *= 0.996;
+    if (this.Wmult - 0.0008 > 0) this.Wmult -= 0.0008;
+    this.virusMult *= 0.9985;
+    this.splittingMult *= 0.9977;
     // Apply anti-teaming if required
     if (effectSum > 1) this.massDecayMult = Math.min(effectSum, 2.5);
     else this.massDecayMult = 1;
