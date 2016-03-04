@@ -402,7 +402,7 @@ GameServer.prototype.mainLoop = function() {
     var local = new Date();
     this.tick += (local - this.time);
     this.time = local;
-    
+
     if (!this.run) return;
 
     if (this.tick >= 25) {
@@ -543,15 +543,78 @@ GameServer.prototype.getDist = function(x1, y1, x2, y2) { // Use Pythagoras theo
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
+GameServer.prototype.checkCellCollision = function(cell, check) {
+    // Returns object which contains info about cell's collisions. You can use this in the future.
+
+    // Check the two cells for collision
+    var collisionDist = cell.getSize() + check.getSize(); // Minimum distance between the two cells
+    var dist = this.getDist(cell.position.x, cell.position.y,
+        check.position.x, check.position.y); // Distance between these two cells
+
+    if (dist < collisionDist) {
+        // Collided
+        return ({
+            cellDist: dist,
+            collideDist: collisionDist,
+            collided: true
+        });
+    } else {
+        // Not collided
+        return ({
+            cellDist: dist,
+            collideDist: collisionDist,
+            collided: false
+        });
+    }
+};
+
+GameServer.prototype.cellCollision = function(cell, check, calcInfo) {
+    if (!calcInfo) this.checkCellCollision(cell, check); // Unedefined calc info
+
+    var dist = calcInfo.cellDist;
+    var collisionDist = calcInfo.collideDist;
+
+    // Check collision
+    if (calcInfo.collided) { // Collided
+        // The moving cell pushes the colliding cell
+        // Strength however depends on cell1 speed divided by cell2 speed
+
+        var c1Speed = cell.getSpeed();
+        var c2Speed = check.getSpeed();
+        var Tmult = (c1Speed / c2Speed) / 2;
+
+        var dY = cell.position.y - check.position.y;
+        var dX = cell.position.x - check.position.x;
+        var newAngle = Math.atan2(dX, dY);
+
+        var Tmove = ((collisionDist - dist) * Tmult) / 2;
+
+        cell.position.x += (Tmove * Math.sin(newAngle)) >> 0;
+        cell.position.y += (Tmove * Math.cos(newAngle)) >> 0;
+
+        // Also move the other cell, but first recalculate distance
+        dist = this.getDist(cell.position.x, cell.position.y,
+            check.position.x, check.position.y);
+
+        var Cmult = c2Speed / c1Speed;
+        var Cmove = ((collisionDist - dist) * Cmult) / 2;
+
+        check.position.x -= (Cmove * Math.sin(newAngle)) >> 0;
+        check.position.y -= (Cmove * Math.cos(newAngle)) >> 0;
+
+        return true;
+    } else return false; // Not collided
+};
+
 GameServer.prototype.updateMoveEngine = function(moveCells) {
     // Move player cells
     var len = this.nodesPlayer.length;
 
     // Sort cells to move the cells close to the mouse first
-    /*
+/*
     var srt = [];
     for (var i = 0; i < len; i++)
-        srt[i] = i;
+        srt[i] = this.nodesPlayer[i];
 
     for (var i = 0; i < len; i++) {
         for (var j = i + 1; j < len; j++) {
@@ -695,7 +758,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Create cell
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(splitSpeed, 12, 0.85);
+    newCell.setMoveEngineData(splitSpeed, 12, 0.83);
     if (this.config.playerSmoothSplit == 1) {
         newCell.collisionRestoreTicks = 12;
         parent.collisionRestoreTicks = 12;
@@ -774,7 +837,7 @@ GameServer.prototype.shootVirus = function(parent) {
 };
 
 GameServer.prototype.getCellsInRange = function(cell) {
-    var list = new Array();
+    var list = [];
     var squareR = cell.getSquareSize(); // Get cell squared radius
 
     // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
@@ -802,12 +865,12 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // AABB Collision
-        if (!check.collisionCheck2(squareR, cell.position)) {
+        if (!check.collisionCheck2(squareR, cell.position) && check.cellType == 1) {
             continue;
         }
 
         // Cell type check - Cell must be bigger than this number times the mass of the cell being eaten
-        var multiplier = 1.33;
+        var multiplier = 1.3;
 
         switch (check.getType()) {
             case 1: // Food cell
@@ -847,11 +910,11 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // Eating range
-        var xs = Math.pow(check.position.x - cell.position.x, 2);
-        var ys = Math.pow(check.position.y - cell.position.y, 2);
-        var dist = Math.sqrt(xs + ys);
+        var dist = this.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
 
-        var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell - 31% of the radius of the cell being eaten
+        // Eating range = radius of eating cell / 2 - 31% of the radius of the cell being eaten
+        var eatingRange = cell.getSize() - check.getEatingRange() * 1.3;
+
         if (dist < eatingRange) {
             // Add to list of cells nearby
             list.push(check);
@@ -904,7 +967,6 @@ GameServer.prototype.updateCells = function() {
     }
 
     // Loop through all player cells
-    // Updates now occur 20 times every second, making more precision. It was 1 update by 1 second earlier
     var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod * 0.05);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
@@ -932,7 +994,7 @@ GameServer.prototype.updateCells = function() {
         if (cell.mass >= this.config.playerMinMassDecay) {
             var client = cell.owner;
             if (this.config.serverTeamingAllowed == 0) {
-                var teamMult = (client.massDecayMult - 1) / 360 + 1; // Calculate anti-teaming multiplier for decay
+                var teamMult = (client.massDecayMult - 1) / 570 + 1; // Calculate anti-teaming multiplier for decay
                 var thisDecay = 1 - massDecay * (1 / teamMult); // Reverse mass decay and apply anti-teaming multiplier
                 cell.mass *= (1 - thisDecay);
             } else {
