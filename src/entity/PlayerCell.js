@@ -36,9 +36,7 @@ PlayerCell.prototype.simpleCollide = function(check, d) {
 };
 
 PlayerCell.prototype.calcMergeTime = function(base) {
-    // The recombine mechanic has been completely revamped.
-    // As time passes on, recombineTicks gets larger, instead of getting smaller.
-    // When the owner has only 1 cell, ticks and shouldRecombine will be reset by gameserver.
+    // Check for merging time
     var r = false;
     if (base == 0 || this.owner.mergeOverride) {
         // Instant recombine in config or merge command was triggered for this client
@@ -93,41 +91,23 @@ PlayerCell.prototype.collision = function(gameServer) {
 
         if ((!cell.shouldRecombine) || (!this.shouldRecombine)) {
             // Cannot recombine - Collision with your own cells
-            var collisionDist = cell.getSize() + r; // Minimum distance between the 2 cells
-            dist = this.getDist(x1, y1, cell.position.x, cell.position.y); // Distance between these two cells
+            var calcInfo = gameServer.checkCellCollision(this, cell); // Calculation info
 
-            // Calculations
-            if (dist < collisionDist) { // Collided
-                // The moving cell pushes the colliding cell
-                // Strength however depends on cell1 speed divided by cell2 speed
+            // Further calculations
+            if (calcInfo.collided) { // Collided
+                // Increment collided cells
                 collidedCells++;
+
+                // Cell with collision restore ticks on should not collide
                 if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) continue;
 
-                var c1Speed = this.getSpeed();
-                var c2Speed = cell.getSpeed();
-                var Tmult = (c1Speed / c2Speed) / 2;
-
-                var dY = y1 - cell.position.y;
-                var dX = x1 - cell.position.x;
-                var newAngle = Math.atan2(dX, dY);
-
-                var Tmove = (collisionDist - dist) * Tmult;
-
-                x1 += (Tmove * Math.sin(newAngle)) >> 0;
-                y1 += (Tmove * Math.cos(newAngle)) >> 0;
-
-                // Also move the other cell
-                dist = this.getDist(x1, y1, cell.position.x, cell.position.y); // Recalculate distance
-                var Cmult = (c2Speed / c1Speed) / 2;
-                var Cmove = (collisionDist - dist) * Cmult;
-
-                cell.position.x -= (Cmove * Math.sin(newAngle)) >> 0;
-                cell.position.y -= (Cmove * Math.cos(newAngle)) >> 0;
+                // Call gameserver's function to collide cells
+                gameServer.cellCollision(this, cell, calcInfo);
             }
         }
     }
 
-    gameServer.gameMode.onCellMove(x1, y1, this);
+    gameServer.gameMode.onCellMove(this, gameServer);
 
     if (collidedCells == 0) this.collisionRestoreTicks = 0; // Automate process of collision restoration as no cells are colliding
 
