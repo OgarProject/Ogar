@@ -93,7 +93,7 @@ Teams.prototype.onCellRemove = function(cell) {
     }
 };
 
-Teams.prototype.onCellMove = function(x1, y1, cell) {
+Teams.prototype.onCellMove = function(cell, gameServer) {
     var team = cell.owner.getTeam();
     var r = cell.getSize();
 
@@ -108,32 +108,15 @@ Teams.prototype.onCellMove = function(x1, y1, cell) {
 
         // Collision with teammates
         if (check.owner.getTeam() == team) {
-            // Check if in collision range
-            var collisionDist = check.getSize() + r; // Minimum distance between the 2 cells
-            var dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
+            var calcInfo = gameServer.checkCellCollision(cell, check); // Calculation info
 
-            // Calculations
-            if (dist < collisionDist) { // Collided
-                // The moving cell pushes the colliding cell
-                // Strength however depends on cell1 speed divided by cell2 speed
+            // Further calculations
+            if (calcInfo.collided) { // Collided
+                // Cell with collision restore ticks on should not collide
+                if (cell.collisionRestoreTicks > 0 || check.collisionRestoreTicks > 0) continue;
 
-                // Note that the collision is actually inversed, cell we're cheking will be moved,
-                // so make sure we're looking in check's perspective
-                var c2Speed = cell.getSpeed();
-                var c1Speed = check.getSpeed();
-
-                var mult = c1Speed / c2Speed / 2;
-                if (mult < 0.15) mult = 0.15;
-                if (mult > 0.9) mult = 0.9;
-
-                var newDeltaY = check.position.y - y1;
-                var newDeltaX = check.position.x - x1;
-                var newAngle = Math.atan2(newDeltaX, newDeltaY);
-
-                var move = (collisionDist - dist) * mult;
-
-                check.position.x = check.position.x + (move * Math.sin(newAngle)) >> 0;
-                check.position.y = check.position.y + (move * Math.cos(newAngle)) >> 0;
+                // Call gameserver's function to collide cells
+                gameServer.cellCollision(cell, check, calcInfo);
             }
         }
     }

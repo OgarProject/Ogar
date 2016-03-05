@@ -45,7 +45,7 @@ Commands.list = {
         console.log("[Console] playerlist                   : get list of players and bots");
         console.log("[Console] pause                        : pause game , freeze all cells");
         console.log("[Console] reload                       : reload config");
-        console.log("[Console] resetantiteam                : reset anti-team effect on client");
+        console.log("[Console] resetantiteam [PlayerID]     : reset anti-team effect on client");
         console.log("[Console] status                       : get server status");
         console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
         console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
@@ -421,15 +421,20 @@ Commands.list = {
             return;
         }
 
-        if (!gameServer.clients[id]) {
-            console.log("[Console] Client is nonexistent!");
-            return;
-        }
+        for (var i in gameServer.clients) {
+            var client = gameServer.clients[i];
+            if (!client) continue; // Nonexistent
 
-        gameServer.clients[id].playerTracker.massDecayMult = 1;
-        gameServer.clients[id].playerTracker.actionMult = 0;
-        gameServer.clients[id].playerTracker.actionDecayMult = 1;
-        console.log("[Console] Successfully reset client's anti-team effect");
+            if (client.playerTracker.pID == id) {
+                // Found client
+                client.playerTracker.massDecayMult = 1;
+                client.playerTracker.Wmult = 0;
+                client.playerTracker.virusMult = 0;
+                client.playerTracker.splittingMult = 0;
+                console.log("[Console] Successfully reset client's anti-team effect");
+                return;
+            }
+        }
     },
     status: function(gameServer, split) {
         // Get amount of humans/bots
