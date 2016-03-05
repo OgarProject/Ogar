@@ -900,6 +900,9 @@ GameServer.prototype.getCellsInRange = function(cell) {
                     }
                 }
                 break;
+            case 2:
+                multiplier = 1.32;
+                break;
             default:
                 break;
         }
