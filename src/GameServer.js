@@ -55,6 +55,7 @@ function GameServer() {
         serverStatsUpdate: 60, // Amount of seconds per update for the server stats
         serverLogLevel: 1, // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         serverScrambleCoords: 1, // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
+        serverScrambleMinimaps: 1, // Toggles scrambling of borders to render maps unusable. 0 = No scrambling, 1 = scrambling. Default is 1.
         serverTeamingAllowed: 1, // Toggles anti-teaming. 0 = Anti-team enabled, 1 = Anti-team disabled
         serverMaxLB: 10, //	Controls the maximum players displayed on the leaderboard.
         borderLeft: 0, // Left border of map (Vanilla value: 0)
@@ -728,9 +729,11 @@ GameServer.prototype.splitCells = function(client) {
         var deltaY = client.mouse.y - cell.position.y;
         var deltaX = client.mouse.x - cell.position.x;
         var angle = Math.atan2(deltaX, deltaY);
+        if (angle == 0) angle = Math.PI / 2;
+
         if (this.createPlayerCell(client, cell, angle, cell.mass / 2) == true) splitCells++;
     }
-    if (splitCells > 0) client.splittingMult += 0.3; // Account anti-teaming
+    if (splitCells > 0) client.splittingMult += 0.6; // Account anti-teaming
 };
 
 GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
@@ -860,7 +863,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // Can't eat cells that have collision turned off
-        if ((cell.owner == check.owner) && (cell.collisionRestoreTicks != 0)) {
+        if ((cell.owner == check.owner) && (cell.collisionRestoreTicks != 0) && (check.cellType == 0)) {
             continue;
         }
 
@@ -997,7 +1000,7 @@ GameServer.prototype.updateCells = function() {
         if (cell.mass >= this.config.playerMinMassDecay) {
             var client = cell.owner;
             if (this.config.serverTeamingAllowed == 0) {
-                var teamMult = (client.massDecayMult - 1) / 570 + 1; // Calculate anti-teaming multiplier for decay
+                var teamMult = (client.massDecayMult - 1) / 666 + 1; // Calculate anti-teaming multiplier for decay
                 var thisDecay = 1 - massDecay * (1 / teamMult); // Reverse mass decay and apply anti-teaming multiplier
                 cell.mass *= (1 - thisDecay);
             } else {
