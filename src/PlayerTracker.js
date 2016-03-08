@@ -18,6 +18,8 @@ function PlayerTracker(gameServer, socket) {
         x: 0,
         y: 0
     };
+    this.shouldMoveCells = true; // False if the mouse packet wasn't triggered
+    this.movePacketTriggered = false;
     this.mouseCells = []; // For individual cell movement
     this.tickLeaderboard = 0;
     this.tickViewBox = 0;
@@ -106,6 +108,13 @@ PlayerTracker.prototype.getTeam = function() {
 // Functions
 
 PlayerTracker.prototype.update = function() {
+    // Move packet update
+    if (this.movePacketTriggered) {
+        this.movePacketTriggered = false;
+        this.shouldMoveCells = true;
+    } else {
+        this.shouldMoveCells = false;
+    }
     // Actions buffer (So that people cant spam packets)
     if (this.socket.packetHandler.pressSpace) { // Split cell
         if (!this.mergeOverride) this.gameServer.gameMode.pressSpace(this.gameServer, this);
@@ -204,6 +213,28 @@ PlayerTracker.prototype.update = function() {
         this.tickLeaderboard--;
     }
 
+    // Map obfuscation
+    var width = this.viewBox.width;
+    var height = this.viewBox.height;
+
+    if (this.cells.length == 0 && this.gameServer.config.serverScrambleMinimaps >= 1) {
+        // Update map, it may have changed
+        this.socket.sendPacket(new Packet.SetBorder(
+            this.gameServer.config.borderLeft,
+            this.gameServer.config.borderRight,
+            this.gameServer.config.borderTop,
+            this.gameServer.config.borderBottom
+        ));
+    } else {
+        // Send a border packet to fake the map size
+        this.socket.sendPacket(new Packet.SetBorder(
+            this.centerPos.x + this.socket.playerTracker.scrambleX - width,
+            this.centerPos.x + this.socket.playerTracker.scrambleX + width,
+            this.centerPos.y + this.socket.playerTracker.scrambleY - height,
+            this.centerPos.y + this.socket.playerTracker.scrambleY + height
+        ));
+    }
+
     // Handles disconnections
     if (this.disconnect > -1) {
         // Player has disconnected... remove it when the timer hits -1
@@ -238,7 +269,7 @@ PlayerTracker.prototype.antiTeamTick = function() {
     this.virusMult *= 0.9985;
     this.splittingMult *= 0.9977;
     // Apply anti-teaming if required
-    if (effectSum > 1) this.massDecayMult = Math.min(effectSum, 2.5);
+    if (effectSum > 1.5) this.massDecayMult = Math.min(effectSum / 1.5, 2.7);
     else this.massDecayMult = 1;
 }
 
@@ -353,8 +384,8 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
 
     // Use calcViewBox's way of looking for nodes
     var newVisible = this.calcVisibleNodes();
-    var specZoom = Math.sqrt(100 * 150);
-    specZoom = Math.pow(Math.min(40.5 / 150, 1.0), 0.4) * 0.6; // Constant zoom
+    var specZoom = 816.455755078;
+    specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6; // Constant zoom
     this.sendPosPacket(specZoom);
     return newVisible;
 };
