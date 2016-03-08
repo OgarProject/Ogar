@@ -51,7 +51,11 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 // Movement
 
 PlayerCell.prototype.calcMove = function(x2, y2, gameServer, moveCell) {
+    this.collision(gameServer);
+
     if (moveCell) {
+        if (!this.owner.shouldMoveCells) return; // Mouse is in one place
+
         // Get angle of mouse
         var deltaY = y2 - this.position.y;
         var deltaX = x2 - this.position.x;
@@ -68,8 +72,6 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer, moveCell) {
         this.position.x += Math.sin(angle) * speed;
         this.position.y += Math.cos(angle) * speed;
     }
-
-    this.collision(gameServer);
 };
 
 PlayerCell.prototype.collision = function(gameServer) {
