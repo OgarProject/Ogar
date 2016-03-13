@@ -90,7 +90,7 @@ Experimental.prototype.onServerInit = function(gameServer) {
     gameServer.run = true;
 
     var mapSize = gameServer.config.borderLeft + gameServer.config.borderRight +
-      gameServer.config.borderTop + gameServer.config.borderRight;
+        gameServer.config.borderTop + gameServer.config.borderRight;
 
     this.motherMinAmount = Math.ceil(mapSize / 3194.382825); // 7 mother cells for agar.io map size
 
@@ -161,7 +161,7 @@ MotherCell.prototype.update = function(gameServer) {
     if (Math.random() * 100 > 97) {
         var maxFood = Math.random() * 2; // Max food spawned per tick
         var i = 0; // Food spawn counter
-        while (i < maxFood)  {
+        while (i < maxFood) {
             // Only spawn if food cap hasn't been reached
             if (gameServer.currentFood < gameServer.config.foodMaxAmount * 1.5) {
                 this.spawnFood(gameServer);
