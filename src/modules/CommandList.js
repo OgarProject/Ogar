@@ -92,7 +92,11 @@ Commands.list = {
     board: function(gameServer, split) {
         var newLB = [];
         for (var i = 1; i < split.length; i++) {
-            newLB[i - 1] = split[i];
+            if (split[i]) {
+                newLB[i - 1] = split[i];
+            } else {
+                newLB[i - 1] = " ";
+            }
         }
 
         // Clears the update leaderboard function and replaces it with our own
@@ -320,8 +324,13 @@ Commands.list = {
             client.mergeOverrideDuration = 0;
             state = false;
         } else {
-            if (client.mergeOverride) { client.mergeOverride = false; client.mergeOverrideDuration = 0; }
-            else { client.mergeOverride = true; client.mergeOverrideDuration = 100; }
+            if (client.mergeOverride) {
+                client.mergeOverride = false;
+                client.mergeOverrideDuration = 0;
+            } else {
+                client.mergeOverride = true;
+                client.mergeOverrideDuration = 100;
+            }
 
             state = client.mergeOverride;
         }
