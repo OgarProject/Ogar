@@ -295,25 +295,15 @@ GameServer.prototype.getRandomSpawn = function() {
 };
 
 GameServer.prototype.getRandomColor = function() {
-    var rand = Math.floor(Math.random() * 3);
-    if (rand == 0)
-        return {
-            r: 255,
-            b: Math.random() * 255,
-            g: 0
-        };
-    else if (rand == 1)
-        return {
-            r: 0,
-            b: 255,
-            g: Math.random() * 255
-        };
-    else
-        return {
-            r: Math.random() * 255,
-            b: 0,
-            g: 255
-        };
+    var colorRGB = [0xFF, 0x07, (Math.random() * 256) >> 0];
+    colorRGB.sort(function() {
+        return 0.5 - Math.random();
+    });
+    return {
+        r: colorRGB[0],
+        b: colorRGB[1],
+        g: colorRGB[2]
+    };
 };
 
 GameServer.prototype.addNode = function(node) {
