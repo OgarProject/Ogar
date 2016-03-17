@@ -19,7 +19,9 @@ function PlayerTracker(gameServer, socket) {
         y: 0
     };
     this.shouldMoveCells = true; // False if the mouse packet wasn't triggered
+    this.notMoved = false; // If one of cells have been moved after splitting this is triggered
     this.movePacketTriggered = false;
+    this.ignoreNextMoveTick = false; // Screen mouse matches old screen mouse
     this.mouseCells = []; // For individual cell movement
     this.tickLeaderboard = 0;
     this.tickViewBox = 0;
@@ -169,11 +171,13 @@ PlayerTracker.prototype.update = function() {
                     updateNodes.push(newVisible[i]);
                 }
             }
-        } finally {} // Catch doesn't work for some reason
+        } catch(err) {
+            console.error(err);
+        }; // Catch doesn't work for some reason
 
         this.visibleNodes = newVisible;
         // Reset Ticks
-        this.tickViewBox = 2;
+        this.tickViewBox = 0;
     } else {
         this.tickViewBox--;
         // Add nodes to screen
@@ -265,13 +269,33 @@ PlayerTracker.prototype.antiTeamTick = function() {
     // ANTI-TEAMING DECAY
     // Calculated even if anti-teaming is disabled.
     var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-    if (this.Wmult - 0.0008 > 0) this.Wmult -= 0.0008;
-    this.virusMult *= 0.9985;
-    this.splittingMult *= 0.9977;
+    if (this.Wmult - 0.00028 > 0) this.Wmult -= 0.00028;
+    this.virusMult *= 0.999;
+    this.splittingMult *= 0.9982;
     // Apply anti-teaming if required
-    if (effectSum > 1.5) this.massDecayMult = Math.min(effectSum / 1.5, 2.7);
+    if (effectSum > 2) this.massDecayMult = Math.min(effectSum / 2, 3.14);
     else this.massDecayMult = 1;
-}
+};
+
+PlayerTracker.prototype.applyTeaming = function(x, type) {
+    // Called when player does an action which increases anti-teaming
+    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
+
+    // Applied anti-teaming is 1.5x smaller if over the threshold
+    var n = effectSum > 1.5 ? x : x / 1.5;
+
+    switch (type) {
+        case 0: // Ejected cell
+            this.Wmult += n;
+            break;
+        case 1: // Virus explosion
+            this.virusMult += n;
+            break;
+        case 2: // Splitting
+            this.splittingMult += n;
+            break;
+    }
+};
 
 // Viewing box
 

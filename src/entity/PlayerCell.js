@@ -50,38 +50,30 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 
 // Movement
 
-PlayerCell.prototype.calcMove = function(x2, y2, gameServer, moveCell) {
-    this.collision(gameServer);
+PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
+    if (!this.owner.shouldMoveCells && this.owner.notMoved) return; // Mouse is in one place
 
-    if (moveCell) {
-        if (!this.owner.shouldMoveCells) return; // Mouse is in one place
+    // Get angle of mouse
+    var deltaY = y2 - this.position.y;
+    var deltaX = x2 - this.position.x;
+    var angle = Math.atan2(deltaX, deltaY);
 
-        // Get angle of mouse
-        var deltaY = y2 - this.position.y;
-        var deltaX = x2 - this.position.x;
-        var angle = Math.atan2(deltaX, deltaY);
-
-        if (isNaN(angle)) {
-            return;
-        }
-
-        var dist = this.getDist(this.position.x, this.position.y, x2, y2);
-        var speed = Math.min(this.getSpeed(), dist);
-
-        // Move cell
-        this.position.x += Math.sin(angle) * speed;
-        this.position.y += Math.cos(angle) * speed;
+    if (isNaN(angle)) {
+        return;
     }
+
+    var dist = this.getDist(this.position.x, this.position.y, x2, y2);
+    var speed = Math.min(this.getSpeed(), dist) / 2; // Twice as slower
+
+    // Move cell
+    this.position.x += Math.sin(angle) * speed;
+    this.position.y += Math.cos(angle) * speed;
+    this.owner.notMoved = false;
 };
 
 PlayerCell.prototype.collision = function(gameServer) {
     var config = gameServer.config;
     var r = this.getSize(); // Cell radius
-
-    var x1 = this.position.x;
-    var y1 = this.position.y;
-
-    var collidedCells = 0; // Amount of cells collided this tick
 
     // Collision check for other cells
     for (var i = 0; i < this.owner.cells.length; i++) {
@@ -97,38 +89,30 @@ PlayerCell.prototype.collision = function(gameServer) {
 
             // Further calculations
             if (calcInfo.collided) { // Collided
-                // Increment collided cells
-                collidedCells++;
-
                 // Cell with collision restore ticks on should not collide
                 if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) continue;
 
                 // Call gameserver's function to collide cells
-                gameServer.cellCollision(this, cell, calcInfo);
+                var change = gameServer.cellCollision(this, cell, calcInfo);
             }
         }
     }
 
     gameServer.gameMode.onCellMove(this, gameServer);
 
-    if (collidedCells == 0) this.collisionRestoreTicks = 0; // Automate process of collision restoration as no cells are colliding
-
     // Check to ensure we're not passing the world border (shouldn't get closer than a quarter of the cell's diameter)
-    if (x1 < config.borderLeft + r / 2) {
-        x1 = config.borderLeft + r / 2;
+    if (this.position.x < config.borderLeft + r / 2) {
+        this.position.x = config.borderLeft + r / 2;
     }
-    if (x1 > config.borderRight - r / 2) {
-        x1 = config.borderRight - r / 2;
+    if (this.position.x > config.borderRight - r / 2) {
+        this.position.x = config.borderRight - r / 2;
     }
-    if (y1 < config.borderTop + r / 2) {
-        y1 = config.borderTop + r / 2;
+    if (this.position.y < config.borderTop + r / 2) {
+        this.position.y = config.borderTop + r / 2;
     }
-    if (y1 > config.borderBottom - r / 2) {
-        y1 = config.borderBottom - r / 2;
+    if (this.position.y > config.borderBottom - r / 2) {
+        this.position.y = config.borderBottom - r / 2;
     }
-
-    this.position.x = x1 >> 0;
-    this.position.y = y1 >> 0;
 }
 
 // Override

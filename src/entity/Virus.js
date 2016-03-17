@@ -65,11 +65,11 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
         var m = endMass,
             i = 0;
         if (m > 466) { // Threshold
-            // While can split into an even smaller cell (1000 => 500, 250, etc)
+            // While can split into an even smaller cell (1000 => 333, 167, etc)
             var mult = 3.33;
             while (m / mult > 24) {
                 m /= mult;
-                mult = 2.5; // First mult 3.33, the next ones 2.5
+                mult = 2; // First mult 3.33, the next ones 2
                 bigSplits.push(m >> 0);
                 i++;
             }
@@ -90,7 +90,7 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 
     // Prevent consumer cell from merging with other cells
     consumer.calcMergeTime(gameServer.config.playerRecombineTime);
-    client.virusMult += 0.9; // Account for anti-teaming
+    client.applyTeaming(0.9, 1); // Apply anti-teaming
 };
 
 Virus.prototype.onAdd = function(gameServer) {
