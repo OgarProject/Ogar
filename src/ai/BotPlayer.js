@@ -516,11 +516,7 @@ BotPlayer.prototype.checkPath = function(cell, check) {
     var v2 = this.getAngle(check, cell);
     v2 = this.reverseAngle(v2);
 
-    if ((v1 <= (v2 + .25)) && (v1 >= (v2 - .25))) {
-        return true;
-    } else {
-        return false;
-    }
+    return ((v1 <= (v2 + .25)) && (v1 >= (v2 - .25)));
 };
 
 BotPlayer.prototype.getBiggest = function(list) {
@@ -558,13 +554,7 @@ BotPlayer.prototype.checkPath = function(cell, check) {
 
     var inRange = Math.atan((2 * cell.getSize()) / dist); // Opposite/adjacent
     console.log(inRange);
-    if ((v1 <= (v2 + inRange)) && (v1 >= (v2 - inRange))) {
-        // Path collides
-        return true;
-    }
-
-    // No collide
-    return false;
+    return ((v1 <= (v2 + inRange)) && (v1 >= (v2 - inRange)));
 };
 
 BotPlayer.prototype.getDist = function(cell, check) {
@@ -596,10 +586,5 @@ BotPlayer.prototype.getAngle = function(c1, c2) {
 };
 
 BotPlayer.prototype.reverseAngle = function(angle) {
-    if (angle > Math.PI) {
-        angle -= Math.PI;
-    } else {
-        angle += Math.PI;
-    }
-    return angle;
+    return (angle > Math.PI) ? angle - Math.PI : angle + Math.PI;
 };
