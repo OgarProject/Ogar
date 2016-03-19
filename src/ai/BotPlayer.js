@@ -586,5 +586,5 @@ BotPlayer.prototype.getAngle = function(c1, c2) {
 };
 
 BotPlayer.prototype.reverseAngle = function(angle) {
-    return angle > 3.14159 ? angle - 3.14159 : angle + 3.14159;
+    return (angle > 3.14159) ? angle - 3.14159 : angle + 3.14159;
 };
