@@ -76,7 +76,7 @@ function GameServer() {
         virusStartMass: 100, // Starting virus size (In mass)
         virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
         ejectMass: 13, // Mass of ejected cells
-        ejectMassCooldown: 200, // Time until a player can eject mass again
+        ejectMassCooldown: 100, // Time until a player can eject mass again
         ejectMassLoss: 15, // Mass lost when ejecting cells
         ejectSpeed: 100, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
