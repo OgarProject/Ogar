@@ -60,6 +60,7 @@ Cell.prototype.getSquareSize = function() {
 };
 
 Cell.prototype.addMass = function(n) {
+    // Check if the cell needs to autosplit before adding mass
     if (this.mass > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
         var splitMass = this.mass / 2;
         var randomAngle = Math.random() * 6.28 // Get random angle
