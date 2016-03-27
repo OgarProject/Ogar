@@ -60,7 +60,6 @@ Cell.prototype.getSquareSize = function() {
 };
 
 Cell.prototype.addMass = function(n) {
-    this.mass += n;
     if (this.mass > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
         var splitMass = this.mass / 2;
         var randomAngle = Math.random() * 6.28 // Get random angle
@@ -68,6 +67,7 @@ Cell.prototype.addMass = function(n) {
     } else {
         this.mass = Math.min(this.mass, this.gameServer.config.playerMaxMass);
     }
+    this.mass += n;
 };
 
 Cell.prototype.getSpeed = function() {
