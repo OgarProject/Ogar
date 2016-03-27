@@ -232,10 +232,10 @@ PlayerTracker.prototype.update = function() {
     } else {
         // Send a border packet to fake the map size
         this.socket.sendPacket(new Packet.SetBorder(
-            this.centerPos.x + this.socket.playerTracker.scrambleX - width,
-            this.centerPos.x + this.socket.playerTracker.scrambleX + width,
-            this.centerPos.y + this.socket.playerTracker.scrambleY - height,
-            this.centerPos.y + this.socket.playerTracker.scrambleY + height
+            Math.max(this.centerPos.x + this.scrambleX - width, this.gameServer.config.borderLeft + this.scrambleX),
+            Math.min(this.centerPos.x + this.scrambleX + width, this.gameServer.config.borderRight + this.scrambleX),
+            Math.max(this.centerPos.y + this.scrambleY - height, this.gameServer.config.borderTop + this.scrambleY),
+            Math.min(this.centerPos.y + this.scrambleY + height, this.gameServer.config.borderBottom + this.scrambleY)
         ));
     }
 

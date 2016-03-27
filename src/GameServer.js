@@ -301,8 +301,8 @@ GameServer.prototype.getRandomColor = function() {
     });
     return {
         r: colorRGB[0],
-        b: colorRGB[1],
-        g: colorRGB[2]
+        g: colorRGB[1],
+        b: colorRGB[2]
     };
 };
 
