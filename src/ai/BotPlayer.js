@@ -83,11 +83,13 @@ BotPlayer.prototype.decide = function(cell) {
         // Figure out distance between cells
         var distance = displacement.length();
         if (influence < 0) {
+            // Get edge distance
             distance -= cell.getSize() + check.getSize();
             if (check.cellType == 0) threats.push(check);
         }
 
         // The farther they are the smaller influnce it is
+        if (distance < 1) distance = 1; // Avoid NaN and positive influence with negative distance & attraction
         influence /= distance;
 
         // Produce force vector exerted by this entity on the cell
