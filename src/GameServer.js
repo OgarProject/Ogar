@@ -553,7 +553,8 @@ GameServer.prototype.checkCellCollision = function(cell, check) {
     return ({
         cellDist: dist,
         collideDist: collisionDist,
-        cellMult: (cell.getSpeed() / check.getSpeed()) / 2,
+        cellMult1: (cell.getSpeed() / check.getSpeed()) / 2,
+        cellMult2: (check.getSpeed() / cell.getSpeed()) / 2,
         cellAngle: angle,
         collided: (dist < collisionDist)
     });
@@ -568,13 +569,20 @@ GameServer.prototype.cellCollision = function(cell, check, calcInfo) {
 
         var dist = calcInfo.cellDist;
         var collisionDist = calcInfo.collideDist;
-        var mult = calcInfo.cellMult;
+        var mult = calcInfo.cellMult1;
         var angle = calcInfo.cellAngle;
 
-        var move = (collisionDist - dist) * mult;
+        var move = ((collisionDist - dist) * mult) / 2;
 
         cell.position.x += move * Math.sin(angle);
         cell.position.y += move * Math.cos(angle);
+
+        // Also move the check
+        mult = calcInfo.cellMult2;
+        move = ((collisionDist - dist) * mult) / 2;
+
+        check.position.x -= move * Math.sin(angle);
+        check.position.y -= move * Math.cos(angle);
     }
 };
 
@@ -614,18 +622,8 @@ GameServer.prototype.updateMoveEngine = function() {
             // Collision with own cells
             cell.collision(this);
 
-            // Check if cells nearby
-            var list = this.getCellsInRange(cell);
-            for (var j = 0; j < list.length; j++) {
-                var check = list[j];
-
-                // Consume effect
-                check.onConsume(cell, this);
-
-                // Remove cell
-                check.setKiller(cell);
-                this.removeNode(check);
-            }
+            // Cell eating
+            this.cellEating(cell);
         }
     }
 
@@ -659,6 +657,21 @@ GameServer.prototype.updateMoveEngine = function() {
                 this.movingNodes.splice(index, 1);
             }
         }
+    }
+};
+
+GameServer.prototype.cellEating = function(cell) {
+    // Check if cells nearby
+    var list = this.getCellsInRange(cell);
+    for (var j = 0; j < list.length; j++) {
+        var check = list[j];
+
+        // Consume effect
+        check.onConsume(cell, this);
+
+        // Remove cell
+        check.setKiller(cell);
+        this.removeNode(check);
     }
 };
 
@@ -710,10 +723,9 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
     newCell.setMoveEngineData(splitSpeed, 12, 0.87);
-    if (this.config.playerSmoothSplit == 1) {
-        newCell.collisionRestoreTicks = 12;
-        parent.collisionRestoreTicks = 12;
-    }
+    // Cells won't collide immediately
+    newCell.collisionRestoreTicks = 12;
+    parent.collisionRestoreTicks = 12;
     newCell.calcMergeTime(this.config.playerRecombineTime);
     parent.mass -= mass; // Remove mass from parent cell
 
