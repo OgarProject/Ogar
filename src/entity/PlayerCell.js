@@ -79,9 +79,8 @@ PlayerCell.prototype.collision = function(gameServer) {
     for (var i = 0; i < this.owner.cells.length; i++) {
         var cell = this.owner.cells[i];
 
-        if (this.nodeId == cell.nodeId) {
-            continue;
-        }
+        if (!cell) continue; // Error
+        if (this.nodeId == cell.nodeId) continue;
 
         if ((!cell.shouldRecombine) || (!this.shouldRecombine)) {
             // Cannot recombine - Collision with your own cells
