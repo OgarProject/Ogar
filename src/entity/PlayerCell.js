@@ -51,7 +51,7 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 // Movement
 
 PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
-    if (!this.owner.shouldMoveCells && this.owner.notMoved) return; // Mouse is in one place
+    if (!this.owner.shouldMoveCells && !this.owner.notMoved) return; // Mouse is in one place
 
     // Get angle of mouse
     var deltaY = y2 - this.position.y;
