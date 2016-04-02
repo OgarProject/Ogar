@@ -688,7 +688,12 @@ GameServer.prototype.splitCells = function(client) {
         var deltaY = client.mouse.y - cell.position.y;
         var deltaX = client.mouse.x - cell.position.x;
         var angle = Math.atan2(deltaX, deltaY);
-        if (angle == 0) angle = Math.PI / 2;
+        if (angle == 0 && len === 1) angle = Math.random() * 6.28;
+		else if (angle == 0 && len === 2) angle = Math.random() * 6.28;
+		else if (angle == 0 && len === 4) angle = Math.random() * 6.28;
+		else if (angle == 0 && len === 8) angle = Math.random() * 6.28;
+		else if (angle == 0 && len > 8) angle = Math.random() * 6.28;
+		else split.setAngle(angle);
 
         if (this.createPlayerCell(client, cell, angle, cell.mass / 2) == true) splitCells++;
     }
