@@ -4,7 +4,9 @@
   "description": "Open source Agar.io server",
   "main": "src/index.js",
   "dependencies": {
-    "ws": "latest"
+    "portfinder": "^1.0.3",
+    "ws": "latest",
+    "zerorpc": "^0.9.6"
   },
   "devDependencies": {},
   "scripts": {

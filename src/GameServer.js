@@ -11,6 +11,7 @@ var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var BotLoader = require('./ai/BotLoader');
+var BotLoaderPython = require('./aiPython/BotLoader');
 var Logger = require('./modules/log');
 
 // GameServer implementation
@@ -32,6 +33,7 @@ function GameServer() {
     this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
     this.bots = new BotLoader(this);
+    this.botsPython = new BotLoaderPython(this);
     this.log = new Logger();
     this.commands; // Command handler
 
@@ -43,12 +45,15 @@ function GameServer() {
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
     this.tickSpawn = 0; // Used with spawning food
 
+    this.pythonBotsPortStart = 13000;
+
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64, // Maximum amount of connections to the server.
         serverPort: 443, // Server port
         serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
-        serverBots: 0, // Amount of player bots to spawn
+        serverBots: 0,
+        serverPythonBots: 0, // Amount of player bots to spawn
         serverViewBaseX: 1024, // Base view distance of players. Warning: high values may cause lag
         serverViewBaseY: 592,
         serverStatsPort: 88, // Port for stats server. Having a negative number will disable the stats server.
@@ -106,6 +111,14 @@ function GameServer() {
 
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
+
+}
+
+GameServer.prototype.exit = function() {
+    console.log("[Console] Closing server...");
+    this.botsPython.killBots();
+    this.socketServer.close();
+    process.exit(1);
 }
 
 module.exports = GameServer;
@@ -138,6 +151,14 @@ GameServer.prototype.start = function() {
                 this.bots.addBot();
             }
             console.log("[Game] Loaded " + this.config.serverBots + " player bots");
+        }
+
+        // Python bots
+        if (this.config.serverPythonBots > 0) {
+            for (var i = 0; i < this.config.serverBots; i++) {
+                this.botsPython.addBot();
+            }
+            console.log("[Game] Loaded " + this.config.serverPythonBots + " python player bots");
         }
 
     }.bind(this));

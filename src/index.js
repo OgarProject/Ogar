@@ -23,6 +23,22 @@ process.argv.forEach(function(val) {
 // Run Ogar
 var gameServer = new GameServer();
 gameServer.start();
+
+process.on('exit', function () {
+    console.log('exit captured');
+    gameServer.exit();
+});
+
+process.on('SIGINT', function () {
+    console.log('SIGINT captured');
+    gameServer.exit();
+});
+
+process.on('SIGTERM', function () {
+    console.log('SIGTERM captured');
+    gameServer.exit();
+});
+
 // Add command handler
 gameServer.commands = Commands.list;
 // Initialize the server console

@@ -27,6 +27,8 @@ Commands.list = {
     help: function(gameServer, split) {
         console.log("[Console] ======================== HELP ======================");
         console.log("[Console] addbot [number]              : add bot to the server");
+        console.log("[Console] addbotpythonmulti [number]   : add a python bot to the server, each bot spawns its own python process");
+        console.log("[Console] addbotpythonsingle [number] [port] : add a python bot to the server, all bots use one python process (must be instansiated seperately)");
         console.log("[Console] kickbot [number]             : kick an amount of bots");
         console.log("[Console] board [string] [string] ...  : set scoreboard text");
         console.log("[Console] boardreset                   : reset scoreboard text");
@@ -61,6 +63,28 @@ Commands.list = {
             gameServer.bots.addBot();
         }
         console.log("[Console] Added " + add + " player bots");
+    },
+    addbotpythonmulti: function(gameServer, split) {
+        var add = parseInt(split[1]);
+        if (isNaN(add)) {
+            add = 1; // Adds 1 bot if user doesnt specify a number
+        }
+
+        for (var i = 0; i < add; i++) {
+            gameServer.botsPython.addBotMulti();
+        }
+        console.log("[Console] Added " + add + " python player bots");
+    },
+    addbotpythonsingle: function(gameServer, split) {
+        var add = parseInt(split[1]);
+        if (isNaN(add)) {
+            add = 1; // Adds 1 bot if user doesnt specify a number
+        }
+
+        for (var i = 0; i < add; i++) {
+            gameServer.botsPython.addBotSingle(parseInt(split[2]));
+        }
+        console.log("[Console] Added " + add + " python player bots");
     },
     kickbot: function(gameServer, split) {
         var toRemove = parseInt(split[1]);
