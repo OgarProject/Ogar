@@ -45,7 +45,7 @@ function GameServer() {
     this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
     this.tickSpawn = 0; // Used with spawning food
 
-    this.pythonBotsPortStart = 13000;
+    this.pythonBotsPortStart = 8100;
 
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
