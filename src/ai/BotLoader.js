@@ -20,6 +20,7 @@ BotLoader.prototype.getName = function() {
         this.randomNames.splice(index, 1);
     } else {
         name = "bot" + ++this.nameIndex;
+        this.loadNames();
     }
 
     return name;
@@ -31,14 +32,15 @@ BotLoader.prototype.loadNames = function() {
     // Load names
     try {
         var fs = require("fs"); // Import the util library
+        var path = require("path");
+    } catch (e) {/* Nothing, use the default names */}
 
         // Read and parse the names - filter out whitespace-only names
-        this.randomNames = fs.readFileSync("./botnames.txt", "utf8").split(/[\r\n]+/).filter(function(x) {
+        try {
+        this.randomNames = fs.readFileSync(path.join(__dirname, '../', 'botnames.txt'), "utf8").split(/[\r\n]+/).filter(function(x) {
             return x != ''; // filter empty names
         });
-    } catch (e) {
-        // Nothing, use the default names
-    }
+    } catch (e) {/* Nothing, use the default names */}
 
     this.nameIndex = 0;
 };
