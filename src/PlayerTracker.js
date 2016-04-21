@@ -244,6 +244,7 @@ PlayerTracker.prototype.update = function() {
     if (this.disconnect > -1) {
         // Player has disconnected... remove it when the timer hits -1
         this.disconnect--;
+        // Also remove it when its cells are completely eaten not to back up dead clients
         if (this.disconnect == -1 || this.cells.length == 0) {
             // Remove all client cells
             var len = this.cells.length;
@@ -326,17 +327,19 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
 
     var X = 0;
     var Y = 0;
+    var allSize = 0; // Focus larger cells to near the center and smaller away
     for (var i = 0; i < len; i++) {
-        if (!this.cells[i]) {
-            continue;
-        }
+        // Error check
+        if (!this.cells[i]) continue;
+        var cell = this.cells[i];
 
-        X += this.cells[i].position.x;
-        Y += this.cells[i].position.y;
+        X += cell.position.x * cell.mass;
+        Y += cell.position.y * cell.mass;
+        allSize += cell.mass;
     }
 
-    this.centerPos.x = X / len;
-    this.centerPos.y = Y / len;
+    this.centerPos.x = X / allSize;
+    this.centerPos.y = Y / allSize;
 };
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -370,8 +373,8 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
 
         // Get spectate player's location and calculate zoom amount
-        var specZoom = Math.sqrt(100 * specPlayer.score);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
+        var specZoom = Math.min(Math.sqrt(100 * specPlayer.score), 444);
+        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.7;
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
@@ -388,7 +391,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
 
     var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
     var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
-    var speed = Math.min(dist / 10, 190); // Not to break laws of universe by going faster than light speed
+    var speed = Math.min(dist / 10, 70); // Not to break laws of universe by going faster than light speed
 
     this.centerPos.x += speed * Math.sin(angle);
     this.centerPos.y += speed * Math.cos(angle);
@@ -399,17 +402,20 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
     // Now that we've updated center pos, get nearby cells
     // We're going to use config's view base times 2.5
 
-    var mult = 2.5; // To simplify multiplier, in case this needs editing later on
-    this.viewBox.topY = this.centerPos.y - this.gameServer.config.serverViewBaseY * mult;
-    this.viewBox.bottomY = this.centerPos.y + this.gameServer.config.serverViewBaseY * mult;
-    this.viewBox.leftX = this.centerPos.x - this.gameServer.config.serverViewBaseX * mult;
-    this.viewBox.rightX = this.centerPos.x + this.gameServer.config.serverViewBaseX * mult;
-    this.viewBox.width = this.gameServer.config.serverViewBaseX * mult;
-    this.viewBox.height = this.gameServer.config.serverViewBaseY * mult;
+    var mult = 3.5; // To simplify multiplier, in case this needs editing later on
+    var baseX = this.gameServer.config.serverViewBaseX;
+    var baseY = this.gameServer.config.serverViewBaseY;
+    
+    this.viewBox.topY = this.centerPos.y - baseY * mult;
+    this.viewBox.bottomY = this.centerPos.y + baseY * mult;
+    this.viewBox.leftX = this.centerPos.x - baseX * mult;
+    this.viewBox.rightX = this.centerPos.x + baseX * mult;
+    this.viewBox.width = baseX * mult;
+    this.viewBox.height = baseY * mult;
 
     // Use calcViewBox's way of looking for nodes
     var newVisible = this.calcVisibleNodes();
-    var specZoom = 816.455755078;
+    var specZoom = 444;
     specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6; // Constant zoom
     this.sendPosPacket(specZoom);
     return newVisible;
@@ -418,7 +424,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
 PlayerTracker.prototype.calcVisibleNodes = function() {
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
-        node = this.gameServer.nodes[i];
+        var node = this.gameServer.nodes[i];
         if (!node) {
             continue;
         }
