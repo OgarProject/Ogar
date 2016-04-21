@@ -19,8 +19,6 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.moveDecay = 0.85;
     this.angle = 0; // Angle of movement
     this.collisionRestoreTicks = 0; // Ticks left before cell starts checking for collision with client's cells
-    // NOTE: collisionRestoreTicks variable is actually ONLY used in player cells.
-    // NOTE: DO NOT REMOVE IT IN ANY WAY, IT WILL BREAK CALCMOVEPHYS!
 }
 
 module.exports = Cell;
@@ -63,7 +61,7 @@ Cell.prototype.addMass = function(n) {
     // Check if the cell needs to autosplit before adding mass
     if (this.mass > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
         var splitMass = this.mass / 2;
-        var randomAngle = Math.random() * 6.28 // Get random angle
+        var randomAngle = Math.random() * 6.28; // Get random angle
         this.gameServer.createPlayerCell(this.owner, this, randomAngle, splitMass);
     } else {
         this.mass = Math.min(this.mass, this.gameServer.config.playerMaxMass);
@@ -154,7 +152,7 @@ Cell.prototype.calcMovePhys = function(config) {
     var Y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle) >> 0);
 
     // Movement engine
-    if (this.moveEngineSpeed <= this.moveDecay * 3) this.moveEngineSpeed = 0;
+    if (this.moveEngineSpeed <= this.moveDecay * 3 && this.cellType == 0) this.moveEngineSpeed = 0;
     var speedDecrease = this.moveEngineSpeed - this.moveEngineSpeed * this.moveDecay;
     this.moveEngineSpeed -= speedDecrease / 2; // Decaying speed twice as slower
     if (this.moveEngineTicks >= 0.5) this.moveEngineTicks -= 0.5; // Ticks passing twice as slower
@@ -174,11 +172,15 @@ Cell.prototype.calcMovePhys = function(config) {
                 var deltaX = this.position.x - check.position.x;
                 var deltaY = this.position.y - check.position.y;
                 var angle = Math.atan2(deltaX, deltaY);
+                
+                this.gameServer.setAsMovingNode(check);
+                check.moveEngineTicks += 1;
+                this.moveEngineTicks += 1;
 
-                var move = (allowDist - dist) / 2;
+                var move = allowDist - dist;
 
-                X += Math.floor(Math.sin(angle) * move);
-                Y += Math.floor(Math.cos(angle) * move);
+                X += Math.sin(angle) * move / 2;
+                Y += Math.cos(angle) * move / 2;
             }
         }
     }
