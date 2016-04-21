@@ -174,12 +174,9 @@ MotherCell.prototype.update = function(gameServer) {
     if (this.mass > 222) {
         // Always spawn food if the mother cell is larger than 222
         var cellSize = gameServer.config.foodMass;
-        if (this.mass > 222 + cellSize * 2) { // Spawn it twice if possible
-            this.spawnFood(gameServer);
-            this.spawnFood(gameServer);
-            this.mass -= cellSize;
-            this.mass -= cellSize;
-        } else if (this.mass > 222 + cellSize) {
+        var remaining = this.mass - 222;
+        var maxAmount = Math.min(Math.floor(remaining / cellSize), 2);
+        for (var i = 0; i < maxAmount; i++) {
             this.spawnFood(gameServer);
             this.mass -= cellSize;
         }
@@ -231,7 +228,7 @@ MotherCell.prototype.abs = function(n) {
 
 MotherCell.prototype.spawnFood = function(gameServer) {
     // Get starting position
-    var angle = Math.random() * 6.28; // (Math.PI * 2) ??? Precision is not our greatest concern here
+    var angle = Math.random() * 6.28;
     var r = this.getSize();
     var pos = {
         x: this.position.x + (r * Math.sin(angle)),
