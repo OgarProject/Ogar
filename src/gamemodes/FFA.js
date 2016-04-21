@@ -43,10 +43,14 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
     // Check if there are ejected mass in the world.
     if (gameServer.nodesEjected.length > 0) {
         var index = Math.floor(Math.random() * 100) + 1;
-        if (index <= gameServer.config.ejectSpawnPlayer) {
+        if (index >= gameServer.config.ejectSpawnPlayer) {
             // Get ejected cell
-            var index = Math.floor(Math.random() * gameServer.nodesEjected.length);
+            index = Math.floor(Math.random() * gameServer.nodesEjected.length);
             var e = gameServer.nodesEjected[index];
+            if (e.moveEngineTicks > 0) {
+                // Ejected cell is currently moving
+                gameServer.spawnPlayer(player, pos, startMass);
+            }
 
             // Remove ejected mass
             gameServer.removeNode(e);
@@ -56,7 +60,7 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
                 x: e.position.x,
                 y: e.position.y
             };
-            startMass = e.mass;
+            startMass = Math.max(e.mass, gameServer.config.playerStartMass);
 
             var color = e.getColor();
             player.setColor({
@@ -101,4 +105,4 @@ FFA.prototype.updateLB = function(gameServer) {
     }
 
     this.rankOne = lb[0];
-};
+}
