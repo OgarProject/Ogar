@@ -555,7 +555,7 @@ GameServer.prototype.checkCellCollision = function(cell, check) {
     return ({
         cellDist: dist,
         collideDist: collisionDist,
-        cellMult: (cell.getSpeed() / check.getSpeed()) / 2,
+        cellMult: (Math.sqrt(check.getSize() * 100) / Math.sqrt(cell.getSize() * 100)) / 3,
         cellAngle: angle,
         collided: (dist < collisionDist)
     });
@@ -701,7 +701,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
 
     // Calculate customized speed for splitting cells
     var t = Math.PI * Math.PI;
-    var modifier = 3 + Math.log(1 + mass) / 10;
+    var modifier = 3 + Math.log(1 + mass) / (10 + Math.log(1 + mass));
     var splitSpeed = this.config.playerSpeed * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);
 
     // Calculate new position
@@ -713,7 +713,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Create cell
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(splitSpeed, 12, 0.87);
+    newCell.setMoveEngineData(splitSpeed, 12, 0.88);
     // Cells won't collide immediately
     newCell.collisionRestoreTicks = 12;
     parent.collisionRestoreTicks = 12;
