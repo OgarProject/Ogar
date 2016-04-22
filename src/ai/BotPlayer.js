@@ -84,8 +84,8 @@ BotPlayer.prototype.decide = function(cell) {
         var influence = 0;
         if (check.cellType == 0) {
             // Player cell
-            if (cell.owner.gameServer.gameMode.hasTeams && (cell.owner.team == check.owner.team)) influence = -1; // Same team cell
-            else if (cell.mass / 1.3 > check.mass) influence = check.getSize(); // Can eat it
+            if (this.gameServer.gameMode.haveTeams && (cell.owner.team == check.owner.team)) influence = 0; // Same team cell
+            else if (cell.mass / 1.3 > check.mass) influence = check.getSize() * 4; // Can eat it
             else if (check.mass / 1.3 > cell.mass) influence = -check.getSize(); // Can eat me
         } else if (check.cellType == 1) {
             // Food
@@ -123,8 +123,8 @@ BotPlayer.prototype.decide = function(cell) {
         var force = displacement.normalize().scale(influence);
 
         // Splitting conditions
-        if (check.cellType == 0 && cell.mass / 2.6 > check.mass &&
-            !split && this.splitCooldown == 0 && this.cells.length < 3) {
+        if (check.cellType == 0 && cell.mass / 2.6 > check.mass && cell.mass / 5 < check.mass &&
+            (!split) && this.splitCooldown == 0 && this.cells.length < 3) {
                 
             var endDist = this.splitDistance(cell);
             
@@ -144,15 +144,17 @@ BotPlayer.prototype.decide = function(cell) {
     // Check for splitkilling and threats
     if (split) {
         // Can be shortened but I'm too lazy
-        if (threats.length > 0) if (this.largest(threats).mass / 2.6 > cell.mass) { // ??? but works
-            // Splitkill the target
-            this.mouse = {
-                x: splitTarget.position.x,
-                y: splitTarget.position.y
-            };
-            this.splitCooldown = 16;
-            this.gameServer.splitCells(this);
-            return;
+        if (threats.length > 0) {
+            if (this.largest(threats).mass / 2.6 > cell.mass) { // ??? but works
+                // Splitkill the target
+                this.mouse = {
+                    x: splitTarget.position.x,
+                    y: splitTarget.position.y
+                };
+                this.splitCooldown = 16;
+                this.gameServer.splitCells(this);
+                return;
+            }
         }
         else {
             // Still splitkill the target
@@ -177,7 +179,7 @@ BotPlayer.prototype.largest = function(list) {
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = list.valueOf();
     sorted.sort(function(a, b) {
-        return a.mass - b.mass;
+        return b.mass - a.mass;
     });
 
     return sorted[0];
