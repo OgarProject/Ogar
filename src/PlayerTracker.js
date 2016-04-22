@@ -373,8 +373,8 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
 
         // Get spectate player's location and calculate zoom amount
-        var specZoom = Math.min(Math.sqrt(100 * specPlayer.score), 444);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.7;
+        var specZoom = Math.min(Math.sqrt(100 * specPlayer.score), 555);
+        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6;
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
@@ -415,7 +415,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
 
     // Use calcViewBox's way of looking for nodes
     var newVisible = this.calcVisibleNodes();
-    var specZoom = 444;
+    var specZoom = 222;
     specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6; // Constant zoom
     this.sendPosPacket(specZoom);
     return newVisible;
