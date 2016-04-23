@@ -76,8 +76,8 @@ Cell.prototype.getSpeed = function() {
     // Old formulas:
     // return 5 + (20 * (1 - (this.mass/(70+this.mass))));
     // return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
-    var tau = Math.PI * Math.PI;
-    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -Math.PI / tau / 1.5);
+    var t = Math.PI * Math.PI;
+    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -Math.PI / t / 1.5);
 };
 
 Cell.prototype.setAngle = function(radians) {
@@ -141,9 +141,25 @@ Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
     return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
 };
 
-Cell.prototype.visibleCheck = function(box, centerPos) {
+Cell.prototype.visibleCheck = function(box, centerPos, cells) {
     // Checks if this cell is visible to the player
-    return this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
+    if (this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX)) {
+        // It is
+        // To save perfomance, check if any client's cell collides with this cell
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            if (!cell) continue;
+            
+            var dist = this.getDist(this.position.x, this.position.y, cell.position.x, cell.position.y);
+            var collideDist = cell.getSize() + this.getSize();
+            
+            if (dist < collideDist) {
+                return 2;
+            }// Colliding with one
+        }
+        return 1; // Not colliding with any
+    }
+    else return 0;
 };
 
 Cell.prototype.calcMovePhys = function(config) {
