@@ -126,7 +126,7 @@ BotPlayer.prototype.decide = function(cell) {
         if (check.cellType == 0 && cell.mass / 2.6 > check.mass && cell.mass / 5 < check.mass &&
             (!split) && this.splitCooldown == 0 && this.cells.length < 3) {
                 
-            var endDist = this.splitDistance(cell);
+            var endDist = Math.max(this.splitDistance(cell), cell.getSize() * 4);
             
             if (distance < endDist - cell.getSize() - check.getSize()) {
                 splitTarget = check;
