@@ -174,12 +174,9 @@ MotherCell.prototype.update = function(gameServer) {
     if (this.mass > 222) {
         // Always spawn food if the mother cell is larger than 222
         var cellSize = gameServer.config.foodMass;
-        if (this.mass > 222 + cellSize * 2) { // Spawn it twice if possible
-            this.spawnFood(gameServer);
-            this.spawnFood(gameServer);
-            this.mass -= cellSize;
-            this.mass -= cellSize;
-        } else if (this.mass > 222 + cellSize) {
+        var remaining = this.mass - 222;
+        var maxAmount = Math.min(Math.floor(remaining / cellSize), 2);
+        for (var i = 0; i < maxAmount; i++) {
             this.spawnFood(gameServer);
             this.mass -= cellSize;
         }
@@ -231,7 +228,7 @@ MotherCell.prototype.abs = function(n) {
 
 MotherCell.prototype.spawnFood = function(gameServer) {
     // Get starting position
-    var angle = Math.random() * 6.28; // (Math.PI * 2) ??? Precision is not our greatest concern here
+    var angle = Math.random() * 6.28;
     var r = this.getSize();
     var pos = {
         x: this.position.x + (r * Math.sin(angle)),
@@ -264,13 +261,4 @@ MotherCell.prototype.onRemove = function(gameServer) {
     if (index != -1) {
         gameServer.gameMode.nodesMother.splice(index, 1);
     }
-};
-
-MotherCell.prototype.visibleCheck = function(box, centerPos) {
-    // Checks if this cell is visible to the player
-    var cellSize = this.getSize();
-    var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
-    var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
-
-    return (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
 };
