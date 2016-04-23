@@ -92,7 +92,7 @@ PlayerCell.prototype.collision = function(gameServer) {
                 if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) continue;
 
                 // Call gameserver's function to collide cells
-                var change = gameServer.cellCollision(this, cell, calcInfo);
+                gameServer.cellCollision(this, cell, calcInfo);
             }
         }
     }
@@ -100,19 +100,19 @@ PlayerCell.prototype.collision = function(gameServer) {
     gameServer.gameMode.onCellMove(this, gameServer);
 
     // Check to ensure we're not passing the world border (shouldn't get closer than a quarter of the cell's diameter)
-    if (this.position.x < config.borderLeft + r / 2) {
-        this.position.x = config.borderLeft + r / 2;
+    if (this.position.x < -config.borderLeft + r / 2) {
+        this.position.x = -config.borderLeft + r / 2;
     }
     if (this.position.x > config.borderRight - r / 2) {
         this.position.x = config.borderRight - r / 2;
     }
-    if (this.position.y < config.borderTop + r / 2) {
-        this.position.y = config.borderTop + r / 2;
+    if (this.position.y < -config.borderTop + r / 2) {
+        this.position.y = -config.borderTop + r / 2;
     }
     if (this.position.y > config.borderBottom - r / 2) {
         this.position.y = config.borderBottom - r / 2;
     }
-}
+};
 
 // Override
 
