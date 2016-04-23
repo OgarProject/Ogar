@@ -262,12 +262,3 @@ MotherCell.prototype.onRemove = function(gameServer) {
         gameServer.gameMode.nodesMother.splice(index, 1);
     }
 };
-
-MotherCell.prototype.visibleCheck = function(box, centerPos) {
-    // Checks if this cell is visible to the player
-    var cellSize = this.getSize();
-    var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
-    var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
-
-    return (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
-};
