@@ -13,20 +13,6 @@ PlayerCell.prototype = new Cell();
 
 // Main Functions
 
-PlayerCell.prototype.visibleCheck = function(box, centerPos) {
-    // Use old fashioned checking method if cell is small
-    if (this.mass < 100) {
-        return this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
-    }
-
-    // Checks if this cell is visible to the player
-    var cellSize = this.getSize();
-    var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
-    var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
-
-    return (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
-};
-
 PlayerCell.prototype.simpleCollide = function(check, d) {
     // Simple collision check
     var len = 2 * d >> 0; // Width of cell + width of the box (Int)
