@@ -186,21 +186,21 @@ Cell.prototype.calcMovePhys = function(config) {
     }
 
     // Border check - Bouncy physics
-    var radius = 40;
-    if ((this.position.x - radius) < config.borderLeft) {
+    var radius = this.getSize();
+    if ((this.position.x - radius) < -config.borderLeft) {
         // Flip angle horizontally - Left side
         this.angle = 6.28 - this.angle;
-        X = config.borderLeft + radius;
+        X = -config.borderLeft + radius;
     }
     if ((this.position.x + radius) > config.borderRight) {
         // Flip angle horizontally - Right side
         this.angle = 6.28 - this.angle;
         X = config.borderRight - radius;
     }
-    if ((this.position.y - radius) < config.borderTop) {
+    if ((this.position.y - radius) < -config.borderTop) {
         // Flip angle vertically - Top side
         this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
-        Y = config.borderTop + radius;
+        Y = -config.borderTop + radius;
     }
     if ((this.position.y + radius) > config.borderBottom) {
         // Flip angle vertically - Bottom side
