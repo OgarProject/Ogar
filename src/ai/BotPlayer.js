@@ -85,14 +85,18 @@ BotPlayer.prototype.decide = function(cell) {
         if (check.cellType == 0) {
             // Player cell
             if (this.gameServer.gameMode.haveTeams && (cell.owner.team == check.owner.team)) influence = 0; // Same team cell
-            else if (cell.mass / 1.3 > check.mass) influence = check.getSize() * 4; // Can eat it
+            else if (cell.mass / 1.3 > check.mass) influence = check.getSize() * 2.5; // Can eat it
             else if (check.mass / 1.3 > cell.mass) influence = -check.getSize(); // Can eat me
         } else if (check.cellType == 1) {
             // Food
             influence = 1;
         } else if (check.cellType == 2) {
             // Virus
-            if (cell.mass / 1.3 > check.mass) influence = -0.8; // Can eat it
+            if (cell.mass / 1.3 > check.mass) {
+                // Can eat it
+                if (this.cells.length == this.gameServer.config.playerMaxCells) influence = check.getSize() * 2.5; // Won't explode
+                else influence = -1; // Can explode
+            }
         } else if (check.cellType == 3) {
             // Ejected mass
             if (cell.mass / 1.3 > check.mass) influence = check.getSize();
