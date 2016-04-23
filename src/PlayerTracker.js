@@ -10,6 +10,7 @@ function PlayerTracker(gameServer, socket) {
     this.nodeAdditionQueue = [];
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
+    this.collidingNodes = []; // Perfomance save; all nodes colliding with player's cells
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
     this.score = 0; // Needed for leaderboard
@@ -113,6 +114,9 @@ PlayerTracker.prototype.getTeam = function() {
 PlayerTracker.prototype.update = function() {
     // Async update, perfomance reasons
     setTimeout(function() {
+        // First reset colliding nodes
+        this.collidingNodes = [];
+        
         // Move packet update
         if (this.movePacketTriggered) {
             this.movePacketTriggered = false;
@@ -432,9 +436,12 @@ PlayerTracker.prototype.calcVisibleNodes = function() {
             continue;
         }
 
-        if (node.visibleCheck(this.viewBox, this.centerPos) || node.owner == this) {
+        var check = node.visibleCheck(this.viewBox, this.centerPos, this.cells);
+        if (check > 0 || node.owner == this) {
             // Cell is in range of viewBox
             newVisible.push(node);
+            // Check if it's colliding with one of player's cells
+            if (check == 2) this.collidingNodes.push(node);
         }
     }
     return newVisible;
