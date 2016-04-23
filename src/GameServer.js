@@ -253,9 +253,11 @@ GameServer.prototype.getNewPlayerID = function() {
 };
 
 GameServer.prototype.getRandomPosition = function() {
+    var xSum = this.config.borderRight + this.config.borderLeft;
+    var ySum = this.config.borderBottom + this.config.borderTop;
     return {
-        x: Math.floor(Math.random() * (this.config.borderRight - this.config.borderLeft) + this.config.borderLeft),
-        y: Math.floor(Math.random() * (this.config.borderBottom - this.config.borderTop) + this.config.borderTop)
+        x: Math.floor(Math.random() * xSum - this.config.borderLeft),
+        y: Math.floor(Math.random() * ySum - this.config.borderTop)
     };
 };
 
@@ -411,10 +413,10 @@ GameServer.prototype.mainLoop = function() {
 
                     // Use sort function
                     clients.sort(function(a, b) {
-                        return a.getScore(true) - b.getScore(true);
+                        return b.playerTracker.getScore(true) - a.playerTracker.getScore(true);
                     });
-                    this.largestClient = clients[0];
-                } else this.largestClient = this.leaderboard[0];
+                    this.largestClient = clients[0].playerTracker;
+                } else this.largestClient = this.gameMode.rankOne;
 
                 this.tickMain = 0; // Reset
             }
