@@ -202,7 +202,7 @@ Cell.prototype.calcMovePhys = function(config) {
     }
 
     // Border check - Bouncy physics
-    var radius = this.getSize();
+    var radius = 40;
     if ((this.position.x - radius) < -config.borderLeft) {
         // Flip angle horizontally - Left side
         this.angle = 6.28 - this.angle;
