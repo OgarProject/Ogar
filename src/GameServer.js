@@ -317,7 +317,7 @@ GameServer.prototype.addNode = function(node) {
 
         // client.nodeAdditionQueue is only used by human players, not bots
         // for bots it just gets collected forever, using ever-increasing amounts of memory
-        if ('_socket' in client.socket && node.visibleCheck(client.viewBox, client.centerPos)) {
+        if ('_socket' in client.socket && node.visibleCheck(client.viewBox, client.centerPos, client.cells)) {
             client.nodeAdditionQueue.push(node);
         }
     }
@@ -799,10 +799,10 @@ GameServer.prototype.getCellsInRange = function(cell) {
     var list = [];
     var squareR = cell.getSquareSize(); // Get cell squared radius
 
-    // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
-    var len = cell.owner.visibleNodes.length;
+    // Loop through all cells that are colliding with the player's cells
+    var len = cell.owner.collidingNodes.length;
     for (var i = 0; i < len; i++) {
-        var check = cell.owner.visibleNodes[i];
+        var check = cell.owner.collidingNodes[i];
 
         if (typeof check === 'undefined') {
             continue;
