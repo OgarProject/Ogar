@@ -143,7 +143,16 @@ Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
 
 Cell.prototype.visibleCheck = function(box, centerPos, cells) {
     // Checks if this cell is visible to the player
-    if (this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX)) {
+    var isThere = false;
+    if (this.mass < 100) isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
+    else {
+        var cellSize = this.getSize();
+        var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
+        var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
+    
+        isThere = (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
+    }
+    if (isThere) {
         // It is
         // To save perfomance, check if any client's cell collides with this cell
         for (var i = 0; i < cells.length; i++) {
