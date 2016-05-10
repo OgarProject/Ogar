@@ -49,6 +49,8 @@ Commands.list = {
         console.log("[Console] status                       : get server status");
         console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
         console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
+        console.log("[Console] pl                           : alias for playerlist");
+        console.log("[Console] st                           : alias for status");
         console.log("[Console] ====================================================");
     },
     addbot: function(gameServer, split) {
@@ -515,4 +517,11 @@ Commands.list = {
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },
+    //Aliases
+    st: function (gameServer, split) {
+        Commands.list.status(gameServer, split);
+    },
+    pl: function(gameServer, split){
+        Commands.list.playerlist(gameServer, split);
+    }
 };
