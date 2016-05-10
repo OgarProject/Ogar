@@ -37,6 +37,7 @@ Commands.list = {
         console.log("[Console] food [X] [Y] [mass]          : spawn food at specified Location");
         console.log("[Console] gamemode [id]                : change server gamemode");
         console.log("[Console] kick [PlayerID]              : kick player or bot by client ID");
+        console.log("[Console] kickall                      : kick all players and bots");
         console.log("[Console] kill [PlayerID]              : kill cell(s) by client ID");
         console.log("[Console] killall                      : kill everyone");
         console.log("[Console] mass [PlayerID] [mass]       : set cell(s) mass by client ID");
@@ -227,6 +228,17 @@ Commands.list = {
                 console.log("[Console] Kicked " + client.name);
                 break;
             }
+        }
+    },
+    kickall: function(gameServer, split) {
+        for (var i in gameServer.clients) {
+                var client = gameServer.clients[i].playerTracker;
+                var len = client.cells.length;
+                for (var j = 0; j < len; j++) {
+                    gameServer.removeNode(client.cells[0]);
+                }
+                client.socket.close();
+                console.log("[Console] Kicked " + client.name);
         }
     },
     kill: function(gameServer, split) {
