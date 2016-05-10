@@ -460,7 +460,7 @@ Commands.list = {
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
         console.log("[Console] Players: " + humans + " - Bots: " + bots);
         console.log("[Console] Server has been running for " + process.uptime() + " seconds");
-        console.log("[Console] Current memory usage: " + process.memoryUsage().heapUsed / 1000 + "/" + process.memoryUsage().heapTotal / 1000 + " kb");
+        console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10)/10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10)/10 + " mb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
     },
     tp: function(gameServer, split) {
