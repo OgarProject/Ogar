@@ -29,7 +29,6 @@ function GameServer() {
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
-    this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
     this.bots = new BotLoader(this);
     this.log = new Logger();
@@ -404,7 +403,6 @@ GameServer.prototype.mainLoop = function() {
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
-                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
 
                 if (!this.gameMode.specByLeaderboard) {
                     // Get client with largest score if gamemode doesn't have a leaderboard
