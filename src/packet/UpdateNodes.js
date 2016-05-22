@@ -19,19 +19,21 @@ UpdateNodes.prototype.build = function() {
     // Check for invalid nodes in any case
     var deadCells = [];
     for (var i = 0; i < this.destroyQueue.length; i++) {
-        if (this.destroyQueue[i] && this.destroyQueue[i].getKiller())
-            deadCells.push(this.destroyQueue[i]);
+        deadCells.push(this.destroyQueue[i]);
     }
     
     buffer.setUint16(deadCells.length);                                         // Eat actions length
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
-        buffer.setUint32(node.getKiller().nodeId);                              // Eaten ID
+        var id = 0;
+        if (node.getKiller()) id = node.getKiller().nodeId;
+        buffer.setUint32(id);                                                   // Eaten ID
         buffer.setUint32(node.nodeId);                                          // Eater ID
     }
     
     for (var i = 0; i < this.nodes.length; i++) {                               // Update nodes
         var node = this.nodes[i];
+
         if (node.nodeId == 0) continue; // Error!
         buffer.setUint32(node.nodeId);                                          // Node ID
         buffer.setInt32(node.position.x + this.scrambleX);                      // Node's X pos
@@ -72,7 +74,7 @@ UpdateNodes.prototype.build = function() {
     
     // Add non-visible cells to the "dead cells" list
     for (var i = 0; i < this.nonVisibleNodes.length; i++) {
-        if (this.nonVisibleNodes[i]) deadCells.push(this.nonVisibleNodes[i]);
+        deadCells.push(this.nonVisibleNodes[i]);
     }
     
     if (this.protocolVersion != 5) {
