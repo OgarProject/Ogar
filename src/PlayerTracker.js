@@ -114,6 +114,9 @@ PlayerTracker.prototype.getTeam = function() {
 PlayerTracker.prototype.update = function() {
     // Async update, perfomance reasons
     setTimeout(function() {
+        // Don't send any messages if client didn't respond with protocol version
+        if (this.socket.packetHandler.protocolVersion == 0) return;
+        
         // First reset colliding nodes
         this.collidingNodes = [];
         
@@ -218,7 +221,12 @@ PlayerTracker.prototype.update = function() {
     
         // Update leaderboard
         if (this.tickLeaderboard <= 0) {
-            this.socket.sendPacket(this.gameServer.lb_packet);
+            this.socket.sendPacket(new Packet.UpdateLeaderboard(
+                this.gameServer.leaderboard,
+                this.gameServer.gameMode.packetLB,
+                this.protocolVersion,
+                this.pID
+            ));
             this.tickLeaderboard = 10; // 20 ticks = 1 second
         } else {
             this.tickLeaderboard--;
