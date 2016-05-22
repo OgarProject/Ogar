@@ -4,7 +4,7 @@ function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
     // Detect protocol version - we can do something about it later
-    this.protocol = 0;
+    this.protocolVersion = 0;
 
     this.pressQ = false;
     this.pressW = false;
@@ -37,23 +37,26 @@ PacketHandler.prototype.handleMessage = function(message) {
 
     switch (packetId) {
         case 0:
-            // Check for invalid packets
-            if ((view.byteLength + 1) % 2 == 1) {
-                break;
-            }
-
             // Set Nickname
-            var nick = "";
-            var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
-            for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
-                var charCode = view.getUint16(i, true);
-                if (charCode == 0) {
+            if (this.protocolVersion == 5) {
+                // Check for invalid packets
+                if ((view.byteLength + 1) % 2 == 1) {
                     break;
                 }
-
-                nick += String.fromCharCode(charCode);
+                var nick = "";
+                var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
+                for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
+                    var charCode = view.getUint16(i, true);
+                    if (charCode == 0) {
+                        break;
+                    }
+    
+                    nick += String.fromCharCode(charCode);
+                }
+                this.setNickname(nick);
+            } else {
+                this.setNickname(message.slice(1, message.length - 1).toString());
             }
-            this.setNickname(nick);
             break;
         case 1:
             // Spectate mode
@@ -87,11 +90,12 @@ PacketHandler.prototype.handleMessage = function(message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
-        case 255:
+        case 254:
             // Connection Start
             if (view.byteLength == 5) {
-                this.protocol = view.getUint32(1, true);
-                // Send SetBorder packet first
+                this.protocolVersion = view.getUint32(1, true);
+                // Send on connection packets
+                this.socket.sendPacket(new Packet.ClearNodes(this.protocolVersion));
                 var c = this.gameServer.config;
                 this.socket.sendPacket(new Packet.SetBorder(
                     c.borderLeft + this.socket.playerTracker.scrambleX,
@@ -111,6 +115,9 @@ PacketHandler.prototype.setNickname = function(newNick) {
     if (client.cells.length < 1) {
         // Set name first
         client.setName(newNick);
+        
+        // Clear client's nodes
+        this.socket.sendPacket(new Packet.ClearNodes());
 
         // If client has no cells... then spawn a player
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer, client);
