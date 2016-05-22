@@ -21,7 +21,7 @@ DynamicBuffer.prototype.setStringUTF8 = function(value) {
 
 DynamicBuffer.prototype.setStringUnicode = function(value) {
     for (var i = 0; i < value.length; i++) {
-        this.tempDataView.setUint8(0, value.charCodeAt(i), false);
+        this.tempDataView.setUint16(0, value.charCodeAt(i), false);
         this.moveTemp(2);
     }
 };
