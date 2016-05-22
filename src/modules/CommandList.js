@@ -37,6 +37,7 @@ Commands.list = {
         console.log("[Console] food [X] [Y] [mass]          : spawn food at specified Location");
         console.log("[Console] gamemode [id]                : change server gamemode");
         console.log("[Console] kick [PlayerID]              : kick player or bot by client ID");
+        console.log("[Console] kickall                      : kick all players and bots");
         console.log("[Console] kill [PlayerID]              : kill cell(s) by client ID");
         console.log("[Console] killall                      : kill everyone");
         console.log("[Console] mass [PlayerID] [mass]       : set cell(s) mass by client ID");
@@ -49,6 +50,8 @@ Commands.list = {
         console.log("[Console] status                       : get server status");
         console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
         console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
+        console.log("[Console] pl                           : alias for playerlist");
+        console.log("[Console] st                           : alias for status");
         console.log("[Console] ====================================================");
     },
     addbot: function(gameServer, split) {
@@ -225,6 +228,17 @@ Commands.list = {
                 console.log("[Console] Kicked " + client.name);
                 break;
             }
+        }
+    },
+    kickall: function(gameServer, split) {
+        for (var i in gameServer.clients) {
+                var client = gameServer.clients[i].playerTracker;
+                var len = client.cells.length;
+                for (var j = 0; j < len; j++) {
+                    gameServer.removeNode(client.cells[0]);
+                }
+                client.socket.close();
+                console.log("[Console] Kicked " + client.name);
         }
     },
     kill: function(gameServer, split) {
@@ -459,8 +473,8 @@ Commands.list = {
         //
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
         console.log("[Console] Players: " + humans + " - Bots: " + bots);
-        console.log("[Console] Server has been running for " + process.uptime() + " seconds");
-        console.log("[Console] Current memory usage: " + process.memoryUsage().heapUsed / 1000 + "/" + process.memoryUsage().heapTotal / 1000 + " kb");
+        console.log("[Console] Server has been running for " + Math.floor(process.uptime()/60) + " minutes");
+        console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10)/10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10)/10 + " mb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
     },
     tp: function(gameServer, split) {
@@ -515,4 +529,11 @@ Commands.list = {
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },
+    //Aliases
+    st: function (gameServer, split) {
+        Commands.list.status(gameServer, split);
+    },
+    pl: function(gameServer, split){
+        Commands.list.playerlist(gameServer, split);
+    }
 };
