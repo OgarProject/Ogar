@@ -339,21 +339,13 @@ GameServer.prototype.removeNode = function(node) {
         }
     }
 
-    // Remove from moving cells list
-    index = this.movingNodes.indexOf(node);
-    if (index != -1) {
-        this.movingNodes.splice(index, 1);
-    }
-
     // Special on-remove actions
     node.onRemove(this);
 
     // Animation when eating
     for (var i = 0; i < this.clients.length; i++) {
         var client = this.clients[i].playerTracker;
-        if (!client) {
-            continue;
-        }
+        if (!client) continue;
 
         // Remove from client
         client.nodeDestroyQueue.push(node);
@@ -540,8 +532,8 @@ GameServer.prototype.willCollide = function(mass, pos, isVirus) {
 };
 
 GameServer.prototype.getDist = function(x1, y1, x2, y2) { // Use Pythagoras theorem
-    var deltaX = this.abs(x1 - x2);
-    var deltaY = this.abs(y1 - y2);
+    var deltaX = x1 - x2;
+    var deltaY = y1 - y2;
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
