@@ -14,7 +14,6 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.killedBy; // Cell that ate this cell
     this.gameServer = gameServer;
 
-    this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
     this.moveDecay = 0.85;
     this.angle = 0; // Angle of movement
@@ -159,10 +158,13 @@ Cell.prototype.visibleCheck = function(box, centerPos, cells) {
             var cell = cells[i];
             if (!cell) continue;
             
-            var dist = this.getDist(this.position.x, this.position.y, cell.position.x, cell.position.y);
-            var collideDist = cell.getSize() + this.getSize();
+            var xs = this.position.x - cell.position.x;
+            var ys = this.position.y - cell.position.y;
+            var sqDist = xs * xs + ys * ys;
             
-            if (dist < collideDist) {
+            var collideDist = cell.getSquareSize() + this.getSquareSize();
+            
+            if (sqDist < collideDist) {
                 return 2;
             }// Colliding with one
         }
@@ -173,14 +175,12 @@ Cell.prototype.visibleCheck = function(box, centerPos, cells) {
 
 Cell.prototype.calcMovePhys = function(config) {
     // Move, twice as slower
-    var X = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle) >> 0);
-    var Y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle) >> 0);
+    var X = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle));
+    var Y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle));
 
     // Movement engine
-    if (this.moveEngineSpeed <= this.moveDecay * 3 && this.cellType == 0) this.moveEngineSpeed = 0;
     var speedDecrease = this.moveEngineSpeed - this.moveEngineSpeed * this.moveDecay;
     this.moveEngineSpeed -= speedDecrease / 2; // Decaying speed twice as slower
-    if (this.moveEngineTicks >= 0.5) this.moveEngineTicks -= 0.5; // Ticks passing twice as slower
 
     // Ejected cell collision
     if (this.cellType == 3) {
@@ -197,10 +197,6 @@ Cell.prototype.calcMovePhys = function(config) {
                 var deltaX = this.position.x - check.position.x;
                 var deltaY = this.position.y - check.position.y;
                 var angle = Math.atan2(deltaX, deltaY);
-                
-                this.gameServer.setAsMovingNode(check);
-                check.moveEngineTicks += 1;
-                this.moveEngineTicks += 1;
 
                 var move = allowDist - dist;
 
@@ -234,8 +230,8 @@ Cell.prototype.calcMovePhys = function(config) {
     }
 
     // Set position
-    this.position.x = X >> 0;
-    this.position.y = Y >> 0;
+    this.position.x = X;
+    this.position.y = Y;
 };
 
 // Override these
