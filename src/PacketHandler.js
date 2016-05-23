@@ -55,7 +55,8 @@ PacketHandler.prototype.handleMessage = function(message) {
                 }
                 this.setNickname(nick);
             } else {
-                this.setNickname(message.slice(1, message.length - 1).toString());
+                var name = message.slice(1, message.length - 1).toString().substr(0, this.gameServer.config.playerMaxNickLength);
+                this.setNickname(name);
             }
             break;
         case 1:
