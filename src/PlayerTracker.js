@@ -336,25 +336,24 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
     var len = this.cells.length;
 
-    if (len <= 0) {
-        return; // End the function if no cells exist
-    }
+    if (len <= 0) return;
 
     var X = 0;
     var Y = 0;
-    var allSize = 0; // Focus larger cells to near the center and smaller away
     for (var i = 0; i < len; i++) {
         // Error check
-        if (!this.cells[i]) continue;
+        if (!this.cells[i]) {
+            len--;
+            continue;
+        }
         var cell = this.cells[i];
 
-        X += cell.position.x * cell.mass;
-        Y += cell.position.y * cell.mass;
-        allSize += cell.mass;
+        X += cell.position.x;
+        Y += cell.position.y;
     }
 
-    this.centerPos.x = X / allSize;
-    this.centerPos.y = Y / allSize;
+    this.centerPos.x = X / len;
+    this.centerPos.y = Y / len;
 };
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -389,7 +388,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
 
         // Get spectate player's location and calculate zoom amount
         var specZoom = Math.min(Math.sqrt(100 * specPlayer.getScore(false)), 555);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.8;
+        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4);
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
