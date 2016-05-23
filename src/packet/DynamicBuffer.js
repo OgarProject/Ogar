@@ -12,9 +12,9 @@ module.exports = DynamicBuffer;
 // Setters
 
 DynamicBuffer.prototype.setStringUTF8 = function(value) {
-    var utf8 = this.convertUTF8(value);
+    var utf8 = unescape(encodeURIComponent(value));
     for (var i = 0; i < utf8.length; i++) {
-        this.tempDataView.setUint8(0, utf8[i], false);
+        this.tempDataView.setUint8(0, utf8.charCodeAt(i), false);
         this.moveTemp(1);
     }
 };
@@ -111,36 +111,4 @@ DynamicBuffer.prototype.build = function() {
         view.setUint8(i, this.bytes[i], false);
     }
     return buf;
-};
-
-// Not my work
-DynamicBuffer.prototype.convertUTF8 = function(str) {
-    var utf8 = [];
-    for (var i=0; i < str.length; i++) {
-        var charcode = str.charCodeAt(i);
-        if (charcode < 0x80) utf8.push(charcode);
-        else if (charcode < 0x800) {
-            utf8.push(0xc0 | (charcode >> 6), 
-                      0x80 | (charcode & 0x3f));
-        }
-        else if (charcode < 0xd800 || charcode >= 0xe000) {
-            utf8.push(0xe0 | (charcode >> 12), 
-                      0x80 | ((charcode>>6) & 0x3f), 
-                      0x80 | (charcode & 0x3f));
-        }
-        // surrogate pair
-        else {
-            i++;
-            // UTF-16 encodes 0x10000-0x10FFFF by
-            // subtracting 0x10000 and splitting the
-            // 20 bits of 0x0-0xFFFFF into two halves
-            charcode = 0x10000 + (((charcode & 0x3ff)<<10)
-                      | (str.charCodeAt(i) & 0x3ff));
-            utf8.push(0xf0 | (charcode >>18), 
-                      0x80 | ((charcode>>12) & 0x3f), 
-                      0x80 | ((charcode>>6) & 0x3f), 
-                      0x80 | (charcode & 0x3f));
-        }
-    }
-    return utf8;
 };
