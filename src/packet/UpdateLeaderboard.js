@@ -1,130 +1,66 @@
-function UpdateLeaderboard(leaderboard, packetLB) {
+var DynamicBuffer = require('./DynamicBuffer');
+
+function UpdateLeaderboard(leaderboard, packetLB, protocolVersion, sendingUser) {
     this.leaderboard = leaderboard;
     this.packetLB = packetLB;
+    this.protocolVersion = protocolVersion;
+    this.sendingUser = sendingUser;
 }
 
 module.exports = UpdateLeaderboard;
 
 UpdateLeaderboard.prototype.build = function() {
-    // First, calculate the size
-    var lb = this.leaderboard;
-    var bufferSize = 5;
-    var validElements = 0;
-
+    var buffer = new DynamicBuffer(true);
+    
     switch (this.packetLB) {
-        case 48: // Custom Text List
-            // Get size of packet
-            for (var i = 0; i < lb.length; i++) {
-                if (typeof lb[i] == "undefined") {
-                    continue;
+        case 48:
+            // Custom text list
+            buffer.setUint8(48);                                                // Packet ID
+            buffer.setUint32(this.leaderboard.length);                          // String amount
+            
+            for (var i = 0; i < this.leaderboard.length; i++) {
+                if (this.protocolVersion != 5) {
+                    buffer.setStringUTF8(                                       // UTF-8 string
+                        this.leaderboard[i] ? this.leaderboard[i] : "");
+                    buffer.setUint8(0);                                         // UTF-8 null terminator
+                } else {
+                    buffer.setStringUnicode(                                    // Unicode string
+                        this.leaderboard[i] ? this.leaderboard[i] : "");
+                    buffer.setUint16(0);                                        // Unicode null terminator
                 }
-
-                var item = lb[i];
-                bufferSize += 4; // Empty ID
-                bufferSize += item.length * 2; // String length
-                bufferSize += 2; // Name terminator
-
-                validElements++;
             }
-
-            var buf = new ArrayBuffer(bufferSize);
-            var view = new DataView(buf);
-
-            // Set packet data
-            view.setUint8(0, 49, true); // Packet ID
-            view.setUint32(1, validElements, true); // Number of elements
-            var offset = 5;
-
-            // Loop through strings
-            for (var i = 0; i < lb.length; i++) {
-                if (typeof lb[i] == "undefined") {
-                    continue;
-                }
-
-                var item = lb[i];
-
-                view.setUint32(offset, 0, true);
-                offset += 4;
-
-                for (var j = 0; j < item.length; j++) {
-                    view.setUint16(offset, item.charCodeAt(j), true);
-                    offset += 2;
-                }
-
-                view.setUint16(offset, 0, true);
-                offset += 2;
-            }
-            return buf;
             break;
-        case 49: // FFA-type Packet (List)
-            // Get size of packet
-            for (var i = 0; i < lb.length; i++) {
-                if (typeof lb[i] == "undefined") {
-                    continue;
+        case 49:
+            // FFA leaderboard list
+            buffer.setUint8(49);                                                // Packet ID
+            buffer.setUint32(this.leaderboard.length);                          // Player amount
+            for (var i = 0; i < this.leaderboard.length; i++) {
+                var player = this.leaderboard[i];
+                var name = player.getName();
+                name = name ? name : "";
+                if (this.protocolVersion != 5) {
+                    var isMe = player.pID == this.sendingUser ? 1 : 0;
+                    buffer.setUint8(isMe);                                      // If to display red color text
+                    buffer.setStringUTF8(name);                                 // UTF-8 string
+                    buffer.setUint8(0);                                         // UTF-8 null terminator
+                } else {
+                    if (player.cells[0])
+                        buffer.setUint32(player.cells[0].nodeId);               // First cell node ID
+                    else buffer.setUint32(0);                                   // In case of error
+                    buffer.setStringUnicode(name);                              // Unicode string
+                    buffer.setUint16(0);                                        // Unicode null terminator
                 }
-
-                var item = lb[i];
-                bufferSize += 4; // Element ID
-                bufferSize += item.getName() ? item.getName().length * 2 : 0; // Name
-                bufferSize += 2; // Name terminator
-
-                validElements++;
             }
-
-            var buf = new ArrayBuffer(bufferSize);
-            var view = new DataView(buf);
-
-            // Set packet data
-            view.setUint8(0, this.packetLB, true); // Packet ID
-            view.setUint32(1, validElements, true); // Number of elements
-
-            var offset = 5;
-            for (var i = 0; i < lb.length; i++) {
-                if (typeof lb[i] == "undefined") {
-                    continue;
-                }
-
-                var item = lb[i];
-
-                var nodeID = 0; // Get node id of player's 1st cell
-                if (item.cells[0]) {
-                    nodeID = item.cells[0].nodeId;
-                }
-
-                view.setUint32(offset, nodeID, true);
-                offset += 4;
-
-                // Set name
-                var name = item.getName();
-                if (name) {
-                    for (var j = 0; j < name.length; j++) {
-                        view.setUint16(offset, name.charCodeAt(j), true);
-                        offset += 2;
-                    }
-                }
-
-                view.setUint16(offset, 0, true);
-                offset += 2;
+            break;
+        case 50:
+            // Pie chart
+            buffer.setUint8(50);                                                // Packet ID
+            buffer.setUint32(this.leaderboard.length);                          // Color amount
+            for (var i = 0; i < this.leaderboard.length; i++) {
+                buffer.setFloat32(this.leaderboard[i]);                         // A color's size
             }
-            return buf;
-        case 50: // Teams-type Packet (Pie Chart)
-            validElements = lb.length;
-            bufferSize += (validElements * 4);
-
-            var buf = new ArrayBuffer(bufferSize);
-            var view = new DataView(buf);
-
-            view.setUint8(0, this.packetLB, true); // Packet ID
-            view.setUint32(1, validElements, true); // Number of elements
-
-            var offset = 5;
-            for (var i = 0; i < validElements; i++) {
-                view.setFloat32(offset, lb[i], true); // Number of elements
-                offset += 4;
-            }
-
-            return buf;
-        default:
             break;
     }
+
+    return buffer.build();
 };

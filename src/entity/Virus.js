@@ -15,9 +15,10 @@ Virus.prototype = new Cell();
 Virus.prototype.calcMove = null; // Only for player controlled movement
 
 Virus.prototype.feed = function(feeder, gameServer) {
-    if (this.moveEngineTicks == 0) this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
+    this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
     this.mass += feeder.mass;
     this.fed++; // Increase feed count
+    feeder.setKiller(this);
     gameServer.removeNode(feeder);
 
     // Check if the virus is going to explode
@@ -78,13 +79,13 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
     numSplits -= bigSplits.length;
 
     for (var k = 0; k < bigSplits.length; k++) {
-        angle = Math.random() * 6.28; // Random directions
+        var angle = Math.random() * 6.28; // Random directions
         gameServer.createPlayerCell(client, consumer, angle, bigSplits[k]);
     }
 
     // Splitting
     for (var k = 0; k < numSplits; k++) {
-        angle = Math.random() * 6.28; // Random directions
+        var angle = Math.random() * 6.28; // Random directions
         gameServer.createPlayerCell(client, consumer, angle, splitMass);
     }
 

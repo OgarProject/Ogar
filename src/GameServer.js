@@ -21,15 +21,15 @@ function GameServer() {
     this.lastPlayerId = 1;
     this.clients = [];
     this.largestClient; // Required for spectators
+    
     this.nodes = [];
+    this.nonPlayerNodes = []; // All nodes except player nodes
     this.nodesVirus = []; // Virus nodes
     this.nodesEjected = []; // Ejected mass nodes
     this.nodesPlayer = []; // Nodes controlled by players
 
     this.currentFood = 0;
-    this.movingNodes = []; // For move engine
     this.leaderboard = [];
-    this.lb_packet = new ArrayBuffer(0); // Leaderboard packet
 
     this.bots = new BotLoader(this);
     this.log = new Logger();
@@ -297,6 +297,7 @@ GameServer.prototype.getRandomColor = function() {
 
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
+    if (node.cellType != 0 && node.cellType != 1) this.nonPlayerNodes.push(node);
 
     // Adds to the owning player's screen excluding ejected cells
     if (node.owner && node.cellType != 3) {
@@ -328,6 +329,14 @@ GameServer.prototype.removeNode = function(node) {
     var index = this.nodes.indexOf(node);
     if (index != -1) {
         this.nodes.splice(index, 1);
+    }
+    
+    if (node.cellType != 0 && node.cellType != 1) {
+        // Remove from non-player node list
+        index = this.nonPlayerNodes.indexOf(node);
+        if (index != -1) {
+            this.nonPlayerNodes.splice(index, 1);
+        }
     }
 
     // Remove from moving cells list
@@ -404,7 +413,6 @@ GameServer.prototype.mainLoop = function() {
                 // Update leaderboard with the gamemode's method
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
-                this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
 
                 if (!this.gameMode.specByLeaderboard) {
                     // Get client with largest score if gamemode doesn't have a leaderboard
@@ -546,12 +554,11 @@ GameServer.prototype.checkCellCollision = function(cell, check) {
 
     // Check the two cells for collision
     var collisionDist = cell.getSize() + check.getSize(); // Minimum distance between the two cells
-    var dist = this.getDist(cell.position.x, cell.position.y,
-        check.position.x, check.position.y); // Distance between these two cells
 
     var dY = cell.position.y - check.position.y;
     var dX = cell.position.x - check.position.x;
     var angle = Math.atan2(dX, dY);
+    var dist = Math.sqrt(dX * dX + dY * dY);
 
     return ({
         cellDist: dist,
@@ -621,34 +628,14 @@ GameServer.prototype.updateMoveEngine = function() {
 
 
     // A system to move cells not controlled by players (ex. viruses, ejected mass)
-    len = this.movingNodes.length;
+    len = this.nonPlayerNodes.length;
     for (var i = 0; i < len; i++) {
-        var check = this.movingNodes[i];
-
-        // Recycle unused nodes
-        while ((typeof check == "undefined") && (i < this.movingNodes.length)) {
-            // Remove moving cells that are undefined
-            this.movingNodes.splice(i, 1);
-            check = this.movingNodes[i];
-        }
-
-        if (i >= this.movingNodes.length) {
-            continue;
-        }
-
-        if (check.moveEngineTicks > 0) {
-            check.onAutoMove(this);
-            // If the cell has enough move ticks, then move it
-            check.calcMovePhys(this.config);
-        } else {
-            // Auto move is done
-            check.moveDone(this);
-            // Remove cell from list
-            var index = this.movingNodes.indexOf(check);
-            if (index != -1) {
-                this.movingNodes.splice(index, 1);
-            }
-        }
+        var node = this.nonPlayerNodes[i];
+        
+        if (!node) continue;
+        if (node.moveEngineSpeed <= 0) continue; // No speed
+        node.calcMovePhys(this.config);
+        node.onAutoMove(this);
     }
 };
 
@@ -665,10 +652,6 @@ GameServer.prototype.cellEating = function(cell) {
         check.setKiller(cell);
         this.removeNode(check);
     }
-};
-
-GameServer.prototype.setAsMovingNode = function(node) {
-    if (this.movingNodes.indexOf(node) == -1) this.movingNodes.push(node);
 };
 
 GameServer.prototype.splitCells = function(client) {
@@ -776,7 +759,6 @@ GameServer.prototype.ejectMass = function(client) {
 
         this.nodesEjected.push(ejected);
         this.addNode(ejected);
-        this.setAsMovingNode(ejected);
     }
 };
 
@@ -788,11 +770,10 @@ GameServer.prototype.shootVirus = function(parent) {
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, this);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(135, 20, 0.85);
+    newVirus.setMoveEngineData(115, 20, 0.9);
 
     // Add to moving cells list
     this.addNode(newVirus);
-    this.setAsMovingNode(newVirus);
 };
 
 GameServer.prototype.getCellsInRange = function(cell) {
@@ -847,10 +828,6 @@ GameServer.prototype.getCellsInRange = function(cell) {
         var multiplier = 1.3;
 
         switch (check.getType()) {
-            case 1: // Food cell
-                list.push(check);
-                check.inRange = true; // skip future collision checks for this food
-                continue;
             case 0: // Players
                 // Can't eat self if it's not time to recombine yet
                 if (check.owner == cell.owner) {
@@ -860,7 +837,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
                         if (!cell.owner.mergeOverride) continue;
                     }
 
-                    multiplier = 1.00;
+                    multiplier = 1.0;
                 }
 
                 // Can't eat team members
