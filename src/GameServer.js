@@ -297,7 +297,7 @@ GameServer.prototype.getRandomColor = function() {
 
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
-    if (node.cellType != 0 && node.cellType != 1) this.nonPlayerNodes.push(node);
+    if (node.cellType != 0) this.nonPlayerNodes.push(node);
 
     // Adds to the owning player's screen excluding ejected cells
     if (node.owner && node.cellType != 3) {
@@ -331,7 +331,7 @@ GameServer.prototype.removeNode = function(node) {
         this.nodes.splice(index, 1);
     }
     
-    if (node.cellType != 0 && node.cellType != 1) {
+    if (node.cellType != 0) {
         // Remove from non-player node list
         index = this.nonPlayerNodes.indexOf(node);
         if (index != -1) {
@@ -689,7 +689,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Create cell
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(splitSpeed, 12, 0.88);
+    newCell.setMoveEngineData(splitSpeed, 0.88);
     // Cells won't collide immediately
     newCell.collisionRestoreTicks = 12;
     parent.collisionRestoreTicks = 12;
@@ -746,7 +746,7 @@ GameServer.prototype.ejectMass = function(client) {
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), client, startPos, this.config.ejectMass, this);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(this.config.ejectSpeed, 20, 0.88);
+        ejected.setMoveEngineData(this.config.ejectSpeed, 0.88);
         ejected.setColor(cell.getColor());
 
         this.nodesEjected.push(ejected);
@@ -762,7 +762,7 @@ GameServer.prototype.shootVirus = function(parent) {
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, this);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(115, 20, 0.9);
+    newVirus.setMoveEngineData(115, 0.9);
 
     // Add to moving cells list
     this.addNode(newVirus);
