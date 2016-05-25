@@ -297,7 +297,7 @@ GameServer.prototype.getRandomColor = function() {
 
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
-    if (node.cellType != 0 && node.cellType != 1) this.nonPlayerNodes.push(node);
+    if (node.cellType != 0) this.nonPlayerNodes.push(node);
 
     // Adds to the owning player's screen excluding ejected cells
     if (node.owner && node.cellType != 3) {
@@ -331,18 +331,12 @@ GameServer.prototype.removeNode = function(node) {
         this.nodes.splice(index, 1);
     }
     
-    if (node.cellType != 0 && node.cellType != 1) {
+    if (node.cellType != 0) {
         // Remove from non-player node list
         index = this.nonPlayerNodes.indexOf(node);
         if (index != -1) {
             this.nonPlayerNodes.splice(index, 1);
         }
-    }
-
-    // Remove from moving cells list
-    index = this.movingNodes.indexOf(node);
-    if (index != -1) {
-        this.movingNodes.splice(index, 1);
     }
 
     // Special on-remove actions
@@ -351,9 +345,7 @@ GameServer.prototype.removeNode = function(node) {
     // Animation when eating
     for (var i = 0; i < this.clients.length; i++) {
         var client = this.clients[i].playerTracker;
-        if (!client) {
-            continue;
-        }
+        if (!client) continue;
 
         // Remove from client
         client.nodeDestroyQueue.push(node);
@@ -540,8 +532,8 @@ GameServer.prototype.willCollide = function(mass, pos, isVirus) {
 };
 
 GameServer.prototype.getDist = function(x1, y1, x2, y2) { // Use Pythagoras theorem
-    var deltaX = this.abs(x1 - x2);
-    var deltaY = this.abs(y1 - y2);
+    var deltaX = x1 - x2;
+    var deltaY = y1 - y2;
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
@@ -697,7 +689,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Create cell
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(splitSpeed, 12, 0.88);
+    newCell.setMoveEngineData(splitSpeed, 0.88);
     // Cells won't collide immediately
     newCell.collisionRestoreTicks = 12;
     parent.collisionRestoreTicks = 12;
@@ -754,7 +746,7 @@ GameServer.prototype.ejectMass = function(client) {
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), client, startPos, this.config.ejectMass, this);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(this.config.ejectSpeed, 20, 0.88);
+        ejected.setMoveEngineData(this.config.ejectSpeed, 0.88);
         ejected.setColor(cell.getColor());
 
         this.nodesEjected.push(ejected);
@@ -770,7 +762,7 @@ GameServer.prototype.shootVirus = function(parent) {
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, this);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(115, 20, 0.9);
+    newVirus.setMoveEngineData(115, 0.9);
 
     // Add to moving cells list
     this.addNode(newVirus);

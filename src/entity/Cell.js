@@ -87,9 +87,8 @@ Cell.prototype.getAngle = function() {
     return this.angle;
 };
 
-Cell.prototype.setMoveEngineData = function(speed, ticks, decay) {
+Cell.prototype.setMoveEngineData = function(speed, decay) {
     this.moveEngineSpeed = speed;
-    this.moveEngineTicks = ticks;
     this.moveDecay = isNaN(decay) ? 0.75 : decay;
 };
 
