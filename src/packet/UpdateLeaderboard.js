@@ -40,7 +40,7 @@ UpdateLeaderboard.prototype.build = function() {
                 name = name ? name : "";
                 if (this.protocolVersion != 5) {
                     var isMe = player.pID == this.sendingUser ? 1 : 0;
-                    buffer.setUint8(isMe);                                      // If to display red color text
+                    buffer.setUint32(isMe);                                     // If to display red color text
                     buffer.setStringUTF8(name);                                 // UTF-8 string
                     buffer.setUint8(0);                                         // UTF-8 null terminator
                 } else {
