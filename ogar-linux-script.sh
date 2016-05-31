@@ -204,13 +204,13 @@ fi
 
 case "$1" in
 	install)
-		ogar_install
+		ogar_install $1 $2
 		;;
 	update)
-		ogar_update
+		ogar_update $1 $2
 		;;
 	uninstall)
-		ogar_uninstall
+		ogar_uninstall $1 $2
 		;;
 	"")
 		echo "Blank sub-command. Please specify if you want to install, update or uninstall."
