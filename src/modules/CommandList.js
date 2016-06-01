@@ -61,7 +61,7 @@ Commands.list = {
         }
 
         for (var i = 0; i < add; i++) {
-            gameServer.bots.addBot();
+            setTimeout(gameServer.bots.addBot.bind(gameServer.bots), i);
         }
         console.log("[Console] Added " + add + " player bots");
     },
