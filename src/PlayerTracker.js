@@ -26,6 +26,8 @@ function PlayerTracker(gameServer, socket) {
     this.mouseCells = []; // For individual cell movement
     this.tickLeaderboard = 0;
     this.tickViewBox = 0;
+    this.ticksLeft = 0; // Individual updates
+    this.cellTicksLeft = 0; // Individual updates for cells
 
     this.team = 0;
     this.spectate = false;
