@@ -1,6 +1,7 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
+    this.ticksLeft = 0; // Individual updates
     this.color = {
         r: 0,
         g: 255,
@@ -75,8 +76,7 @@ Cell.prototype.getSpeed = function() {
     // Old formulas:
     // return 5 + (20 * (1 - (this.mass/(70+this.mass))));
     // return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
-    var t = Math.PI * Math.PI;
-    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -Math.PI / t / 1.5);
+    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -Math.PI / (Math.PI * Math.PI) / 1.5);
 };
 
 Cell.prototype.setAngle = function(radians) {

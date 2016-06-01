@@ -385,19 +385,22 @@ GameServer.prototype.mainLoop = function() {
     this.time = local;
 
     if (!this.run) return;
+    
+    // The node & client updating mechanism is perfomance overhauled
+    // Nodes & clients will update periodically and never all on 25ms/50ms
+    // PlayerTracker and all Cell types have own internal update timer which is measured
+    setTimeout(this.updateClients.bind(this), 0);
+    setTimeout(this.moveTick.bind(this), 0);
+    
 
     if (this.tick >= 25) {
         this.fullTick++;
-        setTimeout(this.moveTick.bind(this), 0);
 
         if (this.fullTick >= 2) {
             // Loop main functions
             setTimeout(this.spawnTick.bind(this), 0);
             setTimeout(this.gamemodeTick.bind(this), 0);
             setTimeout(this.cellUpdateTick.bind(this), 0);
-
-            // Update the client's maps
-            this.updateClients();
 
             // Update cells/leaderboard loop
             this.tickMain++;
@@ -431,14 +434,35 @@ GameServer.prototype.mainLoop = function() {
 };
 
 GameServer.prototype.updateClients = function() {
-    for (var i = 0; i < this.clients.length; i++) {
-        if (typeof this.clients[i] == "undefined") {
-            continue;
-        }
-
-        this.clients[i].playerTracker.antiTeamTick();
-        this.clients[i].playerTracker.update();
+    // The node & client updating mechanism is perfomance overhauled
+    // Nodes & clients will update periodically and never all on 25ms/50ms
+    // PlayerTracker and all Cell types have own internal update timer which is measured
+    
+    var updatedClients = [];
+    
+    var len = this.clients.length;
+    for (var i = 0; i < len; i++) {
+        var client = this.clients[i].playerTracker;
+        if (!client) continue;
+        
+        client.ticksLeft--;
+        if (client.ticksLeft > 0) continue;
+        updatedClients.push(client);
+        
+        client.ticksLeft = 40; // Reset timer
+        
+        client.update();
+        client.antiTeamTick();
     }
+    
+    // Very experimental and currently will freeze the server.
+    // If there are too many updated clients at once, update them a few ticks later
+    /*var maxOnTick = Math.ceil(this.clients.length / 50);
+    if (updatedClients.length > maxOnTick) {
+        for (var i = 0; i < updatedClients.length - maxOnTick; i) {
+            updatedClients[i].ticksLeft += i + 1;
+        }
+    }*/
 };
 
 GameServer.prototype.startingFood = function() {
@@ -586,6 +610,10 @@ GameServer.prototype.updateMoveEngine = function() {
 
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
+        
+        client.cellUpdateTick--;
+        if (client.cellUpdateTick > 0) continue;
+        client.cellUpdateTick = 18;
 
         // Sort client's cells by ascending mass
         var sorted = [];
@@ -623,8 +651,12 @@ GameServer.prototype.updateMoveEngine = function() {
     len = this.nonPlayerNodes.length;
     for (var i = 0; i < len; i++) {
         var node = this.nonPlayerNodes[i];
-        
         if (!node) continue;
+        
+        node.updateTicks--;
+        if (node.updateTicks > 0) continue;
+        node.updateTicks = 25;
+        
         if (node.moveEngineSpeed <= 0) continue; // No speed
         node.calcMovePhys(this.config);
         node.onAutoMove(this);
