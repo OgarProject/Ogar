@@ -372,7 +372,7 @@ GameServer.prototype.updateClients = function () {
 
 GameServer.prototype.updateLeaderboard = function () {
     // Update leaderboard with the gamemode's method
-    if ((this.tickCounter % 40) == 0) {
+    if ((this.tickCounter % 25) == 0) {
         this.leaderboard = [];
         this.gameMode.updateLB(this);
         this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
