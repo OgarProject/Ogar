@@ -350,35 +350,27 @@ GameServer.prototype.removeNode = function(node) {
     }
 };
 
-GameServer.prototype.spawnTick = function() {
+GameServer.prototype.updateSpawn = function() {
     // Spawn food
     this.tickSpawn++;
     if (this.tickSpawn >= this.config.spawnInterval) {
+        this.tickSpawn = 0; // Reset
+        
         this.updateFood(); // Spawn food
         this.virusCheck(); // Spawn viruses
-
-        this.tickSpawn = 0; // Reset
     }
 };
 
-GameServer.prototype.gamemodeTick = function() {
-    // Gamemode tick
-    this.gameMode.onTick(this);
+GameServer.prototype.updateClients = function () {
+    for (var i = 0; i < this.clients.length; i++) {
+        if (typeof this.clients[i] == "undefined") {
+            continue;
+        }
+        this.clients[i].playerTracker.update();
+    }
 };
 
-GameServer.prototype.cellUpdateTick = function() {
-    // Update cells
-    this.updateCells();
-};
-
-GameServer.prototype.mainLoop = function() {
-    // Loop main functions
-    this.updateMoveEngine(); // Move cells
-    this.spawnTick();
-    this.gamemodeTick();
-    this.cellUpdateTick();
-    this.updateClients();
-    
+GameServer.prototype.updateLeaderboard = function () {
     // Update leaderboard with the gamemode's method
     if ((this.tickCounter % 40) == 0) {
         this.leaderboard = [];
@@ -396,17 +388,19 @@ GameServer.prototype.mainLoop = function() {
             this.largestClient = clients[0].playerTracker;
         } else this.largestClient = this.gameMode.rankOne;
     }
-    
-    this.tickCounter++;
 };
 
-GameServer.prototype.updateClients = function() {
-    for (var i = 0; i < this.clients.length; i++) {
-        if (typeof this.clients[i] == "undefined") {
-            continue;
-        }
-        this.clients[i].playerTracker.update();
-    }
+
+GameServer.prototype.mainLoop = function() {
+    // Loop main functions
+    this.updateMoveEngine();
+    this.updateSpawn();
+    this.gameMode.onTick(this);
+    this.updateCells();
+    this.updateClients();
+    this.updateLeaderboard();
+    
+    this.tickCounter++;
 };
 
 GameServer.prototype.startingFood = function() {
