@@ -21,7 +21,7 @@ SetBorder.prototype.build = function(protocol) {
     buffer.writeDouble(this.top);
     buffer.writeDouble(this.right);
     buffer.writeDouble(this.bottom);
-    if (typeof this.gameType != "undefined") {
+    if (typeof this.gameType != "undefined" && this.gameType != null) {
         buffer.writeUInt32(this.gameType >> 0);
         var name = this.serverName;
         if (typeof name == "undefined" || name == null) {
