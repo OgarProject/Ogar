@@ -34,12 +34,16 @@ UpdateLeaderboard.prototype.build = function (protocol) {
                     buffer.writeUInt32LE(0, offset);
                     offset += 4;
                     
-                    if (protocol <= 5)
+                    if (protocol <= 5) {
                         offset += buffer.write(name, offset, 'ucs2');   // string => unicode
-                    else
+                        buffer.writeUInt16LE(0, offset);
+                        offset += 2;
+                    }
+                    else {
                         offset += buffer.write(name, offset);           // string => utf8
-                    buffer.writeUInt8(0, offset);                       // string zero terminator
-                    offset++;
+                        buffer.writeUInt8(0, offset);                   // string zero terminator
+                        offset += 1;
+                    }
                     
                     count++;
                 }
@@ -74,12 +78,16 @@ UpdateLeaderboard.prototype.build = function (protocol) {
                     buffer.writeUInt32LE(isMe ? 1:0, offset);           // isMe flag (previously cell ID)
                     offset += 4;
                     
-                    if (protocol <= 5)
+                    if (protocol <= 5) {
                         offset += buffer.write(name, offset, 'ucs2');   // string => unicode
-                    else
+                        buffer.writeUInt16LE(0, offset);
+                        offset += 2;
+                    }
+                    else {
                         offset += buffer.write(name, offset);           // string => utf8
-                    buffer.writeUInt8(0, offset);                       // string zero terminator
-                    offset += 1;
+                        buffer.writeUInt8(0, offset);                   // string zero terminator
+                        offset += 1;
+                    }
                     
                     count++;
                 }
