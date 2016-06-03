@@ -134,11 +134,14 @@ UpdateNodes.prototype.build5 = function () {
         var cellX = node.position.x + this.scrambleX;
         var cellY = node.position.y + this.scrambleY;
         var cellSize = node.getSize();
+        var skinName = node.getSkin();
         var cellName = node.getName();
+        if (!skinName) skinName = "";
         if (!cellName) cellName = "";
         
         
         var isVirus = (node.spiked & 0x01) != 0;
+        var isSkinPresent = !isVirus && skinName != null && skinName.length > 0;
         var isAgitated = false;                // true = high wave amplitude on a cell outline
         var isEject = node.cellType == 3;
         
@@ -154,11 +157,18 @@ UpdateNodes.prototype.build5 = function () {
         var flags = 0;
         if (isVirus)
             flags |= 0x01;
+        if (isSkinPresent)
+            flags |= 0x04;
         if (isAgitated)
             flags |= 0x10;
         if (isEject)
             flags |= 0x20;
         buffer.writeUInt8(flags >> 0);                  // Flags
+        
+        if (isSkinPresent) {
+            buffer.writeUTF8String(skinName);       // Skin Name in UTF8
+            buffer.writeUInt8(0);                   // Zero-terminator
+        }
         
         for (var j = 0; j < cellName.length && cellName.charCodeAt(j) != 0; j++) {
             buffer.writeUInt16(cellName.charCodeAt(j) >> 0);       // Cell Name in Unicode
@@ -213,7 +223,7 @@ UpdateNodes.prototype.build6 = function () {
         var cellX = node.position.x + this.scrambleX;
         var cellY = node.position.y + this.scrambleY;
         var cellSize = node.getSize();
-        var skinName = null;
+        var skinName = node.getSkin();
         var cellName = node.getName();
         
         var isVirus = (node.spiked & 0x01) != 0;
