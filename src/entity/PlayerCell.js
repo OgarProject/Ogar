@@ -28,7 +28,8 @@ PlayerCell.prototype.calcMergeTime = function(base) {
         // Instant recombine in config or merge command was triggered for this client
         r = true;
     } else {
-        var rec = Math.floor(base + ((0.02 * this.mass))); // base seconds + 0.02% of mass
+        var rec = Math.max(30, 0.02 * this.getSize());
+        rec = Math.max(base, rec);
         if (this.recombineTicks > rec) r = true; // Can combine with other cells
     }
     this.shouldRecombine = r;

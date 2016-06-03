@@ -1,7 +1,6 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    this.ticksLeft = 0; // Individual updates
     this.color = {
         r: 0,
         g: 255,
@@ -15,6 +14,7 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.killedBy; // Cell that ate this cell
     this.gameServer = gameServer;
 
+    this.moveEngineTicks = 0; // Amount of times to loop the movement function
     this.moveEngineSpeed = 0;
     this.moveDecay = 0.85;
     this.angle = 0; // Angle of movement
@@ -26,11 +26,8 @@ module.exports = Cell;
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 
 Cell.prototype.getName = function() {
-    if (this.owner) {
-        return this.owner.name;
-    } else {
+    if (this.owner) return this.owner.name;
         return "";
-    }
 };
 
 Cell.prototype.setColor = function(color) {
@@ -70,13 +67,9 @@ Cell.prototype.addMass = function(n) {
 };
 
 Cell.prototype.getSpeed = function() {
-    // Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
-    // (should possibly have a config value for this?)
-
-    // Old formulas:
-    // return 5 + (20 * (1 - (this.mass/(70+this.mass))));
-    // return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
-    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -Math.PI / (Math.PI * Math.PI) / 1.5);
+    var t = Math.PI * Math.PI;
+    return this.gameServer.config.playerSpeed * 
+        Math.pow(this.getSize(), -0.01 / (Math.PI * Math.PI * Math.PI)); //-Math.PI / t);//1.5);
 };
 
 Cell.prototype.setAngle = function(radians) {
@@ -87,8 +80,9 @@ Cell.prototype.getAngle = function() {
     return this.angle;
 };
 
-Cell.prototype.setMoveEngineData = function(speed, decay) {
+Cell.prototype.setMoveEngineData = function(speed, ticks, decay) {
     this.moveEngineSpeed = speed;
+    this.moveEngineTicks = ticks;
     this.moveDecay = isNaN(decay) ? 0.75 : decay;
 };
 
@@ -157,13 +151,10 @@ Cell.prototype.visibleCheck = function(box, centerPos, cells) {
             var cell = cells[i];
             if (!cell) continue;
             
-            var xs = this.position.x - cell.position.x;
-            var ys = this.position.y - cell.position.y;
-            var sqDist = xs * xs + ys * ys;
+            var dist = this.getDist(this.position.x, this.position.y, cell.position.x, cell.position.y);
+            var collideDist = cell.getSize() + this.getSize();
             
-            var collideDist = cell.getSquareSize() + this.getSquareSize();
-            
-            if (sqDist < collideDist) {
+            if (dist < collideDist) {
                 return 2;
             }// Colliding with one
         }
@@ -174,12 +165,14 @@ Cell.prototype.visibleCheck = function(box, centerPos, cells) {
 
 Cell.prototype.calcMovePhys = function(config) {
     // Move, twice as slower
-    var X = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle));
-    var Y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle));
+    var X = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle) >> 0);
+    var Y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle) >> 0);
 
     // Movement engine
+    if (this.moveEngineSpeed <= this.moveDecay * 3 && this.cellType == 0) this.moveEngineSpeed = 0;
     var speedDecrease = this.moveEngineSpeed - this.moveEngineSpeed * this.moveDecay;
     this.moveEngineSpeed -= speedDecrease / 2; // Decaying speed twice as slower
+    if (this.moveEngineTicks >= 0.5) this.moveEngineTicks -= 0.5; // Ticks passing twice as slower
 
     // Ejected cell collision
     if (this.cellType == 3) {
@@ -196,6 +189,10 @@ Cell.prototype.calcMovePhys = function(config) {
                 var deltaX = this.position.x - check.position.x;
                 var deltaY = this.position.y - check.position.y;
                 var angle = Math.atan2(deltaX, deltaY);
+                
+                this.gameServer.setAsMovingNode(check);
+                check.moveEngineTicks += 1;
+                this.moveEngineTicks += 1;
 
                 var move = allowDist - dist;
 
@@ -229,8 +226,8 @@ Cell.prototype.calcMovePhys = function(config) {
     }
 
     // Set position
-    this.position.x = X;
-    this.position.y = Y;
+    this.position.x = X >> 0;
+    this.position.y = Y >> 0;
 };
 
 // Override these

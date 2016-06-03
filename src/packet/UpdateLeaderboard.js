@@ -1,66 +1,122 @@
-var DynamicBuffer = require('./DynamicBuffer');
-
-function UpdateLeaderboard(leaderboard, packetLB, protocolVersion, sendingUser) {
+function UpdateLeaderboard(leaderboard, packetLB) {
     this.leaderboard = leaderboard;
     this.packetLB = packetLB;
-    this.protocolVersion = protocolVersion;
-    this.sendingUser = sendingUser;
 }
 
 module.exports = UpdateLeaderboard;
 
-UpdateLeaderboard.prototype.build = function() {
-    var buffer = new DynamicBuffer(true);
-    
+UpdateLeaderboard.prototype.build = function (protocol) {
+    var lb = this.leaderboard;
     switch (this.packetLB) {
-        case 48:
-            // Custom text list
-            buffer.setUint8(48);                                                // Packet ID
-            buffer.setUint32(this.leaderboard.length);                          // String amount
-            
-            for (var i = 0; i < this.leaderboard.length; i++) {
-                if (this.protocolVersion != 5) {
-                    buffer.setStringUTF8(                                       // UTF-8 string
-                        this.leaderboard[i] ? this.leaderboard[i] : "");
-                    buffer.setUint8(0);                                         // UTF-8 null terminator
-                } else {
-                    buffer.setStringUnicode(                                    // Unicode string
-                        this.leaderboard[i] ? this.leaderboard[i] : "");
-                    buffer.setUint16(0);                                        // Unicode null terminator
+        case 48:// Custom Text List?
+            {
+                var offset = 0;
+                var buffer = new Buffer(0x10000);
+                
+                
+                buffer.writeUInt8(48, offset);
+                offset++;
+                
+                var countOffset = offset;
+                offset += 4;
+                
+                
+                var count = 0;
+                
+                for (var i = 0; i < lb.length; i++) {
+                    if (typeof lb[i] == "undefined")
+                        continue;
+                    var item = lb[i];
+                    
+                    var name = item;
+                    name = name ? name : "";
+                    
+                    buffer.writeUInt32LE(0, offset);
+                    offset += 4;
+                    
+                    if (protocol <= 5)
+                        offset += buffer.write(name, offset, 'ucs2');   // string => unicode
+                    else
+                        offset += buffer.write(name, offset);           // string => utf8
+                    buffer.writeUInt8(0, offset);                       // string zero terminator
+                    offset++;
+                    
+                    count++;
                 }
+                buffer.writeUInt32LE(count, countOffset);               // Number of elements
+                return buffer.slice(0, offset);
             }
             break;
-        case 49:
-            // FFA leaderboard list
-            buffer.setUint8(49);                                                // Packet ID
-            buffer.setUint32(this.leaderboard.length);                          // Player amount
-            for (var i = 0; i < this.leaderboard.length; i++) {
-                var player = this.leaderboard[i];
-                var name = player.getName();
-                name = name ? name : "";
-                if (this.protocolVersion != 5) {
-                    var isMe = player.pID == this.sendingUser ? 1 : 0;
-                    buffer.setUint32(isMe);                                     // If to display red color text
-                    buffer.setStringUTF8(name);                                 // UTF-8 string
-                    buffer.setUint8(0);                                         // UTF-8 null terminator
-                } else {
-                    if (player.cells[0])
-                        buffer.setUint32(player.cells[0].nodeId);               // First cell node ID
-                    else buffer.setUint32(0);                                   // In case of error
-                    buffer.setStringUnicode(name);                              // Unicode string
-                    buffer.setUint16(0);                                        // Unicode null terminator
+
+        case 49:// FFA
+            {
+                var offset = 0;
+                var buffer = new Buffer(0x10000);
+                
+                buffer.writeUInt8(49, offset);                        // Packet ID
+                offset += 1;
+                
+                
+                var countOffset = offset;
+                offset += 4;
+                
+                var count = 0;
+                for (var i = 0; i < lb.length; i++) {
+                    if (typeof lb[i] == "undefined")
+                        continue;
+                    var item = lb[i];
+                    
+                    var isMe = false;                                   // 1 for red color (current player), 0 for white color (other players)
+                    var name = item.getName();
+                    name = name ? name : "";
+                    
+                    // Write record
+                    buffer.writeUInt32LE(isMe ? 1:0, offset);           // isMe flag (previously cell ID)
+                    offset += 4;
+                    
+                    if (protocol <= 5)
+                        offset += buffer.write(name, offset, 'ucs2');   // string => unicode
+                    else
+                        offset += buffer.write(name, offset);           // string => utf8
+                    buffer.writeUInt8(0, offset);                       // string zero terminator
+                    offset += 1;
+                    
+                    count++;
                 }
+                buffer.writeUInt32LE(count, countOffset);               // Number of elements
+                return buffer.slice(0, offset);
             }
             break;
-        case 50:
-            // Pie chart
-            buffer.setUint8(50);                                                // Packet ID
-            buffer.setUint32(this.leaderboard.length);                          // Color amount
-            for (var i = 0; i < this.leaderboard.length; i++) {
-                buffer.setFloat32(this.leaderboard[i]);                         // A color's size
+
+        case 50:// (Team) Leaderboard Update
+            {
+                var offset = 0;
+                var buffer = new Buffer(0x10000);
+                
+                buffer.writeUInt8(50, offset);                          // Packet ID
+                offset++;
+                
+                var countOffset = offset;
+                offset += 4;
+                
+                var count = 0;
+                for (var i = 0; i < lb.length; i++) {
+                    
+                    var value = lb[i];
+                    
+                    // little validation
+                    value = value < 0 ? 0 : value;
+                    value = value > 1 ? 1 : value;
+                    
+                    buffer.writeFloatLE(0, offset);                       // string zero terminator
+                    offset += 4;
+                }
+                buffer.writeUInt32LE(count, countOffset);               // Number of elements
+                return buffer.slice(0, offset);
             }
+            break;
+
+        default:
             break;
     }
-
-    return buffer.build();
 };

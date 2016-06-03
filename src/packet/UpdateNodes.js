@@ -1,90 +1,275 @@
-var DynamicBuffer = require('./DynamicBuffer');
+// Import
+var ByteBuffer = require("bytebuffer");
 
-function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, scrambleX, scrambleY, protocolVersion) {
+
+function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, scrambleX, scrambleY) {
     this.destroyQueue = destroyQueue;
     this.nodes = nodes;
     this.nonVisibleNodes = nonVisibleNodes;
     this.scrambleX = scrambleX;
     this.scrambleY = scrambleY;
-    this.protocolVersion = protocolVersion;
 }
 
 module.exports = UpdateNodes;
 
-UpdateNodes.prototype.build = function() {
-    var buffer = new DynamicBuffer(true); // Little endian included
+UpdateNodes.prototype.build = function (protocol) {
+    if (!protocol) return null;
+    switch (protocol) {
+        case 4: return this.build4();
+        case 5: return this.build5();
+        case 6:
+        case 7: return this.build6();
+    }
+    return null;
+}
+
+// protocol 4
+UpdateNodes.prototype.build4 = function () {
+    var buffer = new ByteBuffer();
+    buffer.LE(true);
     
-    buffer.setUint8(16);                                                        // Packet ID
-    
-    // Check for invalid nodes in any case
     var deadCells = [];
     for (var i = 0; i < this.destroyQueue.length; i++) {
-        deadCells.push(this.destroyQueue[i]);
+        var node = this.destroyQueue[i];
+        if (!node) continue;
+        deadCells.push(node);
     }
     
-    buffer.setUint16(deadCells.length);                                         // Eat actions length
+    buffer.writeUInt8(0x10);
+    buffer.writeUInt16(deadCells.length);            // EatRecordCount
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
-        var id = 0;
-        if (node.getKiller()) id = node.getKiller().nodeId;
-        buffer.setUint32(id);                                                   // Eaten ID
-        buffer.setUint32(node.nodeId);                                          // Eater ID
+        var hunterId = 0;
+        if (node.getKiller()) {
+            hunterId = node.getKiller().nodeId;
+        }
+        buffer.writeUInt32(hunterId);               // Hunter ID
+        buffer.writeUInt32(node.nodeId);            // Prey ID
     }
     
-    for (var i = 0; i < this.nodes.length; i++) {                               // Update nodes
+    for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-
-        if (node.nodeId == 0) continue; // Error!
-        buffer.setUint32(node.nodeId);                                          // Node ID
-        buffer.setInt32(node.position.x + this.scrambleX);                      // Node's X pos
-        buffer.setInt32(node.position.y + this.scrambleY);                      // Node's Y pos
-        buffer.setUint16(node.getSize());                                       // Node size
+        if (typeof node == "undefined" || !node || node.nodeId == 0)
+            continue;
+        
+        var cellX = node.position.x + this.scrambleX;
+        var cellY = node.position.y + this.scrambleY;
+        var cellSize = node.getSize();
+        var cellName = node.getName();
+        if (!cellName) cellName = "";
+        
+        
+        var isVirus = (node.spiked & 0x01) != 0;
+        var isAgitated = false;                // true = high wave amplitude on a cell outline
+        var isEject = node.cellType == 3;
+        
+        // Write update record
+        buffer.writeUInt32(node.nodeId);              // Cell ID
+        buffer.writeInt16(cellX >> 0);                // Coordinate X
+        buffer.writeInt16(cellY >> 0);                // Coordinate Y
+        buffer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
+        buffer.writeUInt8(node.color.r >> 0);         // Color R
+        buffer.writeUInt8(node.color.g >> 0);         // Color G
+        buffer.writeUInt8(node.color.b >> 0);         // Color B
         
         var flags = 0;
+        if (isVirus)
+            flags |= 0x01;
+        if (isAgitated)
+            flags |= 0x10;
+        if (isEject)
+            flags |= 0x20;
+        buffer.writeUInt8(flags >> 0);                  // Flags
         
-        if (this.protocolVersion != 5) {
-            // Flags
-            if (node.getName() != null && node.getName() != "") flags += 8;
-            flags += 2;
-            if (node.spiked) flags += 1;
-            
-            buffer.setUint8(flags);                                             // Node's update flags
-            buffer.setUint8(node.color.r);                                      // Node's R color
-            buffer.setUint8(node.color.g);                                      // Node's G color
-            buffer.setUint8(node.color.b);                                      // Node's B color
-            if (node.getName() != null && node.getName() != "") {
-                buffer.setStringUTF8(node.getName());                           // Node's name
-                buffer.setUint8(0);                                             // Node name terminator
-            }
-        } else {
-            // Flags
-            if (node.spiked) flags += 1;
-            
-            buffer.setUint8(node.color.r);                                      // Node's R color
-            buffer.setUint8(node.color.g);                                      // Node's G color
-            buffer.setUint8(node.color.b);                                      // Node's B color
-            buffer.setUint8(flags);                                             // Node's update flags
-            if (node.getName() != null && node.getName() != "") {
-                buffer.setStringUnicode(node.getName());                        // Node's name
-            }
-            buffer.setUint8(0);                                                 // Node name terminator
+        for (var j = 0; j < cellName.length && cellName.charCodeAt(j)!=0; j++) {
+            buffer.writeUInt16(cellName.charCodeAt(j) >> 0);       // Cell Name in Unicode
+        }
+        buffer.writeUInt16(0);                          // Zero-terminator
+    }
+    buffer.writeUInt32(0);                              // Cell Update record terminator
+    
+    for (var i = 0; i < this.nonVisibleNodes.length; i++) {
+        var node = this.nonVisibleNodes[i];
+        if (!node) continue;
+        deadCells.push(node);
+    }
+    
+    buffer.writeUInt32(deadCells.length);            // RemoveRecordCount
+    for (var i = 0; i < deadCells.length; i++) {
+        var node = deadCells[i];
+        buffer.writeUInt32(node.nodeId);            // Cell ID
+    }
+    return buffer.buffer.slice(0, buffer.offset);
+}
+
+// protocol 5
+UpdateNodes.prototype.build5 = function () {
+    var buffer = new ByteBuffer();
+    buffer.LE(true);
+    
+    var deadCells = [];
+    for (var i = 0; i < this.destroyQueue.length; i++) {
+        var node = this.destroyQueue[i];
+        if (!node) continue;
+        deadCells.push(node);
+    }
+    
+    buffer.writeUInt8(0x10);
+    buffer.writeUInt16(deadCells.length);            // EatRecordCount
+    for (var i = 0; i < deadCells.length; i++) {
+        var node = deadCells[i];
+        var hunterId = 0;
+        if (node.getKiller()) {
+            hunterId = node.getKiller().nodeId;
+        }
+        buffer.writeUInt32(hunterId);               // Hunter ID
+        buffer.writeUInt32(node.nodeId);            // Prey ID
+    }
+    
+    for (var i = 0; i < this.nodes.length; i++) {
+        var node = this.nodes[i];
+        if (typeof node == "undefined" || !node || node.nodeId == 0)
+            continue;
+        
+        var cellX = node.position.x + this.scrambleX;
+        var cellY = node.position.y + this.scrambleY;
+        var cellSize = node.getSize();
+        var cellName = node.getName();
+        if (!cellName) cellName = "";
+        
+        
+        var isVirus = (node.spiked & 0x01) != 0;
+        var isAgitated = false;                // true = high wave amplitude on a cell outline
+        var isEject = node.cellType == 3;
+        
+        // Write update record
+        buffer.writeUInt32(node.nodeId);              // Cell ID
+        buffer.writeInt32(cellX >> 0);                // Coordinate X
+        buffer.writeInt32(cellY >> 0);                // Coordinate Y
+        buffer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
+        buffer.writeUInt8(node.color.r >> 0);         // Color R
+        buffer.writeUInt8(node.color.g >> 0);         // Color G
+        buffer.writeUInt8(node.color.b >> 0);         // Color B
+        
+        var flags = 0;
+        if (isVirus)
+            flags |= 0x01;
+        if (isAgitated)
+            flags |= 0x10;
+        if (isEject)
+            flags |= 0x20;
+        buffer.writeUInt8(flags >> 0);                  // Flags
+        
+        for (var j = 0; j < cellName.length && cellName.charCodeAt(j) != 0; j++) {
+            buffer.writeUInt16(cellName.charCodeAt(j) >> 0);       // Cell Name in Unicode
+        }
+        buffer.writeUInt16(0);                          // Zero-terminator
+    }
+    buffer.writeUInt32(0);                              // Cell Update record terminator
+    
+    for (var i = 0; i < this.nonVisibleNodes.length; i++) {
+        var node = this.nonVisibleNodes[i];
+        if (!node) continue;
+        deadCells.push(node);
+    }
+    
+    buffer.writeUInt32(deadCells.length);            // RemoveRecordCount
+    for (var i = 0; i < deadCells.length; i++) {
+        var node = deadCells[i];
+        buffer.writeUInt32(node.nodeId);            // Cell ID
+    }
+    return buffer.buffer.slice(0, buffer.offset);
+}
+
+// protocol 6
+UpdateNodes.prototype.build6 = function () {
+    var buffer = new ByteBuffer();
+    buffer.LE(true);
+    
+    var deadCells = [];
+    for (var i = 0; i < this.destroyQueue.length; i++) {
+        var node = this.destroyQueue[i];
+        if (!node) continue;
+        deadCells.push(node);
+    }
+    
+    buffer.writeUInt8(0x10);
+    buffer.writeUInt16(deadCells.length);            // EatRecordCount
+    for (var i = 0; i < deadCells.length; i++) {
+        var node = deadCells[i];
+        var hunterId = 0;
+        if (node.getKiller()) {
+            hunterId = node.getKiller().nodeId;
+        }
+        buffer.writeUInt32(hunterId);               // Hunter ID
+        buffer.writeUInt32(node.nodeId);            // Prey ID
+    }
+    
+    for (var i = 0; i < this.nodes.length; i++) {
+        var node = this.nodes[i];
+        if (typeof node == "undefined" || !node || node.nodeId == 0)
+            continue;
+        
+        var cellX = node.position.x + this.scrambleX;
+        var cellY = node.position.y + this.scrambleY;
+        var cellSize = node.getSize();
+        var skinName = null;
+        var cellName = node.getName();
+        
+        var isVirus = (node.spiked & 0x01) != 0;
+        var isColorPresent = true;             // we always include color
+        var isSkinPresent = !isVirus && skinName != null && skinName.length > 0;
+        var isNamePresent = !isVirus && cellName != null && cellName.length > 0;
+        var isAgitated = false;                // true = high wave amplitude on a cell outline
+        var isEject = node.cellType==3;
+        
+        // Write update record
+        buffer.writeUInt32(node.nodeId);            // Cell ID
+        buffer.writeInt32(cellX >> 0);                // Coordinate X
+        buffer.writeInt32(cellY >> 0);                // Coordinate Y
+        buffer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
+        
+        var flags = 0;
+        if (isVirus)
+            flags |= 0x01;
+        if (isColorPresent)
+            flags |= 0x02;
+        if (isSkinPresent)
+            flags |= 0x04;
+        if (isNamePresent)
+            flags |= 0x08;
+        if (isAgitated)
+            flags |= 0x10;
+        if (isEject)
+            flags |= 0x20;
+        buffer.writeUInt8(flags >> 0);                // Flags
+        
+        if (isColorPresent) {
+            buffer.writeUInt8(node.color.r >> 0);     // Color R
+            buffer.writeUInt8(node.color.g >> 0);     // Color G
+            buffer.writeUInt8(node.color.b >> 0);     // Color B
+        }
+        if (isSkinPresent) {
+            buffer.writeUTF8String(skinName);       // Skin Name in UTF8
+            buffer.writeUInt8(0);                   // Zero-terminator
+        }
+        if (isNamePresent) {
+            buffer.writeUTF8String(cellName);       // Cell Name in UTF8
+            buffer.writeUInt8(0);                   // Zero-terminator
         }
     }
-    buffer.setUint32(0);                                                        // Update nodes end
+    buffer.writeUInt32(0);                          // Cell Update record terminator
     
-    // Add non-visible cells to the "dead cells" list
     for (var i = 0; i < this.nonVisibleNodes.length; i++) {
-        deadCells.push(this.nonVisibleNodes[i]);
+        var node = this.nonVisibleNodes[i];
+        if (!node) continue;
+        deadCells.push(node);
     }
     
-    if (this.protocolVersion != 5) {
-        buffer.setUint16(deadCells.length);                                     // Remove actions length
-    } else {
-        buffer.setUint32(deadCells.length);                                     // Remove actions length
-    }
+    buffer.writeUInt16(deadCells.length);            // RemoveRecordCount
     for (var i = 0; i < deadCells.length; i++) {
-        buffer.setUint32(deadCells[i].nodeId);                                  // Removing node's ID
+        var node = deadCells[i];
+        buffer.writeUInt32(node.nodeId);            // Cell ID
     }
-    
-    return buffer.build();
-};
+    return buffer.buffer.slice(0, buffer.offset);
+}

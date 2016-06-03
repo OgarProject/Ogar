@@ -1,14 +1,9 @@
-function ClearNodes(protocolVersion) {
-    this.protocolVersion = protocolVersion;
-}
+function ClearNodes() { }
 
 module.exports = ClearNodes;
 
-ClearNodes.prototype.build = function() {
-    var buf = new ArrayBuffer(1);
-    var view = new DataView(buf);
-
-    view.setUint8(0, this.protocolVersion == 5 ? 20 : 18);
-
-    return buf;
+ClearNodes.prototype.build = function (protocol) {
+    var buffer = new Buffer(1);
+    buffer.writeUInt8(protocol>=6 ? 0x12 : 0x14, 0);
+    return buffer;
 };

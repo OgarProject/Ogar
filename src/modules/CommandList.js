@@ -46,7 +46,6 @@ Commands.list = {
         console.log("[Console] playerlist                   : get list of players and bots");
         console.log("[Console] pause                        : pause game , freeze all cells");
         console.log("[Console] reload                       : reload config");
-        console.log("[Console] resetantiteam [PlayerID]     : reset anti-team effect on client");
         console.log("[Console] status                       : get server status");
         console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
         console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
@@ -61,7 +60,7 @@ Commands.list = {
         }
 
         for (var i = 0; i < add; i++) {
-            setTimeout(gameServer.bots.addBot.bind(gameServer.bots), i);
+            gameServer.bots.addBot();
         }
         console.log("[Console] Added " + add + " player bots");
     },
@@ -435,29 +434,6 @@ Commands.list = {
     reload: function(gameServer) {
         gameServer.loadConfig();
         console.log("[Console] Reloaded the config file successfully");
-    },
-    resetantiteam: function(gameServer, split) {
-        // Validation checks
-        var id = parseInt(split[1]);
-        if (isNaN(id)) {
-            console.log("[Console] Please specify a valid player ID!");
-            return;
-        }
-
-        for (var i in gameServer.clients) {
-            var client = gameServer.clients[i];
-            if (!client) continue; // Nonexistent
-
-            if (client.playerTracker.pID == id) {
-                // Found client
-                client.playerTracker.massDecayMult = 1;
-                client.playerTracker.Wmult = 0;
-                client.playerTracker.virusMult = 0;
-                client.playerTracker.splittingMult = 0;
-                console.log("[Console] Successfully reset client's anti-team effect");
-                return;
-            }
-        }
     },
     status: function(gameServer, split) {
         // Get amount of humans/bots

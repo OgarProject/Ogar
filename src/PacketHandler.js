@@ -4,7 +4,7 @@ function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
     // Detect protocol version - we can do something about it later
-    this.protocolVersion = 0;
+    this.protocol = 0;
 
     this.pressQ = false;
     this.pressW = false;
@@ -37,28 +37,23 @@ PacketHandler.prototype.handleMessage = function(message) {
 
     switch (packetId) {
         case 0:
-            // Set Nickname
-            if (this.protocolVersion == 5) {
-                // Check for invalid packets
-                if ((view.byteLength + 1) % 2 == 1) {
-                    break;
+            var bufferName = new Buffer(message);
+            bufferName = bufferName.slice(1);
+            
+            var text = "";
+            if (bufferName.length > 0) {
+                if (this.protocol <= 5) {
+                    text = this.readStringUnicode(bufferName);
+                } else {
+                    text = this.readStringUtf8(bufferName);
                 }
-                var nick = "";
-                var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
-                for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
-                    var charCode = view.getUint16(i, true);
-                    if (charCode == 0) {
-                        break;
-                    }
-    
-                    nick += String.fromCharCode(charCode);
+                if (text.length > this.gameServer.config.playerMaxNickLength) {
+                    text = text.substring(0, this.gameServer.config.playerMaxNickLength);
                 }
-                this.setNickname(nick);
-            } else {
-                var name = message.slice(1, message.length - 1).toString().substr(0, this.gameServer.config.playerMaxNickLength);
-                this.setNickname(name);
             }
+            this.setNickname(text);
             break;
+
         case 1:
             // Spectate mode
             if (this.socket.playerTracker.cells.length <= 0) {
@@ -68,13 +63,20 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 16:
             // Set Target
-            if (view.byteLength == 13) {
-                var client = this.socket.playerTracker;
+            var client = this.socket.playerTracker;
+            if (view.byteLength == 13) {  // protocol 5,6,7
                 client.mouse.x = view.getInt32(1, true) - client.scrambleX;
                 client.mouse.y = view.getInt32(5, true) - client.scrambleY;
+                client.movePacketTriggered = true;
+            } else if (view.byteLength == 9) { // early protocol 5
+                client.mouse.x = view.getInt16(1, true) - client.scrambleX;
+                client.mouse.y = view.getInt16(3, true) - client.scrambleY;
+                client.movePacketTriggered = true;
+            } else if (view.byteLength == 21) { // protocol 4
+                client.mouse.x = view.getFloat64(1, true) - client.scrambleX;
+                client.mouse.y = view.getFloat64(9, true) - client.scrambleY;
+                client.movePacketTriggered = true;
             }
-
-            client.movePacketTriggered = true;
             break;
         case 17:
             // Space Press - Split cell
@@ -94,16 +96,17 @@ PacketHandler.prototype.handleMessage = function(message) {
         case 254:
             // Connection Start
             if (view.byteLength == 5) {
-                this.protocolVersion = view.getUint32(1, true);
-                // Send on connection packets
-                this.socket.sendPacket(new Packet.ClearNodes(this.protocolVersion));
+                this.protocol = view.getUint32(1, true);
+                // Send Clear & SetBorder packet first
+                this.socket.sendPacket(new Packet.ClearNodes());
                 var c = this.gameServer.config;
                 this.socket.sendPacket(new Packet.SetBorder(
                     c.borderLeft + this.socket.playerTracker.scrambleX,
                     c.borderRight + this.socket.playerTracker.scrambleX,
                     c.borderTop + this.socket.playerTracker.scrambleY,
-                    c.borderBottom + this.socket.playerTracker.scrambleY
-                ));
+                    c.borderBottom + this.socket.playerTracker.scrambleY,
+                    0,
+                    "OgarMulti"));
             }
             break;
         default:
@@ -111,14 +114,52 @@ PacketHandler.prototype.handleMessage = function(message) {
     }
 };
 
+PacketHandler.prototype.readStringUnicode = function (dataBuffer) {
+    if (dataBuffer.length > 256) return "";
+    
+    var buffer = new Buffer(dataBuffer);
+    var text = "";
+    var maxLength = (buffer.length / 2) >> 0;
+    if (maxLength * 2 > buffer.length) maxLength--;
+    if (maxLength < 0) maxLength = 0;
+    for (var i = 0; i < maxLength; i++) {
+        var charCode = buffer.readUInt16LE(i * 2);
+        if (charCode == 0) {
+            break;
+        }
+        text += String.fromCharCode(charCode);
+    }
+    return text;
+}
+
+PacketHandler.prototype.readStringUtf8 = function (dataBuffer) {
+    if (dataBuffer.length > 256) return "";
+    
+    var buffer = new Buffer(dataBuffer);
+    var maxLen = buffer.length;
+    for (var i = 0; i < maxLen; i++) {
+        if (buffer[i] == 0) {
+            maxLen = i;
+            break;
+        }
+    }
+    var text = buffer.toString('utf8', 0, maxLen);  // utf8 => string
+    return text;
+}
+
 PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
         // Set name first
         client.setName(newNick);
         
-        // Clear client's nodes
+        var c = this.gameServer.config;
         this.socket.sendPacket(new Packet.ClearNodes());
+        this.socket.sendPacket(new Packet.SetBorder(
+            c.borderLeft + this.socket.playerTracker.scrambleX,
+            c.borderRight + this.socket.playerTracker.scrambleX,
+            c.borderTop + this.socket.playerTracker.scrambleY,
+            c.borderBottom + this.socket.playerTracker.scrambleY));
 
         // If client has no cells... then spawn a player
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer, client);

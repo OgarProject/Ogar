@@ -1,21 +1,34 @@
-function SetBorder(left, right, top, bottom) {
+// Import
+var ByteBuffer = require("bytebuffer");
+
+
+function SetBorder(left, right, top, bottom, gameType, serverName) {
     this.left = left;
     this.right = right;
     this.top = top;
     this.bottom = bottom;
+    this.gameType = gameType;
+    this.serverName = serverName;
 }
 
 module.exports = SetBorder;
 
-SetBorder.prototype.build = function() {
-    var buf = new ArrayBuffer(33);
-    var view = new DataView(buf);
-
-    view.setUint8(0, 64, true);
-    view.setFloat64(1, this.left, true);
-    view.setFloat64(9, this.top, true);
-    view.setFloat64(17, this.right, true);
-    view.setFloat64(25, this.bottom, true);
-
-    return buf;
+SetBorder.prototype.build = function(protocol) {
+    var buffer = new ByteBuffer();
+    buffer.LE(true);
+    buffer.writeUInt8(0x40);
+    buffer.writeDouble(this.left);
+    buffer.writeDouble(this.top);
+    buffer.writeDouble(this.right);
+    buffer.writeDouble(this.bottom);
+    if (typeof this.gameType != "undefined") {
+        buffer.writeUInt32(this.gameType >> 0);
+        var name = this.serverName;
+        if (typeof name == "undefined" || name == null) {
+            name = "";
+        }
+        buffer.writeUTF8String(name);
+        buffer.writeByte(0);
+    }
+    return buffer.buffer.slice(0, buffer.offset);
 };

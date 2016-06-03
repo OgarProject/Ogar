@@ -98,14 +98,15 @@ Experimental.prototype.onServerInit = function(gameServer) {
     Virus.prototype.feed = function(feeder, gameServer) {
         gameServer.removeNode(feeder);
         // Pushes the virus
-        // Effect on angle is smaller with larger move engine speed
-        var angle = this.getAngle() + feeder.getAngle(),
-            effect = Math.sqrt(this.moveEngineSpeed + 1);
-        angle += feeder.getAngle() / effect;
-        angle /= (1 + effect);
-        this.setAngle(angle); // Set direction if the virus explodes
-        this.moveEngineSpeed += 10;
-        this.moveDecay = 0.9;
+        this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
+        this.moveEngineTicks += 20; // Amount of times to loop the movement function
+        this.moveEngineSpeed += 16;
+        this.moveDecay = 0.875;
+
+        var index = gameServer.movingNodes.indexOf(this);
+        if (index == -1) {
+            gameServer.movingNodes.push(this);
+        }
     };
 
     // Override this
@@ -197,9 +198,9 @@ MotherCell.prototype.checkEat = function(gameServer) {
         this.checkEatCell(check, safeMass, gameServer);
     }
 
-    // Check ejected cells
-    for (var i in gameServer.nodesEjected) {
-        var check = gameServer.nodesEjected[i];
+    // Check moving nodes
+    for (var i in gameServer.movingNodes) {
+        var check = gameServer.movingNodes[i];
         this.checkEatCell(check, safeMass, gameServer);
     }
 };
@@ -215,7 +216,6 @@ MotherCell.prototype.checkEatCell = function(check, safeMass, gameServer) {
     var allowDist = this.getSize() - check.getEatingRange();
     if (dist < allowDist) {
         // Eat it
-        check.setKiller(this);
         gameServer.removeNode(check);
         this.mass += check.mass;
     }
@@ -245,7 +245,9 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     // Move engine
     f.angle = angle;
     var dist = (Math.random() * 8) + 8; // Random distance
-    f.setMoveEngineData(dist, 0.9);
+    f.setMoveEngineData(dist, 20, 0.85);
+
+    gameServer.setAsMovingNode(f);
 };
 
 MotherCell.prototype.onConsume = Virus.prototype.onConsume; // Copies the virus prototype function

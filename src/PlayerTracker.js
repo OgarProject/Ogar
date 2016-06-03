@@ -22,23 +22,13 @@ function PlayerTracker(gameServer, socket) {
     this.shouldMoveCells = true; // False if the mouse packet wasn't triggered
     this.notMoved = false; // If one of cells have been moved after splitting this is triggered
     this.movePacketTriggered = false;
-    this.ignoreNextMoveTick = false; // Screen mouse matches old screen mouse
     this.mouseCells = []; // For individual cell movement
     this.tickLeaderboard = 0;
     this.tickViewBox = 0;
-    this.ticksLeft = 0; // Individual updates
-    this.cellTicksLeft = 0; // Individual updates for cells
 
     this.team = 0;
     this.spectate = false;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
-
-    // Anti-teaming
-    this.massDecayMult = 1; // Anti-teaming multiplier
-    this.Wmult = 0; // W press multiplier, which will also account on duration of effect
-    this.checkForWMult = false; // Prevent oveload with W multiplier
-    this.virusMult = 0; // Virus explosion multiplier
-    this.splittingMult = 0; // Splitting multiplier
 
     // Viewing box
     this.sightRangeX = 0;
@@ -114,11 +104,12 @@ PlayerTracker.prototype.getTeam = function() {
 // Functions
 
 PlayerTracker.prototype.update = function() {
-    // Async update, perfomance reasons
-    setTimeout(function() {
-        // Don't send any messages if client didn't respond with protocol version
-        if (this.socket.packetHandler.protocolVersion == 0) return;
-        
+    // if initialization is not complete yet then do not update
+    if (this.socket.packetHandler.protocol == 0)  
+        return;    
+    
+    //// Async update, perfomance reasons
+    //setTimeout(function() {
         // First reset colliding nodes
         this.collidingNodes = [];
         
@@ -138,7 +129,6 @@ PlayerTracker.prototype.update = function() {
         if (this.socket.packetHandler.pressW) { // Eject mass
             this.gameServer.gameMode.pressW(this.gameServer, this);
             this.socket.packetHandler.pressW = false;
-            this.checkForWMult = true;
         }
     
         if (this.socket.packetHandler.pressQ) { // Q Press
@@ -223,39 +213,13 @@ PlayerTracker.prototype.update = function() {
     
         // Update leaderboard
         if (this.tickLeaderboard <= 0) {
-            this.socket.sendPacket(new Packet.UpdateLeaderboard(
-                this.gameServer.leaderboard,
-                this.gameServer.gameMode.packetLB,
-                this.protocolVersion,
-                this.pID
-            ));
+            if (this.gameServer.lb_packet != null)
+                this.socket.sendPacket(this.gameServer.lb_packet);
             this.tickLeaderboard = 10; // 20 ticks = 1 second
         } else {
             this.tickLeaderboard--;
         }
-    
-        // Map obfuscation
-        var width = this.viewBox.width;
-        var height = this.viewBox.height;
-    
-        if (this.cells.length == 0 && this.gameServer.config.serverScrambleMinimaps >= 1) {
-            // Update map, it may have changed
-            this.socket.sendPacket(new Packet.SetBorder(
-                -this.gameServer.config.borderLeft + this.scrambleX,
-                this.gameServer.config.borderRight + this.scrambleX,
-                -this.gameServer.config.borderTop + this.scrambleY,
-                this.gameServer.config.borderBottom + this.scrambleY
-            ));
-        } else {
-            // Send a border packet to fake the map size
-            this.socket.sendPacket(new Packet.SetBorder(
-                Math.max(this.centerPos.x + this.scrambleX - width, -this.gameServer.config.borderLeft + this.scrambleX),
-                Math.min(this.centerPos.x + this.scrambleX + width, this.gameServer.config.borderRight + this.scrambleX),
-                Math.max(this.centerPos.y + this.scrambleY - height, -this.gameServer.config.borderTop + this.scrambleY),
-                Math.min(this.centerPos.y + this.scrambleY + height, this.gameServer.config.borderBottom + this.scrambleY)
-            ));
-        }
-    
+            
         // Handles disconnections
         if (this.disconnect > -1) {
             // Player has disconnected... remove it when the timer hits -1
@@ -281,39 +245,7 @@ PlayerTracker.prototype.update = function() {
                 }
             }
         }
-    }.bind(this), 0);
-};
-
-PlayerTracker.prototype.antiTeamTick = function() {
-    // ANTI-TEAMING DECAY
-    // Calculated even if anti-teaming is disabled.
-    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-    if (this.Wmult - 0.00028 > 0) this.Wmult -= 0.00028;
-    this.virusMult *= 0.999;
-    this.splittingMult *= 0.9982;
-    // Apply anti-teaming if required
-    if (effectSum > 2) this.massDecayMult = Math.min(effectSum / 2, 3.14);
-    else this.massDecayMult = 1;
-};
-
-PlayerTracker.prototype.applyTeaming = function(x, type) {
-    // Called when player does an action which increases anti-teaming
-    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-
-    // Applied anti-teaming is 1.5x smaller if over the threshold
-    var n = effectSum > 1.5 ? x : x / 1.5;
-
-    switch (type) {
-        case 0: // Ejected cell
-            this.Wmult += n;
-            break;
-        case 1: // Virus explosion
-            this.virusMult += n;
-            break;
-        case 2: // Splitting
-            this.splittingMult += n;
-            break;
-    }
+    //}.bind(this), 0);
 };
 
 // Viewing box
@@ -338,24 +270,25 @@ PlayerTracker.prototype.updateSightRange = function() { // For view distance
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
     var len = this.cells.length;
 
-    if (len <= 0) return;
+    if (len <= 0) {
+        return; // End the function if no cells exist
+    }
 
     var X = 0;
     var Y = 0;
+    var allSize = 0; // Focus larger cells to near the center and smaller away
     for (var i = 0; i < len; i++) {
         // Error check
-        if (!this.cells[i]) {
-            len--;
-            continue;
-        }
+        if (!this.cells[i]) continue;
         var cell = this.cells[i];
 
-        X += cell.position.x;
-        Y += cell.position.y;
+        X += cell.position.x * cell.mass;
+        Y += cell.position.y * cell.mass;
+        allSize += cell.mass;
     }
 
-    this.centerPos.x = X / len;
-    this.centerPos.y = Y / len;
+    this.centerPos.x = X / allSize;
+    this.centerPos.y = Y / allSize;
 };
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -390,7 +323,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
 
         // Get spectate player's location and calculate zoom amount
         var specZoom = Math.min(Math.sqrt(100 * specPlayer.getScore(false)), 555);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4);
+        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.8;
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);

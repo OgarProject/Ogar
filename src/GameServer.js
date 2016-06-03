@@ -21,27 +21,25 @@ function GameServer() {
     this.lastPlayerId = 1;
     this.clients = [];
     this.largestClient; // Required for spectators
-    
     this.nodes = [];
-    this.nonPlayerNodes = []; // All nodes except player nodes
     this.nodesVirus = []; // Virus nodes
     this.nodesEjected = []; // Ejected mass nodes
     this.nodesPlayer = []; // Nodes controlled by players
 
     this.currentFood = 0;
+    this.movingNodes = []; // For move engine
     this.leaderboard = [];
+    this.lb_packet = null; // Leaderboard packet for protocol 5
 
     this.bots = new BotLoader(this);
     this.log = new Logger();
     this.commands; // Command handler
 
     // Main loop tick
-    this.time = +new Date;
-    this.startTime = this.time;
-    this.tick = 0; // 1 ms, 25 ms - collision update, next time all update
-    this.fullTick = 0; // 2 = all update
-    this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
+    this.startTime = +new Date;
+    this.tickCounter = 0;
     this.tickSpawn = 0; // Used with spawning food
+
 
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
@@ -55,8 +53,6 @@ function GameServer() {
         serverStatsUpdate: 60, // Amount of seconds per update for the server stats
         serverLogLevel: 1, // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         serverScrambleCoords: 1, // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
-        serverScrambleMinimaps: 1, // Toggles scrambling of borders to render maps unusable. 0 = No scrambling, 1 = scrambling. Default is 1.
-        serverTeamingAllowed: 1, // Toggles anti-teaming. 0 = Anti-team enabled, 1 = Anti-team disabled
         serverMaxLB: 10, //	Controls the maximum players displayed on the leaderboard.
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 14142.135623730952)
@@ -125,7 +121,7 @@ GameServer.prototype.start = function() {
         this.startingFood();
 
         // Start Main Loop
-        setInterval(this.mainLoop.bind(this), 1);
+        setInterval(this.mainLoop.bind(this), 40);
 
         // Done
         console.log("[Game] Listening on port " + this.config.serverPort);
@@ -164,27 +160,6 @@ GameServer.prototype.start = function() {
             ws.close();
             return;
         }
-
-        // ----- Client authenticity check code -----
-        // !!!!! WARNING !!!!!
-        // THE BELOW SECTION OF CODE CHECKS TO ENSURE THAT CONNECTIONS ARE COMING
-        // FROM THE OFFICIAL AGAR.IO CLIENT. IF YOU REMOVE OR MODIFY THE BELOW
-        // SECTION OF CODE TO ALLOW CONNECTIONS FROM A CLIENT ON A DIFFERENT DOMAIN,
-        // YOU MAY BE COMMITTING COPYRIGHT INFRINGEMENT AND LEGAL ACTION MAY BE TAKEN
-        // AGAINST YOU. THIS SECTION OF CODE WAS ADDED ON JULY 9, 2015 AT THE REQUEST
-        // OF THE AGAR.IO DEVELOPERS.
-        var origin = ws.upgradeReq.headers.origin;
-        if (origin != 'http://agar.io' &&
-            origin != 'https://agar.io' &&
-            origin != 'http://localhost' &&
-            origin != 'https://localhost' &&
-            origin != 'http://127.0.0.1' &&
-            origin != 'https://127.0.0.1') {
-
-            ws.close();
-            return;
-        }
-        // -----/Client authenticity check code -----
 
         function close(error) {
             // Log disconnections
@@ -297,7 +272,6 @@ GameServer.prototype.getRandomColor = function() {
 
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
-    if (node.cellType != 0) this.nonPlayerNodes.push(node);
 
     // Adds to the owning player's screen excluding ejected cells
     if (node.owner && node.cellType != 3) {
@@ -330,13 +304,11 @@ GameServer.prototype.removeNode = function(node) {
     if (index != -1) {
         this.nodes.splice(index, 1);
     }
-    
-    if (node.cellType != 0) {
-        // Remove from non-player node list
-        index = this.nonPlayerNodes.indexOf(node);
-        if (index != -1) {
-            this.nonPlayerNodes.splice(index, 1);
-        }
+
+    // Remove from moving cells list
+    index = this.movingNodes.indexOf(node);
+    if (index != -1) {
+        this.movingNodes.splice(index, 1);
     }
 
     // Special on-remove actions
@@ -345,16 +317,13 @@ GameServer.prototype.removeNode = function(node) {
     // Animation when eating
     for (var i = 0; i < this.clients.length; i++) {
         var client = this.clients[i].playerTracker;
-        if (!client) continue;
+        if (!client) {
+            continue;
+        }
 
         // Remove from client
         client.nodeDestroyQueue.push(node);
     }
-};
-
-GameServer.prototype.moveTick = function() {
-    // Move cells
-    this.updateMoveEngine();
 };
 
 GameServer.prototype.spawnTick = function() {
@@ -379,90 +348,41 @@ GameServer.prototype.cellUpdateTick = function() {
 };
 
 GameServer.prototype.mainLoop = function() {
-    // Timer
-    var local = new Date();
-    this.tick += (local - this.time);
-    this.time = local;
-
-    if (!this.run) return;
+    // Loop main functions
+    this.updateMoveEngine(); // Move cells
+    this.spawnTick();
+    this.gamemodeTick();
+    this.cellUpdateTick();
+    this.updateClients();
     
-    // The node & client updating mechanism is perfomance overhauled
-    // Nodes & clients will update periodically and never all on 25ms/50ms
-    // PlayerTracker and all Cell types have own internal update timer which is measured
-    setTimeout(this.updateClients.bind(this), 0);
-    setTimeout(this.moveTick.bind(this), 0);
-    
-
-    if (this.tick >= 25) {
-        this.fullTick++;
-
-        if (this.fullTick >= 2) {
-            // Loop main functions
-            setTimeout(this.spawnTick.bind(this), 0);
-            setTimeout(this.gamemodeTick.bind(this), 0);
-            setTimeout(this.cellUpdateTick.bind(this), 0);
-
-            // Update cells/leaderboard loop
-            this.tickMain++;
-            if (this.tickMain >= 4) { // 250 milliseconds
-                // Update leaderboard with the gamemode's method
-                this.leaderboard = [];
-                this.gameMode.updateLB(this);
-
-                if (!this.gameMode.specByLeaderboard) {
-                    // Get client with largest score if gamemode doesn't have a leaderboard
-                    var clients = this.clients.valueOf();
-
-                    // Use sort function
-                    clients.sort(function(a, b) {
-                        return b.playerTracker.getScore(true) - a.playerTracker.getScore(true);
-                    });
-                    this.largestClient = clients[0].playerTracker;
-                } else this.largestClient = this.gameMode.rankOne;
-
-                this.tickMain = 0; // Reset
-            }
-            this.fullTick = 0; // Reset
-        }
-
-        // Debug
-        //console.log(this.tick - 25);
-
-        // Reset
-        this.tick = 0;
+    // Update leaderboard with the gamemode's method
+    if ((this.tickCounter % 40) == 0) {
+        this.leaderboard = [];
+        this.gameMode.updateLB(this);
+        this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
+        
+        if (!this.gameMode.specByLeaderboard) {
+            // Get client with largest score if gamemode doesn't have a leaderboard
+            var clients = this.clients.valueOf();
+            
+            // Use sort function
+            clients.sort(function (a, b) {
+                return b.playerTracker.getScore(true) - a.playerTracker.getScore(true);
+            });
+            this.largestClient = clients[0].playerTracker;
+        } else this.largestClient = this.gameMode.rankOne;
     }
+    
+    this.tickCounter++;
 };
 
 GameServer.prototype.updateClients = function() {
-    // The node & client updating mechanism is perfomance overhauled
-    // Nodes & clients will update periodically and never all on 25ms/50ms
-    // PlayerTracker and all Cell types have own internal update timer which is measured
-    
-    var updatedClients = [];
-    
-    var len = this.clients.length;
-    for (var i = 0; i < len; i++) {
-        var client = this.clients[i].playerTracker;
-        if (!client) continue;
-        
-        client.ticksLeft--;
-        if (client.ticksLeft > 0) continue;
-        updatedClients.push(client);
-        
-        client.ticksLeft = 40; // Reset timer
-        
-        client.update();
-        client.antiTeamTick();
-    }
-    
-    // Very experimental and currently will freeze the server.
-    // If there are too many updated clients at once, update them a few ticks later
-    /*var maxOnTick = Math.ceil(this.clients.length / 50);
-    if (updatedClients.length > maxOnTick) {
-        for (var i = 0; i < updatedClients.length - maxOnTick; i) {
-            updatedClients[i].ticksLeft += i + 1;
+    for (var i = 0; i < this.clients.length; i++) {
+        if (typeof this.clients[i] == "undefined") {
+            continue;
         }
-    }*/
+        this.clients[i].playerTracker.update();
+    }
 };
 
 GameServer.prototype.startingFood = function() {
@@ -556,8 +476,8 @@ GameServer.prototype.willCollide = function(mass, pos, isVirus) {
 };
 
 GameServer.prototype.getDist = function(x1, y1, x2, y2) { // Use Pythagoras theorem
-    var deltaX = x1 - x2;
-    var deltaY = y1 - y2;
+    var deltaX = this.abs(x1 - x2);
+    var deltaY = this.abs(y1 - y2);
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 };
 
@@ -570,11 +490,12 @@ GameServer.prototype.checkCellCollision = function(cell, check) {
 
     // Check the two cells for collision
     var collisionDist = cell.getSize() + check.getSize(); // Minimum distance between the two cells
+    var dist = this.getDist(cell.position.x, cell.position.y,
+        check.position.x, check.position.y); // Distance between these two cells
 
     var dY = cell.position.y - check.position.y;
     var dX = cell.position.x - check.position.x;
     var angle = Math.atan2(dX, dY);
-    var dist = Math.sqrt(dX * dX + dY * dY);
 
     return ({
         cellDist: dist,
@@ -610,10 +531,6 @@ GameServer.prototype.updateMoveEngine = function() {
 
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
-        
-        client.cellUpdateTick--;
-        if (client.cellUpdateTick > 0) continue;
-        client.cellUpdateTick = 18;
 
         // Sort client's cells by ascending mass
         var sorted = [];
@@ -648,18 +565,34 @@ GameServer.prototype.updateMoveEngine = function() {
 
 
     // A system to move cells not controlled by players (ex. viruses, ejected mass)
-    len = this.nonPlayerNodes.length;
+    len = this.movingNodes.length;
     for (var i = 0; i < len; i++) {
-        var node = this.nonPlayerNodes[i];
-        if (!node) continue;
-        
-        node.updateTicks--;
-        if (node.updateTicks > 0) continue;
-        node.updateTicks = 25;
-        
-        if (node.moveEngineSpeed <= 0) continue; // No speed
-        node.calcMovePhys(this.config);
-        node.onAutoMove(this);
+        var check = this.movingNodes[i];
+
+        // Recycle unused nodes
+        while ((typeof check == "undefined") && (i < this.movingNodes.length)) {
+            // Remove moving cells that are undefined
+            this.movingNodes.splice(i, 1);
+            check = this.movingNodes[i];
+        }
+
+        if (i >= this.movingNodes.length) {
+            continue;
+        }
+
+        if (check.moveEngineTicks > 0) {
+            check.onAutoMove(this);
+            // If the cell has enough move ticks, then move it
+            check.calcMovePhys(this.config);
+        } else {
+            // Auto move is done
+            check.moveDone(this);
+            // Remove cell from list
+            var index = this.movingNodes.indexOf(check);
+            if (index != -1) {
+                this.movingNodes.splice(index, 1);
+            }
+        }
     }
 };
 
@@ -678,6 +611,10 @@ GameServer.prototype.cellEating = function(cell) {
     }
 };
 
+GameServer.prototype.setAsMovingNode = function(node) {
+    if (this.movingNodes.indexOf(node) == -1) this.movingNodes.push(node);
+};
+
 GameServer.prototype.splitCells = function(client) {
     var len = client.cells.length;
     var splitCells = 0; // How many cells have been split
@@ -691,7 +628,6 @@ GameServer.prototype.splitCells = function(client) {
 
         if (this.createPlayerCell(client, cell, angle, cell.mass / 2) == true) splitCells++;
     }
-    if (splitCells > 0) client.applyTeaming(1, 2); // Account anti-teaming
 };
 
 GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
@@ -721,7 +657,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Create cell
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
     newCell.setAngle(angle);
-    newCell.setMoveEngineData(splitSpeed, 0.88);
+    newCell.setMoveEngineData(splitSpeed, 12, 0.88);
     // Cells won't collide immediately
     newCell.collisionRestoreTicks = 12;
     parent.collisionRestoreTicks = 12;
@@ -734,8 +670,8 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
 };
 
 GameServer.prototype.canEjectMass = function(client) {
-    if (typeof client.lastEject == 'undefined' || this.time - client.lastEject >= this.config.ejectMassCooldown) {
-        client.lastEject = this.time;
+    if (typeof client.lastEject == 'undefined' || this.tickCounter - client.lastEject >= this.config.ejectMassCooldown) {
+        client.lastEject = this.tickCounter;
         return true;
     } else
         return false;
@@ -778,11 +714,12 @@ GameServer.prototype.ejectMass = function(client) {
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), client, startPos, this.config.ejectMass, this);
         ejected.setAngle(angle);
-        ejected.setMoveEngineData(this.config.ejectSpeed, 0.88);
+        ejected.setMoveEngineData(this.config.ejectSpeed, 20, 0.88);
         ejected.setColor(cell.getColor());
 
         this.nodesEjected.push(ejected);
         this.addNode(ejected);
+        this.setAsMovingNode(ejected);
     }
 };
 
@@ -794,10 +731,11 @@ GameServer.prototype.shootVirus = function(parent) {
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, this);
     newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(115, 0.9);
+    newVirus.setMoveEngineData(135, 20, 0.85);
 
     // Add to moving cells list
     this.addNode(newVirus);
+    this.setAsMovingNode(newVirus);
 };
 
 GameServer.prototype.getCellsInRange = function(cell) {
@@ -852,6 +790,10 @@ GameServer.prototype.getCellsInRange = function(cell) {
         var multiplier = 1.3;
 
         switch (check.getType()) {
+            case 1: // Food cell
+                list.push(check);
+                check.inRange = true; // skip future collision checks for this food
+                continue;
             case 0: // Players
                 // Can't eat self if it's not time to recombine yet
                 if (check.owner == cell.owner) {
@@ -861,7 +803,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
                         if (!cell.owner.mergeOverride) continue;
                     }
 
-                    multiplier = 1.0;
+                    multiplier = 1.00;
                 }
 
                 // Can't eat team members
@@ -964,15 +906,7 @@ GameServer.prototype.updateCells = function() {
 
         // Mass decay
         if (cell.mass >= this.config.playerMinMassDecay) {
-            var client = cell.owner;
-            if (this.config.serverTeamingAllowed == 0) {
-                var teamMult = (client.massDecayMult - 1) / 1111 + 1; // Calculate anti-teaming multiplier for decay
-                var thisDecay = 1 - massDecay * (1 / teamMult); // Reverse mass decay and apply anti-teaming multiplier
-                cell.mass *= (1 - thisDecay);
-            } else {
-                // No anti-team
-                cell.mass *= massDecay;
-            }
+            cell.mass *= massDecay;
         }
     }
 };
@@ -1041,27 +975,13 @@ GameServer.prototype.getStats = function() {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
-    function getBuf(data) {
-        var array = new Uint8Array(data.buffer || data);
-        var l = data.byteLength || data.length;
-        var o = data.byteOffset || 0;
-        var buffer = new Buffer(l);
-
-        for (var i = 0; i < l; i++) {
-            buffer[i] = array[o + i];
-        }
-
-        return buffer;
-    }
 
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
-    if (this.readyState == WebSocket.OPEN && packet.build) {
-        var buf = packet.build();
-        this.send(getBuf(buf), {
-            binary: true
-        });
-    } else if (!packet.build) {
-        // Do nothing
+    if (this.readyState == WebSocket.OPEN) {
+        var buffer = packet.build(this.playerTracker.socket.packetHandler.protocol);
+        if (buffer != null) {
+            this.send(buffer, { binary: true });
+        }
     } else {
         this.readyState = WebSocket.CLOSED;
         this.emit('close');
