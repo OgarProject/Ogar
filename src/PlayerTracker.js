@@ -112,149 +112,146 @@ PlayerTracker.prototype.getTeam = function() {
 
 // Functions
 
-PlayerTracker.prototype.update = function() {
+PlayerTracker.prototype.update = function () {
     // if initialization is not complete yet then do not update
-    if (this.socket.packetHandler.protocol == 0)  
-        return;    
+    if (this.socket.packetHandler.protocol == 0)
+        return;
     
-    //// Async update, perfomance reasons
-    //setTimeout(function() {
-        // First reset colliding nodes
-        this.collidingNodes = [];
+    // First reset colliding nodes
+    this.collidingNodes = [];
+    
+    // Move packet update
+    if (this.movePacketTriggered) {
+        this.movePacketTriggered = false;
+        this.shouldMoveCells = true;
+    } else {
+        this.shouldMoveCells = false;
+    }
+    // Actions buffer (So that people cant spam packets)
+    if (this.socket.packetHandler.pressSpace) { // Split cell
+        if (!this.mergeOverride) this.gameServer.gameMode.pressSpace(this.gameServer, this);
+        this.socket.packetHandler.pressSpace = false;
+    }
+    
+    if (this.socket.packetHandler.pressW) { // Eject mass
+        this.gameServer.gameMode.pressW(this.gameServer, this);
+        this.socket.packetHandler.pressW = false;
+    }
+    
+    if (this.socket.packetHandler.pressQ) { // Q Press
+        this.gameServer.gameMode.pressQ(this.gameServer, this);
+        this.socket.packetHandler.pressQ = false;
+    }
+    
+    var updateNodes = []; // Nodes that need to be updated via packet
+    
+    // Remove nodes from visible nodes if possible
+    var d = 0;
+    while (d < this.nodeDestroyQueue.length) {
+        var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
+        if (index > -1) {
+            this.visibleNodes.splice(index, 1);
+            d++; // Increment
+        } else {
+            // Node was never visible anyways
+            this.nodeDestroyQueue.splice(d, 1);
+        }
+    }
+    
+    // Get visible nodes every 400 ms
+    var nonVisibleNodes = []; // Nodes that are not visible
+    if (this.tickViewBox <= 0) {
+        var newVisible = this.calcViewBox();
+        try { // Add a try block in any case
+            
+            // Compare and destroy nodes that are not seen
+            for (var i = 0; i < this.visibleNodes.length; i++) {
+                var index = newVisible.indexOf(this.visibleNodes[i]);
+                if (index == -1) {
+                    // Not seen by the client anymore
+                    nonVisibleNodes.push(this.visibleNodes[i]);
+                }
+            }
+            
+            // Add nodes to client's screen if client has not seen it already
+            for (var i = 0; i < newVisible.length; i++) {
+                var index = this.visibleNodes.indexOf(newVisible[i]);
+                if (index == -1) {
+                    updateNodes.push(newVisible[i]);
+                }
+            }
+        } catch (err) {
+            console.error(err);
+        }
         
-        // Move packet update
-        if (this.movePacketTriggered) {
-            this.movePacketTriggered = false;
-            this.shouldMoveCells = true;
-        } else {
-            this.shouldMoveCells = false;
+        this.visibleNodes = newVisible;
+        // Reset Ticks
+        this.tickViewBox = 0;
+    } else {
+        this.tickViewBox--;
+        // Add nodes to screen
+        for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
+            var node = this.nodeAdditionQueue[i];
+            this.visibleNodes.push(node);
+            updateNodes.push(node);
         }
-        // Actions buffer (So that people cant spam packets)
-        if (this.socket.packetHandler.pressSpace) { // Split cell
-            if (!this.mergeOverride) this.gameServer.gameMode.pressSpace(this.gameServer, this);
-            this.socket.packetHandler.pressSpace = false;
+    }
+    
+    // Update moving nodes
+    for (var i = 0; i < this.visibleNodes.length; i++) {
+        var node = this.visibleNodes[i];
+        if (node.sendUpdate()) {
+            // Sends an update if cell is moving
+            updateNodes.push(node);
         }
+    }
     
-        if (this.socket.packetHandler.pressW) { // Eject mass
-            this.gameServer.gameMode.pressW(this.gameServer, this);
-            this.socket.packetHandler.pressW = false;
-        }
-    
-        if (this.socket.packetHandler.pressQ) { // Q Press
-            this.gameServer.gameMode.pressQ(this.gameServer, this);
-            this.socket.packetHandler.pressQ = false;
-        }
-    
-        var updateNodes = []; // Nodes that need to be updated via packet
-    
-        // Remove nodes from visible nodes if possible
-        var d = 0;
-        while (d < this.nodeDestroyQueue.length) {
-            var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
-            if (index > -1) {
-                this.visibleNodes.splice(index, 1);
-                d++; // Increment
-            } else {
-                // Node was never visible anyways
-                this.nodeDestroyQueue.splice(d, 1);
-            }
-        }
-    
-        // Get visible nodes every 400 ms
-        var nonVisibleNodes = []; // Nodes that are not visible
-        if (this.tickViewBox <= 0) {
-            var newVisible = this.calcViewBox();
-            try { // Add a try block in any case
-    
-                // Compare and destroy nodes that are not seen
-                for (var i = 0; i < this.visibleNodes.length; i++) {
-                    var index = newVisible.indexOf(this.visibleNodes[i]);
-                    if (index == -1) {
-                        // Not seen by the client anymore
-                        nonVisibleNodes.push(this.visibleNodes[i]);
-                    }
-                }
-    
-                // Add nodes to client's screen if client has not seen it already
-                for (var i = 0; i < newVisible.length; i++) {
-                    var index = this.visibleNodes.indexOf(newVisible[i]);
-                    if (index == -1) {
-                        updateNodes.push(newVisible[i]);
-                    }
-                }
-            } catch(err) {
-                console.error(err);
-            }
-    
-            this.visibleNodes = newVisible;
-            // Reset Ticks
-            this.tickViewBox = 0;
-        } else {
-            this.tickViewBox--;
-            // Add nodes to screen
-            for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
-                var node = this.nodeAdditionQueue[i];
-                this.visibleNodes.push(node);
-                updateNodes.push(node);
-            }
-        }
-    
-        // Update moving nodes
-        for (var i = 0; i < this.visibleNodes.length; i++) {
-            var node = this.visibleNodes[i];
-            if (node.sendUpdate()) {
-                // Sends an update if cell is moving
-                updateNodes.push(node);
-            }
-        }
-    
-        // Send packet
-        this.socket.sendPacket(new Packet.UpdateNodes(
-            this.nodeDestroyQueue,
+    // Send packet
+    this.socket.sendPacket(new Packet.UpdateNodes(
+        this.nodeDestroyQueue,
             updateNodes,
             nonVisibleNodes,
             this.scrambleX,
             this.scrambleY
-        ));
+    ));
     
-        this.nodeDestroyQueue = []; // Reset destroy queue
-        this.nodeAdditionQueue = []; // Reset addition queue
+    this.nodeDestroyQueue = []; // Reset destroy queue
+    this.nodeAdditionQueue = []; // Reset addition queue
     
-        // Update leaderboard
-        if (this.tickLeaderboard <= 0) {
-            if (this.gameServer.lb_packet != null)
-                this.socket.sendPacket(this.gameServer.lb_packet);
-            this.tickLeaderboard = 10; // 20 ticks = 1 second
-        } else {
-            this.tickLeaderboard--;
-        }
+    // Update leaderboard
+    if (this.tickLeaderboard <= 0) {
+        if (this.gameServer.lb_packet != null)
+            this.socket.sendPacket(this.gameServer.lb_packet);
+        this.tickLeaderboard = 10; // 20 ticks = 1 second
+    } else {
+        this.tickLeaderboard--;
+    }
+    
+    // Handles disconnections
+    if (this.disconnect > -1) {
+        // Player has disconnected... remove it when the timer hits -1
+        this.disconnect--;
+        // Also remove it when its cells are completely eaten not to back up dead clients
+        if (this.disconnect == -1 || this.cells.length == 0) {
+            // Remove all client cells
+            var len = this.cells.length;
+            for (var i = 0; i < len; i++) {
+                var cell = this.socket.playerTracker.cells[0];
+                
+                if (!cell) {
+                    continue;
+                }
+                
+                this.gameServer.removeNode(cell);
+            }
             
-        // Handles disconnections
-        if (this.disconnect > -1) {
-            // Player has disconnected... remove it when the timer hits -1
-            this.disconnect--;
-            // Also remove it when its cells are completely eaten not to back up dead clients
-            if (this.disconnect == -1 || this.cells.length == 0) {
-                // Remove all client cells
-                var len = this.cells.length;
-                for (var i = 0; i < len; i++) {
-                    var cell = this.socket.playerTracker.cells[0];
-    
-                    if (!cell) {
-                        continue;
-                    }
-    
-                    this.gameServer.removeNode(cell);
-                }
-    
-                // Remove from client list
-                var index = this.gameServer.clients.indexOf(this.socket);
-                if (index != -1) {
-                    this.gameServer.clients.splice(index, 1);
-                }
+            // Remove from client list
+            var index = this.gameServer.clients.indexOf(this.socket);
+            if (index != -1) {
+                this.gameServer.clients.splice(index, 1);
             }
         }
-    //}.bind(this), 0);
+    }
 };
 
 // Viewing box
