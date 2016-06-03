@@ -157,7 +157,7 @@ GameServer.prototype.start = function() {
 
     function connectionEstablished(ws) {
         if (this.clients.length >= this.config.serverMaxConnections) { // Server full
-            ws.close();
+            ws.close(1000, "No slots");
             return;
         }
 
