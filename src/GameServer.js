@@ -259,14 +259,38 @@ GameServer.prototype.getRandomSpawn = function(mass) {
 };
 
 GameServer.prototype.getRandomColor = function() {
-    var colorRGB = [0xFF, 0x07, (Math.random() * 256) >> 0];
-    colorRGB.sort(function() {
-        return 0.5 - Math.random();
-    });
+    var h = 360 * Math.random();
+    var s = 248 / 255;
+    var v = 1;
+    
+    // hsv to rgb    
+    var rgb = { r: v, g: v, b: v };    // achromatic (grey)
+    if (s > 0) {
+        h /= 60;			           // sector 0 to 5
+        var i = Math.floor(h) >> 0;
+        var f = h - i;			       // factorial part of h
+        var p = v * (1 - s);
+        var q = v * (1 - s * f);
+        var t = v * (1 - s * (1 - f));
+        switch (i) {
+            case 0: rgb = { r: v, g: t, b: p }; break
+            case 1: rgb = { r: q, g: v, b: p }; break
+            case 2: rgb = { r: p, g: v, b: t }; break
+            case 3: rgb = { r: p, g: q, b: v }; break
+            case 4: rgb = { r: t, g: p, b: v }; break
+            default: rgb = { r: v, g: p, b: q }; break
+        }
+    }
+    rgb.r = Math.max(rgb.r, 0);
+    rgb.g = Math.max(rgb.g, 0);
+    rgb.b = Math.max(rgb.b, 0);
+    rgb.r = Math.min(rgb.r, 1);
+    rgb.g = Math.min(rgb.g, 1);
+    rgb.b = Math.min(rgb.b, 1);
     return {
-        r: colorRGB[0],
-        g: colorRGB[1],
-        b: colorRGB[2]
+        r: rgb.r * 255 >> 0,
+        g: rgb.g * 255 >> 0,
+        b: rgb.b * 255 >> 0
     };
 };
 
