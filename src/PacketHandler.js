@@ -47,9 +47,6 @@ PacketHandler.prototype.handleMessage = function(message) {
                 } else {
                     text = this.readStringUtf8(bufferName);
                 }
-                if (text.length > this.gameServer.config.playerMaxNickLength) {
-                    text = text.substring(0, this.gameServer.config.playerMaxNickLength);
-                }
             }
             this.setNickname(text);
             break;
@@ -115,7 +112,7 @@ PacketHandler.prototype.handleMessage = function(message) {
 };
 
 PacketHandler.prototype.readStringUnicode = function (dataBuffer) {
-    if (dataBuffer.length > 256) return "";
+    if (dataBuffer.length > 512) return "";
     
     var buffer = new Buffer(dataBuffer);
     var text = "";
@@ -133,7 +130,7 @@ PacketHandler.prototype.readStringUnicode = function (dataBuffer) {
 }
 
 PacketHandler.prototype.readStringUtf8 = function (dataBuffer) {
-    if (dataBuffer.length > 256) return "";
+    if (dataBuffer.length > 512) return "";
     
     var buffer = new Buffer(dataBuffer);
     var maxLen = buffer.length;
@@ -147,11 +144,28 @@ PacketHandler.prototype.readStringUtf8 = function (dataBuffer) {
     return text;
 }
 
-PacketHandler.prototype.setNickname = function(newNick) {
+PacketHandler.prototype.setNickname = function(text) {
     var client = this.socket.playerTracker;
     if (client.cells.length < 1) {
-        // Set name first
-        client.setName(newNick);
+        var name = "";
+        var skin = "";
+        if (text != null && text.length != 0) {
+            var n = -1;
+            if (text.charAt(0) == '<' && (n = text.indexOf('>', 1)) >= 0) {
+                skin = "%" + text.slice(1, n);
+                name = text.slice(n + 1);
+            //} else if (text[0] == "|" && (n = text.indexOf("|", 1)) >= 0) {
+            //    skin = ":http://i.imgur.com/" + text.slice(1, n);
+            //    name = text.slice(n + 1);
+            } else {
+                name = text;
+            }
+        }        
+        if (name.length > this.gameServer.config.playerMaxNickLength) {
+            name = name.substring(0, this.gameServer.config.playerMaxNickLength);
+        }
+        client.setName(name);
+        client.setSkin(skin);
         
         var c = this.gameServer.config;
         this.socket.sendPacket(new Packet.ClearNodes());
