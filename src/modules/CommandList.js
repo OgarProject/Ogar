@@ -223,7 +223,7 @@ Commands.list = {
                 for (var j = 0; j < len; j++) {
                     gameServer.removeNode(client.cells[0]);
                 }
-                client.socket.close();
+                client.socket.close(1000, "Kicked from server");
                 console.log("[Console] Kicked " + client.name);
                 break;
             }
@@ -236,7 +236,7 @@ Commands.list = {
                 for (var j = 0; j < len; j++) {
                     gameServer.removeNode(client.cells[0]);
                 }
-                client.socket.close();
+                client.socket.close(1000, "Kicked from server");
                 console.log("[Console] Kicked " + client.name);
         }
     },
