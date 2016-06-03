@@ -194,7 +194,7 @@ BotPlayer.prototype.splitDistance = function(cell) {
     var mass = cell.mass;
     var t = Math.PI * Math.PI;
     var modifier = 3 + Math.log(1 + mass) / 10;
-    var splitSpeed = cell.owner.gameServer.config.playerSpeed * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);
+    var splitSpeed = cell.owner.gameServer.config.playerSpeed * 30 * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);
     var endDist = Math.max(splitSpeed * 12.8, cell.getSize() * 2); // Checked via C#, final distance is near 6.512x splitSpeed
     
     return endDist;
