@@ -29,7 +29,7 @@ function GameServer() {
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
-    this.lb_packet = null; // Leaderboard packet for protocol 5
+    this.lb_packet = null; // Leaderboard packet
 
     this.bots = new BotLoader(this);
     this.log = new Logger();
@@ -975,6 +975,7 @@ GameServer.prototype.getStats = function() {
 
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function(packet) {
+    if (packet == null) return;
 
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN) {
