@@ -72,7 +72,7 @@ function GameServer() {
         virusStartMass: 100, // Starting virus size (In mass)
         virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
         ejectMass: 13, // Mass of ejected cells
-        ejectMassCooldown: 100, // Time until a player can eject mass again
+        ejectMassCooldown: 3,   // min ticks between ejects
         ejectMassLoss: 15, // Mass lost when ejecting cells
         ejectSpeed: 100, // Base speed of ejected cells
         ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
@@ -87,7 +87,7 @@ function GameServer() {
         playerMassDecayRate: .002, // Amount of mass lost per second
         playerMinMassDecay: 9, // Minimum mass for decay to occur
         playerMaxNickLength: 15, // Maximum nick length
-        playerSpeed: 30, // Player base speed
+        playerSpeed: 1,         // Player speed multiplier
         playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
         tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
@@ -664,7 +664,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Calculate customized speed for splitting cells
     var t = Math.PI * Math.PI;
     var modifier = 3 + Math.log(1 + mass) / (10 + Math.log(1 + mass));
-    var splitSpeed = this.config.playerSpeed * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);
+    var splitSpeed = this.config.playerSpeed * 30 * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);
 
     // Calculate new position
     var newPos = {
