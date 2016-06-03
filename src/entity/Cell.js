@@ -67,10 +67,19 @@ Cell.prototype.addMass = function(n) {
 };
 
 Cell.prototype.getSpeed = function() {
-    var t = Math.PI * Math.PI;
-    return this.gameServer.config.playerSpeed * 
-        Math.pow(this.getSize(), -0.01 / (Math.PI * Math.PI * Math.PI)); //-Math.PI / t);//1.5);
+    //var t = Math.PI * Math.PI;
+    //return this.gameServer.config.playerSpeed * 30 *
+    //    Math.pow(this.getSize(), -0.01 / (Math.PI * Math.PI * Math.PI)); //-Math.PI / t);//1.5);
+    
+    var k = 100 / 32; // TODO: implement mouse pos dependency
+    
+    var speed = this.getMaxSpeed(this.getSize()) * k;
+    return speed * (1 / 0.04) * this.gameServer.config.playerSpeed;
 };
+
+Cell.prototype.getMaxSpeed = function (size) {
+    return (2.1106 / Math.pow(size, 0.449));
+}
 
 Cell.prototype.setAngle = function(radians) {
     this.angle = radians;
