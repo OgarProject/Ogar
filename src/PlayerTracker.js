@@ -337,11 +337,9 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
 
         // Get spectate player's location and calculate zoom amount
-        var specZoom = Math.min(Math.sqrt(100 * specPlayer.getScore(false)), 555);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.8;
-
+        this.scale = specPlayer.getScale();
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
-        this.sendPosPacket(specZoom);
+        this.sendPosPacket(this.scale);
 
         return specPlayer.visibleNodes.slice(0);
     }
@@ -364,24 +362,21 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
     this.checkBorderPass();
 
     // Now that we've updated center pos, get nearby cells
-    // We're going to use config's view base times 2.5
-
-    var mult = 3.5; // To simplify multiplier, in case this needs editing later on
-    var baseX = this.gameServer.config.serverViewBaseX;
-    var baseY = this.gameServer.config.serverViewBaseY;
     
-    this.viewBox.topY = this.centerPos.y - baseY * mult;
-    this.viewBox.bottomY = this.centerPos.y + baseY * mult;
-    this.viewBox.leftX = this.centerPos.x - baseX * mult;
-    this.viewBox.rightX = this.centerPos.x + baseX * mult;
-    this.viewBox.width = baseX * mult;
-    this.viewBox.height = baseY * mult;
+    this.scale = 0.25;
+    var baseX = (this.gameServer.config.serverViewBaseX + 100) / this.scale;
+    var baseY = (this.gameServer.config.serverViewBaseY + 100) / this.scale;
+    
+    this.viewBox.leftX = this.centerPos.x - baseX / 2;
+    this.viewBox.topY = this.centerPos.y - baseY / 2;
+    this.viewBox.rightX = this.centerPos.x + baseX / 2;
+    this.viewBox.bottomY = this.centerPos.y + baseY / 2;
+    this.viewBox.width = baseX;
+    this.viewBox.height = baseY;
 
     // Use calcViewBox's way of looking for nodes
     var newVisible = this.calcVisibleNodes();
-    var specZoom = 222;
-    specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6; // Constant zoom
-    this.sendPosPacket(specZoom);
+    this.sendPosPacket(this.scale);
     return newVisible;
 };
 
