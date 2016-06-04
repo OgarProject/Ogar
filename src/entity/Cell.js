@@ -88,7 +88,8 @@ Cell.prototype.addMass = function(n) {
 
 Cell.prototype.getSpeed = function() {
     var speed = 2.1106 / Math.pow(this.getSize(), 0.449);
-    return speed * (1 / 0.04) * this.gameServer.config.playerSpeed * 2; // have no idea why it twice slower
+    // tickStep=40ms
+    return speed * 40 * this.gameServer.config.playerSpeed;
 };
 
 Cell.prototype.setAngle = function(radians) {
