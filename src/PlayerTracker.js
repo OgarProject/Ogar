@@ -15,6 +15,8 @@ function PlayerTracker(gameServer, socket) {
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
     this.score = 0; // Needed for leaderboard
+    this.scale = 1;
+    this.isMassChanged = true;
 
     this.mouse = {
         x: 0,
@@ -89,16 +91,38 @@ PlayerTracker.prototype.getSkin = function () {
 };
 
 PlayerTracker.prototype.getScore = function(reCalcScore) {
-    if (reCalcScore) {
-        var s = 0;
-        for (var i = 0; i < this.cells.length; i++) {
-            if (!this.cells[i]) return; // Error
-            s += this.cells[i].getMass();
-            this.score = s;
-        }
-    }
+    if (this.isMassChanged)
+        this.updateMass();
     return this.score >> 0;
 };
+
+PlayerTracker.prototype.getScale = function () {
+    if (this.isMassChanged)
+        this.updateMass();
+    return this.scale;
+};
+
+PlayerTracker.prototype.updateMass = function () {
+    var totalSize = 0;
+    for (var i = 0; i < this.cells.length; i++) {
+        var node = this.cells[i];
+        if (!node) continue;
+        totalSize += node.getSize();
+    }
+    if (totalSize == 0) {
+        //this.scale = 1;
+        this.score = 0;
+    } else {
+        this.score = totalSize * totalSize / 100;
+        this.scale = Math.pow(Math.min(64 / totalSize, 1), 0.4);
+    }
+    this.isMassChanged = false;
+};
+
+PlayerTracker.prototype.massChanged = function () {
+    this.isMassChanged = true;    
+};
+
 
 PlayerTracker.prototype.setColor = function(color) {
     this.color.r = color.r;
@@ -257,44 +281,27 @@ PlayerTracker.prototype.update = function () {
 // Viewing box
 
 PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var totalSize = 1.0;
-    var len = this.cells.length;
-
-    for (var i = 0; i < len; i++) {
-        if (!this.cells[i]) {
-            continue;
-        }
-
-        totalSize += this.cells[i].getSize();
-    }
-
-    var factor = Math.pow(Math.min(64.0 / totalSize, 1), 0.4);
-    this.sightRangeX = this.gameServer.config.serverViewBaseX / factor;
-    this.sightRangeY = this.gameServer.config.serverViewBaseY / factor;
+    var scale = this.getScale();
+    this.sightRangeX = (this.gameServer.config.serverViewBaseX + 100) / scale;
+    this.sightRangeY = (this.gameServer.config.serverViewBaseY + 100) / scale;
 };
 
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
     var len = this.cells.length;
-
-    if (len <= 0) {
-        return; // End the function if no cells exist
-    }
-
-    var X = 0;
-    var Y = 0;
-    var allSize = 0; // Focus larger cells to near the center and smaller away
+    if (len <= 0) return;
+    var cx = 0;
+    var cy = 0;
+    var count = 0;
     for (var i = 0; i < len; i++) {
-        // Error check
-        if (!this.cells[i]) continue;
-        var cell = this.cells[i];
-
-        X += cell.position.x * cell.getMass();
-        Y += cell.position.y * cell.getMass();
-        allSize += cell.getMass();
+        var node = this.cells[i];
+        if (!node) continue;
+        cx += node.position.x;
+        cy += node.position.y;
+        count++;
     }
-
-    this.centerPos.x = X / allSize;
-    this.centerPos.y = Y / allSize;
+    if (count == 0) return;
+    this.centerPos.x = cx / count;
+    this.centerPos.y = cy / count;
 };
 
 PlayerTracker.prototype.calcViewBox = function() {
@@ -308,10 +315,10 @@ PlayerTracker.prototype.calcViewBox = function() {
     this.updateCenter();
 
     // Box
-    this.viewBox.topY = this.centerPos.y - this.sightRangeY;
-    this.viewBox.bottomY = this.centerPos.y + this.sightRangeY;
-    this.viewBox.leftX = this.centerPos.x - this.sightRangeX;
-    this.viewBox.rightX = this.centerPos.x + this.sightRangeX;
+    this.viewBox.topY = this.centerPos.y - this.sightRangeY / 2;
+    this.viewBox.bottomY = this.centerPos.y + this.sightRangeY / 2;
+    this.viewBox.leftX = this.centerPos.x - this.sightRangeX / 2;
+    this.viewBox.rightX = this.centerPos.x + this.sightRangeX / 2;
     this.viewBox.width = this.sightRangeX;
     this.viewBox.height = this.sightRangeY;
 
@@ -380,9 +387,7 @@ PlayerTracker.prototype.calcVisibleNodes = function() {
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         var node = this.gameServer.nodes[i];
-        if (!node) {
-            continue;
-        }
+        if (!node) continue;
 
         var check = node.visibleCheck(this.viewBox, this.centerPos, this.cells);
         if (check > 0 || node.owner == this) {

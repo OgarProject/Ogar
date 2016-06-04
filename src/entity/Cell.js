@@ -9,6 +9,7 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.position = position;
     this._size = 0;
     this._mass = 0;
+    this._squareSize = 0;
     this.setMass(mass); // Starting mass of the cell
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     this.spiked = 0;    // If 1, then this cell has spikes around it
@@ -64,10 +65,13 @@ Cell.prototype.getMass = function () {
 Cell.prototype.setMass = function (mass) {
     this._mass = mass;
     this._size = Math.ceil(Math.sqrt(100 * mass));
+    this._squareSize = this._size * this._size;
+    if (this.owner)
+        this.owner.massChanged();
 };
 
 Cell.prototype.getSquareSize = function() {
-    return this._size * this._size;
+    return this._squareSize;
 };
 
 Cell.prototype.addMass = function(n) {
@@ -116,24 +120,10 @@ Cell.prototype.setKiller = function(cell) {
 // Functions
 
 Cell.prototype.collisionCheck = function(bottomY, topY, rightX, leftX) {
-    // Collision checking
-    if (this.position.y > bottomY) {
-        return false;
-    }
-
-    if (this.position.y < topY) {
-        return false;
-    }
-
-    if (this.position.x > rightX) {
-        return false;
-    }
-
-    if (this.position.x < leftX) {
-        return false;
-    }
-
-    return true;
+    return this.position.x > leftX && 
+        this.position.x < rightX &&
+        this.position.y > topY && 
+        this.position.y < bottomY;
 };
 
 // This collision checking function is based on CIRCLE shape
@@ -151,13 +141,19 @@ Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
 Cell.prototype.visibleCheck = function(box, centerPos, cells) {
     // Checks if this cell is visible to the player
     var isThere = false;
-    if (this.getMass() < 100) isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
-    else {
+    if (this.cellType == 1) {
+        isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
+    } else {
         var cellSize = this.getSize();
-        var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
-        var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
-    
-        isThere = (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
+        var minx = this.position.x - cellSize;
+        var miny = this.position.y - cellSize;
+        var maxx = this.position.x + cellSize;
+        var maxy = this.position.y + cellSize;
+        var d1x = box.leftX - maxx;
+        var d1y = box.topY - maxy;
+        var d2x = minx - box.rightX;
+        var d2y = miny - box.bottomY;
+        isThere = d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
     }
     if (isThere) {
         // It is
