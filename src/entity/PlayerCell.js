@@ -49,8 +49,14 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
         return;
     }
 
-    var dist = this.getDist(this.position.x, this.position.y, x2, y2);
-    var speed = Math.min(this.getSpeed(), dist) / 2; // Twice as slower
+    //var dist = this.getDist(this.position.x, this.position.y, x2, y2);
+    //var speed = Math.min(this.getSpeed(), dist) / 2; // Twice as slower
+    var dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+    dist = Math.min(dist, 32);
+    var speed = 0;
+    if (dist >= 1) {
+        speed = this.getSpeed() * dist / 32;
+    }
 
     // Move cell
     this.position.x += Math.sin(angle) * speed;
