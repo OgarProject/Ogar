@@ -171,20 +171,20 @@ MotherCell.prototype.update = function(gameServer) {
             i++;
         }
     }
-    if (this.mass > 222) {
+    if (this.getMass() > 222) {
         // Always spawn food if the mother cell is larger than 222
         var cellSize = gameServer.config.foodMass;
-        var remaining = this.mass - 222;
+        var remaining = this.getMass() - 222;
         var maxAmount = Math.min(Math.floor(remaining / cellSize), 2);
         for (var i = 0; i < maxAmount; i++) {
             this.spawnFood(gameServer);
-            this.mass -= cellSize;
+            this.setMass(this.getMass() - cellSize);
         }
     }
 };
 
 MotherCell.prototype.checkEat = function(gameServer) {
-    var safeMass = this.mass * .78;
+    var safeMass = this.getMass() * .78;
 
     // Loop for potential prey
     for (var i in gameServer.nodesPlayer) {
@@ -206,7 +206,7 @@ MotherCell.prototype.checkEat = function(gameServer) {
 };
 
 MotherCell.prototype.checkEatCell = function(check, safeMass, gameServer) {
-    if ((check.getType() == 1) || (check.mass > safeMass)) {
+    if ((check.getType() == 1) || (check.getMass() > safeMass)) {
         // Too big to be consumed or check is a food cell
         return;
     }
@@ -217,7 +217,7 @@ MotherCell.prototype.checkEatCell = function(check, safeMass, gameServer) {
     if (dist < allowDist) {
         // Eat it
         gameServer.removeNode(check);
-        this.mass += check.mass;
+        this.setMass(this.getMass() + check.getMass());
     }
 };
 

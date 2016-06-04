@@ -93,7 +93,7 @@ PlayerTracker.prototype.getScore = function(reCalcScore) {
         var s = 0;
         for (var i = 0; i < this.cells.length; i++) {
             if (!this.cells[i]) return; // Error
-            s += this.cells[i].mass;
+            s += this.cells[i].getMass();
             this.score = s;
         }
     }
@@ -288,9 +288,9 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
         if (!this.cells[i]) continue;
         var cell = this.cells[i];
 
-        X += cell.position.x * cell.mass;
-        Y += cell.position.y * cell.mass;
-        allSize += cell.mass;
+        X += cell.position.x * cell.getMass();
+        Y += cell.position.y * cell.getMass();
+        allSize += cell.getMass();
     }
 
     this.centerPos.x = X / allSize;

@@ -246,7 +246,7 @@ TeamZ.prototype.startGame = function(gameServer) {
             var cell = client.cells[j];
             if (cell) {
                 cell.setColor(client.color);
-                cell.mass = gameServer.config.playerStartMass;
+                cell.setMass(gameServer.config.playerStartMass);
                 this.resetSpeedCell(cell);
             }
         }
@@ -486,7 +486,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             }
 
             // Make sure the cell is big enough to be eaten.
-            if ((check.mass * multiplier) > cell.mass) {
+            if ((check.getMass() * multiplier) > cell.getMass()) {
                 continue;
             }
 
@@ -524,7 +524,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 continue;
             }
 
-            if (cell.mass < this.config.playerMinMassSplit) {
+            if (cell.getMass() < this.config.playerMinMassSplit) {
                 continue;
             }
 
@@ -541,8 +541,8 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             };
             // Calculate mass and speed of splitting cell
             var splitSpeed = cell.getSpeed() * 6;
-            var newMass = cell.mass / 2;
-            cell.mass = newMass;
+            var newMass = cell.getMass() / 2;
+            cell.setMass(newMass);
             // Create cell
             var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
             split.setAngle(angle);
@@ -598,13 +598,13 @@ TeamZ.prototype.onServerInit = function(gameServer) {
     Virus.prototype.onConsume = function(consumer, gameServer) {
         var client = consumer.owner;
 
-        var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
+        var maxSplits = Math.floor(consumer.getMass() / 16) - 1; // Maximum amount of splits
         var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
         numSplits = Math.min(numSplits, maxSplits);
-        var splitMass = Math.min(consumer.mass / (numSplits + 1), 36); // Maximum size of new splits
+        var splitMass = Math.min(consumer.getMass() / (numSplits + 1), 36); // Maximum size of new splits
 
         // Cell consumes mass before splitting
-        consumer.addMass(this.mass);
+        consumer.addMass(this.getMass());
 
         // Cell cannot split any further
         if (numSplits <= 0) {
@@ -613,7 +613,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
 
         // Big cells will split into cells larger than 36 mass (1/4 of their mass)
         var bigSplits = 0;
-        var endMass = consumer.mass - (numSplits * splitMass);
+        var endMass = consumer.getMass() - (numSplits * splitMass);
         if ((endMass > 300) && (numSplits > 0)) {
             bigSplits++;
             numSplits--;
@@ -632,14 +632,14 @@ TeamZ.prototype.onServerInit = function(gameServer) {
         for (var k = 0; k < numSplits; k++) {
             angle += 6 / numSplits; // Get directions of splitting cells
             gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
-            consumer.mass -= splitMass;
+            consumer.setMass(consumer.getMass() - splitMass);
         }
 
         for (var k = 0; k < bigSplits; k++) {
             angle = Math.random() * 6.28; // Random directions
-            splitMass = consumer.mass / 4;
+            splitMass = consumer.getMass() / 4;
             gameServer.newCellVirused(client, consumer, angle, splitMass, 20);
-            consumer.mass -= splitMass;
+            consumer.setMass(consumer.getMass() - splitMass);
         }
 
         if (gameServer.gameMode.hasEatenHero(client))
@@ -1052,7 +1052,7 @@ function Hero() {
         g: 255,
         b: 7
     };
-    this.mass = 60;
+    this.setMass(60);
 }
 
 Hero.prototype = new Cell();
@@ -1092,7 +1092,7 @@ Hero.prototype.feed = function(feeder, gameServer) {
 Hero.prototype.onConsume = function(consumer, gameServer) {
     // Called when the cell is consumed
     var client = consumer.owner;
-    consumer.addMass(this.mass); // delicious
+    consumer.addMass(this.getMass()); // delicious
 
     if (gameServer.gameMode.isCrazy(client)) {
         // Neutralize the Zombie effect
@@ -1123,7 +1123,7 @@ function Brain() {
         g: 7,
         b: 255
     };
-    this.mass = 60;
+    this.setMass(60);
 }
 
 Brain.prototype = new Cell();
@@ -1163,7 +1163,7 @@ Brain.prototype.feed = function(feeder, gameServer) {
 Brain.prototype.onConsume = function(consumer, gameServer) {
     // Called when the cell is consumed
     var client = consumer.owner;
-    consumer.addMass(this.mass); // yummy!
+    consumer.addMass(this.getMass()); // yummy!
 
     client.eatenBrainTimer = gameServer.gameMode.brainEffectDuration;
 

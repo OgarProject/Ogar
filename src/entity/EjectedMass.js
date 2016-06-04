@@ -4,8 +4,6 @@ function EjectedMass() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 3;
-    this.size = Math.ceil(Math.sqrt(100 * this.mass));
-    this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.addedAntiTeam = false; // Not to affect anti-teaming two times
 }
 
@@ -19,16 +17,6 @@ EjectedMass.prototype.getName = function() {
 
 EjectedMass.prototype.addMass = function(n) {
     return; // Do nothing, this is an ejected cell
-};
-
-
-// Cell-specific functions
-EjectedMass.prototype.getSize = function() {
-    return this.size;
-};
-
-EjectedMass.prototype.getSquareSize = function() {
-    return this.squareSize;
 };
 
 EjectedMass.prototype.calcMove = null; // Only for player controlled movement
@@ -67,7 +55,7 @@ EjectedMass.prototype.onRemove = function(gameServer) {
 
 EjectedMass.prototype.onConsume = function(consumer, gameServer) {
     // Adds mass to consumer
-    consumer.addMass(this.mass);
+    consumer.addMass(this.getMass());
 };
 
 EjectedMass.prototype.onAutoMove = function(gameServer) {

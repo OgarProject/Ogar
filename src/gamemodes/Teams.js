@@ -138,8 +138,8 @@ Teams.prototype.updateLB = function(gameServer) {
                 continue;
             }
 
-            teamMass[i] += cell.mass;
-            total += cell.mass;
+            teamMass[i] += cell.getMass();
+            total += cell.getMass();
         }
     }
     // Calc percentage

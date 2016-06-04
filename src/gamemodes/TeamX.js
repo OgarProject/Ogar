@@ -228,7 +228,7 @@ TeamX.prototype.onServerInit = function(gameServer) {
                 }
 
                 // Make sure the cell is big enough to be eaten.
-                if ((check.mass * multiplier) > cell.mass) {
+                if ((check.getMass() * multiplier) > cell.getMass()) {
                     continue;
                 }
 
@@ -344,32 +344,32 @@ MotherCell.prototype.getEatingRange = function() {
 
 MotherCell.prototype.update = function(gameServer) {
     // Add mass
-    this.mass += .25;
+    this.setMass(this.getMass() + .25);
 
     // Spawn food
     var maxFood = 10; // Max food spawned per tick
     var i = 0; // Food spawn counter
-    while ((this.mass > gameServer.gameMode.motherCellMass) && (i < maxFood)) {
+    while ((this.getMass() > gameServer.gameMode.motherCellMass) && (i < maxFood)) {
         // Only spawn if food cap hasn been reached
         if (gameServer.currentFood < gameServer.config.foodMaxAmount) {
             this.spawnFood(gameServer);
         }
 
         // Incrementers
-        this.mass--;
+        this.setMass(this.getMass() - 1);
         i++;
     }
 };
 
 MotherCell.prototype.checkEat = function(gameServer) {
-    var safeMass = this.mass * .9;
+    var safeMass = this.getMass() * .9;
     var r = this.getSize(); // The box area that the checked cell needs to be in to be considered eaten
 
     // Loop for potential prey
     for (var i in gameServer.nodesPlayer) {
         var check = gameServer.nodesPlayer[i];
 
-        if (check.mass > safeMass) {
+        if (check.getMass() > safeMass) {
             // Too big to be consumed
             continue;
         }
@@ -379,13 +379,13 @@ MotherCell.prototype.checkEat = function(gameServer) {
         if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
             // Eats the cell
             gameServer.removeNode(check);
-            this.mass += check.mass;
+            this.setMass(this.getMass() + check.getMass());
         }
     }
     for (var i in gameServer.movingNodes) {
         var check = gameServer.movingNodes[i];
 
-        if ((check.getType() == 1) || (check.mass > safeMass)) {
+        if ((check.getType() == 1) || (check.getMass() > safeMass)) {
             // Too big to be consumed/ No player cells
             continue;
         }
@@ -395,7 +395,7 @@ MotherCell.prototype.checkEat = function(gameServer) {
         if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
             // Eat the cell
             gameServer.removeNode(check);
-            this.mass += check.mass;
+            this.setMass(this.getMass() + check.getMass());
         }
     }
 };

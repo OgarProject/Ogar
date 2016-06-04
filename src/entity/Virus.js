@@ -16,13 +16,13 @@ Virus.prototype.calcMove = null; // Only for player controlled movement
 
 Virus.prototype.feed = function(feeder, gameServer) {
     if (this.moveEngineTicks == 0) this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-    this.mass += feeder.mass;
+    this.setMass(this.getMass() + feeder.getMass());
     this.fed++; // Increase feed count
     gameServer.removeNode(feeder);
 
     // Check if the virus is going to explode
     if (this.fed >= gameServer.config.virusFeedAmount) {
-        this.mass = gameServer.config.virusStartMass; // Reset mass
+        this.setMass(gameServer.config.virusStartMass); // Reset mass
         this.fed = 0;
         gameServer.shootVirus(this);
     }
@@ -39,19 +39,19 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
     var client = consumer.owner;
 
     // Cell consumes mass before any calculation
-    consumer.addMass(this.mass);
+    consumer.addMass(this.getMass());
 
-    var maxSplits = Math.floor(consumer.mass / 16) - 1; // Maximum amount of splits
+    var maxSplits = Math.floor(consumer.getMass() / 16) - 1; // Maximum amount of splits
     var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits, maxSplits);
-    var splitMass = Math.min(consumer.mass / (numSplits + 1), 24); // Maximum size of new splits
+    var splitMass = Math.min(consumer.getMass() / (numSplits + 1), 24); // Maximum size of new splits
 
     // Cell cannot split any further
     if (numSplits <= 0) {
         return;
     }
 
-    var mass = consumer.mass; // Mass of the consumer
+    var mass = consumer.getMass(); // Mass of the consumer
     var bigSplits = []; // Big splits
 
     // Big cells will split into cells larger than 24 mass

@@ -23,7 +23,7 @@ BotPlayer.prototype.getLowestCell = function() {
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = this.cells.valueOf();
     sorted.sort(function(a, b) {
-        return b.mass - a.mass;
+        return b.getMass() - a.getMass();
     });
 
     return sorted[0];
@@ -85,21 +85,21 @@ BotPlayer.prototype.decide = function(cell) {
         if (check.cellType == 0) {
             // Player cell
             if (this.gameServer.gameMode.haveTeams && (cell.owner.team == check.owner.team)) influence = 0; // Same team cell
-            else if (cell.mass / 1.3 > check.mass) influence = check.getSize() * 2.5; // Can eat it
-            else if (check.mass / 1.3 > cell.mass) influence = -check.getSize(); // Can eat me
+            else if (cell.getMass() / 1.3 > check.getMass()) influence = check.getSize() * 2.5; // Can eat it
+            else if (check.getMass() / 1.3 > cell.getMass()) influence = -check.getSize(); // Can eat me
         } else if (check.cellType == 1) {
             // Food
             influence = 1;
         } else if (check.cellType == 2) {
             // Virus
-            if (cell.mass / 1.3 > check.mass) {
+            if (cell.getMass() / 1.3 > check.getMass()) {
                 // Can eat it
                 if (this.cells.length == this.gameServer.config.playerMaxCells) influence = check.getSize() * 2.5; // Won't explode
                 else influence = -1; // Can explode
             }
         } else if (check.cellType == 3) {
             // Ejected mass
-            if (cell.mass / 1.3 > check.mass) influence = check.getSize();
+            if (cell.getMass() / 1.3 > check.getMass()) influence = check.getSize();
         } else {
             influence = check.getSize(); // Might be TeamZ
         }
@@ -127,7 +127,7 @@ BotPlayer.prototype.decide = function(cell) {
         var force = displacement.normalize().scale(influence);
 
         // Splitting conditions
-        if (check.cellType == 0 && cell.mass / 2.6 > check.mass && cell.mass / 5 < check.mass &&
+        if (check.cellType == 0 && cell.getMass() / 2.6 > check.getMass() && cell.getMass() / 5 < check.getMass() &&
             (!split) && this.splitCooldown == 0 && this.cells.length < 3) {
                 
             var endDist = Math.max(this.splitDistance(cell), cell.getSize() * 4);
@@ -149,7 +149,7 @@ BotPlayer.prototype.decide = function(cell) {
     if (split) {
         // Can be shortened but I'm too lazy
         if (threats.length > 0) {
-            if (this.largest(threats).mass / 2.6 > cell.mass) { // ??? but works
+            if (this.largest(threats).getMass() / 2.6 > cell.getMass()) { // ??? but works
                 // Splitkill the target
                 this.mouse = {
                     x: splitTarget.position.x,
@@ -183,7 +183,7 @@ BotPlayer.prototype.largest = function(list) {
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = list.valueOf();
     sorted.sort(function(a, b) {
-        return b.mass - a.mass;
+        return b.getMass() - a.getMass();
     });
 
     return sorted[0];
@@ -191,7 +191,7 @@ BotPlayer.prototype.largest = function(list) {
 
 BotPlayer.prototype.splitDistance = function(cell) {
     // Calculate split distance and check if it is larger than the raw distance
-    var mass = cell.mass;
+    var mass = cell.getMass();
     var t = Math.PI * Math.PI;
     var modifier = 3 + Math.log(1 + mass) / 10;
     var splitSpeed = cell.owner.gameServer.config.playerSpeed * 30 * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);

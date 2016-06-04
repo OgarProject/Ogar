@@ -290,7 +290,7 @@ Commands.list = {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
-                    client.cells[j].mass = amount;
+                    client.cells[j].setMass(amount);
                 }
 
                 console.log("[Console] Set mass of " + client.name + " to " + amount);

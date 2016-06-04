@@ -4,8 +4,6 @@ function Food() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 1;
-    this.size = Math.ceil(Math.sqrt(100 * this.mass));
-    this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.shouldSendUpdate = false;
 
     if (this.gameServer.config.foodMassGrow &&
@@ -17,26 +15,16 @@ function Food() {
 module.exports = Food;
 Food.prototype = new Cell();
 
-Food.prototype.getSize = function() {
-    return this.size;
-};
-
-Food.prototype.getSquareSize = function() {
-    return this.squareSize;
-};
-
 Food.prototype.calcMove = null; // Food has no need to move
 
 // Main Functions
 
 Food.prototype.grow = function() {
     setTimeout(function() {
-        this.mass++; // food mass increased, we need to recalculate its size and squareSize, and send update to client side
-        this.size = Math.ceil(Math.sqrt(100 * this.mass));
-        this.squareSize = (100 * this.mass) >> 0;
+        this.setMass(this.getMass() + 1); // food mass increased, we need to recalculate its size and squareSize, and send update to client side
         this.shouldSendUpdate = true;
 
-        if (this.mass < this.gameServer.config.foodMassLimit) {
+        if (this.getMass() < this.gameServer.config.foodMassLimit) {
             this.grow();
         }
     }.bind(this), this.gameServer.config.foodMassTimeout * 1000);
@@ -59,5 +47,5 @@ Food.prototype.onRemove = function(gameServer) {
 };
 
 Food.prototype.onConsume = function(consumer, gameServer) {
-    consumer.addMass(this.mass);
+    consumer.addMass(this.getMass());
 };

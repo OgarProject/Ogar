@@ -117,8 +117,8 @@ PlayerCell.prototype.onConsume = function(consumer, gameServer) {
     // Add an inefficiency for eating other players' cells
     var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
     // Anti-bot measure
-    factor = (consumer.mass >= 625 && this.mass <= 17 && gameServer.config.playerBotGrowEnabled == 1) ? 0 : factor;
-    consumer.addMass(factor * this.mass);
+    factor = (consumer.getMass() >= 625 && this.getMass() <= 17 && gameServer.config.playerBotGrowEnabled == 1) ? 0 : factor;
+    consumer.addMass(factor * this.getMass());
 };
 
 PlayerCell.prototype.onAdd = function(gameServer) {

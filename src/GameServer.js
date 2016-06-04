@@ -555,7 +555,7 @@ GameServer.prototype.updateMoveEngine = function() {
         for (var i = 0; i < client.cells.length; i++) sorted.push(client.cells[i]);
         
         sorted.sort(function(a, b) {
-            return b.mass - a.mass;
+            return b.getMass() - a.getMass();
         });
 
         // Go cell by cell
@@ -644,7 +644,7 @@ GameServer.prototype.splitCells = function(client) {
         var angle = Math.atan2(deltaX, deltaY);
         if (angle == 0) angle = Math.PI / 2;
 
-        if (this.createPlayerCell(client, cell, angle, cell.mass / 2) == true) splitCells++;
+        if (this.createPlayerCell(client, cell, angle, cell.getMass() / 2) == true) splitCells++;
     }
 };
 
@@ -656,7 +656,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
         return false;
     }
 
-    if (parent.mass < this.config.playerMinMassSplit) {
+    if (parent.getMass() < this.config.playerMinMassSplit) {
         // Minimum mass to split
         return false;
     }
@@ -680,7 +680,7 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     newCell.collisionRestoreTicks = 12;
     parent.collisionRestoreTicks = 12;
     newCell.calcMergeTime(this.config.playerRecombineTime);
-    parent.mass -= mass; // Remove mass from parent cell
+    parent.setMass(parent.getMass() - mass); // Remove mass from parent cell
 
     // Add to node list
     this.addNode(newCell);
@@ -705,7 +705,7 @@ GameServer.prototype.ejectMass = function(client) {
             continue;
         }
 
-        if (cell.mass < this.config.playerMinMassEject) {
+        if (cell.getMass() < this.config.playerMinMassEject) {
             continue;
         }
 
@@ -724,7 +724,7 @@ GameServer.prototype.ejectMass = function(client) {
         };
 
         // Remove mass from parent cell
-        cell.mass -= this.config.ejectMassLoss;
+        cell.setMass(cell.getMass() - this.config.ejectMassLoss);
         
         // Randomize angle
         angle += (Math.random() * 0.6) - 0.3;
@@ -840,7 +840,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
         }
 
         // Make sure the cell is big enough to be eaten.
-        if ((check.mass * multiplier) > cell.mass) {
+        if ((check.getMass() * multiplier) > cell.getMass()) {
             continue;
         }
         
@@ -923,8 +923,8 @@ GameServer.prototype.updateCells = function() {
         }
 
         // Mass decay
-        if (cell.mass >= this.config.playerMinMassDecay) {
-            cell.mass *= massDecay;
+        if (cell.getMass() >= this.config.playerMinMassDecay) {
+            cell.setMass(cell.getMass() * massDecay);
         }
     }
 };

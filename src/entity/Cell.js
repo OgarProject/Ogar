@@ -7,9 +7,11 @@ function Cell(nodeId, owner, position, mass, gameServer) {
         b: 0
     };
     this.position = position;
-    this.mass = mass; // Starting mass of the cell
+    this._size = 0;
+    this._mass = 0;
+    this.setMass(mass); // Starting mass of the cell
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
-    this.spiked = 0; // If 1, then this cell has spikes around it
+    this.spiked = 0;    // If 1, then this cell has spikes around it
 
     this.killedBy; // Cell that ate this cell
     this.gameServer = gameServer;
@@ -52,25 +54,32 @@ Cell.prototype.getType = function() {
 };
 
 Cell.prototype.getSize = function() {
-    // Calculates radius based on cell mass
-    return Math.ceil(Math.sqrt(100 * this.mass));
+    return this._size;
+};
+
+Cell.prototype.getMass = function () {
+    return this._mass;
+};
+
+Cell.prototype.setMass = function (mass) {
+    this._mass = mass;
+    this._size = Math.ceil(Math.sqrt(100 * mass));
 };
 
 Cell.prototype.getSquareSize = function() {
-    // R * R
-    return (100 * this.mass) >> 0;
+    return this._size * this._size;
 };
 
 Cell.prototype.addMass = function(n) {
     // Check if the cell needs to autosplit before adding mass
-    if (this.mass > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
-        var splitMass = this.mass / 2;
+    if (this.getMass() > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
+        var splitMass = this.getMass() / 2;
         var randomAngle = Math.random() * 6.28; // Get random angle
         this.gameServer.createPlayerCell(this.owner, this, randomAngle, splitMass);
     } else {
-        this.mass = Math.min(this.mass, this.gameServer.config.playerMaxMass);
+        this.setMass(Math.min(this.getMass(), this.gameServer.config.playerMaxMass));
     }
-    this.mass += n;
+    this.setMass(this.getMass() + n);
 };
 
 Cell.prototype.getSpeed = function() {
@@ -142,7 +151,7 @@ Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
 Cell.prototype.visibleCheck = function(box, centerPos, cells) {
     // Checks if this cell is visible to the player
     var isThere = false;
-    if (this.mass < 100) isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
+    if (this.getMass() < 100) isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
     else {
         var cellSize = this.getSize();
         var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
