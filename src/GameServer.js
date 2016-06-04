@@ -227,11 +227,11 @@ GameServer.prototype.getNewPlayerID = function() {
 };
 
 GameServer.prototype.getRandomPosition = function() {
-    var xSum = this.config.borderRight + this.config.borderLeft;
-    var ySum = this.config.borderBottom + this.config.borderTop;
+    var width = this.config.borderRight - this.config.borderLeft;
+    var height = this.config.borderBottom - this.config.borderTop;
     return {
-        x: Math.floor(Math.random() * xSum - this.config.borderLeft),
-        y: Math.floor(Math.random() * ySum - this.config.borderTop)
+        x: Math.floor(this.config.borderLeft + width * Math.random()),
+        y: Math.floor(this.config.borderTop + height * Math.random())
     };
 };
 

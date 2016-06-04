@@ -216,33 +216,65 @@ Cell.prototype.calcMovePhys = function(config) {
         }
     }
 
-    // Border check - Bouncy physics
+    //// Border check - Bouncy physics
     var radius = 40;
-    if ((this.position.x - radius) < -config.borderLeft) {
+    if (X < config.borderLeft && this.position.x != X) {
         // Flip angle horizontally - Left side
         this.angle = 6.28 - this.angle;
-        X = -config.borderLeft + radius;
+        var p = this.getLineIntersect(
+            this.position.x, this.position.y, X, Y,
+            config.borderLeft, config.borderBottom,
+            config.borderLeft, config.borderTop);
+        X = p.x;
+        Y = p.y;
     }
-    if ((this.position.x + radius) > config.borderRight) {
+    if (X > config.borderRight && this.position.y != X) {
         // Flip angle horizontally - Right side
         this.angle = 6.28 - this.angle;
-        X = config.borderRight - radius;
+        var p = this.getLineIntersect(
+            this.position.x, this.position.y, X, Y,
+            config.borderRight, config.borderBottom,
+            config.borderRight, config.borderTop);
+        X = p.x;
+        Y = p.y;
     }
-    if ((this.position.y - radius) < -config.borderTop) {
+    if (Y < config.borderTop && this.position.y != Y) {
         // Flip angle vertically - Top side
         this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
-        Y = -config.borderTop + radius;
+        var p = this.getLineIntersect(
+            this.position.x, this.position.y, X, Y,
+            config.borderRight, config.borderTop,
+            config.borderLeft, config.borderTop);
+        X = p.x;
+        Y = p.y;
     }
-    if ((this.position.y + radius) > config.borderBottom) {
+    if (Y > config.borderBottom && this.position.y != Y) {
         // Flip angle vertically - Bottom side
         this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
-        Y = config.borderBottom - radius;
+        var p = this.getLineIntersect(
+            this.position.x, this.position.y, X, Y,
+            config.borderRight, config.borderBottom,
+            config.borderLeft, config.borderBottom);
+        X = p.x;
+        Y = p.y;
     }
 
     // Set position
-    this.position.x = X >> 0;
-    this.position.y = Y >> 0;
+    this.position.x = X;
+    this.position.y = Y;
 };
+
+Cell.prototype.getLineIntersect = function(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+    var z1 = p1x - p0x;
+    var z2 = p3x - p2x;
+    var w1 = p1y - p0y;
+    var w2 = p3y - p2y;
+    var k2 = (z1 * (p2y - p0y) + w1 * (p0x - p2x)) / (w1 * z2 - z1 * w2);
+    return {
+        x: p2x + z2 * k2,
+        y: p2y + w2 * k2
+    };
+}
 
 // Override these
 

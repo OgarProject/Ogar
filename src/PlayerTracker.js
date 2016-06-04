@@ -56,8 +56,10 @@ function PlayerTracker(gameServer, socket) {
     // Gamemode function
     if (gameServer) {
         // Find center
-        this.centerPos.x = (gameServer.config.borderLeft - gameServer.config.borderRight) / 2;
-        this.centerPos.y = (gameServer.config.borderTop - gameServer.config.borderBottom) / 2;
+        var width = gameServer.config.borderRight - gameServer.config.borderLeft;
+        var height = gameServer.config.borderBottom - gameServer.config.borderTop;
+        this.centerPos.x = gameServer.config.borderLeft + width / 2;
+        this.centerPos.y = gameServer.config.borderTop + height / 2;
         // Player id
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
@@ -408,13 +410,13 @@ PlayerTracker.prototype.setCenterPos = function(x, y) {
 
 PlayerTracker.prototype.checkBorderPass = function() {
     // A check while in free-roam mode to avoid player going into nothingness
-    if (this.centerPos.x < -this.gameServer.config.borderLeft) {
+    if (this.centerPos.x < this.gameServer.config.borderLeft) {
         this.centerPos.x = this.gameServer.config.borderLeft;
     }
     if (this.centerPos.x > this.gameServer.config.borderRight) {
         this.centerPos.x = this.gameServer.config.borderRight;
     }
-    if (this.centerPos.y < -this.gameServer.config.borderTop) {
+    if (this.centerPos.y < this.gameServer.config.borderTop) {
         this.centerPos.y = this.gameServer.config.borderTop;
     }
     if (this.centerPos.y > this.gameServer.config.borderBottom) {
