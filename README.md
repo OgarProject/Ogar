@@ -13,7 +13,14 @@ Original Ogar found [here](https://github.com/OgarProject/Ogar)
 The goal is to cleanup the code, fix the bugs and improve physics.
 
 
-## The changes
-* Fix protocol issues
-* Cleanup the code (in progress)
-* Improve physics (in progress)
+## What's new:
+* Player speed - replaced with formula approximated to vanilla physics;
+* Recombine time - replaced with formula approximated to vanilla physics;
+* Cell collision - rectangle collision and circle collision algorithms were fixed and replaced with more fast;
+* View area - fixed and replaced with formula approximated to vanilla physics;
+* Mouse control and cell movements - fixed and replaced with physics approximated to vanilla physics;
+* Border calculations - fixed
+* Border bouncy physics - fixed and improved
+* mainLoop - cleaned
+* added support for different protocols
+* color generator replaced with hsv model
