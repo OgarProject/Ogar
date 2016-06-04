@@ -138,12 +138,14 @@ Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
     return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
 };
 
-Cell.prototype.visibleCheck = function(box, centerPos, cells) {
+Cell.prototype.visibleCheck = function (box, centerPos, cells) {
     // Checks if this cell is visible to the player
     var isThere = false;
     if (this.cellType == 1) {
+        // dot collision detector
         isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
     } else {
+        // rectangle collision detector
         var cellSize = this.getSize();
         var minx = this.position.x - cellSize;
         var miny = this.position.y - cellSize;
@@ -155,23 +157,24 @@ Cell.prototype.visibleCheck = function(box, centerPos, cells) {
         var d2y = miny - box.bottomY;
         isThere = d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
     }
-    if (isThere) {
-        // It is
-        // To save perfomance, check if any client's cell collides with this cell
-        for (var i = 0; i < cells.length; i++) {
-            var cell = cells[i];
-            if (!cell) continue;
-            
-            var dist = this.getDist(this.position.x, this.position.y, cell.position.x, cell.position.y);
-            var collideDist = cell.getSize() + this.getSize();
-            
-            if (dist < collideDist) {
-                return 2;
-            }// Colliding with one
+    if (!isThere) return 0;
+    
+    // To save perfomance, check if any client's cell collides with this cell
+    for (var i = 0; i < cells.length; i++) {
+        var cell = cells[i];
+        if (!cell) continue;
+        
+        // circle collision detector
+        var dx = cell.position.x - this.position.x;
+        var dy = cell.position.y - this.position.y;
+        var r = cell.getSize() + this.getSize();
+        if (dx * dx + dy * dy < r * r) {
+            // circle collision detected
+            return 2;
         }
-        return 1; // Not colliding with any
     }
-    else return 0;
+    // Not colliding with any
+    return 1;
 };
 
 Cell.prototype.calcMovePhys = function(config) {
