@@ -103,7 +103,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     c.borderTop + this.socket.playerTracker.scrambleY,
                     c.borderBottom + this.socket.playerTracker.scrambleY,
                     0,
-                    "OgarMulti"));
+                    "MultiOgar 1.0"));
             }
             break;
         default:
