@@ -16,4 +16,4 @@ The goal is to cleanup the code, fix the bugs and improve physics.
 ## The changes
 * Fix protocol issues
 * Cleanup the code (in progress)
-* Improved physics (in progress)
+* Improve physics (in progress)
