@@ -4,7 +4,6 @@ function EjectedMass() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 3;
-    this.addedAntiTeam = false; // Not to affect anti-teaming two times
 }
 
 module.exports = EjectedMass;
@@ -30,22 +29,6 @@ EjectedMass.prototype.sendUpdate = function() {
 };
 
 EjectedMass.prototype.onRemove = function(gameServer) {
-    // Check for teaming and apply anti-teaming if required
-    if (!this.addedAntiTeam && this.owner.checkForWMult) {
-      try {
-            if (this.gameServer.gameMode.teamAmount > 0) {
-                // Apply teaming EXCEPT when exchanging mass to same team member
-                if (this.owner.team != this.killedBy.owner.team || this.owner == this.killedBy.owner) {
-                    this.owner.Wmult += 0.02;
-                    this.owner.checkForWMult = false;
-                };
-            } else {
-                // Always apply anti-teaming if there are no teams
-                this.owner.Wmult += 0.02;
-                this.owner.checkForWMult = false;
-            };
-        } catch(ex) { } // Dont do anything whatever the error is
-    }
     // Remove from list of ejected mass
     var index = gameServer.nodesEjected.indexOf(this);
     if (index != -1) {
@@ -70,8 +53,4 @@ EjectedMass.prototype.onAutoMove = function(gameServer) {
 };
 
 EjectedMass.prototype.moveDone = function(gameServer) {
-    // Always apply anti-teaming
-    this.owner.actionMult += 0.02;
-    this.addedAntiTeam = true;
-    this.owner.checkForWMult = false;
 };

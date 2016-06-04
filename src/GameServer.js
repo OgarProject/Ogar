@@ -385,7 +385,10 @@ GameServer.prototype.updateLeaderboard = function () {
             clients.sort(function (a, b) {
                 return b.playerTracker.getScore(true) - a.playerTracker.getScore(true);
             });
-            this.largestClient = clients[0].playerTracker;
+            //this.largestClient = clients[0].playerTracker;
+            this.largestClient = null;
+            if (clients[0] != null)
+                this.largestClient = clients[0].playerTracker;
         } else this.largestClient = this.gameMode.rankOne;
     }
 };
@@ -730,7 +733,7 @@ GameServer.prototype.ejectMass = function(client) {
         angle += (Math.random() * 0.6) - 0.3;
 
         // Create cell
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), client, startPos, this.config.ejectMass, this);
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass, this);
         ejected.setAngle(angle);
         ejected.setMoveEngineData(this.config.ejectSpeed, 20, 0.88);
         ejected.setColor(cell.getColor());

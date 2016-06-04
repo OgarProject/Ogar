@@ -164,6 +164,9 @@ PacketHandler.prototype.setNickname = function(text) {
         if (name.length > this.gameServer.config.playerMaxNickLength) {
             name = name.substring(0, this.gameServer.config.playerMaxNickLength);
         }
+        if (this.gameServer.gameMode.haveTeams) {
+            skin = "";
+        }
         client.setName(name);
         client.setSkin(skin);
         
