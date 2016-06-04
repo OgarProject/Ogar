@@ -1,4 +1,4 @@
-# OgarMulti
+# MultiOgar
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-node.js-yellow.svg)
