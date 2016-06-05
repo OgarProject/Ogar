@@ -38,6 +38,7 @@ function GameServer() {
     // Main loop tick
     this.startTime = +new Date;
     this.tickCounter = 0;
+    this.timeStamp = 0;
     this.tickSpawn = 0; // Used with spawning food
 
 
@@ -121,7 +122,8 @@ GameServer.prototype.start = function() {
         this.startingFood();
 
         // Start Main Loop
-        setInterval(this.mainLoop.bind(this), 40);
+        //setInterval(this.mainLoop.bind(this), 40);
+        setInterval(this.timerLoop.bind(this), 1);
 
         // Done
         console.log("[Game] Listening on port " + this.config.serverPort);
@@ -204,6 +206,17 @@ GameServer.prototype.start = function() {
     }
 
     this.startStatsServer(this.config.serverStatsPort);
+};
+
+GameServer.prototype.timerLoop = function () {
+    var ts = new Date().getTime();
+    if (ts - this.timeStamp < 40)
+        return;
+    if (this.timeStamp == 0)
+        this.timeStamp = ts;
+    this.timeStamp += 40;
+    
+    setTimeout(this.mainLoop.bind(this), 0);
 };
 
 GameServer.prototype.getTick = function () {
