@@ -324,7 +324,6 @@ TeamZ.prototype.onServerInit = function(gameServer) {
 
     //OVERWRITE GLOBAL FUNCTIONs to adapt Zombie Team mode
 
-    // Change to AGARIO colorful scheme 
     GameServer.prototype.getRandomColor = function() {
         var colorRGB = [0xFF, 0x07, (Math.random() * 256) >> 0];
         colorRGB.sort(function() {

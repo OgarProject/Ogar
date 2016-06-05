@@ -61,7 +61,7 @@ Mode.prototype.onCellRemove = function(cell) {
     // Called when a player cell is removed
 };
 
-Mode.prototype.onCellMove = function(x1, y1, cell) {
+Mode.prototype.onCellMove = function(cell, gameServer) {
     // Called when a player cell is moved
 };
 

@@ -349,7 +349,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
 
 PlayerTracker.prototype.moveInFreeRoam = function() {
     // User is in free roam
-    // To mimic agar.io, get distance from center to mouse and apply a part of the distance
+    // To mimic vanilla, get distance from center to mouse and apply a part of the distance
 
     var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
     var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);

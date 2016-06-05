@@ -93,7 +93,7 @@ Experimental.prototype.onServerInit = function(gameServer) {
     var mapHeight = gameServer.config.borderBottom - gameServer.config.borderTop;
     var mapSize = Math.max(mapWidth, mapHeight);
 
-    this.motherMinAmount = Math.ceil(mapSize / 2000); // 7 mother cells for agar.io map size
+    this.motherMinAmount = Math.ceil(mapSize / 2000); // 7 mother cells for vanilla map size
 
     // Special virus mechanics
     Virus.prototype.feed = function(feeder, gameServer) {
