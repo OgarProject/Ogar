@@ -14,12 +14,12 @@ UpdateLeaderboard.prototype.build = function (protocol) {
     }
 }
 
-// Custom Text List? WTF?
+// Custom Text List
 UpdateLeaderboard.prototype.build48 = function (protocol) {
     var offset = 0;
     var buffer = new Buffer(0x10000);
     
-    buffer.writeUInt8(48, offset);
+    buffer.writeUInt8(49, offset);
     offset++;
     
     var countOffset = offset;
