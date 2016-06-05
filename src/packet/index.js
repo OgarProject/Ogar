@@ -1,4 +1,5 @@
 module.exports = {
+    BinaryWriter: require('./BinaryWriter'),
     AddNode: require('./AddNode'),
     ClearNodes: require('./ClearNodes'),
     UpdatePosition: require('./UpdatePosition'),

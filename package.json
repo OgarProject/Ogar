@@ -7,7 +7,6 @@
   "license": "Apache License, Version 2.0"
   "main": "src/index.js",
   "dependencies": {
-    "bytebuffer": "^5.0.1",
     "simple-quadtree": "^0.1.3",
     "vector2-node": "latest",
     "ws": "latest"

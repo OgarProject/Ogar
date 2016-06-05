@@ -1,5 +1,5 @@
 // Import
-var ByteBuffer = require("bytebuffer");
+var BinaryWriter = require("./BinaryWriter");
 
 
 function UpdateNodes(destroyQueue, nodes, nonVisibleNodes, scrambleX, scrambleY) {
@@ -25,8 +25,8 @@ UpdateNodes.prototype.build = function (protocol) {
 
 // protocol 4
 UpdateNodes.prototype.build4 = function () {
-    var buffer = new ByteBuffer();
-    buffer.LE(true);
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x10);                                // Packet ID
     
     var deadCells = [];
     for (var i = 0; i < this.destroyQueue.length; i++) {
@@ -34,22 +34,20 @@ UpdateNodes.prototype.build4 = function () {
         if (!node) continue;
         deadCells.push(node);
     }
-    
-    buffer.writeUInt8(0x10);
-    buffer.writeUInt16(deadCells.length);            // EatRecordCount
+    writer.writeUInt16(deadCells.length >> 0);            // EatRecordCount
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
         var hunterId = 0;
         if (node.getKiller()) {
             hunterId = node.getKiller().nodeId;
         }
-        buffer.writeUInt32(hunterId);               // Hunter ID
-        buffer.writeUInt32(node.nodeId);            // Prey ID
+        writer.writeUInt32(hunterId >> 0);               // Hunter ID
+        writer.writeUInt32(node.nodeId >> 0);            // Prey ID
     }
     
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-        if (typeof node == "undefined" || !node || node.nodeId == 0)
+        if (node==null || node.nodeId == 0)
             continue;
         
         var cellX = node.position.x + this.scrambleX;
@@ -64,13 +62,13 @@ UpdateNodes.prototype.build4 = function () {
         var isEject = node.cellType == 3;
         
         // Write update record
-        buffer.writeUInt32(node.nodeId);              // Cell ID
-        buffer.writeInt16(cellX >> 0);                // Coordinate X
-        buffer.writeInt16(cellY >> 0);                // Coordinate Y
-        buffer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
-        buffer.writeUInt8(node.color.r >> 0);         // Color R
-        buffer.writeUInt8(node.color.g >> 0);         // Color G
-        buffer.writeUInt8(node.color.b >> 0);         // Color B
+        writer.writeUInt32(node.nodeId >> 0);         // Cell ID
+        writer.writeInt16(cellX >> 0);                // Coordinate X
+        writer.writeInt16(cellY >> 0);                // Coordinate Y
+        writer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
+        writer.writeUInt8(node.color.r >> 0);         // Color R
+        writer.writeUInt8(node.color.g >> 0);         // Color G
+        writer.writeUInt8(node.color.b >> 0);         // Color B
         
         var flags = 0;
         if (isVirus)
@@ -79,33 +77,28 @@ UpdateNodes.prototype.build4 = function () {
             flags |= 0x10;
         if (isEject)
             flags |= 0x20;
-        buffer.writeUInt8(flags >> 0);                  // Flags
-        
-        for (var j = 0; j < cellName.length && cellName.charCodeAt(j)!=0; j++) {
-            buffer.writeUInt16(cellName.charCodeAt(j) >> 0);       // Cell Name in Unicode
-        }
-        buffer.writeUInt16(0);                          // Zero-terminator
+        writer.writeUInt8(flags >> 0);                  // Flags
+        writer.writeStringZeroUnicode(cellName);        // Name
     }
-    buffer.writeUInt32(0);                              // Cell Update record terminator
+    writer.writeUInt32(0);                              // Cell Update record terminator
     
     for (var i = 0; i < this.nonVisibleNodes.length; i++) {
         var node = this.nonVisibleNodes[i];
         if (!node) continue;
         deadCells.push(node);
     }
-    
-    buffer.writeUInt32(deadCells.length);            // RemoveRecordCount
+    writer.writeUInt32(deadCells.length >> 0);          // RemoveRecordCount
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
-        buffer.writeUInt32(node.nodeId);            // Cell ID
+        writer.writeUInt32(node.nodeId);                // Cell ID
     }
-    return buffer.buffer.slice(0, buffer.offset);
+    return writer.ToBuffer();
 }
 
 // protocol 5
 UpdateNodes.prototype.build5 = function () {
-    var buffer = new ByteBuffer();
-    buffer.LE(true);
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x10);                                // Packet ID
     
     var deadCells = [];
     for (var i = 0; i < this.destroyQueue.length; i++) {
@@ -113,22 +106,20 @@ UpdateNodes.prototype.build5 = function () {
         if (!node) continue;
         deadCells.push(node);
     }
-    
-    buffer.writeUInt8(0x10);
-    buffer.writeUInt16(deadCells.length);            // EatRecordCount
+    writer.writeUInt16(deadCells.length >> 0);              // EatRecordCount
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
         var hunterId = 0;
         if (node.getKiller()) {
             hunterId = node.getKiller().nodeId;
         }
-        buffer.writeUInt32(hunterId);               // Hunter ID
-        buffer.writeUInt32(node.nodeId);            // Prey ID
+        writer.writeUInt32(hunterId >> 0);                  // Hunter ID
+        writer.writeUInt32(node.nodeId >> 0);               // Prey ID
     }
     
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-        if (typeof node == "undefined" || !node || node.nodeId == 0)
+        if (node==null || node.nodeId == 0)
             continue;
         
         var cellX = node.position.x + this.scrambleX;
@@ -146,13 +137,13 @@ UpdateNodes.prototype.build5 = function () {
         var isEject = node.cellType == 3;
         
         // Write update record
-        buffer.writeUInt32(node.nodeId);              // Cell ID
-        buffer.writeInt32(cellX >> 0);                // Coordinate X
-        buffer.writeInt32(cellY >> 0);                // Coordinate Y
-        buffer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
-        buffer.writeUInt8(node.color.r >> 0);         // Color R
-        buffer.writeUInt8(node.color.g >> 0);         // Color G
-        buffer.writeUInt8(node.color.b >> 0);         // Color B
+        writer.writeUInt32(node.nodeId >> 0);         // Cell ID
+        writer.writeInt32(cellX >> 0);                // Coordinate X
+        writer.writeInt32(cellY >> 0);                // Coordinate Y
+        writer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
+        writer.writeUInt8(node.color.r >> 0);         // Color R
+        writer.writeUInt8(node.color.g >> 0);         // Color G
+        writer.writeUInt8(node.color.b >> 0);         // Color B
         
         var flags = 0;
         if (isVirus)
@@ -163,38 +154,32 @@ UpdateNodes.prototype.build5 = function () {
             flags |= 0x10;
         if (isEject)
             flags |= 0x20;
-        buffer.writeUInt8(flags >> 0);                  // Flags
+        writer.writeUInt8(flags >> 0);                  // Flags
         
-        if (isSkinPresent) {
-            buffer.writeUTF8String(skinName);       // Skin Name in UTF8
-            buffer.writeUInt8(0);                   // Zero-terminator
-        }
+        if (isSkinPresent)
+            writer.writeStringZeroUtf8(skinName);       // Skin Name in UTF8
         
-        for (var j = 0; j < cellName.length && cellName.charCodeAt(j) != 0; j++) {
-            buffer.writeUInt16(cellName.charCodeAt(j) >> 0);       // Cell Name in Unicode
-        }
-        buffer.writeUInt16(0);                          // Zero-terminator
+        writer.writeStringZeroUnicode(cellName);        // Cell Name
     }
-    buffer.writeUInt32(0);                              // Cell Update record terminator
+    writer.writeUInt32(0 >> 0);                         // Cell Update record terminator
     
     for (var i = 0; i < this.nonVisibleNodes.length; i++) {
         var node = this.nonVisibleNodes[i];
         if (!node) continue;
         deadCells.push(node);
     }
-    
-    buffer.writeUInt32(deadCells.length);            // RemoveRecordCount
+    writer.writeUInt32(deadCells.length >> 0);          // RemoveRecordCount
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
-        buffer.writeUInt32(node.nodeId);            // Cell ID
+        writer.writeUInt32(node.nodeId >> 0);           // Cell ID
     }
-    return buffer.buffer.slice(0, buffer.offset);
+    return writer.ToBuffer();
 }
 
 // protocol 6
 UpdateNodes.prototype.build6 = function () {
-    var buffer = new ByteBuffer();
-    buffer.LE(true);
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x10);                                // Packet ID
     
     var deadCells = [];
     for (var i = 0; i < this.destroyQueue.length; i++) {
@@ -202,22 +187,20 @@ UpdateNodes.prototype.build6 = function () {
         if (!node) continue;
         deadCells.push(node);
     }
-    
-    buffer.writeUInt8(0x10);
-    buffer.writeUInt16(deadCells.length);            // EatRecordCount
+    writer.writeUInt16(deadCells.length >> 0);              // EatRecordCount
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
         var hunterId = 0;
         if (node.getKiller()) {
             hunterId = node.getKiller().nodeId;
         }
-        buffer.writeUInt32(hunterId);               // Hunter ID
-        buffer.writeUInt32(node.nodeId);            // Prey ID
+        writer.writeUInt32(hunterId >> 0);                  // Hunter ID
+        writer.writeUInt32(node.nodeId >> 0);               // Prey ID
     }
     
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-        if (typeof node == "undefined" || !node || node.nodeId == 0)
+        if (node==null || node.nodeId == 0)
             continue;
         
         var cellX = node.position.x + this.scrambleX;
@@ -234,10 +217,10 @@ UpdateNodes.prototype.build6 = function () {
         var isEject = node.cellType==3;
         
         // Write update record
-        buffer.writeUInt32(node.nodeId);            // Cell ID
-        buffer.writeInt32(cellX >> 0);                // Coordinate X
-        buffer.writeInt32(cellY >> 0);                // Coordinate Y
-        buffer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
+        writer.writeUInt32(node.nodeId >> 0);         // Cell ID
+        writer.writeInt32(cellX >> 0);                // Coordinate X
+        writer.writeInt32(cellY >> 0);                // Coordinate Y
+        writer.writeUInt16(cellSize >>> 0);           // Cell Size (not to be confused with mass, because mass = size*size/100)
         
         var flags = 0;
         if (isVirus)
@@ -252,34 +235,29 @@ UpdateNodes.prototype.build6 = function () {
             flags |= 0x10;
         if (isEject)
             flags |= 0x20;
-        buffer.writeUInt8(flags >> 0);                // Flags
+        writer.writeUInt8(flags >> 0);                  // Flags
         
         if (isColorPresent) {
-            buffer.writeUInt8(node.color.r >> 0);     // Color R
-            buffer.writeUInt8(node.color.g >> 0);     // Color G
-            buffer.writeUInt8(node.color.b >> 0);     // Color B
+            writer.writeUInt8(node.color.r >> 0);       // Color R
+            writer.writeUInt8(node.color.g >> 0);       // Color G
+            writer.writeUInt8(node.color.b >> 0);       // Color B
         }
-        if (isSkinPresent) {
-            buffer.writeUTF8String(skinName);       // Skin Name in UTF8
-            buffer.writeUInt8(0);                   // Zero-terminator
-        }
-        if (isNamePresent) {
-            buffer.writeUTF8String(cellName);       // Cell Name in UTF8
-            buffer.writeUInt8(0);                   // Zero-terminator
-        }
+        if (isSkinPresent)
+            writer.writeStringZeroUtf8(skinName);       // Skin Name in UTF8
+        if (isNamePresent)
+            writer.writeStringZeroUtf8(cellName);       // Cell Name in UTF8
     }
-    buffer.writeUInt32(0);                          // Cell Update record terminator
+    writer.writeUInt32(0);                              // Cell Update record terminator
     
     for (var i = 0; i < this.nonVisibleNodes.length; i++) {
         var node = this.nonVisibleNodes[i];
         if (!node) continue;
         deadCells.push(node);
     }
-    
-    buffer.writeUInt16(deadCells.length);            // RemoveRecordCount
+    writer.writeUInt16(deadCells.length >> 0);          // RemoveRecordCount
     for (var i = 0; i < deadCells.length; i++) {
         var node = deadCells[i];
-        buffer.writeUInt32(node.nodeId);            // Cell ID
+        writer.writeUInt32(node.nodeId >> 0);           // Cell ID
     }
-    return buffer.buffer.slice(0, buffer.offset);
+    return writer.ToBuffer();
 }

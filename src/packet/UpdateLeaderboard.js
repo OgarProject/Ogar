@@ -1,3 +1,7 @@
+// Import
+var BinaryWriter = require("./BinaryWriter");
+
+
 function UpdateLeaderboard(leaderboard, packetLB) {
     this.leaderboard = leaderboard;
     this.packetLB = packetLB;
@@ -16,110 +20,64 @@ UpdateLeaderboard.prototype.build = function (protocol) {
 
 // Custom Text List
 UpdateLeaderboard.prototype.build48 = function (protocol) {
-    var offset = 0;
-    var buffer = new Buffer(0x10000);
-    
-    buffer.writeUInt8(49, offset);
-    offset++;
-    
-    var countOffset = offset;
-    offset += 4;
-    
-    var count = 0;
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x31);                                // Packet ID
+    writer.writeUInt32(this.leaderboard.length >> 0);       // Number of elements
     for (var i = 0; i < this.leaderboard.length; i++) {
         var item = this.leaderboard[i];
-        if (typeof item == "undefined" || item==null)
-            continue;
+        if (item == null) return null;  // bad leaderboardm just don't send it
         
         var name = item;
         name = name ? name : "";
+        var id = 0;
         
-        buffer.writeUInt32LE(0, offset);
-        offset += 4;
-        
-        if (protocol <= 5) {
-            offset += buffer.write(name, offset, 'ucs2');   // string => unicode
-            buffer.writeUInt16LE(0, offset);
-            offset += 2;
-        }
-        else {
-            offset += buffer.write(name, offset);           // string => utf8
-            buffer.writeUInt8(0, offset);                   // string zero terminator
-            offset += 1;
-        }
-        count++;
+        writer.writeUInt32(id >> 0);                        // isMe flag (previously cell ID)
+        if (protocol <= 5)
+            writer.writeStringZeroUnicode(name);
+        else
+            writer.writeStringZeroUtf8(name);
     }
-    buffer.writeUInt32LE(count, countOffset);               // Number of elements
-    return buffer.slice(0, offset);
+    return writer.ToBuffer();
 };
 
 // (FFA) Leaderboard Update
 UpdateLeaderboard.prototype.build49 = function (protocol) {
-    var offset = 0;
-    var buffer = new Buffer(0x10000);
-    
-    buffer.writeUInt8(49, offset);                        // Packet ID
-    offset += 1;
-    
-    var countOffset = offset;
-    offset += 4;
-    
-    var count = 0;
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x31);                                // Packet ID
+    writer.writeUInt32(this.leaderboard.length >> 0);       // Number of elements
     for (var i = 0; i < this.leaderboard.length; i++) {
         var item = this.leaderboard[i];
-        if (typeof item == "undefined" || item==null)
-            continue;
-        
-        var isMe = false;                                   // 1 for red color (current player), 0 for white color (other players)
+        if (item == null) return null;  // bad leaderboardm just don't send it
+
+        var isMe = false;  // true for red color (current player), false for white color (other players)
         var name = item.getName();
-        name = name ? name : "";
+        name = name != null ? name : "";
         var id = isMe ? 1:0;
-        
-        // Write record
-        buffer.writeUInt32LE(id>>0, offset);                // isMe flag (previously cell ID)
-        offset += 4;
-        
-        if (protocol <= 5) {
-            offset += buffer.write(name, offset, 'ucs2');   // string => unicode
-            buffer.writeUInt16LE(0, offset);
-            offset += 2;
-        }
-        else {
-            offset += buffer.write(name, offset);           // string => utf8
-            buffer.writeUInt8(0, offset);                   // string zero terminator
-            offset += 1;
-        }
-        count++;
+
+        writer.writeUInt32(id >> 0);                        // isMe flag (previously cell ID)
+        if (protocol <= 5)
+            writer.writeStringZeroUnicode(name);
+        else
+            writer.writeStringZeroUtf8(name);
     }
-    buffer.writeUInt32LE(count, countOffset);               // Number of elements
-    return buffer.slice(0, offset);
+    return writer.ToBuffer();
 };
 
 // (Team) Leaderboard Update
 UpdateLeaderboard.prototype.build50 = function (protocol) {
-    var offset = 0;
-    var buffer = new Buffer(0x10000);
-    
-    buffer.writeUInt8(50, offset);                          // Packet ID
-    offset++;
-    
-    var countOffset = offset;
-    offset += 4;
-    
-    var count = 0;
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x32);                                // Packet ID
+    writer.writeUInt32(this.leaderboard.length >> 0);       // Number of elements
     for (var i = 0; i < this.leaderboard.length; i++) {
-        var value = this.leaderboard[i];
-        if (value==null) continue;
+        var item = this.leaderboard[i];
+        if (item == null) return null;  // bad leaderboardm just don't send it
         
-        // little validation
+        var value = item;
+        if (isNaN(value)) value = 0;
         value = value < 0 ? 0 : value;
         value = value > 1 ? 1 : value;
         
-        buffer.writeFloatLE(value, offset);                       // string zero terminator
-        offset += 4;
-        
-        count++;
+        writer.writeFloat(value);                // isMe flag (previously cell ID)
     }
-    buffer.writeUInt32LE(count, countOffset);               // Number of elements
-    return buffer.slice(0, offset);
+    return writer.ToBuffer();
 };
