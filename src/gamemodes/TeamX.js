@@ -205,7 +205,7 @@ TeamX.prototype.onServerInit = function(gameServer) {
                     case 0: // Players
                         // Can't eat self if it's not time to recombine yet
                         if (check.owner == cell.owner) {
-                            if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
+                            if (!cell.canRemerge() || !check.canRemerge()) {
                                 continue;
                             }
 

@@ -88,8 +88,9 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
         gameServer.createPlayerCell(client, consumer, angle, splitMass);
     }
 
-    // Prevent consumer cell from merging with other cells
-    consumer.calcMergeTime(gameServer.config.playerRecombineTime);
+    //// Prevent consumer cell from merging with other cells
+    //consumer.calcMergeTime(gameServer.getTick(), gameServer.config.playerRecombineTime);
+    // TODO: ttr fix?
 };
 
 Virus.prototype.onAdd = function(gameServer) {

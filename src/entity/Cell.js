@@ -1,6 +1,8 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
+    if (gameServer != null)
+        this.tickOfBirth = gameServer.getTick();
     this.color = {
         r: 0,
         g: 255,
@@ -62,16 +64,16 @@ Cell.prototype.getMass = function () {
     return this._mass;
 };
 
-Cell.prototype.setMass = function (mass) {
-    this._mass = mass;
-    this._size = Math.ceil(Math.sqrt(100 * mass));
-    this._squareSize = this._size * this._size;
-    if (this.owner)
-        this.owner.massChanged();
+Cell.prototype.getSquareSize = function () {
+    return this._squareSize;
 };
 
-Cell.prototype.getSquareSize = function() {
-    return this._squareSize;
+Cell.prototype.setMass = function (mass) {
+    this._size = Math.sqrt(mass * 100);
+    this._squareSize = this._size * this._size;
+    this._mass = this._squareSize / 100;
+    if (this.owner)
+        this.owner.massChanged();
 };
 
 Cell.prototype.addMass = function(n) {
@@ -99,6 +101,11 @@ Cell.prototype.setAngle = function(radians) {
 Cell.prototype.getAngle = function() {
     return this.angle;
 };
+
+Cell.prototype.getAgeTicks = function (tick) {
+    if (this.tickOfBirth == null) return 0;
+    return Math.max(0, tick - this.tickOfBirth);
+}
 
 Cell.prototype.setMoveEngineData = function(speed, ticks, decay) {
     this.moveEngineSpeed = speed;

@@ -2,10 +2,9 @@ var Cell = require('./Cell');
 
 function PlayerCell() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.cellType = 0;
-    this.recombineTicks = 0; // Ticks passed after the cell has split
-    this.shouldRecombine = false; // Should the cell combine. If true, collision with own cells happens
+    this._canRemerge = false;
 }
 
 module.exports = PlayerCell;
@@ -21,18 +20,26 @@ PlayerCell.prototype.simpleCollide = function(check, d) {
         (this.abs(this.position.y - check.y) < len);
 };
 
-PlayerCell.prototype.calcMergeTime = function(base) {
-    // Check for merging time
-    var r = false;
-    if (base == 0 || this.owner.mergeOverride) {
-        // Instant recombine in config or merge command was triggered for this client
-        r = true;
-    } else {
-        var rec = Math.max(30, 0.02 * this.getSize());
-        rec = Math.max(base, rec);
-        if (this.recombineTicks > rec) r = true; // Can combine with other cells
+PlayerCell.prototype.updateRemerge = function (gameServer) {
+    if (this.owner == null) {
+        this._canRemerge = false;
+        return;
     }
-    this.shouldRecombine = r;
+    var tick = gameServer.getTick();
+    var baseTtr = gameServer.config.playerRecombineTime; // default baseTtr = 30
+    var threshold = 3;  // do not remerge if cell age is smaller than 3 ticks
+    
+    if (baseTtr == 0 || this.owner.mergeOverride) {
+        this._canRemerge = this.getAgeTicks(tick) > threshold;
+        return;
+    }
+    var ttr = Math.max(baseTtr, (this.getSize() * 0.2) >> 0); // seconds
+    // tickStep = 0.040 sec
+    this._canRemerge = this.getAgeTicks(tick) > (threshold + ttr / 0.040);
+}
+
+PlayerCell.prototype.canRemerge = function () {
+    return this._canRemerge;
 };
 
 // Movement
@@ -49,8 +56,6 @@ PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
         return;
     }
 
-    //var dist = this.getDist(this.position.x, this.position.y, x2, y2);
-    //var speed = Math.min(this.getSpeed(), dist) / 2; // Twice as slower
     var dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
     dist = Math.min(dist, 32);
     var speed = 0;
@@ -75,8 +80,8 @@ PlayerCell.prototype.collision = function(gameServer) {
         if (!cell) continue; // Error
         if (this.nodeId == cell.nodeId) continue;
 
-        if ((!cell.shouldRecombine) || (!this.shouldRecombine)) {
-            // Cannot recombine - Collision with your own cells
+        if (!cell.canRemerge() || !this.canRemerge()) {
+            // Cannot remerge - Collision with your own cells
             var calcInfo = gameServer.checkCellCollision(this, cell); // Calculation info
 
             // Further calculations

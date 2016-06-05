@@ -206,7 +206,11 @@ GameServer.prototype.start = function() {
     this.startStatsServer(this.config.serverStatsPort);
 };
 
-GameServer.prototype.getMode = function() {
+GameServer.prototype.getTick = function () {
+    return this.tickCounter;
+};
+
+GameServer.prototype.getMode = function () {
     return this.gameMode;
 };
 
@@ -682,7 +686,6 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
     // Cells won't collide immediately
     newCell.collisionRestoreTicks = 12;
     parent.collisionRestoreTicks = 12;
-    newCell.calcMergeTime(this.config.playerRecombineTime);
     parent.setMass(parent.getMass() - mass); // Remove mass from parent cell
 
     // Add to node list
@@ -819,7 +822,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
                 // Can't eat self if it's not time to recombine yet
                 if (check.owner == cell.owner) {
                     // If one of cells can't merge
-                    if (!cell.shouldRecombine || !check.shouldRecombine) {
+                    if (!cell.canRemerge() || !check.canRemerge()) {
                         // Check if merge command was triggered on this client
                         if (!cell.owner.mergeOverride) continue;
                     }
@@ -905,21 +908,15 @@ GameServer.prototype.updateCells = function() {
     var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod * 0.05);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
-
-        if (!cell) {
-            continue;
-        }
+        if (!cell) continue;
 
         // Recombining
-        if (cell.owner.cells.length > 1) {
-            cell.recombineTicks += 0.04;
-            cell.calcMergeTime(this.config.playerRecombineTime);
-        } else if (cell.owner.cells.length == 1 && cell.recombineTicks > 0) {
-            cell.recombineTicks = 0;
-            cell.shouldRecombine = false;
+        if (cell.owner.cells.length == 1 && cell.recombineTicks > 0) {
             cell.owner.mergeOverride = false;
             cell.owner.mergeOverrideDuration = 0;
         }
+        cell.updateRemerge(this);
+        
         // Collision
         if (cell.collisionRestoreTicks > 0) {
             cell.collisionRestoreTicks--;

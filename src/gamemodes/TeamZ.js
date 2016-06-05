@@ -463,7 +463,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 case 0: // Players
                     // Can't eat self if it's not time to recombine yet
                     if (check.owner == cell.owner) {
-                        if ((cell.recombineTicks > 0) || (check.recombineTicks > 0)) {
+                        if (!cell.canRemrege() || !check.canRemerge()) {
                             continue;
                         }
 
@@ -547,7 +547,6 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
             split.setAngle(angle);
             split.setMoveEngineData(splitSpeed, 32, 0.85);
-            split.calcMergeTime(this.config.playerRecombineTime);
 
             // boost speed if zombie eats brain
             if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
@@ -556,7 +555,8 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             // gain effect if human eat hero
             else if (this.gameMode.hasEatenHero(client)) {
                 // fix "unable to split" bug: cell can be merged after finish moving (2nd param in setMoveEngineData)
-                split.recombineTicks = 2; // main-ticks, 1 main-tick = 1 s
+                //split.recombineTicks = 2; // main-ticks, 1 main-tick = 1 s
+                //TODO: fix?
             }
 
             // Add to moving cells list
@@ -577,7 +577,6 @@ TeamZ.prototype.onServerInit = function(gameServer) {
         newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
         newCell.setAngle(angle);
         newCell.setMoveEngineData(speed, 10);
-        newCell.calcMergeTime(this.config.playerRecombineTime);
         newCell.ignoreCollision = true; // Turn off collision
 
         // boost speed if zombie eats brain
@@ -587,7 +586,8 @@ TeamZ.prototype.onServerInit = function(gameServer) {
         // gain effect if human eat hero
         else if (this.gameMode.hasEatenHero(client)) {
             // fix "unable to split" bug
-            newCell.recombineTicks = 1;
+            //newCell.recombineTicks = 1;
+            // TODO: fix?
         }
 
         // Add to moving cells list
@@ -642,10 +642,10 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             consumer.setMass(consumer.getMass() - splitMass);
         }
 
-        if (gameServer.gameMode.hasEatenHero(client))
-            consumer.recombineTicks = 0;
-        else
-            consumer.calcMergeTime(gameServer.config.playerRecombineTime);
+        if (gameServer.gameMode.hasEatenHero(client)) {
+            //consumer.recombineTicks = 0;
+            // TODO: fix?
+        }
     };
 
     // Handle "gamemode" command:
@@ -1103,10 +1103,11 @@ Hero.prototype.onConsume = function(consumer, gameServer) {
         client.heroColorFactor = 0;
 
         // Merge immediately
-        for (var i = 0; i < client.cells.length; i++) {
-            var cell = client.cells[i];
-            cell.recombineTicks = 0;
-        }
+        //for (var i = 0; i < client.cells.length; i++) {
+        //    var cell = client.cells[i];
+        //    cell.recombineTicks = 0;
+        //}
+        // TODO: fix?
 
     }
 };
