@@ -142,13 +142,15 @@ Teams.prototype.updateLB = function(gameServer) {
             total += cell.getMass();
         }
     }
+    // No players
+    if (total <= 0) {
+        for (var i = 0; i < this.teamAmount; i++) {
+            gameServer.leaderboard[i] = 0;
+        }
+        return
+    }
     // Calc percentage
     for (var i = 0; i < this.teamAmount; i++) {
-        // No players
-        if (total <= 0) {
-            continue;
-        }
-
         gameServer.leaderboard[i] = teamMass[i] / total;
     }
 };
