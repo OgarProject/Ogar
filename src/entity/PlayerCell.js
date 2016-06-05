@@ -26,16 +26,17 @@ PlayerCell.prototype.updateRemerge = function (gameServer) {
         return;
     }
     var tick = gameServer.getTick();
-    var baseTtr = gameServer.config.playerRecombineTime; // default baseTtr = 30
-    var threshold = 3;  // do not remerge if cell age is smaller than 3 ticks
-    
-    if (baseTtr == 0 || this.owner.mergeOverride) {
-        this._canRemerge = this.getAgeTicks(tick) > threshold;
+    var age = this.getAgeTicks(tick);
+    if (age < 3 || this.owner.mergeOverride) {
+        // do not remerge if cell age is smaller than 3 ticks
+        this._canRemerge = false;
         return;
     }
-    var ttr = Math.max(baseTtr, (this.getSize() * 0.2) >> 0); // seconds
-    // tickStep = 0.040 sec
-    this._canRemerge = this.getAgeTicks(tick) > (threshold + ttr / 0.040);
+    var baseTtr = gameServer.config.playerRecombineTime;        // default baseTtr = 30
+    var ttr = Math.max(baseTtr, (this.getSize() * 0.2) >> 0);   // ttr in seconds
+    // seconds to ticks (tickStep = 0.040 sec)
+    ttr /= 0.040;
+    this._canRemerge = age >= ttr;
 }
 
 PlayerCell.prototype.canRemerge = function () {
