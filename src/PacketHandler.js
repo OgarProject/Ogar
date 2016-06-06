@@ -19,6 +19,11 @@ PacketHandler.prototype.handleMessage = function(message) {
     // Discard empty messages
     if (message.length == 0)
         return;
+    if (message.length > 2048) {
+        // anti-spamming
+        this.socket.close(1000, "Spam");
+        return;
+    }
     var reader = new BinaryReader(message);
     var packetId = reader.readUInt8();
 
