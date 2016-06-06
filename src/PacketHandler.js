@@ -6,6 +6,7 @@ function PacketHandler(gameServer, socket) {
     this.socket = socket;
     // Detect protocol version - we can do something about it later
     this.protocol = 0;
+    this.lastChatTick = 0;
 
     this.pressQ = false;
     this.pressW = false;
@@ -87,6 +88,27 @@ PacketHandler.prototype.handleMessage = function(message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
+        case 99:
+            // Chat
+            var tick = this.gameServer.getTick();
+            // antispam: ignore it if the time between two message is smaller than 2 seconds
+            if (tick - this.lastChatTick < 40 * 2)
+                break;
+            this.lastChatTick = tick;
+            var reader = new BinaryReader(message);
+            reader.readUInt8();                 // message id
+            var flags = reader.readUInt8();     // flags
+            if (flags & 2) reader.readBytes(4);
+            if (flags & 4) reader.readBytes(8);
+            if (flags & 8) reader.readBytes(16);
+            var text = null;
+            if (this.protocol <= 5)
+                text = reader.readStringZeroUnicode();
+            else
+                text = reader.readStringZeroUtf8();
+            this.gameServer.onChatMessage(this.socket.playerTracker, null, text);
+            break;
+
         case 254:
             // Connection Start
             if (view.byteLength == 5) {
@@ -101,6 +123,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                     c.borderBottom + this.socket.playerTracker.scrambleY,
                     0,
                     "MultiOgar 1.0"));
+                this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
             }
             break;
         default:

@@ -413,6 +413,23 @@ GameServer.prototype.updateLeaderboard = function () {
     }
 };
 
+GameServer.prototype.onChatMessage = function (from, to, message) {
+    if (message == null) return;
+    message = message.trim();
+    if (message == "") return;
+    if (message.length > 128) message = message.slice(0, 128);
+    //console.log("[CHAT] " + (from!=null && from.getName().length>0 ? from.getName() : "Spectator") + ": " + message);
+    this.sendChatMessage(from, to, message);
+};
+
+GameServer.prototype.sendChatMessage = function (from, to, message) {
+    for (var i = 0; i < this.clients.length; i++) {
+        var client = this.clients[i];
+        if (client == null) continue;
+        if (to == null || to == client.playerTracker)
+            client.sendPacket(new Packet.ChatMessage(from, message));
+    }
+}; 
 
 GameServer.prototype.mainLoop = function() {
     // Loop main functions
