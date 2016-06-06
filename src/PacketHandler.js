@@ -113,13 +113,13 @@ PacketHandler.prototype.handleMessage = function(message) {
                 this.protocol = reader.readUInt32();
                 // Send handshake response
                 this.socket.sendPacket(new Packet.ClearNodes());
-                this.socket.sendPacket(new Packet.SetBorder(
-                    this.gameServer.config.borderLeft + this.socket.playerTracker.scrambleX,
-                    this.gameServer.config.borderRight + this.socket.playerTracker.scrambleX,
-                    this.gameServer.config.borderTop + this.socket.playerTracker.scrambleY,
-                    this.gameServer.config.borderBottom + this.socket.playerTracker.scrambleY,
-                    0,
-                    "MultiOgar 1.0"));
+                var border = {
+                    left: this.gameServer.config.borderLeft + this.socket.playerTracker.scrambleX,
+                    top: this.gameServer.config.borderTop + this.socket.playerTracker.scrambleY,
+                    right: this.gameServer.config.borderRight + this.socket.playerTracker.scrambleX,
+                    bottom: this.gameServer.config.borderBottom + this.socket.playerTracker.scrambleY
+                };
+                this.socket.sendPacket(new Packet.SetBorder(border, 0, "MultiOgar 1.0"));
                 // Send welcome message
                 this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
             }

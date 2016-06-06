@@ -147,12 +147,11 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.spectate = false;
 
     this.socket.sendPacket(new Packet.ClearNodes());
-    this.socket.sendPacket(new Packet.SetBorder(
-        this.gameServer.config.borderLeft + this.scrambleX,
-        this.gameServer.config.borderRight + this.scrambleX,
-        this.gameServer.config.borderTop + this.scrambleY,
-        this.gameServer.config.borderBottom + this.scrambleY));
-    
+    this.collidingNodes = [];
+    this.visibleNodes = [];         // Reset visible nodes
+    this.nodeDestroyQueue = [];     // Reset destroy queue
+    this.nodeAdditionQueue = [];    // Reset addition queue
+
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
 
@@ -224,6 +223,17 @@ PlayerTracker.prototype.update = function () {
                     updateNodes.push(newVisible[i]);
                 }
             }
+            
+            // Scramble minimap
+            // TODO: need to send it more rarely (once per second or something like that)
+            // also need to make sure that we send it before first cell update
+            //var border = {
+            //    left: Math.max(this.viewBox.leftX - this.viewBox.width / 2, this.gameServer.config.borderLeft) + this.scrambleX,
+            //    top: Math.max(this.viewBox.topY - this.viewBox.height / 2, this.gameServer.config.borderTop) + this.scrambleY,
+            //    right: Math.min(this.viewBox.rightX + this.viewBox.width / 2, this.gameServer.config.borderRight) + this.scrambleX,
+            //    bottom: Math.min(this.viewBox.bottomY + this.viewBox.height / 2, this.gameServer.config.borderBottom) + this.scrambleY
+            //};
+            //this.socket.sendPacket(new Packet.SetBorder(border));
         } catch (err) {
             console.error(err);
         }
