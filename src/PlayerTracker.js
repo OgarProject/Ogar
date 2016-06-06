@@ -138,6 +138,24 @@ PlayerTracker.prototype.getTeam = function() {
 
 // Functions
 
+PlayerTracker.prototype.joinGame = function (name, skin) {
+    if (this.cells.length > 0) return;
+    if (name == null) name = "";
+    if (skin == null) skin = "";
+    this.setName(name);
+    this.setSkin(skin);
+    this.spectate = false;
+
+    this.socket.sendPacket(new Packet.ClearNodes());
+    this.socket.sendPacket(new Packet.SetBorder(
+        this.gameServer.config.borderLeft + this.scrambleX,
+        this.gameServer.config.borderRight + this.scrambleX,
+        this.gameServer.config.borderTop + this.scrambleY,
+        this.gameServer.config.borderBottom + this.scrambleY));
+    
+    this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
+};
+
 PlayerTracker.prototype.update = function () {
     // if initialization is not complete yet then do not update
     if (this.socket.packetHandler.protocol == 0)
