@@ -35,9 +35,7 @@ GameWorld.prototype.addNode = function(node) {
 };
 
 GameWorld.prototype.removeNode = function(node) {
-    if (this.xyTree[node.lastPos.x][node.lastPos.y].remove(node) != -1) {
-        // Removed the node
-    } else {
+    if (this.xyTree[node.lastPos.x][node.lastPos.y].remove(node) != true) {
         // Log it, it can be a problem
         console.log("[World] Unable to update a node!");
     }
@@ -46,9 +44,7 @@ GameWorld.prototype.removeNode = function(node) {
 // Similar function to removeNode but accesses through pos()
 // if the node needs to be completely removed
 GameWorld.prototype.deleteNode = function(node) {
-    if (this.xyTree[node.pos().x][node.pos().y].remove(node) != -1) {
-        // Removed the node
-    } else {
+    if (this.xyTree[node.pos().x][node.pos().y].remove(node) != true) {
         // Log it, it can be a problem
         console.log("[World] Unable to remove a node!");
     }
