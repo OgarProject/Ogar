@@ -32,7 +32,7 @@ UpdateLeaderboard.prototype.build48 = function (protocol) {
         name = name ? name : "";
         var id = 0;
         
-        writer.writeUInt32(id >> 0);                        // isMe flag (previously cell ID)
+        writer.writeUInt32(id >> 0);                        // isMe flag/cell ID
         if (protocol <= 5)
             writer.writeStringZeroUnicode(name);
         else
@@ -50,12 +50,14 @@ UpdateLeaderboard.prototype.build49 = function (protocol) {
         var item = this.leaderboard[i];
         if (item == null) return null;  // bad leaderboardm just don't send it
 
-        var isMe = item == this.playerTracker;  // true for red color (current player), false for white color (other players)
         var name = item.getName();
         name = name != null ? name : "";
-        var id = isMe ? 1:0;
+        var id = item == this.playerTracker ? 1 : 0;    // protocol 6+ uses isMe flag
+        if (protocol <= 5 && item.cells != null && item.cells.length > 0) {
+            id = item.cells[0].nodeId;                  // protocol 5- uses player cellId instead of isMe flag
+        }
 
-        writer.writeUInt32(id >> 0);                        // isMe flag (previously cell ID)
+        writer.writeUInt32(id >> 0);                        // isMe flag/cell ID
         if (protocol <= 5)
             writer.writeStringZeroUnicode(name);
         else
