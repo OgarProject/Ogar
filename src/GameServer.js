@@ -403,7 +403,7 @@ GameServer.prototype.updateLeaderboard = function () {
             
             // Use sort function
             clients.sort(function (a, b) {
-                return b.playerTracker.getScore(true) - a.playerTracker.getScore(true);
+                return b.playerTracker.getScore() - a.playerTracker.getScore();
             });
             //this.largestClient = clients[0].playerTracker;
             this.largestClient = null;

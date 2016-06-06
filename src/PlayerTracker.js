@@ -92,10 +92,10 @@ PlayerTracker.prototype.getSkin = function () {
     return this.skin;
 };
 
-PlayerTracker.prototype.getScore = function(reCalcScore) {
+PlayerTracker.prototype.getScore = function () {
     if (this.isMassChanged)
         this.updateMass();
-    return this.score >> 0;
+    return this.score;
 };
 
 PlayerTracker.prototype.getScale = function () {
@@ -108,7 +108,7 @@ PlayerTracker.prototype.updateMass = function () {
     var totalSize = 0;
     for (var i = 0; i < this.cells.length; i++) {
         var node = this.cells[i];
-        if (!node) continue;
+        if (node == null) continue;
         totalSize += node.getSize();
     }
     if (totalSize == 0) {
@@ -250,7 +250,8 @@ PlayerTracker.prototype.update = function () {
             var packet = new Packet.UpdateLeaderboard(this, this.gameServer.leaderboard, this.gameServer.leaderboardType);
             this.socket.sendPacket(packet);
         }
-        this.tickLeaderboard = 50;
+        // 1 / 0.040 = 25 (once per second)
+        this.tickLeaderboard = 25;
     } else {
         this.tickLeaderboard--;
     }

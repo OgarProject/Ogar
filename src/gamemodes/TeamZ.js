@@ -296,7 +296,7 @@ TeamZ.prototype.leaderboardAddSort = function(player, leaderboard) {
 
     while ((len >= 0) && (loop)) {
         // Start from the bottom of the leaderboard
-        if (player.getScore(false) <= leaderboard[len].getScore(false)) {
+        if (player.getScore() <= leaderboard[len].getScore()) {
             leaderboard.splice(len + 1, 0, player);
             loop = false; // End the loop if a spot is found
         }
@@ -1010,7 +1010,7 @@ TeamZ.prototype.updateLB = function(gameServer) {
                 if (player.cells.length <= 0) {
                     continue;
                 }
-                var playerScore = player.getScore(true);
+                var playerScore = player.getScore();
 
                 if (localLB.length == 0) {
                     // Initial player
@@ -1020,7 +1020,7 @@ TeamZ.prototype.updateLB = function(gameServer) {
                     this.leaderboardAddSort(player, localLB);
                 } else {
                     // 6 in leaderboard already
-                    if (playerScore > localLB[5].getScore(false)) {
+                    if (playerScore > localLB[5].getScore()) {
                         localLB.pop();
                         this.leaderboardAddSort(player, localLB);
                     }

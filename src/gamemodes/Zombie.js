@@ -26,7 +26,7 @@ Zombie.prototype.leaderboardAddSort = function(player, leaderboard) {
     var loop = true;
     while ((len >= 0) && (loop)) {
         // Start from the bottom of the leaderboard
-        if (player.getScore(false) <= leaderboard[len].getScore(false)) {
+        if (player.getScore() <= leaderboard[len].getScore()) {
             leaderboard.splice(len + 1, 0, player);
             loop = false; // End the loop if a spot is found
         }
@@ -154,7 +154,7 @@ Zombie.prototype.updateLB = function(gameServer) {
         }
 
         var player = gameServer.clients[i].playerTracker;
-        var playerScore = player.getScore(true);
+        var playerScore = player.getScore();
         if (player.cells.length <= 0) {
             continue;
         }
@@ -167,7 +167,7 @@ Zombie.prototype.updateLB = function(gameServer) {
             this.leaderboardAddSort(player, lb);
         } else {
             // 10 in leaderboard already
-            if (playerScore > lb[9].getScore(false)) {
+            if (playerScore > lb[9].getScore()) {
                 lb.pop();
                 this.leaderboardAddSort(player, lb);
             }
