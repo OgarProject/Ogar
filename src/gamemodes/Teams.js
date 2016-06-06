@@ -123,6 +123,7 @@ Teams.prototype.onCellMove = function(cell, gameServer) {
 };
 
 Teams.prototype.updateLB = function(gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var total = 0;
     var teamMass = [];
     // Get mass

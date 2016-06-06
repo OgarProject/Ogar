@@ -246,8 +246,10 @@ PlayerTracker.prototype.update = function () {
     
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
-        if (this.gameServer.lb_packet != null)
-            this.socket.sendPacket(this.gameServer.lb_packet);
+        if (this.gameServer.leaderboardType >= 0) {
+            var packet = new Packet.UpdateLeaderboard(this, this.gameServer.leaderboard, this.gameServer.leaderboardType);
+            this.socket.sendPacket(packet);
+        }
         this.tickLeaderboard = 50;
     } else {
         this.tickLeaderboard--;

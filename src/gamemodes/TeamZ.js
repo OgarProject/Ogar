@@ -968,6 +968,7 @@ TeamZ.prototype.onCellMove = function(x1, y1, cell) {
 };
 
 TeamZ.prototype.updateLB = function(gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
 
     if (this.winTeam == 0) {

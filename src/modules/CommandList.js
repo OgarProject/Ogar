@@ -106,6 +106,7 @@ Commands.list = {
         gameServer.gameMode.specByLeaderboard = false;
         gameServer.gameMode.updateLB = function(gameServer) {
             gameServer.leaderboard = newLB;
+            gameServer.leaderboardType = 48;
         };
         console.log("[Console] Successfully changed leaderboard values");
     },

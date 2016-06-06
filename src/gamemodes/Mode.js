@@ -65,6 +65,7 @@ Mode.prototype.onCellMove = function(cell, gameServer) {
     // Called when a player cell is moved
 };
 
-Mode.prototype.updateLB = function(gameServer) {
+Mode.prototype.updateLB = function (gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     // Called when the leaderboard update function is called
 };

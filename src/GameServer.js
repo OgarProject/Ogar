@@ -29,7 +29,7 @@ function GameServer() {
     this.currentFood = 0;
     this.movingNodes = []; // For move engine
     this.leaderboard = [];
-    this.lb_packet = null; // Leaderboard packet
+    this.leaderboardType = -1; // no type
 
     this.bots = new BotLoader(this);
     this.log = new Logger();
@@ -394,9 +394,9 @@ GameServer.prototype.updateLeaderboard = function () {
     // Update leaderboard with the gamemode's method
     if ((this.tickCounter % 25) == 0) {
         this.leaderboard = [];
+        this.leaderboardType = -1;
         this.gameMode.updateLB(this);
-        this.lb_packet = new Packet.UpdateLeaderboard(this.leaderboard, this.gameMode.packetLB);
-        
+
         if (!this.gameMode.specByLeaderboard) {
             // Get client with largest score if gamemode doesn't have a leaderboard
             var clients = this.clients.valueOf();

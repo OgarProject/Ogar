@@ -2,23 +2,24 @@
 var BinaryWriter = require("./BinaryWriter");
 
 
-function UpdateLeaderboard(leaderboard, packetLB) {
+function UpdateLeaderboard(playerTracker, leaderboard, leaderboardType) {
+    this.playerTracker = playerTracker;
     this.leaderboard = leaderboard;
-    this.packetLB = packetLB;
+    this.leaderboardType = leaderboardType;
 }
 
 module.exports = UpdateLeaderboard;
 
 UpdateLeaderboard.prototype.build = function (protocol) {
-    switch (this.packetLB) {
-        case 48: return this.build48(protocol); // ?
+    switch (this.leaderboardType) {
+        case 48: return this.build48(protocol); // UserText
         case 49: return this.build49(protocol); // FFA
         case 50: return this.build50(protocol); // Team
         default: return null;
     }
 }
 
-// Custom Text List
+// UserText
 UpdateLeaderboard.prototype.build48 = function (protocol) {
     var writer = new BinaryWriter();
     writer.writeUInt8(0x31);                                // Packet ID
@@ -49,7 +50,7 @@ UpdateLeaderboard.prototype.build49 = function (protocol) {
         var item = this.leaderboard[i];
         if (item == null) return null;  // bad leaderboardm just don't send it
 
-        var isMe = false;  // true for red color (current player), false for white color (other players)
+        var isMe = item == this.playerTracker;  // true for red color (current player), false for white color (other players)
         var name = item.getName();
         name = name != null ? name : "";
         var id = isMe ? 1:0;

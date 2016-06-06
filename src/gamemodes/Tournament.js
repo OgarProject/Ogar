@@ -176,6 +176,7 @@ Tournament.prototype.onCellRemove = function(cell) {
 };
 
 Tournament.prototype.updateLB = function(gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
 
     switch (this.gamePhase) {

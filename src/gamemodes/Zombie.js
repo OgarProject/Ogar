@@ -145,6 +145,7 @@ Zombie.prototype.onCellMove = function(x1, y1, cell) {
 };
 
 Zombie.prototype.updateLB = function(gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
     // Loop through all clients
     for (var i = 0; i < gameServer.clients.length; i++) {
