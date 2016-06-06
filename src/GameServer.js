@@ -215,7 +215,10 @@ GameServer.prototype.timerLoop = function () {
     if (this.timeStamp == 0)
         this.timeStamp = ts;
     this.timeStamp += 40;
-    
+    if (this.timeStamp + 400 < ts) {
+        // high lag detected, resynchronize
+        this.timeStamp = ts - 80;
+    }
     setTimeout(this.mainLoop.bind(this), 0);
 };
 
