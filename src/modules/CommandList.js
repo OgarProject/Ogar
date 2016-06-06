@@ -417,7 +417,7 @@ Commands.list = {
             } else if (client.cells.length > 0) {
                 nick = fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', gameServer.config.playerMaxNickLength);
                 cells = fillChar(client.cells.length, ' ', 5, true);
-                score = fillChar(client.getScore(), ' ', 6, true);
+                score = fillChar(client.getScore() >> 0, ' ', 6, true);
                 position = fillChar(client.centerPos.x >> 0, ' ', 5, true) + ', ' + fillChar(client.centerPos.y >> 0, ' ', 5, true);
                 console.log(" " + id + " | " + ip + " | " + nick + " | " + cells + " | " + score + " | " + position);
             } else {
