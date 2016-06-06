@@ -1,4 +1,5 @@
 var Packet = require('./packet');
+var BinaryReader = require('./packet/BinaryReader');
 
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
@@ -37,17 +38,13 @@ PacketHandler.prototype.handleMessage = function(message) {
 
     switch (packetId) {
         case 0:
-            var bufferName = new Buffer(message);
-            bufferName = bufferName.slice(1);
-            
-            var text = "";
-            if (bufferName.length > 0) {
-                if (this.protocol <= 5) {
-                    text = this.readStringUnicode(bufferName);
-                } else {
-                    text = this.readStringUtf8(bufferName);
-                }
-            }
+            var reader = new BinaryReader(message);
+            reader.readUInt8();
+            var text = null;
+            if (this.protocol <= 5)
+                text = reader.readStringZeroUnicode();
+            else
+                text = reader.readStringZeroUtf8();
             this.setNickname(text);
             break;
 
@@ -110,39 +107,6 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
     }
 };
-
-PacketHandler.prototype.readStringUnicode = function (dataBuffer) {
-    if (dataBuffer.length > 512) return "";
-    
-    var buffer = new Buffer(dataBuffer);
-    var text = "";
-    var maxLength = (buffer.length / 2) >> 0;
-    if (maxLength * 2 > buffer.length) maxLength--;
-    if (maxLength < 0) maxLength = 0;
-    for (var i = 0; i < maxLength; i++) {
-        var charCode = buffer.readUInt16LE(i * 2);
-        if (charCode == 0) {
-            break;
-        }
-        text += String.fromCharCode(charCode);
-    }
-    return text;
-}
-
-PacketHandler.prototype.readStringUtf8 = function (dataBuffer) {
-    if (dataBuffer.length > 512) return "";
-    
-    var buffer = new Buffer(dataBuffer);
-    var maxLen = buffer.length;
-    for (var i = 0; i < maxLen; i++) {
-        if (buffer[i] == 0) {
-            maxLen = i;
-            break;
-        }
-    }
-    var text = buffer.toString('utf8', 0, maxLen);  // utf8 => string
-    return text;
-}
 
 PacketHandler.prototype.setNickname = function(text) {
     var client = this.socket.playerTracker;

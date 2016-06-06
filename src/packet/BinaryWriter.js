@@ -66,6 +66,13 @@ BinaryWriter.prototype.writeDouble = function (value) {
     this._offset += 8;
 };
 
+BinaryWriter.prototype.writeBytes = function (data) {
+    var length = data.length;
+    this.allocCheck(length);
+    data.copy(this._buffer, this._offset, 0, length);
+    this._offset += length;
+};
+
 BinaryWriter.prototype.writeStringUtf8 = function (value) {
     var length = Buffer.byteLength(value, 'utf8')
     this.allocCheck(length);
@@ -73,16 +80,16 @@ BinaryWriter.prototype.writeStringUtf8 = function (value) {
     this._offset += length;
 };
 
-BinaryWriter.prototype.writeStringZeroUtf8 = function (value) {
-    this.writeStringUtf8(value);
-    this.writeUInt8(0);
-};
-
 BinaryWriter.prototype.writeStringUnicode = function (value) {
     var length = Buffer.byteLength(value, 'ucs2')
     this.allocCheck(length);
     this._buffer.write(value, this._offset, 'ucs2');
     this._offset += length;
+};
+
+BinaryWriter.prototype.writeStringZeroUtf8 = function (value) {
+    this.writeStringUtf8(value);
+    this.writeUInt8(0);
 };
 
 BinaryWriter.prototype.writeStringZeroUnicode = function (value) {
