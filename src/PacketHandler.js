@@ -83,12 +83,12 @@ PacketHandler.prototype.handleMessage = function(message) {
             // Chat
             if (message.length < 3)             // first validation
                 break;
+            // chat anti-spam
+            // Just ignore if the time between two messages is smaller than 2 seconds
+            // The user should stop spamming for at least 2 seconds in order to send next chat message
             var tick = this.gameServer.getTick();
             var deltaTick = tick - this.lastChatTick;
             this.lastChatTick = tick;
-            // antispam: 
-            // ignore if thetime between two messages is smaller than 2 seconds
-            // The user should stop spamming for at least 2 seconds in order to send next chat message
             if (deltaTick < 40 * 2)
                 break;
             
