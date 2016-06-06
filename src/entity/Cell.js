@@ -187,14 +187,16 @@ Cell.prototype.visibleCheck = function (box, centerPos, cells) {
 
 Cell.prototype.calcMovePhys = function(config) {
     // Move, twice as slower
-    var X = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle) >> 0);
-    var Y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle) >> 0);
+    var x = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle) >> 0);
+    var y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle) >> 0);
 
     // Movement engine
-    if (this.moveEngineSpeed <= this.moveDecay * 3 && this.cellType == 0) this.moveEngineSpeed = 0;
+    if (this.moveEngineSpeed <= this.moveDecay * 3 && this.cellType == 0)
+        this.moveEngineSpeed = 0;
     var speedDecrease = this.moveEngineSpeed - this.moveEngineSpeed * this.moveDecay;
     this.moveEngineSpeed -= speedDecrease / 2; // Decaying speed twice as slower
-    if (this.moveEngineTicks >= 0.5) this.moveEngineTicks -= 0.5; // Ticks passing twice as slower
+    if (this.moveEngineTicks >= 0.5)
+        this.moveEngineTicks -= 0.5; // Ticks passing twice as slower
 
     // Ejected cell collision
     if (this.cellType == 3) {
@@ -218,71 +220,59 @@ Cell.prototype.calcMovePhys = function(config) {
 
                 var move = allowDist - dist;
 
-                X += Math.sin(angle) * move / 2;
-                Y += Math.cos(angle) * move / 2;
+                x += Math.sin(angle) * move / 2;
+                y += Math.cos(angle) * move / 2;
             }
         }
     }
 
     //// Border check - Bouncy physics
     var radius = 40;
-    if (X < config.borderLeft && this.position.x != X) {
+    if (x < config.borderLeft && this.position.x != x) {
         // Flip angle horizontally - Left side
         this.angle = 6.28 - this.angle;
-        var p = this.getLineIntersect(
-            this.position.x, this.position.y, X, Y,
+        var p = this.getLineIntersection(
+            this.position.x, this.position.y, x, y,
             config.borderLeft, config.borderBottom,
             config.borderLeft, config.borderTop);
-        X = p.x;
-        Y = p.y;
+        x = p.x;
+        y = p.y;
     }
-    if (X > config.borderRight && this.position.y != X) {
+    if (x > config.borderRight && this.position.y != x) {
         // Flip angle horizontally - Right side
         this.angle = 6.28 - this.angle;
-        var p = this.getLineIntersect(
-            this.position.x, this.position.y, X, Y,
+        var p = this.getLineIntersection(
+            this.position.x, this.position.y, x, y,
             config.borderRight, config.borderBottom,
             config.borderRight, config.borderTop);
-        X = p.x;
-        Y = p.y;
+        x = p.x;
+        y = p.y;
     }
-    if (Y < config.borderTop && this.position.y != Y) {
+    if (y < config.borderTop && this.position.y != y) {
         // Flip angle vertically - Top side
         this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
-        var p = this.getLineIntersect(
-            this.position.x, this.position.y, X, Y,
+        var p = this.getLineIntersection(
+            this.position.x, this.position.y, x, y,
             config.borderRight, config.borderTop,
             config.borderLeft, config.borderTop);
-        X = p.x;
-        Y = p.y;
+        x = p.x;
+        y = p.y;
     }
-    if (Y > config.borderBottom && this.position.y != Y) {
+    if (y > config.borderBottom && this.position.y != y) {
         // Flip angle vertically - Bottom side
         this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
-        var p = this.getLineIntersect(
-            this.position.x, this.position.y, X, Y,
+        var p = this.getLineIntersection(
+            this.position.x, this.position.y, x, y,
             config.borderRight, config.borderBottom,
             config.borderLeft, config.borderBottom);
-        X = p.x;
-        Y = p.y;
+        x = p.x;
+        y = p.y;
     }
 
     // Set position
-    this.position.x = X;
-    this.position.y = Y;
+    this.position.x = x;
+    this.position.y = y;
 };
-
-Cell.prototype.getLineIntersect = function(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
-    var z1 = p1x - p0x;
-    var z2 = p3x - p2x;
-    var w1 = p1y - p0y;
-    var w2 = p3y - p2y;
-    var k2 = (z1 * (p2y - p0y) + w1 * (p0x - p2x)) / (w1 * z2 - z1 * w2);
-    return {
-        x: p2x + z2 * k2,
-        y: p2y + w2 * k2
-    };
-}
 
 // Override these
 
@@ -313,16 +303,24 @@ Cell.prototype.moveDone = function(gameServer) {
 
 // Lib
 
+Cell.prototype.getLineIntersection = function (p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+    var z1 = p1x - p0x;
+    var z2 = p3x - p2x;
+    var w1 = p1y - p0y;
+    var w2 = p3y - p2y;
+    var k2 = (z1 * (p2y - p0y) + w1 * (p0x - p2x)) / (w1 * z2 - z1 * w2);
+    return {
+        x: p2x + z2 * k2,
+        y: p2y + w2 * k2
+    };
+}
+
 Cell.prototype.abs = function(x) {
     return x < 0 ? -x : x;
 };
 
 Cell.prototype.getDist = function(x1, y1, x2, y2) {
-    var xs = x2 - x1;
-    xs = xs * xs;
-
-    var ys = y2 - y1;
-    ys = ys * ys;
-
-    return Math.sqrt(xs + ys);
+    var vx = x2 - x1;
+    var vy = y2 - x1;
+    return Math.sqrt(vx * vx + vy * vy);
 };
