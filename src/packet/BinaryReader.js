@@ -62,6 +62,11 @@ BinaryReader.prototype.readDouble = function () {
 
 BinaryReader.prototype.readBytes = function (length) {
     return this._buffer.slice(this._offset, this._offset + length);
+    this._offset += length;
+};
+
+BinaryReader.prototype.skipBytes = function (length) {
+    this._offset += length;
 };
 
 BinaryReader.prototype.readStringUtf8 = function (length) {

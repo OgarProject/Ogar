@@ -96,7 +96,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             var rvLength = (flags & 2 ? 4:0) + (flags & 4 ? 8:0) + (flags & 8 ? 16:0);
             if (message.length < 3 + rvLength) // second validation
                 break;
-            reader.readBytes(rvLength);        // reserved
+            reader.skipBytes(rvLength);        // reserved
             var text = null;
             if (this.protocol <= 5)
                 text = reader.readStringZeroUnicode();
