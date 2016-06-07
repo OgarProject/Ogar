@@ -6,6 +6,7 @@ function PacketHandler(gameServer, socket) {
     this.socket = socket;
     // Detect protocol version - we can do something about it later
     this.protocol = 0;
+    this.isHandshakePassed = false;
     this.lastChatTick = 0;
 
     this.pressQ = false;
@@ -26,6 +27,32 @@ PacketHandler.prototype.handleMessage = function(message) {
     }
     var reader = new BinaryReader(message);
     var packetId = reader.readUInt8();
+    
+    // no handshake?
+    if (!this.isHandshakePassed) { 
+        if (packetId != 254 || message.length != 5)
+            return; // wait handshake
+        
+        // Handshake request
+        this.protocol = reader.readUInt32();
+        if (this.protocol < 4 || this.protocol > 7) {
+            this.socket.close(1002, "Not supported protocol");
+            return;
+        }
+        // Send handshake response
+        this.socket.sendPacket(new Packet.ClearNodes());
+        var border = {
+            left: this.gameServer.config.borderLeft + this.socket.playerTracker.scrambleX,
+            top: this.gameServer.config.borderTop + this.socket.playerTracker.scrambleY,
+            right: this.gameServer.config.borderRight + this.socket.playerTracker.scrambleX,
+            bottom: this.gameServer.config.borderBottom + this.socket.playerTracker.scrambleY
+        };
+        this.socket.sendPacket(new Packet.SetBorder(border, 0, "MultiOgar 1.0"));
+        // Send welcome message
+        this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
+        this.isHandshakePassed = true;
+        return;
+    }
 
     switch (packetId) {
         case 0:
@@ -107,30 +134,6 @@ PacketHandler.prototype.handleMessage = function(message) {
             else
                 text = reader.readStringZeroUtf8();
             this.gameServer.onChatMessage(this.socket.playerTracker, null, text);
-            break;
-
-        case 254:
-            // Handshake request
-            if (this.protocol != 0) // second handshake request is not allowed
-                break;
-            if (message.length == 5) {
-                this.protocol = reader.readUInt32();
-                if (this.protocol < 4 || this.protocol > 7) {
-                    this.socket.close(1002, "Not supported protocol");
-                    break;
-                }
-                // Send handshake response
-                this.socket.sendPacket(new Packet.ClearNodes());
-                var border = {
-                    left: this.gameServer.config.borderLeft + this.socket.playerTracker.scrambleX,
-                    top: this.gameServer.config.borderTop + this.socket.playerTracker.scrambleY,
-                    right: this.gameServer.config.borderRight + this.socket.playerTracker.scrambleX,
-                    bottom: this.gameServer.config.borderBottom + this.socket.playerTracker.scrambleY
-                };
-                this.socket.sendPacket(new Packet.SetBorder(border, 0, "MultiOgar 1.0"));
-                // Send welcome message
-                this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
-            }
             break;
         default:
             break;
