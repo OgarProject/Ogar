@@ -14,13 +14,10 @@ module.exports = UpdateNodes;
 
 UpdateNodes.prototype.build = function (protocol) {
     if (!protocol) return null;
-    switch (protocol) {
-        case 4: return this.build4();
-        case 5: return this.build5();
-        case 6:
-        case 7: return this.build6();
-    }
-    return null;
+    
+    if (protocol <= 4) return this.build4();
+    else if (protocol == 5) return this.build5();
+    else return this.build6();
 }
 
 // protocol 4
