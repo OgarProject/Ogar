@@ -115,6 +115,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                 break;
             if (message.length == 5) {
                 this.protocol = reader.readUInt32();
+                if (this.protocol < 4 || this.protocol > 7) {
+                    this.socket.close(1002, "Not supported protocol");
+                    break;
+                }
                 // Send handshake response
                 this.socket.sendPacket(new Packet.ClearNodes());
                 var border = {
