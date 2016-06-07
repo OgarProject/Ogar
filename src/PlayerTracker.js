@@ -67,8 +67,8 @@ function PlayerTracker(gameServer, socket) {
         // Only scramble if enabled in config
         if (gameServer.config.serverScrambleCoords == 1) {
             // avoid mouse packet limitations
-            var maxScrambleX = Math.max(0, 32767 - width / 2);
-            var maxScrambleY = Math.max(0, 32767 - height / 2);
+            var maxScrambleX = Math.max(0, 32767 - 2000 - width / 2);
+            var maxScrambleY = Math.max(0, 32767 - 2000 - height / 2);
             this.scrambleX = Math.floor(maxScrambleX * Math.random());
             this.scrambleY = Math.floor(maxScrambleY * Math.random());
         }
