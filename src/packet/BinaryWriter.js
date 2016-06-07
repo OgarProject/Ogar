@@ -119,7 +119,7 @@ BinaryWriter.prototype.allocCheck = function (size) {
 BinaryWriter.prototype.allocBuffer = function (size) {
     if (Buffer.allocUnsafe == null) // node.js < v6?
         return new Buffer(size);
-    return Buffer.allocUnsafe(poolSize);
+    return Buffer.allocUnsafe(size);
 }
 
 BinaryWriter.prototype.ToBuffer = function () {
