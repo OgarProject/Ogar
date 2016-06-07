@@ -62,6 +62,10 @@ PacketHandler.prototype.handleMessage = function(message) {
                 client.mouse.x = reader.readDouble() - client.scrambleX;
                 client.mouse.y = reader.readDouble() - client.scrambleY;
                 client.movePacketTriggered = true;
+                if (isNaN(client.mouse.x))
+                    client.mouse.x = client.centerPos.x;
+                if (isNaN(client.mouse.y))
+                    client.mouse.y = client.centerPos.y;
             }
             break;
         case 17:
