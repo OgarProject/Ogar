@@ -34,19 +34,19 @@ function PlayerTracker(gameServer, socket) {
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
 
     // Viewing box
-    this.sightRangeX = 0;
-    this.sightRangeY = 0;
+    this.sightWidth = 0;
+    this.sightHeight = 0;
     this.centerPos = { // Center of map
         x: 3000,
         y: 3000
     };
     this.viewBox = {
-        topY: 0,
-        bottomY: 0,
-        leftX: 0,
-        rightX: 0,
-        width: 0, // Half-width
-        height: 0 // Half-height
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        halfWidth: 0,
+        halfHeight: 0
     };
 
     // Scramble the coordinate system for anti-raga
@@ -66,8 +66,11 @@ function PlayerTracker(gameServer, socket) {
         gameServer.gameMode.onPlayerInit(this);
         // Only scramble if enabled in config
         if (gameServer.config.serverScrambleCoords == 1) {
-            this.scrambleX = Math.floor((1 << 15) * Math.random());
-            this.scrambleY = Math.floor((1 << 15) * Math.random());
+            // avoid mouse packet limitations
+            var maxScrambleX = Math.max(0, 32767 - width / 2);
+            var maxScrambleY = Math.max(0, 32767 - height / 2);
+            this.scrambleX = Math.floor(maxScrambleX * Math.random());
+            this.scrambleY = Math.floor(maxScrambleY * Math.random());
         }
     }
 }
@@ -204,7 +207,7 @@ PlayerTracker.prototype.update = function () {
     // Get visible nodes every 400 ms
     var nonVisibleNodes = []; // Nodes that are not visible
     if (this.tickViewBox <= 0) {
-        var newVisible = this.calcViewBox();
+        var newVisible = this.getVisibleNodes();
         try { // Add a try block in any case
             
             // Compare and destroy nodes that are not seen
@@ -228,10 +231,10 @@ PlayerTracker.prototype.update = function () {
             // TODO: need to send it more rarely (once per second or something like that)
             // also need to make sure that we send it before first cell update
             //var border = {
-            //    left: Math.max(this.viewBox.leftX - this.viewBox.width / 2, this.gameServer.config.borderLeft) + this.scrambleX,
-            //    top: Math.max(this.viewBox.topY - this.viewBox.height / 2, this.gameServer.config.borderTop) + this.scrambleY,
-            //    right: Math.min(this.viewBox.rightX + this.viewBox.width / 2, this.gameServer.config.borderRight) + this.scrambleX,
-            //    bottom: Math.min(this.viewBox.bottomY + this.viewBox.height / 2, this.gameServer.config.borderBottom) + this.scrambleY
+            //    left: Math.max(this.viewBox.left - this.viewBox.halfWidth, this.gameServer.config.borderLeft) + this.scrambleX,
+            //    top: Math.max(this.viewBox.top - this.viewBox.halfHeight, this.gameServer.config.borderTop) + this.scrambleY,
+            //    right: Math.min(this.viewBox.right + this.viewBox.halfWidth, this.gameServer.config.borderRight) + this.scrambleX,
+            //    bottom: Math.min(this.viewBox.bottom + this.viewBox.halfHeight, this.gameServer.config.borderBottom) + this.scrambleY
             //};
             //this.socket.sendPacket(new Packet.SetBorder(border));
         } catch (err) {
@@ -263,11 +266,10 @@ PlayerTracker.prototype.update = function () {
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(
         this.nodeDestroyQueue,
-            updateNodes,
-            nonVisibleNodes,
-            this.scrambleX,
-            this.scrambleY
-    ));
+        updateNodes,
+        nonVisibleNodes,
+        this.scrambleX,
+        this.scrambleY));
     
     this.nodeDestroyQueue = []; // Reset destroy queue
     this.nodeAdditionQueue = []; // Reset addition queue
@@ -294,10 +296,7 @@ PlayerTracker.prototype.update = function () {
             var len = this.cells.length;
             for (var i = 0; i < len; i++) {
                 var cell = this.socket.playerTracker.cells[0];
-                
-                if (!cell) {
-                    continue;
-                }
+                if (cell == null) continue;
                 
                 this.gameServer.removeNode(cell);
             }
@@ -313,13 +312,7 @@ PlayerTracker.prototype.update = function () {
 
 // Viewing box
 
-PlayerTracker.prototype.updateSightRange = function() { // For view distance
-    var scale = this.getScale();
-    this.sightRangeX = (this.gameServer.config.serverViewBaseX + 100) / scale;
-    this.sightRangeY = (this.gameServer.config.serverViewBaseY + 100) / scale;
-};
-
-PlayerTracker.prototype.updateCenter = function() { // Get center of cells
+PlayerTracker.prototype.updateCenterInGame = function() { // Get center of cells
     var len = this.cells.length;
     if (len <= 0) return;
     var cx = 0;
@@ -327,95 +320,70 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
     var count = 0;
     for (var i = 0; i < len; i++) {
         var node = this.cells[i];
-        if (!node) continue;
+        if (node == null) continue;
         cx += node.position.x;
         cy += node.position.y;
         count++;
     }
     if (count == 0) return;
-    this.centerPos.x = cx / count;
-    this.centerPos.y = cy / count;
+    this.setCenterPos(cx / count, cy / count);
 };
 
-PlayerTracker.prototype.calcViewBox = function() {
-    if (this.spectate) {
-        // Spectate mode
-        return this.getSpectateNodes();
-    }
-
-    // Main function
-    this.updateSightRange();
-    this.updateCenter();
-
-    // Box
-    this.viewBox.topY = this.centerPos.y - this.sightRangeY / 2;
-    this.viewBox.bottomY = this.centerPos.y + this.sightRangeY / 2;
-    this.viewBox.leftX = this.centerPos.x - this.sightRangeX / 2;
-    this.viewBox.rightX = this.centerPos.x + this.sightRangeX / 2;
-    this.viewBox.width = this.sightRangeX;
-    this.viewBox.height = this.sightRangeY;
-
-    var newVisible = this.calcVisibleNodes();
-
-    return newVisible;
-};
-
-PlayerTracker.prototype.getSpectateNodes = function() {
-    var specPlayer = this.gameServer.largestClient;
-
-    if (!this.freeRoam) {
-
-        if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
-
-        // Get spectate player's location and calculate zoom amount
-        this.scale = specPlayer.getScale();
-        this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
-        this.sendPosPacket(this.scale);
-
-        return specPlayer.visibleNodes.slice(0);
-    }
-    // Behave like client is in free-roam as function didn't return nodes
-    return this.moveInFreeRoam();
-};
-
-PlayerTracker.prototype.moveInFreeRoam = function() {
-    // User is in free roam
-    // To mimic vanilla, get distance from center to mouse and apply a part of the distance
-
+PlayerTracker.prototype.updateCenterFreeRoam = function () {
     var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
     var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
-    var speed = Math.min(dist / 10, 70); // Not to break laws of universe by going faster than light speed
-
-    this.centerPos.x += speed * Math.sin(angle);
-    this.centerPos.y += speed * Math.cos(angle);
-
-    // Check if went away from borders
-    this.checkBorderPass();
-
-    // Now that we've updated center pos, get nearby cells
-    
-    this.scale = 0.25;
-    var baseX = (this.gameServer.config.serverViewBaseX + 100) / this.scale;
-    var baseY = (this.gameServer.config.serverViewBaseY + 100) / this.scale;
-    
-    this.viewBox.leftX = this.centerPos.x - baseX / 2;
-    this.viewBox.topY = this.centerPos.y - baseY / 2;
-    this.viewBox.rightX = this.centerPos.x + baseX / 2;
-    this.viewBox.bottomY = this.centerPos.y + baseY / 2;
-    this.viewBox.width = baseX;
-    this.viewBox.height = baseY;
-
-    // Use calcViewBox's way of looking for nodes
-    var newVisible = this.calcVisibleNodes();
-    this.sendPosPacket(this.scale);
-    return newVisible;
+    // Not to break laws of universe by going faster than light speed
+    var speed = Math.min(dist / 10, 70);
+    var x = this.centerPos.x + speed * Math.sin(angle);
+    var y = this.centerPos.y + speed * Math.cos(angle);
+    this.setCenterPos(x, y);
 };
+
+PlayerTracker.prototype.updateViewBox = function () {
+    var scale = this.getScale();
+    this.sightWidth = (this.gameServer.config.serverViewBaseX + 100) / scale;
+    this.sightHeight = (this.gameServer.config.serverViewBaseY + 100) / scale;
+    var halfWidth = this.sightWidth / 2;
+    var halfHeight = this.sightHeight / 2;
+    this.viewBox = {
+        left: this.centerPos.x - halfWidth,
+        top: this.centerPos.y - halfHeight,
+        right: this.centerPos.x + halfWidth,
+        bottom: this.centerPos.y + halfHeight,
+        halfWidth: halfWidth,
+        halfHeight: halfHeight
+    };
+};
+
+PlayerTracker.prototype.getVisibleNodes = function () {
+    if (this.spectate) {
+        var specPlayer = this.gameServer.largestClient;
+        if (!this.freeRoam && specPlayer != null) {
+            // top player spectate
+            this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
+            this.scale = specPlayer.getScale();
+            this.sendPosPacket();
+            this.updateViewBox();
+            return specPlayer.visibleNodes.slice(0);
+        }
+        // free roam spectate
+        this.updateCenterFreeRoam();
+        this.scale = 0.25;
+        this.sendPosPacket();
+    } else {
+        // in game
+        this.updateCenterInGame();
+        // scale will be calculated on first call to this.getScale() inside updateViewBox()
+    }
+    this.updateViewBox();
+    return this.calcVisibleNodes();
+}
 
 PlayerTracker.prototype.calcVisibleNodes = function() {
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         var node = this.gameServer.nodes[i];
-        if (!node) continue;
+        if (node == null) continue;
 
         var check = node.visibleCheck(this.viewBox, this.centerPos, this.cells);
         if (check > 0 || node.owner == this) {
@@ -436,35 +404,22 @@ PlayerTracker.prototype.setCenterPos = function(x, y) {
 
 PlayerTracker.prototype.checkBorderPass = function() {
     // A check while in free-roam mode to avoid player going into nothingness
-    if (this.centerPos.x < this.gameServer.config.borderLeft) {
+    if (this.centerPos.x < this.gameServer.config.borderLeft)
         this.centerPos.x = this.gameServer.config.borderLeft;
-    }
-    if (this.centerPos.x > this.gameServer.config.borderRight) {
+    if (this.centerPos.x > this.gameServer.config.borderRight)
         this.centerPos.x = this.gameServer.config.borderRight;
-    }
-    if (this.centerPos.y < this.gameServer.config.borderTop) {
+    if (this.centerPos.y < this.gameServer.config.borderTop)
         this.centerPos.y = this.gameServer.config.borderTop;
-    }
-    if (this.centerPos.y > this.gameServer.config.borderBottom) {
+    if (this.centerPos.y > this.gameServer.config.borderBottom)
         this.centerPos.y = this.gameServer.config.borderBottom;
-    }
 };
 
-PlayerTracker.prototype.sendPosPacket = function(specZoom) {
+PlayerTracker.prototype.sendPosPacket = function() {
     // TODO: Send packet elsewhere so it is sent more often
     this.socket.sendPacket(new Packet.UpdatePosition(
         this.centerPos.x + this.scrambleX,
         this.centerPos.y + this.scrambleY,
-        specZoom
-    ));
-};
-
-PlayerTracker.prototype.sendCustomPosPacket = function(x, y, specZoom) {
-    // TODO: Send packet elsewhere so it is sent more often
-    this.socket.sendPacket(new Packet.UpdatePosition(
-        x + this.scrambleX,
-        y + this.scrambleY,
-        specZoom
+        this.getScale()
     ));
 };
 

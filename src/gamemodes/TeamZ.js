@@ -353,7 +353,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             if (typeof check === 'undefined') {
                 continue;
             }
-            if (!check.collisionCheck(bottomY, topY, rightX, leftX)) {
+            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
                 continue;
             }
             virus = check;
@@ -368,7 +368,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             if (typeof check === 'undefined') {
                 continue;
             }
-            if (!check.collisionCheck(bottomY, topY, rightX, leftX)) {
+            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
                 continue;
             }
             virus = check;
@@ -388,7 +388,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 continue;
             }
 
-            if (!check.collisionCheck(bottomY, topY, rightX, leftX)) {
+            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
                 continue;
             }
 

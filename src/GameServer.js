@@ -920,7 +920,7 @@ GameServer.prototype.getNearestVirus = function(cell) {
             continue;
         }
 
-        if (!check.collisionCheck(bottomY, topY, rightX, leftX)) {
+        if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
             continue;
         }
 

@@ -127,11 +127,11 @@ Cell.prototype.setKiller = function(cell) {
 
 // Functions
 
-Cell.prototype.collisionCheck = function(bottomY, topY, rightX, leftX) {
-    return this.position.x > leftX && 
-        this.position.x < rightX &&
-        this.position.y > topY && 
-        this.position.y < bottomY;
+Cell.prototype.collisionCheck = function(left, top, right, bottom) {
+    return this.position.x > left && 
+        this.position.x < right &&
+        this.position.y > top && 
+        this.position.y < bottom;
 };
 
 // This collision checking function is based on CIRCLE shape
@@ -151,7 +151,7 @@ Cell.prototype.visibleCheck = function (box, centerPos, cells) {
     var isThere = false;
     if (this.cellType == 1) {
         // dot collision detector
-        isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
+        isThere = this.collisionCheck(box.left, box.top, box.right, box.bottom);
     } else {
         // rectangle collision detector
         var cellSize = this.getSize();
@@ -159,10 +159,10 @@ Cell.prototype.visibleCheck = function (box, centerPos, cells) {
         var miny = this.position.y - cellSize;
         var maxx = this.position.x + cellSize;
         var maxy = this.position.y + cellSize;
-        var d1x = box.leftX - maxx;
-        var d1y = box.topY - maxy;
-        var d2x = minx - box.rightX;
-        var d2y = miny - box.bottomY;
+        var d1x = box.left - maxx;
+        var d1y = box.top - maxy;
+        var d2x = minx - box.right;
+        var d2y = miny - box.bottom;
         isThere = d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
     }
     if (!isThere) return 0;

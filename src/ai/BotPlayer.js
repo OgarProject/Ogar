@@ -52,7 +52,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     
     setTimeout(function() {
         // Calculate nodes
-        this.visibleNodes = this.calcViewBox();
+        this.visibleNodes = this.getVisibleNodes();
 
         // Calc predators/prey
         var cell = this.getLowestCell();
