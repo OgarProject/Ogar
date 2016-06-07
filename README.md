@@ -14,13 +14,15 @@ The goal is to cleanup the code, fix the bugs and improve physics.
 
 
 ## What's new:
-* Player speed - replaced with formula approximated to vanilla physics;
-* Recombine time - replaced with formula approximated to vanilla physics;
-* Cell collision - rectangle collision and circle collision algorithms were fixed and replaced with more fast;
-* View area - fixed and replaced with formula approximated to vanilla physics;
-* Mouse control and cell movements - fixed and replaced with physics approximated to vanilla physics;
-* Border calculations - fixed
+* Player speed - physics rewritten;
+* Recombine time - physics rewritten;
+* Cell collision - physics rewritten;
+* View area - rewritten
+* Mouse control and cell movements - physics rewritten;
+* Border calculations - rewritten;
 * Border bouncy physics - fixed and improved
 * mainLoop - cleaned
 * added support for different protocols
+* added chat support
+* added anti-spam protection
 * color generator replaced with hsv model
