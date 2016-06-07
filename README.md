@@ -15,7 +15,7 @@ The goal is to cleanup the code, fix the bugs and improve physics.
 
 ## What's new:
 * Player speed - physics rewritten;
-* Recombine time - physics rewritten;
+* Recombine - physics rewritten;
 * Cell collision - physics rewritten;
 * View area - rewritten
 * Mouse control and cell movements - physics rewritten;
