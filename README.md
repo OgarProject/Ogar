@@ -16,14 +16,14 @@ The goal is to cleanup the code, fix the bugs and improve physics.
 
 Ogar clients and server trackers, that I found on internet
 
-#Ogar server trackers
+###Ogar server trackers
 
 URL | Description
 --- | ---
 http://ogar.mivabe.nl/master | MivaBe, tracks a lot of servers
 
 
-#Ogar clients
+###Ogar clients
 Just replace ip:port in the url to play
 
 URL | Protocol | Description
