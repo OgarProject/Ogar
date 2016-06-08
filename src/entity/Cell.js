@@ -250,7 +250,7 @@ Cell.prototype.calcMovePhys = function(config) {
             y = p.y;
         }
     }
-    if (x > config.borderRight && this.position.y != x) {
+    if (x > config.borderRight && this.position.x != x) {
         // Flip angle horizontally - Right side
         this.angle = 6.28 - this.angle;
         if (x == this.position.x && y == this.position.y) {
