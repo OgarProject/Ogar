@@ -12,6 +12,25 @@ Original Ogar found [here](https://github.com/OgarProject/Ogar)
 
 The goal is to cleanup the code, fix the bugs and improve physics.
 
+## Clients
+
+Ogar clients and server trackers, that I found on internet
+
+Ogar server trackers
+
+URL | Description
+--- | ---
+http://ogar.mivabe.nl/master | MivaBe, tracks a lot of servers
+
+
+Ogar clients
+
+URL | Protocol | Description
+--- | --- | ---
+http://ogar.mivabe.nl/?ip=127.0.0.1:50000 | early 5 | MivaBe, custom graphics
+http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla clone (sends invalid protocol=1)
+
+
 
 ## What's new:
 * Player speed - physics rewritten;
