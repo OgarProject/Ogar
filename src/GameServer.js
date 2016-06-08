@@ -257,15 +257,16 @@ GameServer.prototype.getRandomPosition = function() {
 
 GameServer.prototype.getRandomSpawn = function(mass) {
     // Random and secure spawns for players and viruses
+    var size = Math.sqrt(mass * 100);
     var pos = this.getRandomPosition();
-    var unsafe = this.willCollide(mass, pos, mass == this.config.virusStartMass);
+    var unsafe = this.willCollide(size, pos, mass == this.config.virusStartMass);
     var attempt = 1;
     
     // Prevent stack overflow by counting attempts
     while (true) {
         if (!unsafe || attempt >= 15) break;
         pos = this.getRandomPosition();
-        unsafe = this.willCollide(mass, pos, mass == this.config.virusStartMass);
+        unsafe = this.willCollide(size, pos, mass == this.config.virusStartMass);
         attempt++;
     }
     
@@ -495,22 +496,15 @@ GameServer.prototype.virusCheck = function() {
     }
 };
 
-GameServer.prototype.willCollide = function(mass, pos, isVirus) {
+GameServer.prototype.willCollide = function(size, pos, isVirus) {
     // Look if there will be any collision with the current nodes
-    var size = Math.sqrt(mass * 100) >> 0;
     
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var check = this.nodesPlayer[i];
         if (!check) continue;
 
-        // Eating range
-        var xs = check.position.x - pos.x,
-            ys = check.position.y - pos.y,
-            sqDist = xs * xs + ys * ys,
-            dist = Math.sqrt(sqDist);
-
         if (check.getSize() > size) { // Check only if the player cell is larger than imaginary cell
-            if (dist + size <= check.getSize()) return true; // Collided
+            if (check.collisionCheckCircle(pos.x, pos.y, size+50)) return true; // Collided
         }
     }
     
@@ -520,14 +514,8 @@ GameServer.prototype.willCollide = function(mass, pos, isVirus) {
         var check = this.nodesVirus[i];
         if (!check) continue;
         
-        // Eating range
-        var xs = check.position.x - pos.x,
-            ys = check.position.y - pos.y,
-            sqDist = xs * xs + ys * ys,
-            dist = Math.sqrt(sqDist);
-
         if (check.getSize() > size) { // Check only if the virus cell is larger than imaginary cell
-            if (dist + size <= check.getSize()) return true; // Collided
+            if (check.collisionCheckCircle(pos.x, pos.y, size + 50)) return true; // Collided
         }
     }
     return false;
