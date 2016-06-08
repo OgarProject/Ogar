@@ -383,13 +383,13 @@ Commands.list = {
     },
     playerlist: function(gameServer, split) {
         console.log("[Console] Showing " + gameServer.clients.length + " players: ");
-        console.log(" ID         | IP              |   | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
-        console.log(fillChar('', '-', ' ID         | IP              |   |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
+        console.log(" ID     | IP              | P | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
+        console.log(fillChar('', '-', ' ID     | IP              |   |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
         for (var i = 0; i < gameServer.clients.length; i++) {
             var client = gameServer.clients[i].playerTracker;
 
             // ID with 3 digits length
-            var id = fillChar((client.pID), ' ', 10, true);
+            var id = fillChar((client.pID), ' ', 6, true);
 
             // Get ip (15 digits length)
             var ip = "BOT";
