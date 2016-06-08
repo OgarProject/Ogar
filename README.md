@@ -16,18 +16,19 @@ The goal is to cleanup the code, fix the bugs and improve physics.
 
 Ogar clients and server trackers, that I found on internet
 
-Ogar server trackers
+#Ogar server trackers
 
 URL | Description
 --- | ---
 http://ogar.mivabe.nl/master | MivaBe, tracks a lot of servers
 
 
-Ogar clients
+#Ogar clients
+Just replace ip:port in the url to play
 
 URL | Protocol | Description
 --- | --- | ---
-http://ogar.mivabe.nl/?ip=127.0.0.1:50000 | early 5 | MivaBe, custom graphics
+http://ogar.mivabe.nl/?ip=127.0.0.1:50000 | early 5 | MivaBe, custom graphics (anime)
 http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla clone (sends invalid protocol=1)
 
 
