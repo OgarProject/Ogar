@@ -944,6 +944,7 @@ GameServer.prototype.updateCells = function() {
         }
 
         // Mass decay
+        // TODO: needs to be updated rarely
         if (cell.getMass() >= this.config.playerMinMassDecay) {
             cell.setMass(cell.getMass() * massDecay);
         }

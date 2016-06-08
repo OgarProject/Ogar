@@ -109,16 +109,18 @@ PlayerTracker.prototype.getScale = function () {
 
 PlayerTracker.prototype.updateMass = function () {
     var totalSize = 0;
+    var totalMass = 0;
     for (var i = 0; i < this.cells.length; i++) {
         var node = this.cells[i];
         if (node == null) continue;
         totalSize += node.getSize();
+        totalMass += node.getMass();
     }
     if (totalSize == 0) {
         //do not change scale for spectators or not in game players
         this.score = 0;
     } else {
-        this.score = totalSize * totalSize / 100;
+        this.score = totalMass;
         this.scale = Math.pow(Math.min(64 / totalSize, 1), 0.4);
     }
     this.isMassChanged = false;
