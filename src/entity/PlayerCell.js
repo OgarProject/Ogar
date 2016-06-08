@@ -87,21 +87,22 @@ PlayerCell.prototype.collision = function(gameServer) {
 
         if (!cell.canRemerge() || !this.canRemerge()) {
             // Cannot remerge - Collision with your own cells
-            var calcInfo = gameServer.checkCellCollision(this, cell); // Calculation info
+            var manifold = gameServer.checkCellCollision(this, cell); // Calculation info
 
             // Further calculations
-            if (calcInfo.collided) { // Collided
+            if (manifold != null) { // Collided
                 // Cell with collision restore ticks on should not collide
-                if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) continue;
+                if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0)
+                    continue;
 
                 // Call gameserver's function to collide cells
-                gameServer.cellCollision(this, cell, calcInfo);
+                gameServer.resolveCollision(manifold);
             }
         }
     }
 
     gameServer.gameMode.onCellMove(this, gameServer);
-
+    
     // Check to ensure we're not passing the world border (shouldn't get closer than a quarter of the cell's diameter)
     if (this.position.x < config.borderLeft + r / 2) {
         this.position.x = config.borderLeft + r / 2;

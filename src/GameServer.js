@@ -532,43 +532,51 @@ GameServer.prototype.abs = function(x) { // Because Math.abs is slow
 };
 
 GameServer.prototype.checkCellCollision = function(cell, check) {
-    // Returns object which contains info about cell's collisions. You can use this in the future.
-
-    // Check the two cells for collision
-    var collisionDist = cell.getSize() + check.getSize(); // Minimum distance between the two cells
-    var dist = this.getDist(cell.position.x, cell.position.y,
-        check.position.x, check.position.y); // Distance between these two cells
-
-    var dY = cell.position.y - check.position.y;
-    var dX = cell.position.x - check.position.x;
-    var angle = Math.atan2(dX, dY);
-
-    return ({
-        cellDist: dist,
-        collideDist: collisionDist,
-        cellMult: (Math.sqrt(check.getSize() * 100) / Math.sqrt(cell.getSize() * 100)) / 3,
-        cellAngle: angle,
-        collided: (dist < collisionDist)
-    });
+    // Returns manifold which contains info about cell's collisions. 
+    // Returns null if there is no collision
+    var r = cell.getSize() + check.getSize();
+    var dx = check.position.x - cell.position.x;
+    var dy = check.position.y - cell.position.y;
+    var squared = dx * dx + dy * dy;         // squared distance from cell to check
+    if (squared >= r * r) {
+        // no collision
+        return null;
+    }
+    // create collision manifold
+    return {
+        cell1: cell,
+        cell2: check,
+        r: r,               // radius sum
+        dx: dx,             // delta x from cell1 to cell2
+        dy: dy,             // delta y from cell1 to cell2
+        squared: squared    // squared distance from cell1 to cell2
+    };
 };
 
-GameServer.prototype.cellCollision = function(cell, check, calcInfo) {
-    if (!calcInfo) calcInfo = this.checkCellCollision(cell, check); // Unedefined calc info
-
-    // Check collision
-    if (calcInfo.collided) { // Collided
-        // The moving cell pushes the colliding cell
-
-        var dist = calcInfo.cellDist;
-        var collisionDist = calcInfo.collideDist;
-        var mult = calcInfo.cellMult;
-        var angle = calcInfo.cellAngle;
-
-        var move = (collisionDist - dist) * mult;
-
-        cell.position.x += move * Math.sin(angle);
-        cell.position.y += move * Math.cos(angle);
-    }
+GameServer.prototype.resolveCollision = function (manifold) {
+    // distance from cell1 to cell2
+    var d = Math.sqrt(manifold.squared);
+    if (d <= 0) return;
+    
+    // body penetration distance
+    var penetration = manifold.r - d;
+    if (penetration <= 0) return;
+    
+    // penetration vector = penetration distance * normalized vector
+    var px = penetration * manifold.dx / d;
+    var py = penetration * manifold.dy / d;
+    
+    // body impulse
+    var totalMass = manifold.cell1.getMass() + manifold.cell2.getMass();
+    if (totalMass <= 0) return;
+    var impulse1 = manifold.cell2.getMass() / totalMass;
+    var impulse2 = manifold.cell1.getMass() / totalMass;
+    
+    // apply extrusion force
+    manifold.cell1.position.x -= px * impulse1;
+    manifold.cell1.position.y -= py * impulse1;
+    manifold.cell2.position.x += px * impulse2;
+    manifold.cell2.position.y += py * impulse2;
 };
 
 GameServer.prototype.updateMoveEngine = function() {

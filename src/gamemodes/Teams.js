@@ -108,15 +108,16 @@ Teams.prototype.onCellMove = function(cell, gameServer) {
 
         // Collision with teammates
         if (check.owner.getTeam() == team) {
-            var calcInfo = gameServer.checkCellCollision(cell, check); // Calculation info
+            var manifold = gameServer.checkCellCollision(cell, check); // Calculation info
 
             // Further calculations
-            if (calcInfo.collided) { // Collided
+            if (manifold != null) { // Collided
                 // Cell with collision restore ticks on should not collide
-                if (cell.collisionRestoreTicks > 0 || check.collisionRestoreTicks > 0) continue;
+                if (cell.collisionRestoreTicks > 0 || check.collisionRestoreTicks > 0)
+                    continue;
 
                 // Call gameserver's function to collide cells
-                gameServer.cellCollision(cell, check, calcInfo);
+                gameServer.resolveCollision(manifold);
             }
         }
     }
