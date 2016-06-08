@@ -932,7 +932,7 @@ GameServer.prototype.updateCells = function() {
         if (!cell) continue;
 
         // Recombining
-        if (cell.owner.cells.length == 1 && cell.recombineTicks > 0) {
+        if (cell.owner.cells.length == 1) {
             cell.owner.mergeOverride = false;
             cell.owner.mergeOverrideDuration = 0;
         }

@@ -25,9 +25,13 @@ PlayerCell.prototype.updateRemerge = function (gameServer) {
         this._canRemerge = false;
         return;
     }
+    if (this.owner.mergeOverride) { // force merge from console
+        this._canRemerge = true;
+        return;
+    }
     var tick = gameServer.getTick();
     var age = this.getAgeTicks(tick);
-    if (age < 3 || this.owner.mergeOverride) {
+    if (age < 3) {
         // do not remerge if cell age is smaller than 3 ticks
         this._canRemerge = false;
         return;
