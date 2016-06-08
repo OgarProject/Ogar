@@ -35,7 +35,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         
         // Handshake request
         this.protocol = reader.readUInt32();
-        if (this.protocol < 4 || this.protocol > 8) {
+        if (this.protocol < 1 || this.protocol > 8) {
             this.socket.close(1002, "Not supported protocol");
             return;
         }
