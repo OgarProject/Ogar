@@ -115,7 +115,7 @@ PlayerTracker.prototype.updateMass = function () {
         totalSize += node.getSize();
     }
     if (totalSize == 0) {
-        //this.scale = 1;
+        //do not change scale for spectators or not in game players
         this.score = 0;
     } else {
         this.score = totalSize * totalSize / 100;
