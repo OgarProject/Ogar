@@ -233,47 +233,67 @@ Cell.prototype.calcMovePhys = function(config) {
         }
     }
 
-    //// Border check - Bouncy physics
+    // Border check - Bouncy physics
     var radius = 40;
     if (x < config.borderLeft && this.position.x != x) {
         // Flip angle horizontally - Left side
         this.angle = 6.28 - this.angle;
-        var p = this.getLineIntersection(
-            this.position.x, this.position.y, x, y,
-            config.borderLeft, config.borderBottom,
-            config.borderLeft, config.borderTop);
-        x = p.x;
-        y = p.y;
+        if (x == this.position.x && y == this.position.y) {
+            // movement vector is missing
+            x = config.borderLeft;
+        } else {
+            var p = this.getLineIntersection(
+                this.position.x, this.position.y, x, y,
+                config.borderLeft, config.borderBottom,
+                config.borderLeft, config.borderTop);
+            x = p.x;
+            y = p.y;
+        }
     }
     if (x > config.borderRight && this.position.y != x) {
         // Flip angle horizontally - Right side
         this.angle = 6.28 - this.angle;
-        var p = this.getLineIntersection(
-            this.position.x, this.position.y, x, y,
-            config.borderRight, config.borderBottom,
-            config.borderRight, config.borderTop);
-        x = p.x;
-        y = p.y;
+        if (x == this.position.x && y == this.position.y) {
+            // movement vector is missing
+            x = config.borderRight;
+        } else {
+            var p = this.getLineIntersection(
+                this.position.x, this.position.y, x, y,
+                config.borderRight, config.borderBottom,
+                config.borderRight, config.borderTop);
+            x = p.x;
+            y = p.y;
+        }
     }
     if (y < config.borderTop && this.position.y != y) {
         // Flip angle vertically - Top side
         this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
-        var p = this.getLineIntersection(
-            this.position.x, this.position.y, x, y,
-            config.borderRight, config.borderTop,
-            config.borderLeft, config.borderTop);
-        x = p.x;
-        y = p.y;
+        if (x == this.position.x && y == this.position.y) {
+            // movement vector is missing
+            y = config.borderTop;
+        } else {
+            var p = this.getLineIntersection(
+                this.position.x, this.position.y, x, y,
+                config.borderRight, config.borderTop,
+                config.borderLeft, config.borderTop);
+            x = p.x;
+            y = p.y;
+        }
     }
     if (y > config.borderBottom && this.position.y != y) {
         // Flip angle vertically - Bottom side
         this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
-        var p = this.getLineIntersection(
-            this.position.x, this.position.y, x, y,
-            config.borderRight, config.borderBottom,
-            config.borderLeft, config.borderBottom);
-        x = p.x;
-        y = p.y;
+        if (x == this.position.x && y == this.position.y) {
+            // movement vector is missing
+            y = config.borderBottom;
+        } else {
+            var p = this.getLineIntersection(
+                this.position.x, this.position.y, x, y,
+                config.borderRight, config.borderBottom,
+                config.borderLeft, config.borderBottom);
+            x = p.x;
+            y = p.y;
+        }
     }
 
     // Set position
