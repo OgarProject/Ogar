@@ -49,28 +49,31 @@ PlayerCell.prototype.canRemerge = function () {
 
 // Movement
 
-PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
-    if (!this.owner.shouldMoveCells && this.owner.notMoved) return; // Mouse is in one place
-
-    // Get angle of mouse
-    var deltaY = y2 - this.position.y;
-    var deltaX = x2 - this.position.x;
-    var angle = Math.atan2(deltaX, deltaY);
-
-    if (isNaN(angle)) {
+PlayerCell.prototype.calcMove = function(x, y, gameServer) {
+    // No mouse update
+    if (!this.owner.shouldMoveCells && this.owner.notMoved)
         return;
-    }
 
-    var dist = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
-    dist = Math.min(dist, 32);
-    var speed = 0;
-    if (dist >= 1) {
-        speed = this.getSpeed() * dist / 32;
+    var dx = x - this.position.x;
+    var dy = y - this.position.y;
+    var squared = dx * dx + dy * dy;
+    
+    if (squared >= 1) {     // stop threshold
+        // distance
+        var d = Math.sqrt(squared);
+        // normalized distance (0..1)
+        d = Math.min(d, 32) / 32;
+        
+        var speed = this.getSpeed() * d;
+        if (speed > 0) {
+            var angle = Math.atan2(dx, dy);
+            if (isNaN(angle)) return;
+            // Move cell
+            this.position.x += speed * Math.sin(angle);
+            this.position.y += speed * Math.cos(angle);
+        }
     }
-
-    // Move cell
-    this.position.x += Math.sin(angle) * speed;
-    this.position.y += Math.cos(angle) * speed;
+    
     this.owner.notMoved = false;
 };
 
