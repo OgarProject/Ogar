@@ -332,13 +332,24 @@ PlayerTracker.prototype.updateCenterInGame = function() { // Get center of cells
 };
 
 PlayerTracker.prototype.updateCenterFreeRoam = function () {
-    var dist = this.gameServer.getDist(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
-    var angle = this.getAngle(this.mouse.x, this.mouse.y, this.centerPos.x, this.centerPos.y);
+    var dx = this.mouse.x - this.centerPos.x;
+    var dy = this.mouse.y - this.centerPos.x;
+    var squared = dx * dx + dy * dy;
+    if (squared < 1) return;     // stop threshold
+    
+    // distance
+    var d = Math.sqrt(squared);
+    
     // Not to break laws of universe by going faster than light speed
-    var speed = Math.min(dist / 10, 70);
-    var x = this.centerPos.x + speed * Math.sin(angle);
-    var y = this.centerPos.y + speed * Math.cos(angle);
-    this.setCenterPos(x, y);
+    var speed = Math.min(d / 10, 70);
+    if (speed <= 0) return;
+    
+    var angle = Math.atan2(dx, dy);
+    if (isNaN(angle)) return;
+    
+    this.setCenterPos(
+        this.centerPos.x + speed * Math.sin(angle),
+        this.centerPos.y + speed * Math.cos(angle));
 };
 
 PlayerTracker.prototype.updateViewBox = function () {
