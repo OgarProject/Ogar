@@ -441,6 +441,25 @@ GameServer.prototype.mainLoop = function() {
     this.updateClients();
     this.updateLeaderboard();
     
+    //var t = process.hrtime();
+    //this.updateMoveEngine();
+    //this.t1 = process.hrtime(t);
+    //t = process.hrtime();
+    //this.updateSpawn();
+    //this.t2 = process.hrtime(t);
+    //t = process.hrtime();
+    //this.gameMode.onTick(this);
+    //this.t3 = process.hrtime(t);
+    //t = process.hrtime();
+    //this.updateCells();
+    //this.t4 = process.hrtime(t);
+    //t = process.hrtime();
+    //this.updateClients();
+    //this.t5 = process.hrtime(t);
+    //t = process.hrtime();
+    //this.updateLeaderboard();
+    //this.t6 = process.hrtime(t);
+    
     this.tickCounter++;
 };
 
@@ -521,13 +540,13 @@ GameServer.prototype.willCollide = function(size, pos, isVirus) {
     return false;
 };
 
-GameServer.prototype.getDist = function(x1, y1, x2, y2) { // Use Pythagoras theorem
-    var deltaX = this.abs(x1 - x2);
-    var deltaY = this.abs(y1 - y2);
-    return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+GameServer.prototype.getDist = function (x1, y1, x2, y2) {
+    var dx = x2 - x1;
+    var dy = y2 - x1;
+    return Math.sqrt(dx * dx + dy * dy);
 };
 
-GameServer.prototype.abs = function(x) { // Because Math.abs is slow
+GameServer.prototype.abs = function (x) {
     return x < 0 ? -x : x;
 };
 

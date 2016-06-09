@@ -158,19 +158,3 @@ PlayerCell.prototype.onRemove = function(gameServer) {
 PlayerCell.prototype.moveDone = function(gameServer) {
     // Well, nothing.
 };
-
-// Lib
-
-PlayerCell.prototype.abs = function(x) {
-    return x < 0 ? -x : x;
-};
-
-PlayerCell.prototype.getDist = function(x1, y1, x2, y2) {
-    var xs = x2 - x1;
-    xs = xs * xs;
-
-    var ys = y2 - y1;
-    ys = ys * ys;
-
-    return Math.sqrt(xs + ys);
-};
