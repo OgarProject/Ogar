@@ -333,15 +333,14 @@ PlayerTracker.prototype.updateCenterInGame = function() { // Get center of cells
 
 PlayerTracker.prototype.updateCenterFreeRoam = function () {
     var dx = this.mouse.x - this.centerPos.x;
-    var dy = this.mouse.y - this.centerPos.x;
+    var dy = this.mouse.y - this.centerPos.y;
     var squared = dx * dx + dy * dy;
     if (squared < 1) return;     // stop threshold
     
     // distance
     var d = Math.sqrt(squared);
     
-    // Not to break laws of universe by going faster than light speed
-    var speed = Math.min(d / 10, 70);
+    var speed = Math.min(d, 32);
     if (speed <= 0) return;
     
     var angle = Math.atan2(dx, dy);
