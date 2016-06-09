@@ -99,18 +99,19 @@ BinaryWriter.prototype.writeStringZeroUnicode = function (value) {
 
 
 BinaryWriter.prototype.allocCheck = function (size) {
+    var pageSize = Math.max(256, (Buffer.poolSize / 4) >> 0);
     if (this._buffer == null) {
-        var allocSize = size + Buffer.poolSize - (size % Buffer.poolSize);
+        var allocSize = size + pageSize - (size % pageSize);
         this._buffer = this.allocBuffer(allocSize);
     }
     var needed = this._offset + size;
     if (needed <= this._buffer.length)
         return;
     var addSize = needed - this._buffer.length;
-    if (addSize < Buffer.poolSize) {
-        addSize = Buffer.poolSize;
+    if (addSize < pageSize) {
+        addSize = pageSize;
     } else {
-        addSize += Buffer.poolSize - (addSize % Buffer.poolSize);
+        addSize += pageSize - (addSize % pageSize);
     }
     var buffer2 = this.allocBuffer(addSize);
     this._buffer = Buffer.concat([this._buffer, buffer2], this._buffer.length + buffer2.length);
