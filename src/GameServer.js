@@ -332,7 +332,7 @@ GameServer.prototype.addNode = function(node) {
 
         // client.nodeAdditionQueue is only used by human players, not bots
         // for bots it just gets collected forever, using ever-increasing amounts of memory
-        if ('_socket' in client.socket && node.visibleCheck(client.viewBox, client.centerPos, client.cells)) {
+        if ('_socket' in client.socket && node.visibleCheck(client.viewBox)) {
             client.nodeAdditionQueue.push(node);
         }
     }

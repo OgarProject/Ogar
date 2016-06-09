@@ -397,12 +397,27 @@ PlayerTracker.prototype.calcVisibleNodes = function() {
         var node = this.gameServer.nodes[i];
         if (node == null) continue;
 
-        var check = node.visibleCheck(this.viewBox, this.centerPos, this.cells);
-        if (check > 0 || node.owner == this) {
+        if (node.owner == this || node.visibleCheck(this.viewBox)) {
             // Cell is in range of viewBox
             newVisible.push(node);
+            
+            // TODO: rewrite that!
             // Check if it's colliding with one of player's cells
-            if (check == 2) this.collidingNodes.push(node);
+            // To save perfomance, check if any client's cell collides with this cell
+            for (var j = 0; j < this.cells.length; j++) {
+                var cell = this.cells[j];
+                if (cell == null || cell == node)
+                    continue;
+                
+                // circle collision detector
+                var dx = cell.position.x - node.position.x;
+                var dy = cell.position.y - node.position.y;
+                var r = cell.getSize() + node.getSize();
+                if (dx * dx + dy * dy < r * r) {
+                    // circle collision detected
+                    this.collidingNodes.push(node);
+                }
+            }
         }
     }
     return newVisible;

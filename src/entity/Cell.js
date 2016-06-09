@@ -153,43 +153,26 @@ Cell.prototype.collisionCheckCircle = function(x, y, size) {
     return dx * dx + dy * dy < r * r;
 };
 
-Cell.prototype.visibleCheck = function (box, centerPos, cells) {
+Cell.prototype.visibleCheck = function (box) {
     // Checks if this cell is visible to the player
-    var isThere = false;
     if (this.cellType == 1) {
         // dot collision detector
-        isThere = this.collisionCheck(box.left, box.top, box.right, box.bottom);
-    } else {
-        // rectangle collision detector
-        var cellSize = this.getSize();
-        var minx = this.position.x - cellSize;
-        var miny = this.position.y - cellSize;
-        var maxx = this.position.x + cellSize;
-        var maxy = this.position.y + cellSize;
-        var d1x = box.left - maxx;
-        var d1y = box.top - maxy;
-        var d2x = minx - box.right;
-        var d2y = miny - box.bottom;
-        isThere = d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
+        return this.position.x >= box.left && 
+            this.position.x <= box.right &&
+            this.position.y >= box.top && 
+            this.position.y <= box.bottom;
     }
-    if (!isThere) return 0;
-    
-    // To save perfomance, check if any client's cell collides with this cell
-    for (var i = 0; i < cells.length; i++) {
-        var cell = cells[i];
-        if (!cell) continue;
-        
-        // circle collision detector
-        var dx = cell.position.x - this.position.x;
-        var dy = cell.position.y - this.position.y;
-        var r = cell.getSize() + this.getSize();
-        if (dx * dx + dy * dy < r * r) {
-            // circle collision detected
-            return 2;
-        }
-    }
-    // Not colliding with any
-    return 1;
+    // rectangle collision detector
+    var cellSize = this.getSize();
+    var minx = this.position.x - cellSize;
+    var miny = this.position.y - cellSize;
+    var maxx = this.position.x + cellSize;
+    var maxy = this.position.y + cellSize;
+    var d1x = box.left - maxx;
+    var d1y = box.top - maxy;
+    var d2x = minx - box.right;
+    var d2y = miny - box.bottom;
+    return d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
 };
 
 Cell.prototype.calcMovePhys = function(config) {
