@@ -807,8 +807,7 @@ GameServer.prototype.getCellsInRange = function(cell) {
     var squareR = cell.getSquareSize(); // Get cell squared radius
 
     // Loop through all cells that are colliding with the player's cells
-    var len = cell.owner.collidingNodes.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0; i < cell.owner.collidingNodes.length; i++) {
         var check = cell.owner.collidingNodes[i];
         if (check === null) continue;
 

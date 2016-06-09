@@ -392,6 +392,7 @@ PlayerTracker.prototype.getVisibleNodes = function () {
 }
 
 PlayerTracker.prototype.calcVisibleNodes = function() {
+    this.collidingNodes = [];
     var newVisible = [];
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         var node = this.gameServer.nodes[i];
