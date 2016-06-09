@@ -171,10 +171,7 @@ GameServer.prototype.start = function() {
             var len = this.socket.playerTracker.cells.length;
             for (var i = 0; i < len; i++) {
                 var cell = this.socket.playerTracker.cells[i];
-
-                if (!cell) {
-                    continue;
-                }
+                if (cell == null) continue;
 
                 cell.calcMove = function() {
                     return;
@@ -331,9 +328,7 @@ GameServer.prototype.addNode = function(node) {
     // Add to visible nodes
     for (var i = 0; i < this.clients.length; i++) {
         var client = this.clients[i].playerTracker;
-        if (!client) {
-            continue;
-        }
+        if (client == null) continue;
 
         // client.nodeAdditionQueue is only used by human players, not bots
         // for bots it just gets collected forever, using ever-increasing amounts of memory
@@ -362,9 +357,7 @@ GameServer.prototype.removeNode = function(node) {
     // Animation when eating
     for (var i = 0; i < this.clients.length; i++) {
         var client = this.clients[i].playerTracker;
-        if (!client) {
-            continue;
-        }
+        if (client == null) continue;
 
         // Remove from client
         client.nodeDestroyQueue.push(node);
@@ -384,10 +377,9 @@ GameServer.prototype.updateSpawn = function() {
 
 GameServer.prototype.updateClients = function () {
     for (var i = 0; i < this.clients.length; i++) {
-        if (typeof this.clients[i] == "undefined") {
-            continue;
-        }
-        this.clients[i].playerTracker.update();
+        var client = this.clients[i];
+        if (client == null) continue;
+        client.playerTracker.update();
     }
 };
 
@@ -410,7 +402,9 @@ GameServer.prototype.updateLeaderboard = function () {
             this.largestClient = null;
             if (clients[0] != null)
                 this.largestClient = clients[0].playerTracker;
-        } else this.largestClient = this.gameMode.rankOne;
+        } else {
+            this.largestClient = this.gameMode.rankOne;
+        }
     }
 };
 
@@ -520,7 +514,7 @@ GameServer.prototype.willCollide = function(size, pos, isVirus) {
     
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var check = this.nodesPlayer[i];
-        if (!check) continue;
+        if (check == null) continue;
 
         if (check.getSize() > size) { // Check only if the player cell is larger than imaginary cell
             if (check.collisionCheckCircle(pos.x, pos.y, size+50)) return true; // Collided
@@ -531,7 +525,7 @@ GameServer.prototype.willCollide = function(size, pos, isVirus) {
     
     for (var i = 0; i < this.nodesVirus.length; i++) {
         var check = this.nodesVirus[i];
-        if (!check) continue;
+        if (check == null) continue;
         
         if (check.getSize() > size) { // Check only if the virus cell is larger than imaginary cell
             if (check.collisionCheckCircle(pos.x, pos.y, size + 50)) return true; // Collided
@@ -600,14 +594,16 @@ GameServer.prototype.resolveCollision = function (manifold) {
 
 GameServer.prototype.updateMoveEngine = function() {
     // Move player cells
-    var len = this.nodesPlayer.length;
-
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
 
         // Sort client's cells by ascending mass
         var sorted = [];
-        for (var i = 0; i < client.cells.length; i++) sorted.push(client.cells[i]);
+        for (var i = 0; i < client.cells.length; i++) {
+            var node = client.cells[i];
+            if (node == null) continue;
+            sorted.push(node);
+        }
         
         sorted.sort(function(a, b) {
             return b.getMass() - a.getMass();
@@ -616,11 +612,6 @@ GameServer.prototype.updateMoveEngine = function() {
         // Go cell by cell
         for (var i = 0; i < sorted.length; i++) {
             var cell = sorted[i];
-
-            // Do not move cells that have already been eaten
-            if (!cell) {
-                continue;
-            }
 
             // First move the cell
             cell.calcMovePhys(this.config);
@@ -638,20 +629,18 @@ GameServer.prototype.updateMoveEngine = function() {
 
 
     // A system to move cells not controlled by players (ex. viruses, ejected mass)
-    len = this.movingNodes.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0; i < this.movingNodes.length; i++) {
         var check = this.movingNodes[i];
 
         // Recycle unused nodes
-        while ((typeof check == "undefined") && (i < this.movingNodes.length)) {
+        while (check == null && i < this.movingNodes.length) {
             // Remove moving cells that are undefined
             this.movingNodes.splice(i, 1);
             check = this.movingNodes[i];
         }
 
-        if (i >= this.movingNodes.length) {
+        if (i >= this.movingNodes.length)
             continue;
-        }
 
         if (check.moveEngineTicks > 0) {
             check.onAutoMove(this);
@@ -685,7 +674,8 @@ GameServer.prototype.cellEating = function(cell) {
 };
 
 GameServer.prototype.setAsMovingNode = function(node) {
-    if (this.movingNodes.indexOf(node) == -1) this.movingNodes.push(node);
+    if (this.movingNodes.indexOf(node) == -1)
+        this.movingNodes.push(node);
 };
 
 GameServer.prototype.splitCells = function(client) {
@@ -699,7 +689,8 @@ GameServer.prototype.splitCells = function(client) {
         var angle = Math.atan2(deltaX, deltaY);
         if (angle == 0) angle = Math.PI / 2;
 
-        if (this.createPlayerCell(client, cell, angle, cell.getMass() / 2) == true) splitCells++;
+        if (this.createPlayerCell(client, cell, angle, cell.getMass() / 2) == true)
+            splitCells++;
     }
 };
 
@@ -742,11 +733,12 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
 };
 
 GameServer.prototype.canEjectMass = function(client) {
-    if (typeof client.lastEject == 'undefined' || this.tickCounter - client.lastEject >= this.config.ejectMassCooldown) {
+    if (client.lastEject == null || this.tickCounter - client.lastEject >= this.config.ejectMassCooldown) {
         client.lastEject = this.tickCounter;
         return true;
-    } else
+    } else {
         return false;
+    }
 };
 
 GameServer.prototype.ejectMass = function(client) {
@@ -818,25 +810,19 @@ GameServer.prototype.getCellsInRange = function(cell) {
     var len = cell.owner.collidingNodes.length;
     for (var i = 0; i < len; i++) {
         var check = cell.owner.collidingNodes[i];
-
-        if (typeof check === 'undefined') {
-            continue;
-        }
+        if (check === null) continue;
 
         // if something already collided with this cell, don't check for other collisions
-        if (check.inRange) {
+        if (check.inRange)
             continue;
-        }
 
         // Can't eat itself
-        if (cell.nodeId == check.nodeId) {
+        if (cell.nodeId == check.nodeId)
             continue;
-        }
 
         // Can't eat cells that have collision turned off
-        if ((cell.owner == check.owner) && (cell.collisionRestoreTicks != 0) && (check.cellType == 0)) {
+        if (cell.owner == check.owner && cell.collisionRestoreTicks != 0 && check.cellType == 0)
             continue;
-        }
         
         // Eating range
         var xs = cell.position.x - check.position.x,
@@ -847,7 +833,10 @@ GameServer.prototype.getCellsInRange = function(cell) {
         // Use a more reliant version for pellets
         // Might be a bit slower but it can be eaten with any mass
         if (check.cellType == 1) {
-            if (dist + check.getSize() / 3.14 > cell.getSize()) continue; // Too far away
+            if (dist + check.getSize() / 3.14 > cell.getSize()) {
+                // Too far away
+                continue;
+            }
             else {
                 // Add to list of cells nearby
                 list.push(check);
@@ -930,14 +919,10 @@ GameServer.prototype.getNearestVirus = function(cell) {
     var len = this.nodesVirus.length;
     for (var i = 0; i < len; i++) {
         var check = this.nodesVirus[i];
+        if (check === null) continue;
 
-        if (typeof check === 'undefined') {
+        if (!check.collisionCheck(leftX, topY, rightX, bottomY))
             continue;
-        }
-
-        if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
-            continue;
-        }
 
         // Add to list of cells nearby
         virus = check;

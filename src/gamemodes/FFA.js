@@ -80,16 +80,17 @@ FFA.prototype.updateLB = function(gameServer) {
     var lb = gameServer.leaderboard;
     // Loop through all clients
     for (var i = 0; i < gameServer.clients.length; i++) {
-        if (typeof gameServer.clients[i] == "undefined") {
-            continue;
-        }
+        var client = gameServer.clients[i];
+        if (client == null) continue;
 
-        var player = gameServer.clients[i].playerTracker;
-        if (player.disconnect > -1) continue; // Don't add disconnected players to list
+        var player = client.playerTracker;
+        if (player.disconnect > -1)
+            continue; // Don't add disconnected players to list
+        
         var playerScore = player.getScore();
-        if (player.cells.length <= 0) {
+        
+        if (player.cells.length <= 0)
             continue;
-        }
 
         if (lb.length == 0) {
             // Initial player
