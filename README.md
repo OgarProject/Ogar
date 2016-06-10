@@ -51,4 +51,4 @@ http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends inv
 * Performance improved with optimizations
 
 Currently most of the physics code from original ogar was replaced with new code.
-Now the physics in MultiOgar it pretty close to old vanilla physics.
+Now the physics engine in MultiOgar is pretty close to old vanilla physics.
