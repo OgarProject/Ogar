@@ -50,6 +50,11 @@ PacketHandler.prototype.handleMessage = function(message) {
         this.socket.sendPacket(new Packet.SetBorder(border, 0, "MultiOgar 1.0"));
         // Send welcome message
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
+        if (this.protocol < 4) {
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING Your client has protocol error!");
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Client sends invalid protocol version "+this.protocol);
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Server assumes it as protocol 4");
+        }        
         this.isHandshakePassed = true;
         return;
     }
