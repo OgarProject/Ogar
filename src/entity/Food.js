@@ -32,7 +32,7 @@ Food.prototype.grow = function() {
 
 Food.prototype.sendUpdate = function() {
     // Whether or not to include this cell in the update packet
-    if (this.moveEngineTicks == 0) {
+    if (this.boostDistance <= 0) {
         return false;
     }
     if (this.shouldSendUpdate) {

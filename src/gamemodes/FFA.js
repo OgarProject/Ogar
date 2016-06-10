@@ -47,7 +47,7 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
             // Get ejected cell
             index = Math.floor(Math.random() * gameServer.nodesEjected.length);
             var e = gameServer.nodesEjected[index];
-            if (e.moveEngineTicks > 0) {
+            if (e.boostDistance > 0) {
                 // Ejected cell is currently moving
                 gameServer.spawnPlayer(player, pos, startMass);
             }

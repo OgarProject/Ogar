@@ -142,9 +142,11 @@ TeamX.prototype.onServerInit = function(gameServer) {
         Virus.prototype.feed = function(feeder, gameServer) {
             gameServer.removeNode(feeder);
             // Pushes the virus
-            this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-            this.moveEngineTicks = 5; // Amount of times to loop the movement function
-            this.moveEngineSpeed = 30;
+            // TODO: check distance
+            this.setBoost(30 * 5, feeder.getAngle());
+            //this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
+            //this.moveEngineTicks = 5; // Amount of times to loop the movement function
+            //this.moveEngineSpeed = 30;
 
             var index = gameServer.movingNodes.indexOf(this);
             if (index == -1) {
@@ -422,9 +424,9 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     gameServer.currentFood++;
 
     // Move engine
-    f.angle = angle;
     var dist = (Math.random() * 10) + 22; // Random distance
-    f.setMoveEngineData(dist, 15);
+    // TODO: check distance
+    f.setBoost(dist*15, angle);
 
     gameServer.setAsMovingNode(f);
 };

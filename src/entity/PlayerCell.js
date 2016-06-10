@@ -83,19 +83,14 @@ PlayerCell.prototype.collision = function(gameServer) {
     for (var i = 0; i < this.owner.cells.length; i++) {
         var cell = this.owner.cells[i];
 
-        if (!cell) continue; // Error
+        if (cell == null) continue; // Error
         if (this.nodeId == cell.nodeId) continue;
 
         if (!cell.canRemerge() || !this.canRemerge()) {
             // Cannot remerge - Collision with your own cells
+            
             var manifold = gameServer.checkCellCollision(this, cell); // Calculation info
-
-            // Further calculations
             if (manifold != null) { // Collided
-                // Cell with collision restore ticks on should not collide
-                if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0)
-                    continue;
-
                 // Call gameserver's function to collide cells
                 gameServer.resolveCollision(manifold);
             }

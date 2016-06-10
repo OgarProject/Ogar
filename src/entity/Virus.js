@@ -15,7 +15,8 @@ Virus.prototype = new Cell();
 Virus.prototype.calcMove = null; // Only for player controlled movement
 
 Virus.prototype.feed = function(feeder, gameServer) {
-    if (this.moveEngineTicks == 0) this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
+    if (this.boostDistance <= 0)
+        this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
     this.setMass(this.getMass() + feeder.getMass());
     this.fed++; // Increase feed count
     gameServer.removeNode(feeder);

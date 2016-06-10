@@ -547,6 +547,14 @@ GameServer.prototype.abs = function (x) {
 GameServer.prototype.checkCellCollision = function(cell, check) {
     // Returns manifold which contains info about cell's collisions. 
     // Returns null if there is no collision
+    
+    // do not affect splitted cell for 1 sec
+    if (cell.boostDistance > 0 || check.boostDistance > 0) {
+        var tick = this.getTick();
+        if (cell.getAgeTicks(tick) < 25 || check.getAgeTicks(tick) < 25)
+            return null;
+    }
+
     var r = cell.getSize() + check.getSize();
     var dx = check.position.x - cell.position.x;
     var dy = check.position.y - cell.position.y;
@@ -571,13 +579,17 @@ GameServer.prototype.resolveCollision = function (manifold) {
     var d = Math.sqrt(manifold.squared);
     if (d <= 0) return;
     
+    // normal
+    var nx = manifold.dx / d;
+    var ny = manifold.dy / d;
+    
     // body penetration distance
     var penetration = manifold.r - d;
     if (penetration <= 0) return;
     
-    // penetration vector = penetration distance * normalized vector
-    var px = penetration * manifold.dx / d;
-    var py = penetration * manifold.dy / d;
+    // penetration vector = penetration * normal
+    var px = penetration * nx;
+    var py = penetration * ny;
     
     // body impulse
     var totalMass = manifold.cell1.getMass() + manifold.cell2.getMass();
@@ -608,17 +620,17 @@ GameServer.prototype.updateMoveEngine = function() {
         sorted.sort(function(a, b) {
             return b.getMass() - a.getMass();
         });
-
+        
         // Go cell by cell
         for (var i = 0; i < sorted.length; i++) {
+            sorted[i].calcMove(client.mouse.x, client.mouse.y, this);
+        }
+        for (var i = 0; i < sorted.length; i++) {
+            sorted[i].calcMoveBoost(this.config);
+        }
+        for (var i = 0; i < sorted.length; i++) {
             var cell = sorted[i];
-
-            // First move the cell
-            cell.calcMovePhys(this.config);
-
-            // Now move it to the mouse
-            cell.calcMove(client.mouse.x, client.mouse.y, this);
-
+            
             // Collision with own cells
             cell.collision(this);
 
@@ -642,10 +654,10 @@ GameServer.prototype.updateMoveEngine = function() {
         if (i >= this.movingNodes.length)
             continue;
 
-        if (check.moveEngineTicks > 0) {
+        if (check.boostDistance > 0) {
             check.onAutoMove(this);
             // If the cell has enough move ticks, then move it
-            check.calcMovePhys(this.config);
+            check.calcMoveBoost(this.config);
         } else {
             // Auto move is done
             check.moveDone(this);
@@ -684,10 +696,11 @@ GameServer.prototype.splitCells = function(client) {
     for (var i = 0; i < len; i++) {
         var cell = client.cells[i];
 
-        var deltaY = client.mouse.y - cell.position.y;
-        var deltaX = client.mouse.x - cell.position.x;
-        var angle = Math.atan2(deltaX, deltaY);
-        if (angle == 0) angle = Math.PI / 2;
+        var dx = client.mouse.x - cell.position.x;
+        var dy = client.mouse.y - cell.position.y;
+        var angle = Math.atan2(dx, dy);
+        //if (angle == 0) angle = Math.PI / 2;
+        if (isNaN(angle)) angle = 0;
 
         if (this.createPlayerCell(client, cell, angle, cell.getMass() / 2) == true)
             splitCells++;
@@ -706,27 +719,20 @@ GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
         // Minimum mass to split
         return false;
     }
-
-    // Calculate customized speed for splitting cells
-    var t = Math.PI * Math.PI;
-    var modifier = 3 + Math.log(1 + mass) / (10 + Math.log(1 + mass));
-    var splitSpeed = this.config.playerSpeed * 30 * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);
-
-    // Calculate new position
-    var newPos = {
-        x: parent.position.x,
-        y: parent.position.y
+    
+    // make a small shift to the cell position to prevent extrusion in wrong direction
+    var pos = {
+        x: parent.position.x + 40 * Math.sin(angle),
+        y: parent.position.y + 40 * Math.cos(angle)
     };
-
-    // Create cell
-    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, newPos, mass, this);
-    newCell.setAngle(angle);
-    newCell.setMoveEngineData(splitSpeed, 12, 0.88);
-    // Cells won't collide immediately
-    newCell.collisionRestoreTicks = 12;
-    parent.collisionRestoreTicks = 12;
+    
     parent.setMass(parent.getMass() - mass); // Remove mass from parent cell
-
+    
+    // Create cell
+    var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, pos, mass, this);
+    newCell.ejector = parent;
+    newCell.setBoost(780, angle);
+    
     // Add to node list
     this.addNode(newCell);
     return true;
@@ -755,31 +761,28 @@ GameServer.prototype.ejectMass = function(client) {
             continue;
         }
 
-        var deltaY = client.mouse.y - cell.position.y;
-        var deltaX = client.mouse.x - cell.position.x;
-        var angle = Math.atan2(deltaX, deltaY);
-
+        var dx = client.mouse.x - cell.position.x;
+        var dy = client.mouse.y - cell.position.y;
+        var angle = Math.atan2(dx, dy);
+        if (isNaN(angle)) angle = 0;
+        
         // Randomize angle
         angle += (Math.random() * 0.1) - 0.05;
-
+        
         // Get starting position
-        var size = cell.getSize() + 0.2;
         var startPos = {
-            x: cell.position.x + ((size + this.config.ejectMass) * Math.sin(angle)),
-            y: cell.position.y + ((size + this.config.ejectMass) * Math.cos(angle))
+            x: cell.position.x + cell.getSize() * Math.sin(angle),
+            y: cell.position.y + cell.getSize() * Math.cos(angle)
         };
-
+        
         // Remove mass from parent cell
         cell.setMass(cell.getMass() - this.config.ejectMassLoss);
         
-        // Randomize angle
-        angle += (Math.random() * 0.6) - 0.3;
-
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass, this);
-        ejected.setAngle(angle);
-        ejected.setMoveEngineData(this.config.ejectSpeed, 20, 0.88);
         ejected.setColor(cell.getColor());
+        ejected.setBoost(780, angle);
+        ejected.ejector = cell;
 
         this.nodesEjected.push(ejected);
         this.addNode(ejected);
@@ -794,8 +797,7 @@ GameServer.prototype.shootVirus = function(parent) {
     };
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, this);
-    newVirus.setAngle(parent.getAngle());
-    newVirus.setMoveEngineData(135, 20, 0.85);
+    newVirus.setBoost(780, parent.getAngle());
 
     // Add to moving cells list
     this.addNode(newVirus);
@@ -819,8 +821,8 @@ GameServer.prototype.getCellsInRange = function(cell) {
         if (cell.nodeId == check.nodeId)
             continue;
 
-        // Can't eat cells that have collision turned off
-        if (cell.owner == check.owner && cell.collisionRestoreTicks != 0 && check.cellType == 0)
+        // Can't eat self ejected mass, because it still in boost mode
+        if (check.ejector == cell && check.boostDistance > 0)
             continue;
         
         // Eating range
@@ -949,11 +951,6 @@ GameServer.prototype.updateCells = function() {
         }
         cell.updateRemerge(this);
         
-        // Collision
-        if (cell.collisionRestoreTicks > 0) {
-            cell.collisionRestoreTicks--;
-        }
-
         // Mass decay
         // TODO: needs to be updated rarely
         if (cell.getMass() >= this.config.playerMinMassDecay) {

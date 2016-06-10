@@ -108,14 +108,9 @@ Teams.prototype.onCellMove = function(cell, gameServer) {
 
         // Collision with teammates
         if (check.owner.getTeam() == team) {
+            
             var manifold = gameServer.checkCellCollision(cell, check); // Calculation info
-
-            // Further calculations
             if (manifold != null) { // Collided
-                // Cell with collision restore ticks on should not collide
-                if (cell.collisionRestoreTicks > 0 || check.collisionRestoreTicks > 0)
-                    continue;
-
                 // Call gameserver's function to collide cells
                 gameServer.resolveCollision(manifold);
             }

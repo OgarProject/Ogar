@@ -544,8 +544,10 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             cell.setMass(newMass);
             // Create cell
             var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
-            split.setAngle(angle);
-            split.setMoveEngineData(splitSpeed, 32, 0.85);
+            // TODO: check distance
+            split.setBoost(splitSpeed * 32, angle);
+            //split.setAngle(angle);
+            //split.setMoveEngineData(splitSpeed, 32, 0.85);
 
             // boost speed if zombie eats brain
             if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
@@ -574,8 +576,10 @@ TeamZ.prototype.onServerInit = function(gameServer) {
 
         // Create cell
         newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
-        newCell.setAngle(angle);
-        newCell.setMoveEngineData(speed, 10);
+        // TODO: check distance
+        newCell.setBoost(speed * 10, angle);
+        //newCell.setAngle(angle);
+        //newCell.setMoveEngineData(speed, 10);
         newCell.ignoreCollision = true; // Turn off collision
 
         // boost speed if zombie eats brain
@@ -1079,9 +1083,11 @@ Hero.prototype.onRemove = function(gameServer) {
 Hero.prototype.feed = function(feeder, gameServer) {
     gameServer.removeNode(feeder);
 
-    this.setAngle(feeder.getAngle());
-    this.moveEngineTicks = 5; // Amount of times to loop the movement function
-    this.moveEngineSpeed = 60;
+    // TODO: check distance
+    this.setBoost(60 * 5, feeder.getAngle());
+    //this.setAngle(feeder.getAngle());
+    //this.moveEngineTicks = 5; // Amount of times to loop the movement function
+    //this.moveEngineSpeed = 60;
 
     var index = gameServer.movingNodes.indexOf(this);
     if (index == -1) {
@@ -1151,9 +1157,11 @@ Brain.prototype.onRemove = function(gameServer) {
 Brain.prototype.feed = function(feeder, gameServer) {
     gameServer.removeNode(feeder);
 
-    this.setAngle(feeder.getAngle());
-    this.moveEngineTicks = 5; // Amount of times to loop the movement function
-    this.moveEngineSpeed = 60;
+    // TODO: check distance
+    this.setBoost(60 * 5, feeder.getAngle());
+    //this.setAngle(feeder.getAngle());
+    //this.moveEngineTicks = 5; // Amount of times to loop the movement function
+    //this.moveEngineSpeed = 60;
 
     var index = gameServer.movingNodes.indexOf(this);
     if (index == -1) {

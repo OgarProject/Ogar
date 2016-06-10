@@ -19,10 +19,10 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.killedBy; // Cell that ate this cell
     this.gameServer = gameServer;
 
-    this.moveEngineTicks = 0; // Amount of times to loop the movement function
-    this.moveEngineSpeed = 0;
-    this.moveDecay = 0.85;
-    this.angle = 0; // Angle of movement
+    this.boostDistance = 0;
+    this.boostDirection = { x: 1, y: 0, angle: 0 };
+    this.ejector = null;
+    
     this.collisionRestoreTicks = 0; // Ticks left before cell starts checking for collision with client's cells
 }
 
@@ -94,24 +94,22 @@ Cell.prototype.getSpeed = function() {
     return speed * 40 * this.gameServer.config.playerSpeed;
 };
 
-Cell.prototype.setAngle = function(radians) {
-    this.angle = radians;
+Cell.prototype.setAngle = function(angle) {
+    this.boostDirection = {
+        x: Math.sin(angle),
+        y: Math.cos(angle),
+        angle: angle
+    };
 };
 
 Cell.prototype.getAngle = function() {
-    return this.angle;
+    return this.boostDirection.angle;
 };
 
 Cell.prototype.getAgeTicks = function (tick) {
     if (this.tickOfBirth == null) return 0;
     return Math.max(0, tick - this.tickOfBirth);
 }
-
-Cell.prototype.setMoveEngineData = function(speed, ticks, decay) {
-    this.moveEngineSpeed = speed;
-    this.moveEngineTicks = ticks;
-    this.moveDecay = isNaN(decay) ? 0.75 : decay;
-};
 
 Cell.prototype.getEatingRange = function() {
     return 0; // 0 for ejected cells
@@ -175,52 +173,30 @@ Cell.prototype.visibleCheck = function (box) {
     return d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
 };
 
-Cell.prototype.calcMovePhys = function(config) {
-    // Move, twice as slower
-    var x = this.position.x + ((this.moveEngineSpeed / 2) * Math.sin(this.angle) >> 0);
-    var y = this.position.y + ((this.moveEngineSpeed / 2) * Math.cos(this.angle) >> 0);
+Cell.prototype.setBoost = function (distance, angle) {
+    if (isNaN(angle)) angle = 0;
+    
+    this.boostDistance = distance;
+    this.setAngle(angle);
+};
 
-    // Movement engine
-    if (this.moveEngineSpeed <= this.moveDecay * 3 && this.cellType == 0)
-        this.moveEngineSpeed = 0;
-    var speedDecrease = this.moveEngineSpeed - this.moveEngineSpeed * this.moveDecay;
-    this.moveEngineSpeed -= speedDecrease / 2; // Decaying speed twice as slower
-    if (this.moveEngineTicks >= 0.5)
-        this.moveEngineTicks -= 0.5; // Ticks passing twice as slower
-
-    // Ejected cell collision
-    if (this.cellType == 3) {
-        for (var i = 0; i < this.gameServer.nodesEjected.length; i++) {
-            var check = this.gameServer.nodesEjected[i];
-
-            if (check.nodeId == this.nodeId) continue; // Don't check for yourself
-
-            var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
-            var allowDist = this.getSize() + check.getSize(); // Allow cells to get in themselves a bit
-
-            if (dist < allowDist) {
-                // Two ejected cells collided
-                var deltaX = this.position.x - check.position.x;
-                var deltaY = this.position.y - check.position.y;
-                var angle = Math.atan2(deltaX, deltaY);
-                
-                this.gameServer.setAsMovingNode(check);
-                check.moveEngineTicks += 1;
-                this.moveEngineTicks += 1;
-
-                var move = allowDist - dist;
-
-                x += Math.sin(angle) * move / 2;
-                y += Math.cos(angle) * move / 2;
-            }
-        }
-    }
+Cell.prototype.calcMoveBoost = function (config) {
+    if (this.boostDistance <= 0) return;
+    
+    //var maxSpeed = 40 * (2.1106 / Math.pow(32, 0.449));
+    //var speed = Math.sqrt(this.boostDistance * this.boostDistance / this.getSize()) * 0.8;
+    var speed = Math.sqrt(this.boostDistance * this.boostDistance / (this.getSize()*2) );
+    speed = Math.min(speed, this.boostDistance);
+    this.boostDistance -= speed;
+    if (this.boostDistance <= 1) this.boostDistance = 0;
+    var x = this.position.x + this.boostDirection.x * speed;
+    var y = this.position.y + this.boostDirection.y * speed;
 
     // Border check - Bouncy physics
     var radius = 40;
     if (x < config.borderLeft && this.position.x != x) {
         // Flip angle horizontally - Left side
-        this.angle = 6.28 - this.angle;
+        this.setAngle(6.28 - this.getAngle());
         if (x == this.position.x && y == this.position.y) {
             // movement vector is missing
             x = config.borderLeft;
@@ -235,7 +211,7 @@ Cell.prototype.calcMovePhys = function(config) {
     }
     if (x > config.borderRight && this.position.x != x) {
         // Flip angle horizontally - Right side
-        this.angle = 6.28 - this.angle;
+        this.setAngle(6.28 - this.getAngle());
         if (x == this.position.x && y == this.position.y) {
             // movement vector is missing
             x = config.borderRight;
@@ -250,7 +226,7 @@ Cell.prototype.calcMovePhys = function(config) {
     }
     if (y < config.borderTop && this.position.y != y) {
         // Flip angle vertically - Top side
-        this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
+        this.setAngle((this.getAngle() <= 3.14) ? 3.14 - this.getAngle() : 9.42 - this.getAngle());
         if (x == this.position.x && y == this.position.y) {
             // movement vector is missing
             y = config.borderTop;
@@ -265,7 +241,7 @@ Cell.prototype.calcMovePhys = function(config) {
     }
     if (y > config.borderBottom && this.position.y != y) {
         // Flip angle vertically - Bottom side
-        this.angle = (this.angle <= 3.14) ? 3.14 - this.angle : 9.42 - this.angle;
+        this.setAngle((this.getAngle() <= 3.14) ? 3.14 - this.getAngle() : 9.42 - this.getAngle());
         if (x == this.position.x && y == this.position.y) {
             // movement vector is missing
             y = config.borderBottom;
@@ -278,11 +254,9 @@ Cell.prototype.calcMovePhys = function(config) {
             y = p.y;
         }
     }
-
-    // Set position
     this.position.x = x;
     this.position.y = y;
-};
+}
 
 // Override these
 
