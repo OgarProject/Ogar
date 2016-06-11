@@ -37,7 +37,7 @@ http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends inv
 ## What's new:
 * Split/Eject - physics code rewritten;
 * Player speed - physics code rewritten;
-* Recombine - physics code rewritten;
+* Cell remerge - physics code rewritten;
 * Cell collision - physics code rewritten;
 * View area - code rewritten;
 * Spectate - code rewritten;
