@@ -35,21 +35,23 @@ http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends inv
 
 
 ## What's new:
-* Split/Eject - physics rewritten;
-* Player speed - physics rewritten;
-* Recombine - physics rewritten;
-* Cell collision - physics rewritten;
-* View area - rewritten
-* Mouse control and cell movements - physics rewritten;
+* Split/Eject - physics code rewritten;
+* Player speed - physics code rewritten;
+* Recombine - physics code rewritten;
+* Cell collision - physics code rewritten;
+* View area - code rewritten;
+* Spectate - code rewritten;
+* Mouse control and cell movements - physics code rewritten;
 * Border calculations - rewritten;
-* Border bouncy physics - fixed and improved
-* mainLoop - cleaned
-* added support for different protocols
-* added chat support
-* added anti-spam protection
-* color generator replaced with hsv model
-* Memory leaks fixed
-* Performance improved with optimizations
+* Border bouncy physics - fixed and improved;
+* mainLoop - cleaned;
+* Added support for different protocols (4, early 5, late 5, 6, 7, 8);
+* Added automatic mouse message type recognition;
+* Added chat support;
+* Added anti-spam protection;
+* Color generator replaced with hsv model;
+* Memory leaks fixed;
+* Performance improved and optimized
 
-Currently most of the physics code from original ogar was replaced with new code.
-Now the physics engine in MultiOgar is pretty close to old vanilla physics.
+Most of the physics code from original ogar were rewritten.
+The physics engine in MultiOgar is pretty close to the old vanilla physics.
