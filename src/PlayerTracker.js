@@ -151,11 +151,14 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.setSkin(skin);
     this.spectate = false;
 
-    this.socket.sendPacket(new Packet.ClearNodes());
+    this.socket.sendPacket(new Packet.ClearAll());
     this.collidingNodes = [];
-    this.visibleNodes = [];         // Reset visible nodes
-    this.nodeDestroyQueue = [];     // Reset destroy queue
-    this.nodeAdditionQueue = [];    // Reset addition queue
+    // some clients don't understand ClearAll message
+    // so we will send we will do not perform cleanup
+    // to allow them to receive remove notifications
+    //this.visibleNodes = [];         // Reset visible nodes
+    //this.nodeDestroyQueue = [];     // Reset destroy queue
+    //this.nodeAdditionQueue = [];    // Reset addition queue
 
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };

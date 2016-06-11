@@ -40,7 +40,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             return;
         }
         // Send handshake response
-        this.socket.sendPacket(new Packet.ClearNodes());
+        this.socket.sendPacket(new Packet.ClearAll());
         var border = {
             left: this.gameServer.config.borderLeft + this.socket.playerTracker.scrambleX,
             top: this.gameServer.config.borderTop + this.socket.playerTracker.scrambleY,
