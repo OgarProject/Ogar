@@ -766,20 +766,20 @@ GameServer.prototype.ejectMass = function(client) {
         var angle = Math.atan2(dx, dy);
         if (isNaN(angle)) angle = 0;
         
-        // Randomize angle
-        angle += (Math.random() * 0.1) - 0.05;
-        
         // Get starting position
-        var startPos = {
+        var pos = {
             x: cell.position.x + cell.getSize() * Math.sin(angle),
             y: cell.position.y + cell.getSize() * Math.cos(angle)
         };
         
+        // Randomize angle
+        angle += (Math.random() * 0.6) - 0.3;
+
         // Remove mass from parent cell
         cell.setMass(cell.getMass() - this.config.ejectMassLoss);
         
         // Create cell
-        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, startPos, this.config.ejectMass, this);
+        var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, this.config.ejectMass, this);
         ejected.setColor(cell.getColor());
         ejected.setBoost(780, angle);
         ejected.ejector = cell;
