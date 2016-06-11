@@ -184,8 +184,7 @@ Cell.prototype.calcMoveBoost = function (config) {
     if (this.boostDistance <= 0) return;
     
     //var maxSpeed = 40 * (2.1106 / Math.pow(32, 0.449));
-    //var speed = Math.sqrt(this.boostDistance * this.boostDistance / this.getSize()) * 0.8;
-    var speed = Math.sqrt(this.boostDistance * this.boostDistance / (this.getSize()*2) );
+    var speed = Math.sqrt(this.boostDistance * this.boostDistance / this.getSize());
     speed = Math.min(speed, this.boostDistance);
     this.boostDistance -= speed;
     if (this.boostDistance <= 1) this.boostDistance = 0;
