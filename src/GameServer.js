@@ -551,7 +551,7 @@ GameServer.prototype.checkCellCollision = function(cell, check) {
     // do not affect splitted cell for 1 sec
     if (cell.boostDistance > 0 || check.boostDistance > 0) {
         var tick = this.getTick();
-        if (cell.getAgeTicks(tick) < 25 || check.getAgeTicks(tick) < 25)
+        if (cell.getAgeTicks(tick) < 12 || check.getAgeTicks(tick) < 12)
             return null;
     }
 
