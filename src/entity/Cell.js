@@ -106,7 +106,8 @@ Cell.prototype.getAngle = function() {
     return this.boostDirection.angle;
 };
 
-Cell.prototype.getAgeTicks = function (tick) {
+// Returns cell age in ticks for specified game tick
+Cell.prototype.getAge = function (tick) {
     if (this.tickOfBirth == null) return 0;
     return Math.max(0, tick - this.tickOfBirth);
 }

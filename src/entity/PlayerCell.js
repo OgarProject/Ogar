@@ -30,7 +30,7 @@ PlayerCell.prototype.updateRemerge = function (gameServer) {
         return;
     }
     var tick = gameServer.getTick();
-    var age = this.getAgeTicks(tick);
+    var age = this.getAge(tick);
     if (age < 3) {
         // do not remerge if cell age is smaller than 3 ticks
         this._canRemerge = false;
