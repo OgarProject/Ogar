@@ -1,4 +1,5 @@
 # MultiOgar
+Ogar game server with vanilla physics and multi-protocol support.
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-node.js-yellow.svg)
