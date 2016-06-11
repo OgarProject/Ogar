@@ -49,6 +49,7 @@ http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends inv
 * Added automatic mouse message type recognition;
 * Added chat support;
 * Added anti-spam protection;
+* Added skin support (use name "< shark > Fish", remove space);
 * Color generator replaced with hsv model;
 * Memory leaks fixed;
 * Performance improved and optimized
