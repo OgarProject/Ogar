@@ -39,8 +39,11 @@ if (showConsole) {
 
 function prompt() {
     in_.question(">", function(str) {
-        parseCommands(str);
-        return prompt(); // Too lazy to learn async
+        try {
+            parseCommands(str);
+        } finally {
+            process.nextTick(prompt);
+        }
     });
 }
 
