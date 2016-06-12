@@ -455,7 +455,7 @@ Commands.list = {
         
         var lagMessage = "extreme high lag";
         if (gameServer.updateTimeAvg < 20)
-            lagMessage = "perfect smooth";
+            lagMessage = "perfectly smooth";
         else if (gameServer.updateTimeAvg < 35)
             lagMessage = "good";
         else if (gameServer.updateTimeAvg < 40)
