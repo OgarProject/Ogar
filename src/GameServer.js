@@ -173,6 +173,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
         ws.close(1000, "No slots");
         return;
     }
+    ws.isConnected = true;
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
     this.log.onConnect(ws.remoteAddress); // Log connections
@@ -199,6 +200,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
 GameServer.prototype.onClientSocketClose = function (ws, reason) {
     this.log.onDisconnect(ws.remoteAddress);
     
+    ws.isConnected = false;
     ws.sendPacket = function (data) { };
     ws.playerTracker.disconnect = this.config.playerDisconnectTime * 20;
     for (var i = 0; i < ws.playerTracker.cells.length; i++) {

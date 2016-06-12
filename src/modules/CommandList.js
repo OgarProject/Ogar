@@ -386,15 +386,20 @@ Commands.list = {
         console.log(" ID     | IP              | P | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
         console.log(fillChar('', '-', ' ID     | IP              |   |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
         for (var i = 0; i < gameServer.clients.length; i++) {
-            var client = gameServer.clients[i].playerTracker;
+            var socket = gameServer.clients[i];
+            var client = socket.playerTracker;
 
             // ID with 3 digits length
             var id = fillChar((client.pID), ' ', 6, true);
 
             // Get ip (15 digits length)
-            var ip = "BOT";
-            if (typeof gameServer.clients[i].remoteAddress != 'undefined') {
-                ip = gameServer.clients[i].remoteAddress;
+            var ip = "[BOT]";
+            if (socket.isConnected != null) {
+                if (socket.isConnected) {
+                    ip = socket.remoteAddress;
+                } else {
+                    ip = "[DISCONNECTED]";
+                }
             }
             ip = fillChar(ip, ' ', 15);
             var protocol = gameServer.clients[i].packetHandler.protocol;
