@@ -442,7 +442,8 @@ GameServer.prototype.timerLoop = function () {
         return;
     }
     if (dt < timeStep) {
-        process.nextTick(this.timerLoopBind);
+        //process.nextTick(this.timerLoopBind);
+        setTimeout(this.timerLoopBind, 0);
         return;
     }
     // update average
@@ -451,8 +452,10 @@ GameServer.prototype.timerLoop = function () {
     if (this.timeStamp == 0)
         this.timeStamp = ts;
     this.timeStamp += timeStep;
-    process.nextTick(this.mainLoopBind);
-    process.nextTick(this.timerLoopBind);
+    //process.nextTick(this.mainLoopBind);
+    //process.nextTick(this.timerLoopBind);
+    setTimeout(this.mainLoopBind, 0);
+    setTimeout(this.timerLoopBind, 0);
 };
 
 GameServer.prototype.mainLoop = function() {
