@@ -52,6 +52,7 @@ function PlayerTracker(gameServer, socket) {
     // Scramble the coordinate system for anti-raga
     this.scrambleX = 0;
     this.scrambleY = 0;
+    this.scrambleId = 0;
 
     // Gamemode function
     if (gameServer) {
@@ -72,6 +73,7 @@ function PlayerTracker(gameServer, socket) {
             this.scrambleX = Math.floor(maxScrambleX * Math.random());
             this.scrambleY = Math.floor(maxScrambleY * Math.random());
         }
+        this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
     }
 }
 
@@ -270,11 +272,10 @@ PlayerTracker.prototype.update = function () {
     
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(
+        this,
         this.nodeDestroyQueue,
         updateNodes,
-        nonVisibleNodes,
-        this.scrambleX,
-        this.scrambleY));
+        nonVisibleNodes));
     
     this.nodeDestroyQueue = []; // Reset destroy queue
     this.nodeAdditionQueue = []; // Reset addition queue

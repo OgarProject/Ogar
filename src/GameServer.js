@@ -251,7 +251,7 @@ GameServer.prototype.getNextNodeId = function() {
     if (this.lastNodeId > 2147483647) {
         this.lastNodeId = 1;
     }
-    return this.lastNodeId++;
+    return this.lastNodeId++ >>> 0;
 };
 
 GameServer.prototype.getNewPlayerID = function() {
@@ -259,7 +259,7 @@ GameServer.prototype.getNewPlayerID = function() {
     if (this.lastPlayerId > 2147483647) {
         this.lastPlayerId = 1;
     }
-    return this.lastPlayerId++;
+    return this.lastPlayerId++ >>> 0;
 };
 
 GameServer.prototype.getRandomPosition = function() {
@@ -338,7 +338,7 @@ GameServer.prototype.addNode = function(node) {
     if (node.owner && node.cellType != 3) {
         node.setColor(node.owner.color);
         node.owner.cells.push(node);
-        node.owner.socket.sendPacket(new Packet.AddNode(node));
+        node.owner.socket.sendPacket(new Packet.AddNode(node.owner, node));
     }
 
     // Special on-add actions

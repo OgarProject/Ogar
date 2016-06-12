@@ -23,7 +23,7 @@ UpdateLeaderboard.prototype.build = function (protocol) {
 UpdateLeaderboard.prototype.build48 = function (protocol) {
     var writer = new BinaryWriter();
     writer.writeUInt8(0x31);                                // Packet ID
-    writer.writeUInt32(this.leaderboard.length >> 0);       // Number of elements
+    writer.writeUInt32(this.leaderboard.length >>> 0);       // Number of elements
     for (var i = 0; i < this.leaderboard.length; i++) {
         var item = this.leaderboard[i];
         if (item == null) return null;  // bad leaderboardm just don't send it
@@ -45,7 +45,7 @@ UpdateLeaderboard.prototype.build48 = function (protocol) {
 UpdateLeaderboard.prototype.build49 = function (protocol) {
     var writer = new BinaryWriter();
     writer.writeUInt8(0x31);                                // Packet ID
-    writer.writeUInt32(this.leaderboard.length >> 0);       // Number of elements
+    writer.writeUInt32(this.leaderboard.length >>> 0);       // Number of elements
     for (var i = 0; i < this.leaderboard.length; i++) {
         var item = this.leaderboard[i];
         if (item == null) return null;  // bad leaderboardm just don't send it
@@ -54,10 +54,10 @@ UpdateLeaderboard.prototype.build49 = function (protocol) {
         name = name != null ? name : "";
         var id = item == this.playerTracker ? 1 : 0;    // protocol 6+ uses isMe flag
         if (protocol <= 5 && item.cells != null && item.cells.length > 0) {
-            id = item.cells[0].nodeId;                  // protocol 5- uses player cellId instead of isMe flag
+            id = item.cells[0].nodeId ^ this.playerTracker.scrambleId;                  // protocol 5- uses player cellId instead of isMe flag
         }
 
-        writer.writeUInt32(id >> 0);                        // isMe flag/cell ID
+        writer.writeUInt32(id >>> 0);                        // isMe flag/cell ID
         if (protocol <= 5)
             writer.writeStringZeroUnicode(name);
         else
@@ -70,7 +70,7 @@ UpdateLeaderboard.prototype.build49 = function (protocol) {
 UpdateLeaderboard.prototype.build50 = function (protocol) {
     var writer = new BinaryWriter();
     writer.writeUInt8(0x32);                                // Packet ID
-    writer.writeUInt32(this.leaderboard.length >> 0);       // Number of elements
+    writer.writeUInt32(this.leaderboard.length >>> 0);       // Number of elements
     for (var i = 0; i < this.leaderboard.length; i++) {
         var item = this.leaderboard[i];
         if (item == null) return null;  // bad leaderboardm just don't send it
