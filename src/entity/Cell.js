@@ -184,9 +184,9 @@ Cell.prototype.setBoost = function (distance, angle) {
 Cell.prototype.calcMoveBoost = function (config) {
     if (this.boostDistance <= 0) return;
     
-    //var maxSpeed = 40 * (2.1106 / Math.pow(32, 0.449));
     var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
-    speed = Math.min(speed, this.boostDistance);
+    var speed = Math.min(speed, 78);                // limit max speed with sqrt(780*780/100)
+    speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
     this.boostDistance -= speed;
     if (this.boostDistance <= 1) this.boostDistance = 0;
     var x = this.position.x + this.boostDirection.x * speed;
