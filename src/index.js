@@ -42,7 +42,7 @@ function prompt() {
         try {
             parseCommands(str);
         } finally {
-            process.nextTick(prompt);
+            setTimeout(prompt, 0);
         }
     });
 }
