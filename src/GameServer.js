@@ -37,8 +37,13 @@ function GameServer() {
 
     // Main loop tick
     this.startTime = +new Date;
-    this.tickCounter = 0;
     this.timeStamp = 0;
+    this.updateTime = 0;
+    this.updateTimeAvg = 0;
+    this.timerLoopBind = null;
+    this.mainLoopBind = null;
+    
+    this.tickCounter = 0;
     this.tickSpawn = 0; // Used with spawning food
 
 
@@ -67,7 +72,6 @@ function GameServer() {
         foodMassGrow: 1, // Enable food mass grow ?
         foodMassGrowPossiblity: 50, // Chance for a food to has the ability to be self growing
         foodMassLimit: 5, // Maximum mass for a food can grow
-        foodMassTimeout: 120, // The amount of interval for a food to grow its mass (in seconds)
         virusMinAmount: 10, // Minimum amount of viruses on the map.
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100, // Starting virus size (In mass)
@@ -107,117 +111,113 @@ function GameServer() {
 module.exports = GameServer;
 
 GameServer.prototype.start = function() {
+    this.timerLoopBind = this.timerLoop.bind(this);
+    this.mainLoopBind = this.mainLoop.bind(this);
+    
     // Logging
     this.log.setup(this);
-
+    
     // Gamemode configurations
     this.gameMode.onServerInit(this);
-
-    // Start the server
-    this.socketServer = new WebSocket.Server({
+    
+    var options = {
         port: this.config.serverPort,
         perMessageDeflate: false
-    }, function() {
-        // Spawn starting food
-        this.startingFood();
+    };
 
-        // Start Main Loop
-        //setInterval(this.mainLoop.bind(this), 40);
-        setInterval(this.timerLoop.bind(this), 1);
-
-        // Done
-        console.log("[Game] Listening on port " + this.config.serverPort);
-        console.log("[Game] Current game mode is " + this.gameMode.name);
-
-        // Player bots (Experimental)
-        if (this.config.serverBots > 0) {
-            for (var i = 0; i < this.config.serverBots; i++) {
-                this.bots.addBot();
-            }
-            console.log("[Game] Loaded " + this.config.serverBots + " player bots");
-        }
-
-    }.bind(this));
-
-    this.socketServer.on('connection', connectionEstablished.bind(this));
-
-    // Properly handle errors because some people are too lazy to read the readme
-    this.socketServer.on('error', function err(e) {
-        switch (e.code) {
-            case "EADDRINUSE":
-                console.log("[Error] Server could not bind to port! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
-                break;
-            case "EACCES":
-                console.log("[Error] Please make sure you are running Ogar with root privileges.");
-                break;
-            default:
-                console.log("[Error] Unhandled error code: " + e.code);
-                break;
-        }
-        process.exit(1); // Exits the program
-    });
-
-    function connectionEstablished(ws) {
-        if (this.clients.length >= this.config.serverMaxConnections) { // Server full
-            ws.close(1000, "No slots");
-            return;
-        }
-
-        function close(error) {
-            // Log disconnections
-            this.server.log.onDisconnect(this.socket.remoteAddress);
-
-            var client = this.socket.playerTracker;
-            var len = this.socket.playerTracker.cells.length;
-            for (var i = 0; i < len; i++) {
-                var cell = this.socket.playerTracker.cells[i];
-                if (cell == null) continue;
-
-                cell.calcMove = function() {
-                    return;
-                }; // Clear function so that the cell cant move
-                //this.server.removeNode(cell);
-            }
-
-            client.disconnect = this.server.config.playerDisconnectTime * 20;
-            this.socket.sendPacket = function() {
-                return;
-            }; // Clear function so no packets are sent
-        }
-
-        ws.remoteAddress = ws._socket.remoteAddress;
-        ws.remotePort = ws._socket.remotePort;
-        this.log.onConnect(ws.remoteAddress); // Log connections
-
-        ws.playerTracker = new PlayerTracker(this, ws);
-        ws.packetHandler = new PacketHandler(this, ws);
-        ws.on('message', ws.packetHandler.handleMessage.bind(ws.packetHandler));
-
-        var bindObject = {
-            server: this,
-            socket: ws
-        };
-        ws.on('error', close.bind(bindObject));
-        ws.on('close', close.bind(bindObject));
-        this.clients.push(ws);
-    }
+    // Start the server
+    this.socketServer = new WebSocket.Server(options, this.onServerSocketOpen.bind(this));
+    this.socketServer.on('error', this.onServerSocketError.bind(this));
+    this.socketServer.on('connection', this.onClientSocketOpen.bind(this));
 
     this.startStatsServer(this.config.serverStatsPort);
 };
 
-GameServer.prototype.timerLoop = function () {
-    var ts = new Date().getTime();
-    if (ts - this.timeStamp < 40)
-        return;
-    if (this.timeStamp == 0)
-        this.timeStamp = ts;
-    this.timeStamp += 40;
-    if (this.timeStamp + 400 < ts) {
-        // high lag detected, resynchronize
-        this.timeStamp = ts - 80;
+GameServer.prototype.onServerSocketError = function (error) {
+    switch (error.code) {
+        case "EADDRINUSE":
+            console.log("[Error] Server could not bind to port! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
+            break;
+        case "EACCES":
+            console.log("[Error] Please make sure you are running Ogar with root privileges.");
+            break;
+        default:
+            console.log("[Error] Unhandled error code: " + error.code);
+            break;
     }
-    setTimeout(this.mainLoop.bind(this), 0);
+    process.exit(1); // Exits the program
 };
+
+GameServer.prototype.onServerSocketOpen = function () {
+    // Spawn starting food
+    this.startingFood();
+    
+    // Start Main Loop
+    setTimeout(this.timerLoopBind, 1);
+    
+    // Done
+    console.log("[Game] Listening on port " + this.config.serverPort);
+    console.log("[Game] Current game mode is " + this.gameMode.name);
+    
+    // Player bots (Experimental)
+    if (this.config.serverBots > 0) {
+        for (var i = 0; i < this.config.serverBots; i++) {
+            this.bots.addBot();
+        }
+        console.log("[Game] Loaded " + this.config.serverBots + " player bots");
+    }
+};
+
+GameServer.prototype.onClientSocketOpen = function (ws) {
+    if (this.clients.length >= this.config.serverMaxConnections) { // Server full
+        ws.close(1000, "No slots");
+        return;
+    }
+    ws.remoteAddress = ws._socket.remoteAddress;
+    ws.remotePort = ws._socket.remotePort;
+    this.log.onConnect(ws.remoteAddress); // Log connections
+    
+    ws.playerTracker = new PlayerTracker(this, ws);
+    ws.packetHandler = new PacketHandler(this, ws);
+    
+    var gameServer = this;
+    var onMessage = function (message) {
+        gameServer.onClientSocketMessage(ws, message);
+    };
+    var onError = function (error) {
+        gameServer.onClientSocketError(ws, error);
+    };
+    var onClose = function (reason) {
+        gameServer.onClientSocketClose(ws, reason);
+    };
+    ws.on('message', onMessage);
+    ws.on('error', onError);
+    ws.on('close', onClose);
+    this.clients.push(ws);
+};
+
+GameServer.prototype.onClientSocketClose = function (ws, reason) {
+    this.log.onDisconnect(ws.remoteAddress);
+    
+    ws.sendPacket = function (data) { };
+    ws.playerTracker.disconnect = this.config.playerDisconnectTime * 20;
+    for (var i = 0; i < ws.playerTracker.cells.length; i++) {
+        var cell = ws.playerTracker.cells[i];
+        if (cell == null) continue;
+        
+        cell.calcMove = function () { }
+    }
+};
+
+GameServer.prototype.onClientSocketError = function (ws, error) {
+    ws.sendPacket = function (data) { };
+    ws.close(1002, "Socket error");
+};
+
+GameServer.prototype.onClientSocketMessage = function (ws, message) {
+    ws.packetHandler.handleMessage(message);
+};
+
 
 GameServer.prototype.getTick = function () {
     return this.tickCounter;
@@ -426,7 +426,37 @@ GameServer.prototype.sendChatMessage = function (from, to, message) {
     }
 }; 
 
+GameServer.prototype.timerLoop = function () {
+    var timeStep = this.updateTimeAvg >> 0;
+    timeStep += 5;
+    timeStep = Math.max(timeStep, 40);
+    
+    var ts = new Date().getTime();
+    var dt = ts - this.timeStamp;
+    if (dt < timeStep - 5) {
+        setTimeout(this.timerLoopBind, ((timeStep-5) - dt) >> 0);
+        return;
+    }
+    if (dt < timeStep - 1) {
+        setTimeout(this.timerLoopBind, 0);
+        return;
+    }
+    if (dt < timeStep) {
+        process.nextTick(this.timerLoopBind);
+        return;
+    }
+    // update average
+    this.updateTimeAvg += 0.5 * (this.updateTime - this.updateTimeAvg);
+    // calculate next
+    if (this.timeStamp == 0)
+        this.timeStamp = ts;
+    this.timeStamp += timeStep;
+    process.nextTick(this.mainLoopBind);
+    process.nextTick(this.timerLoopBind);
+};
+
 GameServer.prototype.mainLoop = function() {
+    var tStart = new Date().getTime();
     // Loop main functions
     this.updateMoveEngine();
     this.updateSpawn();
@@ -437,24 +467,29 @@ GameServer.prototype.mainLoop = function() {
     
     //var t = process.hrtime();
     //this.updateMoveEngine();
-    //this.t1 = process.hrtime(t);
+    //this.t1 = toTime(process.hrtime(t));
     //t = process.hrtime();
     //this.updateSpawn();
-    //this.t2 = process.hrtime(t);
+    //this.t2 = toTime(process.hrtime(t));
     //t = process.hrtime();
     //this.gameMode.onTick(this);
-    //this.t3 = process.hrtime(t);
+    //this.t3 = toTime(process.hrtime(t));
     //t = process.hrtime();
     //this.updateCells();
-    //this.t4 = process.hrtime(t);
+    //this.t4 = toTime(process.hrtime(t));
     //t = process.hrtime();
     //this.updateClients();
-    //this.t5 = process.hrtime(t);
+    //this.t5 = toTime(process.hrtime(t));
     //t = process.hrtime();
     //this.updateLeaderboard();
-    //this.t6 = process.hrtime(t);
+    //this.t6 = toTime(process.hrtime(t));
+    //function toTime(tscTicks) {
+    //    return tscTicks[0] * 1000 + tscTicks[1] / 1000000;
+    //}
     
     this.tickCounter++;
+    var tEnd = new Date().getTime();
+    this.updateTime = tEnd - tStart;
 };
 
 GameServer.prototype.startingFood = function() {
@@ -996,10 +1031,11 @@ GameServer.prototype.startStatsServer = function(port) {
         res.end(this.stats);
     }.bind(this));
 
-    this.httpServer.listen(port, function() {
+    var getStatsBind = this.getStats.bind(this);
+    this.httpServer.listen(port, function () {
         // Stats server
         console.log("[Game] Loaded stats server on port " + port);
-        setInterval(this.getStats.bind(this), this.config.serverStatsUpdate * 1000);
+        setInterval(getStatsBind, this.config.serverStatsUpdate * 1000);
     }.bind(this));
 };
 

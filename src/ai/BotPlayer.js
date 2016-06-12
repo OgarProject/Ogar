@@ -29,7 +29,7 @@ BotPlayer.prototype.getLowestCell = function() {
     return sorted[0];
 };
 
-BotPlayer.prototype.update = function() { // Overrides the update function from player tracker
+BotPlayer.prototype.update = function () { // Overrides the update function from player tracker
     // Remove nodes from visible nodes if possible
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
         var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
@@ -37,7 +37,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
             this.visibleNodes.splice(index, 1);
         }
     }
-
+    
     // Respawn if bot is dead
     if (this.cells.length <= 0) {
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
@@ -50,20 +50,18 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     
     if (this.splitCooldown > 0) this.splitCooldown--;
     
-    setTimeout(function() {
-        // Calculate nodes
-        this.visibleNodes = this.getVisibleNodes();
-
-        // Calc predators/prey
-        var cell = this.getLowestCell();
-
-        // Action
-        this.decide(cell);
-
-        // Reset queues
-        this.nodeDestroyQueue = [];
-        this.nodeAdditionQueue = [];
-    }.bind(this), 0);
+    // Calculate nodes
+    this.visibleNodes = this.getVisibleNodes();
+    
+    // Calc predators/prey
+    var cell = this.getLowestCell();
+    
+    // Action
+    this.decide(cell);
+    
+    // Reset queues
+    this.nodeDestroyQueue = [];
+    this.nodeAdditionQueue = [];
 };
 
 // Custom

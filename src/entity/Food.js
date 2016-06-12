@@ -19,15 +19,13 @@ Food.prototype.calcMove = null; // Food has no need to move
 
 // Main Functions
 
-Food.prototype.grow = function() {
-    setTimeout(function() {
-        this.setMass(this.getMass() + 1); // food mass increased, we need to recalculate its size and squareSize, and send update to client side
-        this.shouldSendUpdate = true;
-
-        if (this.getMass() < this.gameServer.config.foodMassLimit) {
-            this.grow();
-        }
-    }.bind(this), this.gameServer.config.foodMassTimeout * 1000);
+Food.prototype.grow = function () {
+    this.setMass(this.getMass() + 1); // food mass increased, we need to recalculate its size and squareSize, and send update to client side
+    this.shouldSendUpdate = true;
+    
+    if (this.getMass() < this.gameServer.config.foodMassLimit) {
+        this.grow();
+    }
 };
 
 Food.prototype.sendUpdate = function() {
