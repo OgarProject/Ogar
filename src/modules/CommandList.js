@@ -452,12 +452,23 @@ Commands.list = {
                 bots++;
             }
         }
-        //
+        
+        var lagMessage = "extreme high lag";
+        if (gameServer.updateTimeAvg < 20)
+            lagMessage = "perfect smooth";
+        else if (gameServer.updateTimeAvg < 35)
+            lagMessage = "good";
+        else if (gameServer.updateTimeAvg < 40)
+            lagMessage = "tiny lag";
+        else if (gameServer.updateTimeAvg < 50)
+            lagMessage = "lag";
+        
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
         console.log("[Console] Players: " + humans + " - Bots: " + bots);
         console.log("[Console] Server has been running for " + Math.floor(process.uptime()/60) + " minutes");
         console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10)/10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10)/10 + " mb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
+        console.log("[Console] Current update time: " + gameServer.updateTimeAvg.toFixed(3) + " [ms]  (" + lagMessage + ")");
     },
     tp: function(gameServer, split) {
         var id = parseInt(split[1]);
