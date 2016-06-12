@@ -49,57 +49,58 @@ function GameServer() {
 
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
-        serverMaxConnections: 64, // Maximum amount of connections to the server.
-        serverPort: 443, // Server port
-        serverGamemode: 0, // Gamemode, 0 = FFA, 1 = Teams
-        serverBots: 0, // Amount of player bots to spawn
-        serverViewBaseX: 1920, // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
+        serverMaxConnections: 64,   // Maximum amount of connections to the server. (0 for no limit)
+        serverIpLimit: 4,           // Maximum amount of connections from the same IP (0 for no limit)
+        serverPort: 443,            // Server port
+        serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
+        serverBots: 0,              // Amount of player bots to spawn
+        serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
         serverViewBaseY: 1080, 
-        serverStatsPort: 88, // Port for stats server. Having a negative number will disable the stats server.
-        serverStatsUpdate: 60, // Amount of seconds per update for the server stats
-        serverLogLevel: 1, // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
-        serverScrambleCoords: 1, // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
-        serverMaxLB: 10, //	Controls the maximum players displayed on the leaderboard.
-        borderLeft: 0, // Left border of map (Vanilla value: 0)
-        borderRight: 6000, // Right border of map (Vanilla value: 14142.135623730952)
-        borderTop: 0, // Top border of map (Vanilla value: 0)
-        borderBottom: 6000, // Bottom border of map (Vanilla value: 14142.135623730952)
-        spawnInterval: 20, // The interval between each food cell spawn in ticks (1 tick = 50 ms)
-        foodSpawnAmount: 10, // The amount of food to spawn per interval
-        foodStartAmount: 100, // The starting amount of food in the map
-        foodMaxAmount: 500, // Maximum food cells on the map
-        foodMass: 1, // Starting food size (In mass)
-        foodMassGrow: 1, // Enable food mass grow ?
+        serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
+        serverStatsUpdate: 60,      // Amount of seconds per update for the server stats
+        serverLogLevel: 1,          // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
+        serverScrambleCoords: 1,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
+        serverMaxLB: 10,            //	Controls the maximum players displayed on the leaderboard.
+        borderLeft: 0,              // Left border of map (Vanilla value: 0)
+        borderRight: 6000,          // Right border of map (Vanilla value: 14142.135623730952)
+        borderTop: 0,               // Top border of map (Vanilla value: 0)
+        borderBottom: 6000,         // Bottom border of map (Vanilla value: 14142.135623730952)
+        spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
+        foodSpawnAmount: 10,        // The amount of food to spawn per interval
+        foodStartAmount: 100,       // The starting amount of food in the map
+        foodMaxAmount: 500,         // Maximum food cells on the map
+        foodMass: 1,                // Starting food size (In mass)
+        foodMassGrow: 1,            // Enable food mass grow ?
         foodMassGrowPossiblity: 50, // Chance for a food to has the ability to be self growing
-        foodMassLimit: 5, // Maximum mass for a food can grow
-        virusMinAmount: 10, // Minimum amount of viruses on the map.
-        virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
-        virusStartMass: 100, // Starting virus size (In mass)
-        virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
-        ejectMass: 13, // Mass of ejected cells
-        ejectMassCooldown: 3,   // min ticks between ejects
-        ejectMassLoss: 15, // Mass lost when ejecting cells
-        ejectSpeed: 100, // Base speed of ejected cells
-        ejectSpawnPlayer: 50, // Chance for a player to spawn from ejected mass
-        playerStartMass: 10, // Starting mass of the player cell.
-        playerBotGrowEnabled: 1, // If 0, eating a cell with less than 17 mass while cell has over 625 wont gain any mass
-        playerMaxMass: 22500, // Maximum mass a player can have
-        playerMinMassEject: 32, // Mass required to eject a cell
-        playerMinMassSplit: 36, // Mass required to split
-        playerMaxCells: 16, // Max cells the player is allowed to have
-        playerRecombineTime: 30, // Base amount of seconds before a cell is allowed to recombine
-        playerMassAbsorbed: 1.0, // Fraction of player cell's mass gained upon eating
-        playerMassDecayRate: .002, // Amount of mass lost per second
-        playerMinMassDecay: 9, // Minimum mass for decay to occur
-        playerMaxNickLength: 15, // Maximum nick length
-        playerSpeed: 1,         // Player speed multiplier
-        playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
-        tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
-        tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
-        tourneyEndTime: 30, // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
-        tourneyTimeLimit: 20, // Time limit of the game, in minutes.
-        tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
-        tourneyAutoFillPlayers: 1, // The timer for filling the server with bots will not count down unless there is this amount of real players
+        foodMassLimit: 5,           // Maximum mass for a food can grow
+        virusMinAmount: 10,         // Minimum amount of viruses on the map.
+        virusMaxAmount: 50,         // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
+        virusStartMass: 100,        // Starting virus size (In mass)
+        virusFeedAmount: 7,         // Amount of times you need to feed a virus to shoot it
+        ejectMass: 13,              // Mass of ejected cells
+        ejectMassCooldown: 3,       // min ticks between ejects
+        ejectMassLoss: 15,          // Mass lost when ejecting cells
+        ejectSpeed: 100,            // Base speed of ejected cells
+        ejectSpawnPlayer: 50,       // Chance for a player to spawn from ejected mass
+        playerStartMass: 10,        // Starting mass of the player cell.
+        playerBotGrowEnabled: 1,    // If 0, eating a cell with less than 17 mass while cell has over 625 wont gain any mass
+        playerMaxMass: 22500,       // Maximum mass a player can have
+        playerMinMassEject: 32,     // Mass required to eject a cell
+        playerMinMassSplit: 36,     // Mass required to split
+        playerMaxCells: 16,         // Max cells the player is allowed to have
+        playerRecombineTime: 30,    // Base amount of seconds before a cell is allowed to recombine
+        playerMassAbsorbed: 1.0,    // Fraction of player cell's mass gained upon eating
+        playerMassDecayRate: .002,  // Amount of mass lost per second
+        playerMinMassDecay: 9,      // Minimum mass for decay to occur
+        playerMaxNickLength: 15,    // Maximum nick length
+        playerSpeed: 1,             // Player speed multiplier
+        playerDisconnectTime: 60,   // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
+        tourneyMaxPlayers: 12,      // Maximum amount of participants for tournament style game modes
+        tourneyPrepTime: 10,        // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
+        tourneyEndTime: 30,         // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
+        tourneyTimeLimit: 20,       // Time limit of the game, in minutes.
+        tourneyAutoFill: 0,         // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
+        tourneyAutoFillPlayers: 1,  // The timer for filling the server with bots will not count down unless there is this amount of real players
     };
     // Parse config
     this.loadConfig();
@@ -169,8 +170,24 @@ GameServer.prototype.onServerSocketOpen = function () {
 };
 
 GameServer.prototype.onClientSocketOpen = function (ws) {
-    if (this.clients.length >= this.config.serverMaxConnections) { // Server full
+    var totalConnections = 0;
+    var ipConnections = 0;
+    for (var i = 0; i < this.clients.length; i++) {
+        var socket = this.clients[i];
+        if (socket == null || socket.isConnected == null)
+            continue;
+        totalConnections++;
+        if (socket.remoteAddress == ws._socket.remoteAddress)
+            ipConnections++;
+    }
+    if (this.config.serverMaxConnections > 0 && totalConnections >= this.config.serverMaxConnections) {
+        // Server full
         ws.close(1000, "No slots");
+        return;
+    }
+    if (this.config.serverIpLimit > 0 && ipConnections >= this.config.serverIpLimit) {
+        // IP limit reached
+        ws.close(1000, "IP limit reached");
         return;
     }
     ws.isConnected = true;
