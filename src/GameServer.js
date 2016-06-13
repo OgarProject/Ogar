@@ -72,7 +72,7 @@ function GameServer() {
         foodMass: 1,                // Starting food size (In mass)
         foodMassGrow: 1,            // Enable food mass grow ?
         foodMassGrowPossiblity: 50, // Chance for a food to has the ability to be self growing
-        foodMassLimit: 5,           // Maximum mass for a food can grow
+        foodMassLimit: 4,           // Maximum mass for a food can grow
         virusMinAmount: 10,         // Minimum amount of viruses on the map.
         virusMaxAmount: 50,         // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         virusStartMass: 100,        // Starting virus size (In mass)
