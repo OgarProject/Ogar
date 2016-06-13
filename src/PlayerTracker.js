@@ -238,12 +238,12 @@ PlayerTracker.prototype.update = function () {
             // TODO: need to send it more rarely (once per second or something like that)
             // also need to make sure that we send it before first cell update
             //var border = {
-            //    left: Math.max(this.viewBox.left - this.viewBox.halfWidth, this.gameServer.config.borderLeft) + this.scrambleX,
-            //    top: Math.max(this.viewBox.top - this.viewBox.halfHeight, this.gameServer.config.borderTop) + this.scrambleY,
-            //    right: Math.min(this.viewBox.right + this.viewBox.halfWidth, this.gameServer.config.borderRight) + this.scrambleX,
-            //    bottom: Math.min(this.viewBox.bottom + this.viewBox.halfHeight, this.gameServer.config.borderBottom) + this.scrambleY
+            //    left: Math.max(this.viewBox.left - this.viewBox.halfWidth, this.gameServer.config.borderLeft),
+            //    top: Math.max(this.viewBox.top - this.viewBox.halfHeight, this.gameServer.config.borderTop),
+            //    right: Math.min(this.viewBox.right + this.viewBox.halfWidth, this.gameServer.config.borderRight),
+            //    bottom: Math.min(this.viewBox.bottom + this.viewBox.halfHeight, this.gameServer.config.borderBottom)
             //};
-            //this.socket.sendPacket(new Packet.SetBorder(border));
+            //this.socket.sendPacket(new Packet.SetBorder(this, border));
         } catch (err) {
             console.error(err);
         }
