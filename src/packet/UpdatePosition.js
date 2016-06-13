@@ -1,7 +1,8 @@
-function UpdatePosition(x, y, size) {
+function UpdatePosition(playerTracker, x, y, scale) {
+    this.playerTracker = playerTracker,
     this.x = x;
     this.y = y;
-    this.size = size;
+    this.scale = scale;
 }
 
 module.exports = UpdatePosition;
@@ -11,11 +12,11 @@ UpdatePosition.prototype.build = function(protocol) {
     var offset = 0;
     buffer.writeUInt8(0x11, offset);
     offset += 1;
-    buffer.writeFloatLE(this.x, offset);
+    buffer.writeFloatLE(this.x + this.playerTracker.scrambleX, offset);
     offset += 4;
-    buffer.writeFloatLE(this.y, offset);
+    buffer.writeFloatLE(this.y + this.playerTracker.scrambleY, offset);
     offset += 4;
-    buffer.writeFloatLE(this.size, offset);
+    buffer.writeFloatLE(this.scale, offset);
     offset += 4;
     return buffer;
 };

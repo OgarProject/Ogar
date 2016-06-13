@@ -38,8 +38,7 @@ Mode.prototype.onPlayerSpawn = function(gameServer, player) {
 Mode.prototype.pressQ = function(gameServer, player) {
     // Called when the Q key is pressed
     if (player.spectate) {
-        if (!player.freeRoam) player.freeRoam = true;
-        else player.freeRoam = false;
+        player.freeRoam = !player.freeRoam;
     }
 };
 

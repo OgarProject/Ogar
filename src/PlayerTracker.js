@@ -152,6 +152,7 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.setName(name);
     this.setSkin(skin);
     this.spectate = false;
+    this.freeRoam = false;
 
     this.socket.sendPacket(new Packet.ClearAll());
     this.collidingNodes = [];
@@ -449,8 +450,9 @@ PlayerTracker.prototype.checkBorderPass = function() {
 PlayerTracker.prototype.sendPosPacket = function() {
     // TODO: Send packet elsewhere so it is sent more often
     this.socket.sendPacket(new Packet.UpdatePosition(
-        this.centerPos.x + this.scrambleX,
-        this.centerPos.y + this.scrambleY,
+        this,
+        this.centerPos.x,
+        this.centerPos.y,
         this.getScale()
     ));
 };
