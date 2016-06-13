@@ -47,7 +47,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             right: this.gameServer.config.borderRight + this.socket.playerTracker.scrambleX,
             bottom: this.gameServer.config.borderBottom + this.socket.playerTracker.scrambleY
         };
-        this.socket.sendPacket(new Packet.SetBorder(border, 0, "MultiOgar 1.0"));
+        this.socket.sendPacket(new Packet.SetBorder(border, this.gameServer.config.serverGamemode, "MultiOgar 1.0"));
         // Send welcome message
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
         if (this.protocol < 4) {
