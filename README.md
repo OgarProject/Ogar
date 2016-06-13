@@ -53,6 +53,7 @@ http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends inv
 * Color generator replaced with hsv model;
 * Memory leaks fixed;
 * Performance improved and optimized
+* Added support for server tracker ogar.mivabe.nl/master
 
 Most of the physics code from original ogar were rewritten.
 The physics engine in MultiOgar is pretty close to the old vanilla physics.
