@@ -3,6 +3,7 @@ var WebSocket = require('ws');
 var http = require('http');
 var fs = require("fs");
 var ini = require('./modules/ini.js');
+var os = require("os");
 
 // Project imports
 var Packet = require('./packet');
@@ -52,6 +53,7 @@ function GameServer() {
         serverMaxConnections: 64,   // Maximum amount of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum amount of connections from the same IP (0 for no limit)
         serverPort: 443,            // Server port
+        serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
         serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0,              // Amount of player bots to spawn
         serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
@@ -479,6 +481,7 @@ GameServer.prototype.timerLoop = function () {
 
 GameServer.prototype.mainLoop = function() {
     var tStart = new Date().getTime();
+    
     // Loop main functions
     this.updateMoveEngine();
     this.updateSpawn();
@@ -486,6 +489,11 @@ GameServer.prototype.mainLoop = function() {
     this.updateCells();
     this.updateClients();
     this.updateLeaderboard();
+    
+    // ping server tracker
+    if (this.config.serverTracker && (this.getTick() % (30000/40)) == 0) {
+        this.pingServerTracker();
+    }
     
     //var t = process.hrtime();
     //this.updateMoveEngine();
@@ -1095,3 +1103,57 @@ WebSocket.prototype.sendPacket = function(packet) {
         this.removeAllListeners();
     }
 };
+
+// Ping the server tracker.
+// To list us on the server tracker located at http://ogar.mivabe.nl/master
+// Should be called every 30 seconds
+GameServer.prototype.pingServerTracker = function () {
+    // Get server statistics
+    var totalPlayers = 0;
+    var alivePlayers = 0;
+    var spectatePlayers = 0;
+    for (var i = 0; i < this.clients.length; i++) {
+        var socket = this.clients[i];
+        if (socket == null || !socket.isConnected)
+            continue;
+        totalPlayers++;
+        if (socket.playerTracker.cells.length > 0)
+            alivePlayers++;
+        else
+            spectatePlayers++;
+    }
+    /* Sending Ping */
+    // Why don't just to use JSON?
+    var data = 'current_players=' + totalPlayers +
+               '&alive=' + alivePlayers +
+               '&spectators=' + spectatePlayers +
+               '&max_players=' + this.config.serverMaxConnections +
+               '&sport=' + this.config.serverPort +
+               '&gamemode=[*] ' + this.gameMode.name +  // we add [*] to indicate that this is multi-server
+               '&agario=true' +                         // protocol version
+               '&name=Unnamed Server' +                 // we cannot use it, because other value will be used as dns name
+               '&opp=' + os.platform() + ' ' + os.arch() + // "win32 x64"
+               '&uptime=' + process.uptime() +          // Number of seconds server has been running
+               '&start_time=' + this.startTime;
+    var options ={
+        host: 'ogar.mivabe.nl',
+        port: '80',
+        path: '/master',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': Buffer.byteLength(data)
+        }
+    };
+    var req = http.request(options, function (res) {
+        if (res.statusCode != 200) {
+            console.log("\u001B[1m\u001B[31m[Tracker Error] " + res.statusCode + "\u001B[0m");
+        }
+    });
+    req.on('error', function (e) {
+        console.log("\u001B[1m\u001B[31m[Tracker Error] " + e.message + "\u001B[0m");
+    });
+    req.write(data);
+    req.end()
+};
+
