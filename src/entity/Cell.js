@@ -82,10 +82,11 @@ Cell.prototype.addMass = function(n) {
         var splitMass = this.getMass() / 2;
         var randomAngle = Math.random() * 6.28; // Get random angle
         this.gameServer.createPlayerCell(this.owner, this, randomAngle, splitMass);
-    } else {
-        this.setMass(Math.min(this.getMass(), this.gameServer.config.playerMaxMass));
     }
-    this.setMass(this.getMass() + n);
+    var newMass = this.getMass() + n;
+    if (newMass > this.gameServer.config.playerMaxMass)
+        newMass = this.gameServer.config.playerMaxMass;
+    this.setMass(newMass);
 };
 
 Cell.prototype.getSpeed = function() {
