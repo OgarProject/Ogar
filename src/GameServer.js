@@ -740,10 +740,18 @@ GameServer.prototype.cellEating = function(cell) {
     var list = this.getCellsInRange(cell);
     for (var j = 0; j < list.length; j++) {
         var check = list[j];
+        
+        // Disable mergeOverride on the last merging cell
+        // We need to disable it before onCosume to prevent merging loop
+        // (onConsume may cause split for big mass)
+        if (check.owner != null && check.owner.cells.length <= 2) {
+            cell.owner.mergeOverride = false;
+            cell.owner.mergeOverrideDuration = 0;
+        }
 
         // Consume effect
         check.onConsume(cell, this);
-
+        
         // Remove cell
         check.setKiller(cell);
         this.removeNode(check);
@@ -767,12 +775,12 @@ GameServer.prototype.splitCells = function(client) {
         //if (angle == 0) angle = Math.PI / 2;
         if (isNaN(angle)) angle = 0;
 
-        if (this.createPlayerCell(client, cell, angle, cell.getMass() / 2) == true)
+        if (this.splitPlayerCell(client, cell, angle, cell.getMass() / 2) == true)
             splitCells++;
     }
 };
 
-GameServer.prototype.createPlayerCell = function(client, parent, angle, mass) {
+GameServer.prototype.splitPlayerCell = function(client, parent, angle, mass) {
     // Returns boolean whether a cell has been split or not. You can use this in the future.
 
     if (client.cells.length >= this.config.playerMaxCells) {
@@ -1010,10 +1018,6 @@ GameServer.prototype.updateCells = function() {
         if (!cell) continue;
 
         // Recombining
-        if (cell.owner.cells.length == 1) {
-            cell.owner.mergeOverride = false;
-            cell.owner.mergeOverrideDuration = 0;
-        }
         cell.updateRemerge(this);
         
         // Mass decay

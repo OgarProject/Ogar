@@ -76,17 +76,17 @@ Cell.prototype.setMass = function (mass) {
         this.owner.massChanged();
 };
 
-Cell.prototype.addMass = function(n) {
+Cell.prototype.addMass = function (n) {
     // Check if the cell needs to autosplit before adding mass
-    if (this.getMass() > this.gameServer.config.playerMaxMass && this.owner.cells.length < this.gameServer.config.playerMaxCells) {
-        var splitMass = this.getMass() / 2;
-        var randomAngle = Math.random() * 6.28; // Get random angle
-        this.gameServer.createPlayerCell(this.owner, this, randomAngle, splitMass);
-    }
     var newMass = this.getMass() + n;
-    if (newMass > this.gameServer.config.playerMaxMass)
-        newMass = this.gameServer.config.playerMaxMass;
     this.setMass(newMass);
+    if (this.getMass() <= this.gameServer.config.playerMaxMass)
+        return;
+    if (this.owner.cells.length >= this.gameServer.config.playerMaxCells)
+        return;
+    var splitMass = this.getMass() / 2;
+    var randomAngle = Math.random() * 6.28; // Get random angle
+    this.gameServer.splitPlayerCell(this.owner, this, randomAngle, splitMass);
 };
 
 Cell.prototype.getSpeed = function() {

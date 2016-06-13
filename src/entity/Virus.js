@@ -80,13 +80,13 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 
     for (var k = 0; k < bigSplits.length; k++) {
         angle = Math.random() * 6.28; // Random directions
-        gameServer.createPlayerCell(client, consumer, angle, bigSplits[k]);
+        gameServer.splitPlayerCell(client, consumer, angle, bigSplits[k]);
     }
 
     // Splitting
     for (var k = 0; k < numSplits; k++) {
         angle = Math.random() * 6.28; // Random directions
-        gameServer.createPlayerCell(client, consumer, angle, splitMass);
+        gameServer.splitPlayerCell(client, consumer, angle, splitMass);
     }
 
     //// Prevent consumer cell from merging with other cells
