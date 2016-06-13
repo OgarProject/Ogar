@@ -80,7 +80,6 @@ function GameServer() {
         ejectMass: 13,              // Mass of ejected cells
         ejectMassCooldown: 3,       // min ticks between ejects
         ejectMassLoss: 15,          // Mass lost when ejecting cells
-        ejectSpeed: 100,            // Base speed of ejected cells
         ejectSpawnPlayer: 50,       // Chance for a player to spawn from ejected mass
         playerStartMass: 10,        // Starting mass of the player cell.
         playerBotGrowEnabled: 1,    // If 0, eating a cell with less than 17 mass while cell has over 625 wont gain any mass
