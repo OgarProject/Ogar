@@ -27,7 +27,7 @@ Now you can enable MultiOgar to be listed on server tracker.
 Just set serverTracker = 1 in the gameserver.ini and your server will appears
 on this page: http://ogar.mivabe.nl/master
 If you don't want to include your server to tracker list. 
-Just set serverTracker = 0 and server will not make ping to server tracker.
+Just set serverTracker = 0 and server will not ping the server tracker.
 
 
 ###Ogar clients
