@@ -318,6 +318,7 @@ GameServer.prototype.getRandomColor = function() {
             default: rgb = { r: v, g: p, b: q }; break
         }
     }
+    // check color range
     rgb.r = Math.max(rgb.r, 0);
     rgb.g = Math.max(rgb.g, 0);
     rgb.b = Math.max(rgb.b, 0);
@@ -325,9 +326,9 @@ GameServer.prototype.getRandomColor = function() {
     rgb.g = Math.min(rgb.g, 1);
     rgb.b = Math.min(rgb.b, 1);
     return {
-        r: rgb.r * 255 >> 0,
-        g: rgb.g * 255 >> 0,
-        b: rgb.b * 255 >> 0
+        r: (rgb.r * 255) >>> 0,
+        g: (rgb.g * 255) >>> 0,
+        b: (rgb.b * 255) >>> 0
     };
 };
 
