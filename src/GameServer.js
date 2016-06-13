@@ -81,7 +81,7 @@ function GameServer() {
         ejectMassCooldown: 3,       // min ticks between ejects
         ejectMassLoss: 15,          // Mass lost when ejecting cells
         ejectSpawnPlayer: 50,       // Chance for a player to spawn from ejected mass
-        playerStartMass: 10,        // Starting mass of the player cell.
+        playerStartMass: 10.24,     // Starting mass of the player cell.
         playerBotGrowEnabled: 1,    // If 0, eating a cell with less than 17 mass while cell has over 625 wont gain any mass
         playerMaxMass: 22500,       // Maximum mass a player can have
         playerMinMassEject: 32,     // Mass required to eject a cell
@@ -90,7 +90,7 @@ function GameServer() {
         playerRecombineTime: 30,    // Base amount of seconds before a cell is allowed to recombine
         playerMassAbsorbed: 1.0,    // Fraction of player cell's mass gained upon eating
         playerMassDecayRate: .002,  // Amount of mass lost per second
-        playerMinMassDecay: 9,      // Minimum mass for decay to occur
+        playerMinMassDecay: 10.24,  // Minimum mass for decay to occur
         playerMaxNickLength: 15,    // Maximum nick length
         playerSpeed: 1,             // Player speed multiplier
         playerDisconnectTime: 60,   // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
