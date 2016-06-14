@@ -113,10 +113,6 @@ Cell.prototype.getAge = function (tick) {
     return Math.max(0, tick - this.tickOfBirth);
 }
 
-Cell.prototype.getEatingRange = function() {
-    return 0; // 0 for ejected cells
-};
-
 Cell.prototype.getKiller = function() {
     return this.killedBy;
 };
@@ -182,7 +178,7 @@ Cell.prototype.setBoost = function (distance, angle) {
     this.setAngle(angle);
 };
 
-Cell.prototype.calcMoveBoost = function (config) {
+Cell.prototype.calcMoveBoost = function (border) {
     if (this.boostDistance <= 0) return;
     
     var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
@@ -190,74 +186,97 @@ Cell.prototype.calcMoveBoost = function (config) {
     speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
     this.boostDistance -= speed;
     if (this.boostDistance <= 1) this.boostDistance = 0;
-    var x = this.position.x + this.boostDirection.x * speed;
-    var y = this.position.y + this.boostDirection.y * speed;
+    var dx = this.boostDirection.x * speed;
+    var dy = this.boostDirection.y * speed;
 
-    // Border check - Bouncy physics
-    var radius = 40;
-    if (x < config.borderLeft && this.position.x != x) {
-        // Flip angle horizontally - Left side
-        this.setAngle(6.28 - this.getAngle());
-        if (x == this.position.x && y == this.position.y) {
-            // movement vector is missing
-            x = config.borderLeft;
-        } else {
-            var p = this.getLineIntersection(
-                this.position.x, this.position.y, x, y,
-                config.borderLeft, config.borderBottom,
-                config.borderLeft, config.borderTop);
-            x = p.x;
-            y = p.y;
-        }
-    }
-    if (x > config.borderRight && this.position.x != x) {
-        // Flip angle horizontally - Right side
-        this.setAngle(6.28 - this.getAngle());
-        if (x == this.position.x && y == this.position.y) {
-            // movement vector is missing
-            x = config.borderRight;
-        } else {
-            var p = this.getLineIntersection(
-                this.position.x, this.position.y, x, y,
-                config.borderRight, config.borderBottom,
-                config.borderRight, config.borderTop);
-            x = p.x;
-            y = p.y;
-        }
-    }
-    if (y < config.borderTop && this.position.y != y) {
-        // Flip angle vertically - Top side
-        this.setAngle((this.getAngle() <= 3.14) ? 3.14 - this.getAngle() : 9.42 - this.getAngle());
-        if (x == this.position.x && y == this.position.y) {
-            // movement vector is missing
-            y = config.borderTop;
-        } else {
-            var p = this.getLineIntersection(
-                this.position.x, this.position.y, x, y,
-                config.borderRight, config.borderTop,
-                config.borderLeft, config.borderTop);
-            x = p.x;
-            y = p.y;
-        }
-    }
-    if (y > config.borderBottom && this.position.y != y) {
-        // Flip angle vertically - Bottom side
-        this.setAngle((this.getAngle() <= 3.14) ? 3.14 - this.getAngle() : 9.42 - this.getAngle());
-        if (x == this.position.x && y == this.position.y) {
-            // movement vector is missing
-            y = config.borderBottom;
-        } else {
-            var p = this.getLineIntersection(
-                this.position.x, this.position.y, x, y,
-                config.borderRight, config.borderBottom,
-                config.borderLeft, config.borderBottom);
-            x = p.x;
-            y = p.y;
-        }
-    }
-    this.position.x = x;
-    this.position.y = y;
+    // Border bouncy physics
+    var r = this.getSize() / 2;
+    var borderCell = {
+        left: border.left + r,
+        top: border.top + r,
+        right: border.right - r,
+        bottom: border.bottom - r
+    };
+    this.moveReflected(dx, dy, borderCell);
 }
+
+Cell.prototype.moveReflected = function (dx, dy, border) {
+    var cx = this.position.x;
+    var cy = this.position.y;
+    var x = cx + dx;
+    var y = cy + dy;
+    if (isNaN(x) || isNaN(y)) {
+        // something is going wrong
+        // TODO: border center?
+        console.log("\u001B[1m\u001B[31m[Error] Cell.moveReflected failed (NaN)");
+        return;
+    }
+    if (dx == 0 && dy == 0) return; // zero move :)
+    
+    var pleft = x >= border.left ? null : this.getLineIntersection(
+        cx, cy, x, y,
+        border.left, border.top, border.left, border.bottom);
+    var pright = x <= border.right ? null : this.getLineIntersection(
+        cx, cy, x, y,
+        border.right, border.top, border.right, border.bottom);
+    var ptop = y >= border.top ? null : this.getLineIntersection(
+        cx, cy, x, y,
+        border.left, border.top, border.right, border.top);
+    var pbottom = y <= border.bottom ? null : this.getLineIntersection(
+        cx, cy, x, y,
+        border.left, border.bottom, border.right, border.bottom);
+    var ph = pleft != null ? pleft : pright;
+    var pv = ptop != null ? ptop : pbottom;
+    var p = ph != null ? ph : pv;
+    if (p == null) {
+        // inside border
+        this.position.x = x;
+        this.position.y = y;
+        return;
+    }
+    if (ph && pv) {
+        // two border lines intersection => get nearest point
+        var hdx = ph.x - cx;
+        var hdy = ph.y - cx;
+        var vdx = pv.x - cx;
+        var vdy = pv.y - cx;
+        if (hdx * hdx + hdy * hdy < vdx * vdx + vdy * vdy)
+            p = ph;
+        else
+            p = pv;
+    }
+    var angle = this.getAngle();
+    if (p == ph) {
+        // left/right border reflection
+        angle = 2 * Math.PI - angle;
+    } else {
+        // top/bottom border reflection
+        angle = angle <= Math.PI ? Math.PI - angle : 3 * Math.PI - angle;
+    }
+    this.setAngle(angle);
+    this.position.x = p.x;
+    this.position.y = p.y;
+    // calculate rest of distance
+    var lx = p.x - cx;
+    var ly = p.y - cy;
+    var ldx = dx - lx;
+    var ldy = dy - ly;
+    var l = Math.sqrt(ldx * ldx + ldy * ldy);
+    this.boostDistance += l;
+};
+
+Cell.prototype.checkBorder = function (border) {
+    var r = this.getSize() / 2;
+    if (this.position.x < border.left + r)
+        this.position.x = border.left + r;
+    else if (this.position.x > border.right - r)
+        this.position.x = border.right - r;
+    if (this.position.y < border.top + r)
+        this.position.y = border.top + r;
+    else if (this.position.y > border.bottom - r)
+        this.position.y = border.bottom - r;
+};
+
 
 // Override these
 
@@ -293,11 +312,13 @@ Cell.prototype.getLineIntersection = function (p0x, p0y, p1x, p1y, p2x, p2y, p3x
     var z2 = p3x - p2x;
     var w1 = p1y - p0y;
     var w2 = p3y - p2y;
-    var k2 = (z1 * (p2y - p0y) + w1 * (p0x - p2x)) / (w1 * z2 - z1 * w2);
-    return {
-        x: p2x + z2 * k2,
-        y: p2y + w2 * k2
-    };
+    var k1 = w1 * z2 - z1 * w2;
+    if (k1 == 0) return null;
+    var k2 = (z1 * (p2y - p0y) + w1 * (p0x - p2x)) / k1;
+    var px = p2x + z2 * k2;
+    var py = p2y + w2 * k2;
+    if (isNaN(px) || isNaN(py)) return null;
+    return { x: px, y: py };
 }
 
 Cell.prototype.abs = function(x) {

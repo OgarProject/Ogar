@@ -83,17 +83,14 @@ PacketHandler.prototype.handleMessage = function(message) {
                 // protocol late 5, 6, 7
                 client.mouse.x = reader.readInt32() - client.scrambleX;
                 client.mouse.y = reader.readInt32() - client.scrambleY;
-                client.movePacketTriggered = true;
             } else if (message.length == 9) {
                 // early protocol 5
                 client.mouse.x = reader.readInt16() - client.scrambleX;
                 client.mouse.y = reader.readInt16() - client.scrambleY;
-                client.movePacketTriggered = true;
             } else if (message.length == 21) {
                 // protocol 4
                 client.mouse.x = reader.readDouble() - client.scrambleX;
                 client.mouse.y = reader.readDouble() - client.scrambleY;
-                client.movePacketTriggered = true;
                 if (isNaN(client.mouse.x))
                     client.mouse.x = client.centerPos.x;
                 if (isNaN(client.mouse.y))

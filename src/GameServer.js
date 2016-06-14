@@ -349,11 +349,11 @@ GameServer.prototype.addNode = function(node) {
     // Add to visible nodes
     for (var i = 0; i < this.clients.length; i++) {
         var client = this.clients[i].playerTracker;
-        if (client == null) continue;
+        if (client == null || !client.socket.isConnected) continue;
 
         // client.nodeAdditionQueue is only used by human players, not bots
         // for bots it just gets collected forever, using ever-increasing amounts of memory
-        if ('_socket' in client.socket && node.visibleCheck(client.viewBox)) {
+        if (node.visibleCheck(client.viewBox)) {
             client.nodeAdditionQueue.push(node);
         }
     }
@@ -612,14 +612,6 @@ GameServer.prototype.abs = function (x) {
 GameServer.prototype.checkCellCollision = function(cell, check) {
     // Returns manifold which contains info about cell's collisions. 
     // Returns null if there is no collision
-    
-    // do not affect splitted cell for 1 sec
-    if (cell.boostDistance > 0 || check.boostDistance > 0) {
-        var tick = this.getTick();
-        if (cell.getAge(tick) < 15 || check.getAge(tick) < 15)
-            return null;
-    }
-
     var r = cell.getSize() + check.getSize();
     var dx = check.position.x - cell.position.x;
     var dy = check.position.y - cell.position.y;
@@ -643,10 +635,11 @@ GameServer.prototype.resolveCollision = function (manifold) {
     // distance from cell1 to cell2
     var d = Math.sqrt(manifold.squared);
     if (d <= 0) return;
+    var invd = 1 / d;
     
     // normal
-    var nx = manifold.dx / d;
-    var ny = manifold.dy / d;
+    var nx = manifold.dx * invd;
+    var ny = manifold.dy * invd;
     
     // body penetration distance
     var penetration = manifold.r - d;
@@ -659,8 +652,9 @@ GameServer.prototype.resolveCollision = function (manifold) {
     // body impulse
     var totalMass = manifold.cell1.getMass() + manifold.cell2.getMass();
     if (totalMass <= 0) return;
-    var impulse1 = manifold.cell2.getMass() / totalMass;
-    var impulse2 = manifold.cell1.getMass() / totalMass;
+    var invTotalMass = 1 / totalMass;
+    var impulse1 = manifold.cell2.getMass() * invTotalMass;
+    var impulse2 = manifold.cell1.getMass() * invTotalMass;
     
     // apply extrusion force
     manifold.cell1.position.x -= px * impulse1;
@@ -669,60 +663,165 @@ GameServer.prototype.resolveCollision = function (manifold) {
     manifold.cell2.position.y += py * impulse2;
 };
 
+GameServer.prototype.processCollision = function (manifold) {
+    var minCell = manifold.cell1;
+    var maxCell = manifold.cell2;
+    if (minCell.getSize() > maxCell.getSize()) {
+        minCell = manifold.cell2;
+        maxCell = manifold.cell1;
+    }
+    // check if any cell already eaten
+    if (minCell.inRange) return;
+    if (maxCell.inRange) return;
+    
+    if (minCell.owner && minCell.owner == maxCell.owner) {
+        // collision owned/owned => ignore or resolve or remerge
+        
+        var tick = this.getTick();
+        if ((minCell.boostDistance > 0 && minCell.getAge(tick) < 15) ||
+            (maxCell.boostDistance > 0 && maxCell.getAge(tick) < 15)) {
+            // just splited => ignore
+            return;
+        }
+        if (!minCell.owner.mergeOverride) {
+            // not force remerge => check if can remerge
+            if (!minCell.canRemerge() || !maxCell.canRemerge()) {
+                // cannot remerge => resolve
+                this.resolveCollision(manifold);
+                return;
+            }
+        }
+    } else {
+        // collision owned/enemy => check if can eat
+        
+        // Can't eat self ejected mass because it still in boost mode (vanilla)
+        //if (minCell.ejector == maxCell && minCell.boostDistance > 0)
+        //    return;
+        
+        // Team check
+        if (this.gameMode.haveTeams) {
+            if (minCell.owner && maxCell.owner && minCell.owner.getTeam() == maxCell.owner.getTeam()) {
+                // cannot eat team member
+                this.resolveCollision(manifold);
+                return;
+            }
+        }
+        // Size check
+        if (minCell.getSize() * 1.15 > maxCell.getSize()) {
+            // too large => can't eat
+            return;
+        }
+    }
+    // check distance
+    var eatingRange = maxCell.getSize() - minCell.getSize() / Math.PI;
+    //var d = Math.sqrt(manifold.squared);    // distance
+    //if (d >= eatingRange) {
+    if (manifold.squared >= eatingRange * eatingRange) {
+        // too far => can't eat
+        return;
+    }
+    // Now maxCell can eat minCell
+    minCell.inRange = true;
+    
+    // Disable mergeOverride on the last merging cell
+    // We need to disable it before onCosume to prevent merging loop
+    // (onConsume may cause split for big mass)
+    if (minCell.owner != null && minCell.owner.cells.length <= 2) {
+        minCell.owner.mergeOverride = false;
+    }
+    
+    // Consume effect
+    minCell.onConsume(maxCell, this);
+    
+    // Remove cell
+    minCell.setKiller(maxCell);
+    this.removeNode(minCell);
+};
+
 GameServer.prototype.updateMoveEngine = function() {
+    var border = {
+        left: this.config.borderLeft,
+        top: this.config.borderTop,
+        right: this.config.borderRight,
+        bottom: this.config.borderBottom
+    };
     // Move player cells
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
 
-        // Sort client's cells by ascending mass
-        var sorted = [];
-        for (var i = 0; i < client.cells.length; i++) {
-            var node = client.cells[i];
-            if (node == null) continue;
-            sorted.push(node);
-        }
-        
-        sorted.sort(function(a, b) {
-            return b.getMass() - a.getMass();
+        client.cells.sort(function (a, b) {
+            return a.getSize() - b.getSize();
         });
+        var sorted = client.cells;
         
-        // Go cell by cell
-        for (var i = 0; i < sorted.length; i++) {
-            sorted[i].calcMove(client.mouse.x, client.mouse.y, this);
-        }
-        for (var i = 0; i < sorted.length; i++) {
-            sorted[i].calcMoveBoost(this.config);
-        }
+        // Move
         for (var i = 0; i < sorted.length; i++) {
             var cell = sorted[i];
-            
-            // Collision with own cells
-            cell.collision(this);
-
-            // Cell eating
-            this.cellEating(cell);
+            cell.calcMove(client.mouse.x, client.mouse.y, this);
+            cell.checkBorder(border);
+            cell.calcMoveBoost(border);
+        }
+        
+        // Scan for collision and process it
+        for (var i = 0; i < sorted.length; i++) {
+            var cell1 = sorted[i];
+            // check collision owned/owned
+            for (var j = 0; j < client.cells.length; j++) {
+                var cell2 = client.cells[j];
+                if (cell2 == null || cell2.inRange || cell1 == cell2)
+                    continue;
+                
+                var manifold = this.checkCellCollision(cell1, cell2);
+                if (manifold == null) continue;
+                this.processCollision(manifold);
+            }
+            // check collision owned/enemy
+            for (var j = 0; j < client.collidingNodes.length; j++) {
+                var cell2 = client.collidingNodes[j];
+                if (cell2 == null || cell2.inRange || cell1 == cell2)
+                    continue;
+                
+                // TODO: remove 
+                // Added skip to comply with oldstyle collision check
+                // If we remove it virus can eat player cell, so it should be fixed
+                if (cell1.getSize() < cell2.getSize()) continue;
+                
+                var manifold = this.checkCellCollision(cell1, cell2);
+                if (manifold == null) continue;
+                this.processCollision(manifold);
+            }
+            this.gameMode.onCellMove(cell1, this);
         }
     }
-
 
     // A system to move cells not controlled by players (ex. viruses, ejected mass)
     for (var i = 0; i < this.movingNodes.length; i++) {
         var check = this.movingNodes[i];
-
+        
         // Recycle unused nodes
         while (check == null && i < this.movingNodes.length) {
             // Remove moving cells that are undefined
             this.movingNodes.splice(i, 1);
             check = this.movingNodes[i];
         }
-
+        
         if (i >= this.movingNodes.length)
             continue;
-
+        
         if (check.boostDistance > 0) {
             check.onAutoMove(this);
             // If the cell has enough move ticks, then move it
-            check.calcMoveBoost(this.config);
+            check.calcMoveBoost(border);
+            //var cell1 = check;
+            //// check collision for ejected/ejected
+            //for (var j = 0; j < this.movingNodes.length; j++) {
+            //    var cell2 = this.movingNodes[j];
+            //    if (cell2 == null) continue;
+            //    if (cell1 == cell2) continue; // ignore self
+            //    var manifold = this.checkCellCollision(cell1, cell2);
+            //    if (manifold == null) continue;
+            //        this.resolveCollision(manifold);
+            //}
         } else {
             // Auto move is done
             check.moveDone(this);
@@ -732,29 +831,6 @@ GameServer.prototype.updateMoveEngine = function() {
                 this.movingNodes.splice(index, 1);
             }
         }
-    }
-};
-
-GameServer.prototype.cellEating = function(cell) {
-    // Check if cells nearby
-    var list = this.getCellsInRange(cell);
-    for (var j = 0; j < list.length; j++) {
-        var check = list[j];
-        
-        // Disable mergeOverride on the last merging cell
-        // We need to disable it before onCosume to prevent merging loop
-        // (onConsume may cause split for big mass)
-        if (check.owner != null && check.owner.cells.length <= 2) {
-            cell.owner.mergeOverride = false;
-            cell.owner.mergeOverrideDuration = 0;
-        }
-
-        // Consume effect
-        check.onConsume(cell, this);
-        
-        // Remove cell
-        check.setKiller(cell);
-        this.removeNode(check);
     }
 };
 
@@ -875,107 +951,6 @@ GameServer.prototype.shootVirus = function(parent) {
     // Add to moving cells list
     this.addNode(newVirus);
     this.setAsMovingNode(newVirus);
-};
-
-GameServer.prototype.getCellsInRange = function(cell) {
-    var list = [];
-    var squareR = cell.getSquareSize(); // Get cell squared radius
-
-    // Loop through all cells that are colliding with the player's cells
-    for (var i = 0; i < cell.owner.collidingNodes.length; i++) {
-        var check = cell.owner.collidingNodes[i];
-        if (check === null) continue;
-
-        // if something already collided with this cell, don't check for other collisions
-        if (check.inRange)
-            continue;
-
-        // Can't eat itself
-        if (cell.nodeId == check.nodeId)
-            continue;
-
-        // Can't eat self ejected mass, because it still in boost mode
-        if (check.ejector == cell && check.boostDistance > 0)
-            continue;
-        
-        // Eating range
-        var xs = cell.position.x - check.position.x,
-            ys = cell.position.y - check.position.y,
-            sqDist = xs * xs + ys * ys,
-            dist = Math.sqrt(sqDist);
-
-        // Use a more reliant version for pellets
-        // Might be a bit slower but it can be eaten with any mass
-        if (check.cellType == 1) {
-            if (dist + check.getSize() / 3.14 > cell.getSize()) {
-                // Too far away
-                continue;
-            }
-            else {
-                // Add to list of cells nearby
-                list.push(check);
-    
-                // Something is about to eat this cell; no need to check for other collisions with it
-                check.inRange = true;
-                continue; // No need to look for type and calculate if eaten again
-            }
-        }
-
-        // Cell type check - Cell must be bigger than this number times the mass of the cell being eaten
-        var multiplier = 1.3;
-
-        switch (check.getType()) {
-            case 1: // Food cell
-                list.push(check);
-                check.inRange = true; // skip future collision checks for this food
-                continue;
-            case 0: // Players
-                // Can't eat self if it's not time to recombine yet
-                if (check.owner == cell.owner) {
-                    // If one of cells can't merge
-                    if (!cell.canRemerge() || !check.canRemerge()) {
-                        // Check if merge command was triggered on this client
-                        if (!cell.owner.mergeOverride) continue;
-                    }
-
-                    multiplier = 1.00;
-                }
-
-                // Can't eat team members
-                if (this.gameMode.haveTeams) {
-                    if (!check.owner) { // Error check
-                        continue;
-                    }
-
-                    if ((check.owner != cell.owner) && (check.owner.getTeam() == cell.owner.getTeam())) {
-                        continue;
-                    }
-                }
-                break;
-            default:
-                break;
-        }
-
-        // Make sure the cell is big enough to be eaten.
-        if ((check.getMass() * multiplier) > cell.getMass()) {
-            continue;
-        }
-        
-        // Eating range = radius of eating cell / 2 - 31% of the radius of the cell being eaten
-        var eatingRange = cell.getSize() - check.getEatingRange();
-
-        if (dist < eatingRange) {
-            // Add to list of cells nearby
-            list.push(check);
-
-            // Something is about to eat this cell; no need to check for other collisions with it
-            check.inRange = true;
-        } else {
-            // Not in eating range
-            continue;
-        }
-    }
-    return list;
 };
 
 GameServer.prototype.getNearestVirus = function(cell) {

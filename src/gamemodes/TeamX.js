@@ -239,7 +239,7 @@ TeamX.prototype.onServerInit = function(gameServer) {
                 var ys = Math.pow(check.position.y - cell.position.y, 2);
                 var dist = Math.sqrt(xs + ys);
 
-                var eatingRange = cell.getSize() - check.getEatingRange(); // Eating range = radius of eating cell + 40% of the radius of the cell being eaten
+                var eatingRange = cell.getSize() - check.getSize() / Math.PI; // Eating range = radius of eating cell + 40% of the radius of the cell being eaten
                 if (dist > eatingRange) {
                     // Not in eating range
                     continue;
@@ -339,10 +339,6 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
 }
 
 MotherCell.prototype = new Cell(); // Base
-
-MotherCell.prototype.getEatingRange = function() {
-    return this.getSize() * .5;
-};
 
 MotherCell.prototype.update = function(gameServer) {
     // Add mass

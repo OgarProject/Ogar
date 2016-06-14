@@ -22,10 +22,6 @@ function PlayerTracker(gameServer, socket) {
         x: 0,
         y: 0
     };
-    this.shouldMoveCells = true; // False if the mouse packet wasn't triggered
-    this.notMoved = false; // If one of cells have been moved after splitting this is triggered
-    this.movePacketTriggered = false;
-    this.mouseCells = []; // For individual cell movement
     this.tickLeaderboard = 0;
     this.tickViewBox = 0;
 
@@ -174,13 +170,6 @@ PlayerTracker.prototype.update = function () {
     // First reset colliding nodes
     this.collidingNodes = [];
     
-    // Move packet update
-    if (this.movePacketTriggered) {
-        this.movePacketTriggered = false;
-        this.shouldMoveCells = true;
-    } else {
-        this.shouldMoveCells = false;
-    }
     // Actions buffer (So that people cant spam packets)
     if (this.socket.packetHandler.pressSpace) { // Split cell
         if (!this.mergeOverride) this.gameServer.gameMode.pressSpace(this.gameServer, this);
@@ -439,11 +428,11 @@ PlayerTracker.prototype.checkBorderPass = function() {
     // A check while in free-roam mode to avoid player going into nothingness
     if (this.centerPos.x < this.gameServer.config.borderLeft)
         this.centerPos.x = this.gameServer.config.borderLeft;
-    if (this.centerPos.x > this.gameServer.config.borderRight)
+    else if (this.centerPos.x > this.gameServer.config.borderRight)
         this.centerPos.x = this.gameServer.config.borderRight;
     if (this.centerPos.y < this.gameServer.config.borderTop)
         this.centerPos.y = this.gameServer.config.borderTop;
-    if (this.centerPos.y > this.gameServer.config.borderBottom)
+    else if (this.centerPos.y > this.gameServer.config.borderBottom)
         this.centerPos.y = this.gameServer.config.borderBottom;
 };
 

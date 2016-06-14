@@ -78,7 +78,7 @@ Experimental.prototype.spawnMotherCell = function(gameServer) {
         }
 
         // Spawn if no cells are colliding
-        var m = new MotherCell(gameServer.getNextNodeId(), null, pos, this.motherCellMass);
+        var m = new MotherCell(gameServer.getNextNodeId(), null, pos, this.motherCellMass, gameServer);
         gameServer.addNode(m);
     }
 };
@@ -156,10 +156,6 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
 
 MotherCell.prototype = new Cell(); // Base
 
-MotherCell.prototype.getEatingRange = function() {
-    return this.getSize() / 3.14;
-};
-
 MotherCell.prototype.update = function(gameServer) {
     if (Math.random() * 100 > 97) {
         var maxFood = Math.random() * 2; // Max food spawned per tick
@@ -208,20 +204,30 @@ MotherCell.prototype.checkEat = function(gameServer) {
     }
 };
 
-MotherCell.prototype.checkEatCell = function(check, safeMass, gameServer) {
+MotherCell.prototype.checkEatCell = function (check, safeMass, gameServer) {
     if ((check.getType() == 1) || (check.getMass() > safeMass)) {
         // Too big to be consumed or check is a food cell
         return;
     }
-
+    
     // Very simple yet very powerful
-    var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
-    var allowDist = this.getSize() - check.getEatingRange();
-    if (dist < allowDist) {
-        // Eat it
-        gameServer.removeNode(check);
-        this.setMass(this.getMass() + check.getMass());
-    }
+    //var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
+    //var allowDist = this.getSize() - check.getEatingRange();
+    //if (dist < allowDist) {
+    //    // Eat it
+    //    gameServer.removeNode(check);
+    //    this.setMass(this.getMass() + check.getMass());
+    //}
+    if (this.getSize() <= check.getSize() * 1.15)
+        return;
+    var eatingRange = this.getSize() - check.getSize() / Math.PI;
+    var dx = this.position.x - check.position.x;
+    var dy = this.position.y - check.position.y;
+    if (dx * dx + dy * dy >= eatingRange * eatingRange)
+        return
+    // Eat it
+    gameServer.removeNode(check);
+    this.setMass(this.getMass() + check.getMass());
 };
 
 MotherCell.prototype.abs = function(n) {
