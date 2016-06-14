@@ -82,28 +82,45 @@ BotPlayer.prototype.decide = function(cell) {
         var influence = 0;
         if (check.cellType == 0) {
             // Player cell
-            if (this.gameServer.gameMode.haveTeams && (cell.owner.team == check.owner.team)) influence = 0; // Same team cell
-            else if (cell.getMass() / 1.3 > check.getMass()) influence = check.getSize() * 2.5; // Can eat it
-            else if (check.getMass() / 1.3 > cell.getMass()) influence = -check.getSize(); // Can eat me
+            if (this.gameServer.gameMode.haveTeams && (cell.owner.team == check.owner.team)) {
+                // Same team cell
+                influence = 0;
+            }
+            else if (cell.getSize() > check.getSize() * 1.15) {//cell.getMass() / 1.3 > check.getMass()) {
+                // Can eat it
+                influence = check.getSize() * 2.5;
+            }
+            else if (check.getSize() >= cell.getSize() * 1.15) {//check.getMass() / 1.3 > cell.getMass()) {
+                // Can eat me
+                influence = -check.getSize();
+            }
         } else if (check.cellType == 1) {
             // Food
             influence = 1;
         } else if (check.cellType == 2) {
             // Virus
-            if (cell.getMass() / 1.3 > check.getMass()) {
+            if (cell.getSize() > check.getSize() * 1.15) {//cell.getMass() / 1.3 > check.getMass()) {
                 // Can eat it
-                if (this.cells.length == this.gameServer.config.playerMaxCells) influence = check.getSize() * 2.5; // Won't explode
-                else influence = -1; // Can explode
+                if (this.cells.length == this.gameServer.config.playerMaxCells) {
+                    // Won't explode
+                    influence = check.getSize() * 2.5;
+                }
+                else {
+                    // Can explode
+                    influence = -1;
+                }
             }
         } else if (check.cellType == 3) {
             // Ejected mass
-            if (cell.getMass() / 1.3 > check.getMass()) influence = check.getSize();
+            if (cell.getSize() > check.getSize() * 1.15)// cell.getMass() / 1.3 > check.getMass())
+                influence = check.getSize();
         } else {
             influence = check.getSize(); // Might be TeamZ
         }
 
         // Apply influence if it isn't 0 or my cell
-        if (influence == 0 || cell.owner == check.owner) continue;
+        if (influence == 0 || cell.owner == check.owner)
+            continue;
         
         // Calculate separation between cell and check
         var checkPos = check.position;
@@ -125,8 +142,12 @@ BotPlayer.prototype.decide = function(cell) {
         var force = displacement.normalize().scale(influence);
 
         // Splitting conditions
-        if (check.cellType == 0 && cell.getMass() / 2.6 > check.getMass() && cell.getMass() / 5 < check.getMass() &&
-            (!split) && this.splitCooldown == 0 && this.cells.length < 3) {
+        if (check.cellType == 0 && 
+            cell.getMass() / 2.6 > check.getMass() && 
+            cell.getMass() / 5 < check.getMass() &&
+            (!split) && 
+            this.splitCooldown == 0 && 
+            this.cells.length < 3) {
                 
             var endDist = Math.max(this.splitDistance(cell), cell.getSize() * 4);
             
