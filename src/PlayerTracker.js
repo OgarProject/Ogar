@@ -148,7 +148,7 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.freeRoam = false;
 
     // some old clients don't understand ClearAll message
-    // so we will not perform cleanup
+    // so we will not perform cleanup for old protocol
     // to allow them to receive remove notifications
     if (this.socket.packetHandler.protocol >= 6) {
         this.socket.sendPacket(new Packet.ClearAll());
@@ -191,21 +191,24 @@ PlayerTracker.prototype.update = function () {
             continue;
         }
         if (newVisible[newIndex].nodeId > this.visibleNodes[oldIndex].nodeId) {
-            if (this.visibleNodes[oldIndex].isRemoved)
-                eatNodes.push(this.visibleNodes[oldIndex]);
+            var node = this.visibleNodes[oldIndex];
+            if (node.isRemoved)
+                eatNodes.push(node);
             else
-                deleteNodes.push(this.visibleNodes[oldIndex]);
+                deleteNodes.push(node);
             oldIndex++;
             continue;
         }
         newIndex++;
         oldIndex++;
     }
-    for (; oldIndex < this.visibleNodes.length; oldIndex++) {
-        if (this.visibleNodes[oldIndex].isRemoved)
-            eatNodes.push(this.visibleNodes[oldIndex]);
-        else
-            deleteNodes.push(this.visibleNodes[oldIndex]);
+    for (; oldIndex < this.visibleNodes.length; ) {
+        var node = this.visibleNodes[oldIndex];
+        if (node.isRemoved)
+            eatNodes.push(node);
+        else 
+            deleteNodes.push(node);
+        oldIndex++;
     }
     this.visibleNodes = newVisible;
 
@@ -386,10 +389,4 @@ PlayerTracker.prototype.sendPosPacket = function() {
         this.centerPos.y,
         this.getScale()
     ));
-};
-
-PlayerTracker.prototype.getAngle = function(x1, y1, x2, y2) {
-    var deltaY = y1 - y2;
-    var deltaX = x1 - x2;
-    return Math.atan2(deltaX, deltaY);
 };

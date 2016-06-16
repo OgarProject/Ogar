@@ -24,5 +24,5 @@ SetBorder.prototype.build = function(protocol) {
         if (name == null) name = "";
         writer.writeStringZeroUtf8(name);
     }
-    return writer.ToBuffer();
+    return writer.toBuffer();
 };

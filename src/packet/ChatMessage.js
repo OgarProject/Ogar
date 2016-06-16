@@ -40,5 +40,5 @@ ChatMessage.prototype.build = function (protocol) {
         writer.writeStringZeroUtf8(name);
         writer.writeStringZeroUtf8(text);
     }
-    return writer.ToBuffer();
+    return writer.toBuffer();
 };

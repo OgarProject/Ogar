@@ -38,7 +38,7 @@ UpdateLeaderboard.prototype.build48 = function (protocol) {
         else
             writer.writeStringZeroUtf8(name);
     }
-    return writer.ToBuffer();
+    return writer.toBuffer();
 };
 
 // (FFA) Leaderboard Update
@@ -63,7 +63,7 @@ UpdateLeaderboard.prototype.build49 = function (protocol) {
         else
             writer.writeStringZeroUtf8(name);
     }
-    return writer.ToBuffer();
+    return writer.toBuffer();
 };
 
 // (Team) Leaderboard Update
@@ -82,5 +82,5 @@ UpdateLeaderboard.prototype.build50 = function (protocol) {
         
         writer.writeFloat(value);                // isMe flag (previously cell ID)
     }
-    return writer.ToBuffer();
+    return writer.toBuffer();
 };
