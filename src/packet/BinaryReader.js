@@ -1,10 +1,12 @@
-﻿/*
-* Simple BinaryReader is a minimal tool to read binary stream.
-* Useful for binary deserialization.
-*
-* Copyright (c) 2016 Barbosik https://github.com/Barbosik
-* License: Apache License, Version 2.0
-*/
+﻿'use strict';
+/*
+ * Simple BinaryReader is a minimal tool to read binary stream.
+ * Useful for binary deserialization.
+ *
+ * Copyright (c) 2016 Barbosik https://github.com/Barbosik
+ * License: Apache License, Version 2.0
+ */
+
 function BinaryReader(buffer) {
     this._offset = 0;
     this._buffer = new Buffer(buffer);

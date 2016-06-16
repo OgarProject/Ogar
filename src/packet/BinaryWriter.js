@@ -1,10 +1,12 @@
-﻿/*
-* Simple BinaryWriter is a minimal tool to write binary stream with unpredictable size.
-* Useful for binary serialization.
-*
-* Copyright (c) 2016 Barbosik https://github.com/Barbosik
-* License: Apache License, Version 2.0
-*/
+﻿'use strict';
+/*
+ * Simple BinaryWriter is a minimal tool to write binary stream with unpredictable size.
+ * Useful for binary serialization.
+ *
+ * Copyright (c) 2016 Barbosik https://github.com/Barbosik
+ * License: Apache License, Version 2.0
+ */
+
 function BinaryWriter() {
     this._writers = [];
     this._length = 0;
