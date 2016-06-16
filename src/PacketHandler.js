@@ -51,9 +51,9 @@ PacketHandler.prototype.handleMessage = function(message) {
         // Send welcome message
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
         if (this.gameServer.config.serverChat == 0)
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server chat is disabled.");
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
         if (this.protocol < 4) {
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING Your client has protocol error!");
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Your client has protocol error!");
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Client sends invalid protocol version "+this.protocol);
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Server assumes it as protocol 4");
         }        
