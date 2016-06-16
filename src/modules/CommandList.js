@@ -46,7 +46,6 @@ Commands.list = {
         console.log("[Console] playerlist                   : get list of players and bots");
         console.log("[Console] pause                        : pause game , freeze all cells");
         console.log("[Console] reload                       : reload config");
-        console.log("[Console] resetantiteam [PlayerID]     : reset anti-team effect on client");
         console.log("[Console] status                       : get server status");
         console.log("[Console] tp [PlayerID] [X] [Y]        : teleport player to specified location");
         console.log("[Console] virus [X] [Y] [mass]         : spawn virus at a specified Location");
@@ -107,6 +106,7 @@ Commands.list = {
         gameServer.gameMode.specByLeaderboard = false;
         gameServer.gameMode.updateLB = function(gameServer) {
             gameServer.leaderboard = newLB;
+            gameServer.leaderboardType = 48;
         };
         console.log("[Console] Successfully changed leaderboard values");
     },
@@ -224,7 +224,7 @@ Commands.list = {
                 for (var j = 0; j < len; j++) {
                     gameServer.removeNode(client.cells[0]);
                 }
-                client.socket.close();
+                client.socket.close(1000, "Kicked from server");
                 console.log("[Console] Kicked " + client.name);
                 break;
             }
@@ -237,7 +237,7 @@ Commands.list = {
                 for (var j = 0; j < len; j++) {
                     gameServer.removeNode(client.cells[0]);
                 }
-                client.socket.close();
+                client.socket.close(1000, "Kicked from server");
                 console.log("[Console] Kicked " + client.name);
         }
     },
@@ -291,7 +291,7 @@ Commands.list = {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
-                    client.cells[j].mass = amount;
+                    client.cells[j].setMass(amount);
                 }
 
                 console.log("[Console] Set mass of " + client.name + " to " + amount);
@@ -383,20 +383,30 @@ Commands.list = {
     },
     playerlist: function(gameServer, split) {
         console.log("[Console] Showing " + gameServer.clients.length + " players: ");
-        console.log(" ID         | IP              | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
-        console.log(fillChar('', '-', ' ID         | IP              |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
+        console.log(" ID     | IP              | P | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
+        console.log(fillChar('', '-', ' ID     | IP              |   |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
         for (var i = 0; i < gameServer.clients.length; i++) {
-            var client = gameServer.clients[i].playerTracker;
+            var socket = gameServer.clients[i];
+            var client = socket.playerTracker;
 
             // ID with 3 digits length
-            var id = fillChar((client.pID), ' ', 10, true);
+            var id = fillChar((client.pID), ' ', 6, true);
 
             // Get ip (15 digits length)
-            var ip = "BOT";
-            if (typeof gameServer.clients[i].remoteAddress != 'undefined') {
-                ip = gameServer.clients[i].remoteAddress;
+            var ip = "[BOT]";
+            if (socket.isConnected != null) {
+                if (socket.isConnected) {
+                    ip = socket.remoteAddress;
+                } else {
+                    ip = "[DISCONNECTED]";
+                }
             }
             ip = fillChar(ip, ' ', 15);
+            var protocol = gameServer.clients[i].packetHandler.protocol;
+            if (protocol == null)
+                protocol = "?"
+
+
 
             // Get name and data
             var nick = '',
@@ -413,17 +423,17 @@ Commands.list = {
                 }
                 nick = (nick == "") ? "An unnamed cell" : nick;
                 data = fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(" " + id + " | " + ip + " | " + data);
+                console.log(" " + id + " | " + ip + " | " + protocol + " | " + data);
             } else if (client.cells.length > 0) {
                 nick = fillChar((client.name == "") ? "An unnamed cell" : client.name, ' ', gameServer.config.playerMaxNickLength);
                 cells = fillChar(client.cells.length, ' ', 5, true);
-                score = fillChar(client.getScore(true), ' ', 6, true);
+                score = fillChar(client.getScore() >> 0, ' ', 6, true);
                 position = fillChar(client.centerPos.x >> 0, ' ', 5, true) + ', ' + fillChar(client.centerPos.y >> 0, ' ', 5, true);
-                console.log(" " + id + " | " + ip + " | " + nick + " | " + cells + " | " + score + " | " + position);
+                console.log(" " + id + " | " + ip + " | " + protocol + " | " + nick + " | " + cells + " | " + score + " | " + position);
             } else {
                 // No cells = dead player or in-menu
                 data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(" " + id + " | " + ip + " | " + data);
+                console.log(" " + id + " | " + ip + " | " + protocol + " | " + data);
             }
         }
     },
@@ -436,29 +446,6 @@ Commands.list = {
         gameServer.loadConfig();
         console.log("[Console] Reloaded the config file successfully");
     },
-    resetantiteam: function(gameServer, split) {
-        // Validation checks
-        var id = parseInt(split[1]);
-        if (isNaN(id)) {
-            console.log("[Console] Please specify a valid player ID!");
-            return;
-        }
-
-        for (var i in gameServer.clients) {
-            var client = gameServer.clients[i];
-            if (!client) continue; // Nonexistent
-
-            if (client.playerTracker.pID == id) {
-                // Found client
-                client.playerTracker.massDecayMult = 1;
-                client.playerTracker.Wmult = 0;
-                client.playerTracker.virusMult = 0;
-                client.playerTracker.splittingMult = 0;
-                console.log("[Console] Successfully reset client's anti-team effect");
-                return;
-            }
-        }
-    },
     status: function(gameServer, split) {
         // Get amount of humans/bots
         var humans = 0,
@@ -470,12 +457,23 @@ Commands.list = {
                 bots++;
             }
         }
-        //
+        
+        var lagMessage = "extreme high lag";
+        if (gameServer.updateTimeAvg < 20)
+            lagMessage = "perfectly smooth";
+        else if (gameServer.updateTimeAvg < 35)
+            lagMessage = "good";
+        else if (gameServer.updateTimeAvg < 40)
+            lagMessage = "tiny lag";
+        else if (gameServer.updateTimeAvg < 50)
+            lagMessage = "lag";
+        
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
         console.log("[Console] Players: " + humans + " - Bots: " + bots);
         console.log("[Console] Server has been running for " + Math.floor(process.uptime()/60) + " minutes");
         console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10)/10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10)/10 + " mb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
+        console.log("[Console] Current update time: " + gameServer.updateTimeAvg.toFixed(3) + " [ms]  (" + lagMessage + ")");
     },
     tp: function(gameServer, split) {
         var id = parseInt(split[1]);
@@ -499,8 +497,8 @@ Commands.list = {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
-                    client.cells[j].position.x = pos.x;
-                    client.cells[j].position.y = pos.y;
+                    client.cells[j].setPosition(pos.x, pos.y);
+                    gameServer.updateNodeQuad(client.cells[j]);
                 }
 
                 console.log("[Console] Teleported " + client.name + " to (" + pos.x + " , " + pos.y + ")");

@@ -1,6 +1,10 @@
 module.exports = {
+    BinaryWriter: require('./BinaryWriter'),
+    BinaryReader: require('./BinaryReader'),
+    ChatMessage: require('./ChatMessage'),
     AddNode: require('./AddNode'),
-    ClearNodes: require('./ClearNodes'),
+    ClearAll: require('./ClearAll'),
+    ClearOwned: require('./ClearOwned'),
     UpdatePosition: require('./UpdatePosition'),
     SetBorder: require('./SetBorder'),
     UpdateNodes: require('./UpdateNodes'),

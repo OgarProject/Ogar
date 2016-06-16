@@ -1,66 +1,86 @@
-var DynamicBuffer = require('./DynamicBuffer');
+// Import
+var BinaryWriter = require("./BinaryWriter");
 
-function UpdateLeaderboard(leaderboard, packetLB, protocolVersion, sendingUser) {
+
+function UpdateLeaderboard(playerTracker, leaderboard, leaderboardType) {
+    this.playerTracker = playerTracker;
     this.leaderboard = leaderboard;
-    this.packetLB = packetLB;
-    this.protocolVersion = protocolVersion;
-    this.sendingUser = sendingUser;
+    this.leaderboardType = leaderboardType;
 }
 
 module.exports = UpdateLeaderboard;
 
-UpdateLeaderboard.prototype.build = function() {
-    var buffer = new DynamicBuffer(true);
-    
-    switch (this.packetLB) {
-        case 48:
-            // Custom text list
-            buffer.setUint8(48);                                                // Packet ID
-            buffer.setUint32(this.leaderboard.length);                          // String amount
-            
-            for (var i = 0; i < this.leaderboard.length; i++) {
-                if (this.protocolVersion != 5) {
-                    buffer.setStringUTF8(                                       // UTF-8 string
-                        this.leaderboard[i] ? this.leaderboard[i] : "");
-                    buffer.setUint8(0);                                         // UTF-8 null terminator
-                } else {
-                    buffer.setStringUnicode(                                    // Unicode string
-                        this.leaderboard[i] ? this.leaderboard[i] : "");
-                    buffer.setUint16(0);                                        // Unicode null terminator
-                }
-            }
-            break;
-        case 49:
-            // FFA leaderboard list
-            buffer.setUint8(49);                                                // Packet ID
-            buffer.setUint32(this.leaderboard.length);                          // Player amount
-            for (var i = 0; i < this.leaderboard.length; i++) {
-                var player = this.leaderboard[i];
-                var name = player.getName();
-                name = name ? name : "";
-                if (this.protocolVersion != 5) {
-                    var isMe = player.pID == this.sendingUser ? 1 : 0;
-                    buffer.setUint32(isMe);                                     // If to display red color text
-                    buffer.setStringUTF8(name);                                 // UTF-8 string
-                    buffer.setUint8(0);                                         // UTF-8 null terminator
-                } else {
-                    if (player.cells[0])
-                        buffer.setUint32(player.cells[0].nodeId);               // First cell node ID
-                    else buffer.setUint32(0);                                   // In case of error
-                    buffer.setStringUnicode(name);                              // Unicode string
-                    buffer.setUint16(0);                                        // Unicode null terminator
-                }
-            }
-            break;
-        case 50:
-            // Pie chart
-            buffer.setUint8(50);                                                // Packet ID
-            buffer.setUint32(this.leaderboard.length);                          // Color amount
-            for (var i = 0; i < this.leaderboard.length; i++) {
-                buffer.setFloat32(this.leaderboard[i]);                         // A color's size
-            }
-            break;
+UpdateLeaderboard.prototype.build = function (protocol) {
+    switch (this.leaderboardType) {
+        case 48: return this.build48(protocol); // UserText
+        case 49: return this.build49(protocol); // FFA
+        case 50: return this.build50(protocol); // Team
+        default: return null;
     }
+}
 
-    return buffer.build();
+// UserText
+UpdateLeaderboard.prototype.build48 = function (protocol) {
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x31);                                // Packet ID
+    writer.writeUInt32(this.leaderboard.length >>> 0);       // Number of elements
+    for (var i = 0; i < this.leaderboard.length; i++) {
+        var item = this.leaderboard[i];
+        if (item == null) return null;  // bad leaderboardm just don't send it
+        
+        var name = item;
+        name = name ? name : "";
+        var id = 0;
+        
+        writer.writeUInt32(id >> 0);                        // isMe flag/cell ID
+        if (protocol <= 5)
+            writer.writeStringZeroUnicode(name);
+        else
+            writer.writeStringZeroUtf8(name);
+    }
+    return writer.toBuffer();
+};
+
+// (FFA) Leaderboard Update
+UpdateLeaderboard.prototype.build49 = function (protocol) {
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x31);                                // Packet ID
+    writer.writeUInt32(this.leaderboard.length >>> 0);       // Number of elements
+    for (var i = 0; i < this.leaderboard.length; i++) {
+        var item = this.leaderboard[i];
+        if (item == null) return null;  // bad leaderboardm just don't send it
+
+        var name = item.getName();
+        name = name != null ? name : "";
+        var id = item == this.playerTracker ? 1 : 0;    // protocol 6+ uses isMe flag
+        if (protocol <= 5 && item.cells != null && item.cells.length > 0) {
+            id = item.cells[0].nodeId ^ this.playerTracker.scrambleId;                  // protocol 5- uses player cellId instead of isMe flag
+        }
+
+        writer.writeUInt32(id >>> 0);                        // isMe flag/cell ID
+        if (protocol <= 5)
+            writer.writeStringZeroUnicode(name);
+        else
+            writer.writeStringZeroUtf8(name);
+    }
+    return writer.toBuffer();
+};
+
+// (Team) Leaderboard Update
+UpdateLeaderboard.prototype.build50 = function (protocol) {
+    var writer = new BinaryWriter();
+    writer.writeUInt8(0x32);                                // Packet ID
+    writer.writeUInt32(this.leaderboard.length >>> 0);       // Number of elements
+    for (var i = 0; i < this.leaderboard.length; i++) {
+        var item = this.leaderboard[i];
+        if (item == null) return null;  // bad leaderboardm just don't send it
+        
+        var value = item;
+        if (isNaN(value)) value = 0;
+        value = value < 0 ? 0 : value;
+        value = value > 1 ? 1 : value;
+        
+        writer.writeFloat(value);                // isMe flag (previously cell ID)
+    }
+    return writer.toBuffer();
 };

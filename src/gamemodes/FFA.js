@@ -19,7 +19,7 @@ FFA.prototype.leaderboardAddSort = function(player, leaderboard) {
     var loop = true;
     while ((len >= 0) && (loop)) {
         // Start from the bottom of the leaderboard
-        if (player.getScore(false) <= leaderboard[len].getScore(false)) {
+        if (player.getScore() <= leaderboard[len].getScore()) {
             leaderboard.splice(len + 1, 0, player);
             loop = false; // End the loop if a spot is found
         }
@@ -47,7 +47,7 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
             // Get ejected cell
             index = Math.floor(Math.random() * gameServer.nodesEjected.length);
             var e = gameServer.nodesEjected[index];
-            if (e.moveEngineTicks > 0) {
+            if (e.boostDistance > 0) {
                 // Ejected cell is currently moving
                 gameServer.spawnPlayer(player, pos, startMass);
             }
@@ -60,7 +60,7 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
                 x: e.position.x,
                 y: e.position.y
             };
-            startMass = Math.max(e.mass, gameServer.config.playerStartMass);
+            startMass = Math.max(e.getMass(), gameServer.config.playerStartMass);
 
             var color = e.getColor();
             player.setColor({
@@ -76,19 +76,21 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
 };
 
 FFA.prototype.updateLB = function(gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
     // Loop through all clients
     for (var i = 0; i < gameServer.clients.length; i++) {
-        if (typeof gameServer.clients[i] == "undefined") {
-            continue;
-        }
+        var client = gameServer.clients[i];
+        if (client == null) continue;
 
-        var player = gameServer.clients[i].playerTracker;
-        if (player.disconnect > -1) continue; // Don't add disconnected players to list
-        var playerScore = player.getScore(true);
-        if (player.cells.length <= 0) {
+        var player = client.playerTracker;
+        if (player.disconnect > -1)
+            continue; // Don't add disconnected players to list
+        
+        var playerScore = player.getScore();
+        
+        if (player.cells.length <= 0)
             continue;
-        }
 
         if (lb.length == 0) {
             // Initial player
@@ -98,7 +100,7 @@ FFA.prototype.updateLB = function(gameServer) {
             this.leaderboardAddSort(player, lb);
         } else {
             // 10 in leaderboard already
-            if (playerScore > lb[gameServer.config.serverMaxLB - 1].getScore(false)) {
+            if (playerScore > lb[gameServer.config.serverMaxLB - 1].getScore()) {
                 lb.pop();
                 this.leaderboardAddSort(player, lb);
             }

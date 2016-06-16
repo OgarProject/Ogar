@@ -6,7 +6,7 @@ var GameServer = require('./GameServer');
 var showConsole = true;
 
 // Start msg
-console.log("[Game] Ogar - An open source Agar.io server implementation");
+console.log("[Game] MultiOgar - An open source multi-protocol ogar server");
 
 // Handle arguments
 process.argv.forEach(function(val) {
@@ -39,8 +39,11 @@ if (showConsole) {
 
 function prompt() {
     in_.question(">", function(str) {
-        parseCommands(str);
-        return prompt(); // Too lazy to learn async
+        try {
+            parseCommands(str);
+        } finally {
+            setTimeout(prompt, 0);
+        }
     });
 }
 

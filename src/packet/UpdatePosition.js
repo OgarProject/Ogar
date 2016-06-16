@@ -1,19 +1,22 @@
-function UpdatePosition(x, y, size) {
+function UpdatePosition(playerTracker, x, y, scale) {
+    this.playerTracker = playerTracker,
     this.x = x;
     this.y = y;
-    this.size = size;
+    this.scale = scale;
 }
 
 module.exports = UpdatePosition;
 
-UpdatePosition.prototype.build = function() {
-    var buf = new ArrayBuffer(13);
-    var view = new DataView(buf);
-
-    view.setUint8(0, 17, true);
-    view.setFloat32(1, this.x, true);
-    view.setFloat32(5, this.y, true);
-    view.setFloat32(9, this.size, true);
-
-    return buf;
+UpdatePosition.prototype.build = function(protocol) {
+    var buffer = new Buffer(13);
+    var offset = 0;
+    buffer.writeUInt8(0x11, offset);
+    offset += 1;
+    buffer.writeFloatLE(this.x + this.playerTracker.scrambleX, offset);
+    offset += 4;
+    buffer.writeFloatLE(this.y + this.playerTracker.scrambleY, offset);
+    offset += 4;
+    buffer.writeFloatLE(this.scale, offset);
+    offset += 4;
+    return buffer;
 };
