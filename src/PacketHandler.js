@@ -50,6 +50,8 @@ PacketHandler.prototype.handleMessage = function(message) {
         this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, border, this.gameServer.config.serverGamemode, "MultiOgar 1.0"));
         // Send welcome message
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
+        if (this.gameServer.config.serverChat == 0)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server chat is disabled.");
         if (this.protocol < 4) {
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING Your client has protocol error!");
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Client sends invalid protocol version "+this.protocol);
@@ -114,7 +116,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 99:
             // Chat
-            if (message.length < 3)             // first validation
+            if (this.gameServer.config.serverChat == 0 || message.length < 3)             // first validation
                 break;
             // chat anti-spam
             // Just ignore if the time between two messages is smaller than 2 seconds

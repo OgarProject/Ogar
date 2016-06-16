@@ -64,7 +64,9 @@ function GameServer() {
         serverStatsUpdate: 60,      // Amount of seconds per update for the server stats
         serverLogLevel: 1,          // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         serverScrambleCoords: 1,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
-        serverMaxLB: 10,            //	Controls the maximum players displayed on the leaderboard.
+        serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
+        serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
+        serverUseBlacklist: 0,      // Set to 1 to use blacklist; 0 to not use a blacklist.
         borderLeft: 0,              // Left border of map (Vanilla value: 0)
         borderRight: 6000,          // Right border of map (Vanilla value: 14142.135623730952)
         borderTop: 0,               // Top border of map (Vanilla value: 0)
@@ -105,6 +107,9 @@ function GameServer() {
         tourneyAutoFill: 0,         // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1,  // The timer for filling the server with bots will not count down unless there is this amount of real players
     };
+    
+    this.blacklist = [];
+    
     // Parse config
     this.loadConfig();
 
@@ -181,6 +186,12 @@ GameServer.prototype.onServerSocketOpen = function () {
 };
 
 GameServer.prototype.onClientSocketOpen = function (ws) {
+    // Check blacklist first (if enabled).
+    if (this.config.serverUseBlacklist == 1 && this.blacklist.indexOf(ws._socket.remoteAddress) > -1) {
+        // IP banned
+        ws.close(1000, "IP banned");
+        return;
+    }
     var totalConnections = 0;
     var ipConnections = 0;
     for (var i = 0; i < this.clients.length; i++) {
@@ -1126,6 +1137,20 @@ GameServer.prototype.loadConfig = function() {
 
         // Create a new config
         fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
+    }
+    
+    // Sorry for hijacking this function to add banning feature...
+    try {
+        // Load and input the contents of the blacklist file
+        this.blacklist = fs.readFileSync("./blacklist.txt", "utf8").split(/[\r\n]+/).filter(function(x) {
+            return x != ''; // filter empty lines
+        });
+    } catch (err) {
+        // Only if blacklist toggle has been turned on
+        if (this.config.serverUseBlacklist != 0) {
+            // No blacklist file
+            console.log("[Game] Info: Blacklist enabled but file not found.");
+        }
     }
 };
 

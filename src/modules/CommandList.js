@@ -28,6 +28,7 @@ Commands.list = {
         console.log("[Console] ======================== HELP ======================");
         console.log("[Console] addbot [number]              : add bot to the server");
         console.log("[Console] kickbot [number]             : kick an amount of bots");
+        console.log("[Console] ban [PlayerID | IP]          : bans a(n) (player's) IP");
         console.log("[Console] board [string] [string] ...  : set scoreboard text");
         console.log("[Console] boardreset                   : reset scoreboard text");
         console.log("[Console] change [setting] [value]     : change specified settings");
@@ -43,6 +44,7 @@ Commands.list = {
         console.log("[Console] mass [PlayerID] [mass]       : set cell(s) mass by client ID");
         console.log("[Console] merge [PlayerID]             : merge all client's cells once");
         console.log("[Console] name [PlayerID] [name]       : change cell(s) name by client ID");
+        console.log("[Console] pardon [IP]                  : pardons (unbans) an IP");
         console.log("[Console] playerlist                   : get list of players and bots");
         console.log("[Console] pause                        : pause game , freeze all cells");
         console.log("[Console] reload                       : reload config");
@@ -63,6 +65,53 @@ Commands.list = {
             gameServer.bots.addBot();
         }
         console.log("[Console] Added " + add + " player bots");
+    },
+    ban: function(gameServer, split) {
+        if (split[1].indexOf(".") > -1) {
+            var ip = split[1];
+            // If input is an IP address
+            if (ip.split(".").length != 4) {
+                // an IP without 3 decimals
+                console.log("[Console] Please specify a valid player ID or IP address!");
+                return;
+            }
+            gameServer.blacklist.push(ip);
+            console.log("[Console] Banned IP " + ip);
+        }
+        else {
+            // if input is a Player ID
+            var id = parseInt(split[1]);
+            if (isNaN(id)) {
+                console.log("[Console] Please specify a valid player ID or IP address!");
+                return;
+            }
+            for (var i in gameServer.clients) {
+                if (gameServer.clients[i].playerTracker.pID == id) {
+                    var client = gameServer.clients[i].playerTracker;
+                    var len = client.cells.length;
+                    for (var j = 0; j < len; j++) {
+                        gameServer.removeNode(client.cells[0]);
+                    }
+                    
+                    // Push banned IP address
+                    var ip = gameServer.clients[i]._socket.remoteAddress;
+                    gameServer.blacklist.push(ip);
+                    client.socket.close(1000, "Banned from server");
+                    console.log("[Console] Banned " + client.name + " with IP " + ip);
+                    break;
+                }
+            }
+        }
+        // TODO: Make it so players with the same IP are kicked.
+        // Get filestream
+        var fs = require("fs");
+        var blFile = fs.createWriteStream('./blacklist.txt');
+        
+        // Sort the blacklist and write.
+        gameServer.blacklist.forEach(function (v) {
+            blFile.write(v + '\n');
+        });
+        blFile.end();
     },
     kickbot: function(gameServer, split) {
         var toRemove = parseInt(split[1]);
@@ -170,6 +219,19 @@ Commands.list = {
         }
     },
     exit: function(gameServer, split) {
+        if (gameServer.config.serverUseBlacklist != 0) {
+            console.log("[Console] Writing blacklist...");
+            
+            // Get filestream
+            var fs = require("fs");
+            var blFile = fs.createWriteStream('./blacklist.txt');
+            
+            // Sort the blacklist and write.
+            gameServer.blacklist.sort().forEach(function (v) {
+                blFile.write(v + '\n');
+            });
+            blFile.end();
+        }
         console.log("[Console] Closing server...");
         gameServer.socketServer.close();
         process.exit(1);
@@ -380,6 +442,26 @@ Commands.list = {
 
         // Error
         console.log("[Console] Player " + id + " was not found");
+    },
+    pardon: function(gameServer, split) {
+        var ip = split[1],
+            index = gameServer.blacklist.indexOf(ip);
+        if (index > -1) {
+            gameServer.blacklist.splice(index, 1);
+            console.log("[Console] Pardoned IP " + ip)
+
+            // Get filestream
+            var fs = require("fs");
+            var blFile = fs.createWriteStream('./blacklist.txt');
+            
+            // Sort the blacklist and write.
+            gameServer.blacklist.forEach(function (v) {
+                blFile.write(v + '\n');
+            });
+            blFile.end();
+        }
+        else
+            console.log("[Console] IP " + ip + " was not in the blacklist");
     },
     playerlist: function(gameServer, split) {
         console.log("[Console] Showing " + gameServer.clients.length + " players: ");
