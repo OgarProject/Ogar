@@ -38,19 +38,8 @@ EjectedMass.prototype.onRemove = function(gameServer) {
 
 EjectedMass.prototype.onConsume = function(consumer, gameServer) {
     // Adds mass to consumer
-    consumer.addMass(this.getMass());
-};
-
-EjectedMass.prototype.onAutoMove = function(gameServer) {
-    if (gameServer.nodesVirus.length < gameServer.config.virusMaxAmount) {
-        // Check for viruses
-        var v = gameServer.getNearestVirus(this);
-        if (v) { // Feeds the virus if it exists
-            v.feed(this, gameServer);
-            return true;
-        }
-    }
-};
-
-EjectedMass.prototype.moveDone = function(gameServer) {
+    if (consumer.cellType == 2 && consumer.feed != null) // virus
+        consumer.feed(this, gameServer);
+    else
+        consumer.addMass(this.getMass());
 };

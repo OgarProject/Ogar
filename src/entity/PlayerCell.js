@@ -48,9 +48,22 @@ PlayerCell.prototype.canRemerge = function () {
     return this._canRemerge;
 };
 
+PlayerCell.prototype.canEat = function (cell) {
+    // player cell can eat anyone
+    return true;
+};
+
 // Movement
 
-PlayerCell.prototype.calcMove = function (x, y, gameServer) {
+PlayerCell.prototype.moveUser = function (border) {
+    if (this.owner == null) {
+        return;
+    }
+    var x = this.owner.mouse.x;
+    var y = this.owner.mouse.y;
+    if (isNaN(x) || isNaN(y)) {
+        return;
+    }
     var dx = x - this.position.x;
     var dy = y - this.position.y;
     var squared = dx * dx + dy * dy;
@@ -71,6 +84,7 @@ PlayerCell.prototype.calcMove = function (x, y, gameServer) {
     
     this.position.x += nx * speed;
     this.position.y += ny * speed;
+    this.checkBorder(border);
 };
 
 // Override
@@ -104,8 +118,4 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     }
     // Gamemode actions
     gameServer.gameMode.onCellRemove(this);
-};
-
-PlayerCell.prototype.moveDone = function(gameServer) {
-    // Well, nothing.
 };

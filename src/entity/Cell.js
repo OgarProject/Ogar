@@ -121,6 +121,14 @@ Cell.prototype.setKiller = function(cell) {
     this.killedBy = cell;
 };
 
+Cell.prototype.setPosition = function (x, y) {
+    if (isNaN(x) || isNaN(y)) {
+        console.log("[ERROR] Cell.setPosition: NaN");
+        return;
+    }
+    this.position = { x: x, y: y };
+};
+
 // Functions
 
 Cell.prototype.collisionCheck = function(left, top, right, bottom) {
@@ -178,7 +186,7 @@ Cell.prototype.setBoost = function (distance, angle) {
     this.setAngle(angle);
 };
 
-Cell.prototype.calcMoveBoost = function (border) {
+Cell.prototype.move = function (border) {
     if (this.boostDistance <= 0) return;
     
     var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
@@ -186,65 +194,64 @@ Cell.prototype.calcMoveBoost = function (border) {
     speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
     this.boostDistance -= speed;
     if (this.boostDistance <= 1) this.boostDistance = 0;
-    var dx = this.boostDirection.x * speed;
-    var dy = this.boostDirection.y * speed;
-
-    // Border bouncy physics
-    var r = this.getSize() / 2;
-    var borderCell = {
-        left: border.left + r,
-        top: border.top + r,
-        right: border.right - r,
-        bottom: border.bottom - r
-    };
-    this.moveReflected(dx, dy, borderCell);
+    
+    var v = this.clipVelocity(
+        { x: this.boostDirection.x * speed, y: this.boostDirection.y * speed }, 
+        border);
+    this.position.x += v.x;
+    this.position.y += v.y;
+    this.checkBorder(border);
 }
 
-Cell.prototype.moveReflected = function (dx, dy, border) {
-    var cx = this.position.x;
-    var cy = this.position.y;
-    var x = cx + dx;
-    var y = cy + dy;
-    if (isNaN(x) || isNaN(y)) {
-        // something is going wrong
-        // TODO: border center?
-        console.log("\u001B[1m\u001B[31m[Error] Cell.moveReflected failed (NaN)");
-        return;
-    }
-    if (dx == 0 && dy == 0) return; // zero move :)
-    
-    var pleft = x >= border.left ? null : this.getLineIntersection(
-        cx, cy, x, y,
-        border.left, border.top, border.left, border.bottom);
-    var pright = x <= border.right ? null : this.getLineIntersection(
-        cx, cy, x, y,
-        border.right, border.top, border.right, border.bottom);
+Cell.prototype.clipVelocity = function (v, border) {
+    if (isNaN(v.x) || isNaN(v.y)) {
+        throw new TypeError("Cell.clipVelocity: NaN");
+    };
+    if (v.x == 0 && v.y == 0)
+        return v; // zero move, no calculations :)
+    var r = this.getSize() / 2;
+    var bound = {
+        minx: border.left + r,
+        miny: border.top + r,
+        maxx: border.right - r,
+        maxy: border.bottom - r
+    };
+    var x = this.position.x + v.x;
+    var y = this.position.y + v.y;
+    // border check
+    var pleft = x >= bound.minx ? null : this.getLineIntersection(
+        this.position.x, this.position.y, x, y,
+        bound.minx, bound.miny, bound.minx, bound.maxy);
+    var pright = x <= bound.maxx ? null : this.getLineIntersection(
+        this.position.x, this.position.y, x, y,
+        bound.maxx, bound.miny, bound.maxx, bound.maxy);
     var ptop = y >= border.top ? null : this.getLineIntersection(
-        cx, cy, x, y,
-        border.left, border.top, border.right, border.top);
-    var pbottom = y <= border.bottom ? null : this.getLineIntersection(
-        cx, cy, x, y,
-        border.left, border.bottom, border.right, border.bottom);
+        this.position.x, this.position.y, x, y,
+        bound.minx, bound.miny, bound.maxx, bound.miny);
+    var pbottom = y <= bound.maxy ? null : this.getLineIntersection(
+        this.position.x, this.position.y, x, y,
+        bound.minx, bound.maxy, bound.maxx, bound.maxy);
     var ph = pleft != null ? pleft : pright;
     var pv = ptop != null ? ptop : pbottom;
     var p = ph != null ? ph : pv;
     if (p == null) {
         // inside border
-        this.position.x = x;
-        this.position.y = y;
-        return;
+        return v;
     }
     if (ph && pv) {
         // two border lines intersection => get nearest point
-        var hdx = ph.x - cx;
-        var hdy = ph.y - cx;
-        var vdx = pv.x - cx;
-        var vdy = pv.y - cx;
+        var hdx = ph.x - this.position.x;
+        var hdy = ph.y - this.position.y;
+        var vdx = pv.x - this.position.x;
+        var vdy = pv.y - this.position.y;
         if (hdx * hdx + hdy * hdy < vdx * vdx + vdy * vdy)
             p = ph;
         else
             p = pv;
     }
+    // p - stop point on the border
+    
+    // reflect angle
     var angle = this.getAngle();
     if (p == ph) {
         // left/right border reflection
@@ -254,27 +261,33 @@ Cell.prototype.moveReflected = function (dx, dy, border) {
         angle = angle <= Math.PI ? Math.PI - angle : 3 * Math.PI - angle;
     }
     this.setAngle(angle);
-    this.position.x = p.x;
-    this.position.y = p.y;
-    // calculate rest of distance
-    var lx = p.x - cx;
-    var ly = p.y - cy;
-    var ldx = dx - lx;
-    var ldy = dy - ly;
-    var l = Math.sqrt(ldx * ldx + ldy * ldy);
-    this.boostDistance += l;
+    // new velocity
+    var lx = p.x - this.position.x;
+    var ly = p.y - this.position.y;
+    // calculate rest of velocity
+    var ldx = v.x - lx;
+    var ldy = v.y - ly;
+    // update velocity and add rest to the boostDistance
+    v.x = lx;
+    v.y = ly;
+    this.boostDistance += Math.sqrt(ldx * ldx + ldy * ldy);
+    return v;
 };
 
 Cell.prototype.checkBorder = function (border) {
     var r = this.getSize() / 2;
-    if (this.position.x < border.left + r)
-        this.position.x = border.left + r;
-    else if (this.position.x > border.right - r)
-        this.position.x = border.right - r;
-    if (this.position.y < border.top + r)
-        this.position.y = border.top + r;
+    var x = this.position.x;
+    var y = this.position.y;
+    if (x < border.left + r)
+        x = border.left + r;
+    else if (x > border.right - r)
+        x = border.right - r;
+    if (y < border.top + r)
+        y = border.top + r;
     else if (this.position.y > border.bottom - r)
-        this.position.y = border.bottom - r;
+        y = border.bottom - r;
+    if (x != this.position.x || y != this.position.y)
+        this.setPosition(x, y);
 };
 
 
@@ -283,6 +296,11 @@ Cell.prototype.checkBorder = function (border) {
 Cell.prototype.sendUpdate = function() {
     // Whether or not to include this cell in the update packet
     return true;
+};
+
+Cell.prototype.canEat = function (cell) {
+    // by default cell cannot eat anyone
+    return false;
 };
 
 Cell.prototype.onConsume = function(consumer, gameServer) {
@@ -295,14 +313,6 @@ Cell.prototype.onAdd = function(gameServer) {
 
 Cell.prototype.onRemove = function(gameServer) {
     // Called when this cell is removed
-};
-
-Cell.prototype.onAutoMove = function(gameServer) {
-    // Called on each auto move engine tick
-};
-
-Cell.prototype.moveDone = function(gameServer) {
-    // Called when this cell finished moving with the auto move engine
 };
 
 // Lib

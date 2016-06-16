@@ -8,10 +8,7 @@ function PlayerTracker(gameServer, socket) {
     this.skin = "";
     this.gameServer = gameServer;
     this.socket = socket;
-    this.nodeAdditionQueue = [];
-    this.nodeDestroyQueue = [];
     this.visibleNodes = [];
-    this.collidingNodes = []; // Perfomance save; all nodes colliding with player's cells
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
     this.score = 0; // Needed for leaderboard
@@ -150,14 +147,13 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.spectate = false;
     this.freeRoam = false;
 
-    this.socket.sendPacket(new Packet.ClearAll());
-    this.collidingNodes = [];
-    // some clients don't understand ClearAll message
-    // so we will send we will do not perform cleanup
+    // some old clients don't understand ClearAll message
+    // so we will not perform cleanup
     // to allow them to receive remove notifications
-    //this.visibleNodes = [];         // Reset visible nodes
-    //this.nodeDestroyQueue = [];     // Reset destroy queue
-    //this.nodeAdditionQueue = [];    // Reset addition queue
+    if (this.socket.packetHandler.protocol >= 6) {
+        this.socket.sendPacket(new Packet.ClearAll());
+        this.visibleNodes = [];
+    }
 
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
@@ -166,9 +162,6 @@ PlayerTracker.prototype.update = function () {
     // if initialization is not complete yet then do not update
     if (this.socket.packetHandler.protocol == 0)
         return;
-    
-    // First reset colliding nodes
-    this.collidingNodes = [];
     
     // Actions buffer (So that people cant spam packets)
     if (this.socket.packetHandler.pressSpace) { // Split cell
@@ -186,89 +179,42 @@ PlayerTracker.prototype.update = function () {
         this.socket.packetHandler.pressQ = false;
     }
     
-    var updateNodes = []; // Nodes that need to be updated via packet
-    
-    // Remove nodes from visible nodes if possible
-    var d = 0;
-    while (d < this.nodeDestroyQueue.length) {
-        var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
-        if (index > -1) {
-            this.visibleNodes.splice(index, 1);
-            d++; // Increment
-        } else {
-            // Node was never visible anyways
-            this.nodeDestroyQueue.splice(d, 1);
+    var newVisible = this.getVisibleNodes();
+    newVisible.sort(function (a, b) { return a.nodeId - b.nodeId; });
+    var deleteNodes = [];
+    var eatNodes = [];
+    var newIndex = 0;
+    var oldIndex = 0;
+    for (; newIndex < newVisible.length && oldIndex < this.visibleNodes.length;) {
+        if (newVisible[newIndex].nodeId < this.visibleNodes[oldIndex].nodeId) {
+            newIndex++;
+            continue;
         }
+        if (newVisible[newIndex].nodeId > this.visibleNodes[oldIndex].nodeId) {
+            if (this.visibleNodes[oldIndex].isRemoved)
+                eatNodes.push(this.visibleNodes[oldIndex]);
+            else
+                deleteNodes.push(this.visibleNodes[oldIndex]);
+            oldIndex++;
+            continue;
+        }
+        newIndex++;
+        oldIndex++;
     }
-    
-    // Get visible nodes every 400 ms
-    var nonVisibleNodes = []; // Nodes that are not visible
-    if (this.tickViewBox <= 0) {
-        var newVisible = this.getVisibleNodes();
-        try { // Add a try block in any case
-            
-            // Compare and destroy nodes that are not seen
-            for (var i = 0; i < this.visibleNodes.length; i++) {
-                var index = newVisible.indexOf(this.visibleNodes[i]);
-                if (index == -1) {
-                    // Not seen by the client anymore
-                    nonVisibleNodes.push(this.visibleNodes[i]);
-                }
-            }
-            
-            // Add nodes to client's screen if client has not seen it already
-            for (var i = 0; i < newVisible.length; i++) {
-                var index = this.visibleNodes.indexOf(newVisible[i]);
-                if (index == -1) {
-                    updateNodes.push(newVisible[i]);
-                }
-            }
-            
-            // Scramble minimap
-            // TODO: need to send it more rarely (once per second or something like that)
-            // also need to make sure that we send it before first cell update
-            //var border = {
-            //    left: Math.max(this.viewBox.left - this.viewBox.halfWidth, this.gameServer.config.borderLeft),
-            //    top: Math.max(this.viewBox.top - this.viewBox.halfHeight, this.gameServer.config.borderTop),
-            //    right: Math.min(this.viewBox.right + this.viewBox.halfWidth, this.gameServer.config.borderRight),
-            //    bottom: Math.min(this.viewBox.bottom + this.viewBox.halfHeight, this.gameServer.config.borderBottom)
-            //};
-            //this.socket.sendPacket(new Packet.SetBorder(this, border));
-        } catch (err) {
-            console.error(err);
-        }
-        
-        this.visibleNodes = newVisible;
-        // Reset Ticks
-        this.tickViewBox = 0;
-    } else {
-        this.tickViewBox--;
-        // Add nodes to screen
-        for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
-            var node = this.nodeAdditionQueue[i];
-            this.visibleNodes.push(node);
-            updateNodes.push(node);
-        }
+    for (; oldIndex < this.visibleNodes.length; oldIndex++) {
+        if (this.visibleNodes[oldIndex].isRemoved)
+            eatNodes.push(this.visibleNodes[oldIndex]);
+        else
+            deleteNodes.push(this.visibleNodes[oldIndex]);
     }
-    
-    // Update moving nodes
-    for (var i = 0; i < this.visibleNodes.length; i++) {
-        var node = this.visibleNodes[i];
-        if (node.sendUpdate()) {
-            // Sends an update if cell is moving
-            updateNodes.push(node);
-        }
-    }
-    
+    this.visibleNodes = newVisible;
+
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(
         this,
-        this.nodeDestroyQueue,
-        updateNodes,
-        nonVisibleNodes));
-    
-    this.nodeDestroyQueue = []; // Reset destroy queue
-    this.nodeAdditionQueue = []; // Reset addition queue
+        eatNodes,
+        this.visibleNodes,
+        deleteNodes));
     
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
@@ -329,20 +275,30 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
     var dx = this.mouse.x - this.centerPos.x;
     var dy = this.mouse.y - this.centerPos.y;
     var squared = dx * dx + dy * dy;
-    if (squared < 1) return;     // stop threshold
+    if (squared == 0) return;     // stop threshold
     
     // distance
     var d = Math.sqrt(squared);
     
+    var invd = 1 / d;
+    var nx = dx * invd;
+    var ny = dy * invd;
+    
     var speed = Math.min(d, 32);
     if (speed <= 0) return;
     
-    var angle = Math.atan2(dx, dy);
-    if (isNaN(angle)) return;
-    
-    this.setCenterPos(
-        this.centerPos.x + speed * Math.sin(angle),
-        this.centerPos.y + speed * Math.cos(angle));
+    var x = this.centerPos.x + nx * speed;
+    var y = this.centerPos.y + ny * speed;
+    // check border
+    if (x < this.gameServer.config.borderLeft)
+        x = this.gameServer.config.borderLeft;
+    else if (y > this.gameServer.config.borderRight)
+        x = this.gameServer.config.borderRight;
+    if (y < this.gameServer.config.borderTop)
+        y = this.gameServer.config.borderTop;
+    else if (y > this.gameServer.config.borderBottom)
+        y = this.gameServer.config.borderBottom;
+    this.setCenterPos(x, y);
 };
 
 PlayerTracker.prototype.updateViewBox = function () {
@@ -386,34 +342,20 @@ PlayerTracker.prototype.getVisibleNodes = function () {
 }
 
 PlayerTracker.prototype.calcVisibleNodes = function() {
-    this.collidingNodes = [];
     var newVisible = [];
-    for (var i = 0; i < this.gameServer.nodes.length; i++) {
-        var node = this.gameServer.nodes[i];
-        if (node == null) continue;
-
-        if (node.owner == this || node.visibleCheck(this.viewBox)) {
-            // Cell is in range of viewBox
-            newVisible.push(node);
-            
-            // TODO: rewrite that!
-            // Check if it's colliding with one of player's cells
-            // To save perfomance, check if any client's cell collides with this cell
-            for (var j = 0; j < this.cells.length; j++) {
-                var cell = this.cells[j];
-                if (cell == null || cell == node)
-                    continue;
-                
-                // circle collision detector
-                var dx = cell.position.x - node.position.x;
-                var dy = cell.position.y - node.position.y;
-                var r = cell.getSize() + node.getSize();
-                if (dx * dx + dy * dy < r * r) {
-                    // circle collision detected
-                    this.collidingNodes.push(node);
-                }
-            }
-        }
+    var bound = {
+        minx: this.viewBox.left,
+        miny: this.viewBox.top,
+        maxx: this.viewBox.right,
+        maxy: this.viewBox.bottom
+    };
+    this.gameServer.quadTree.find(bound, function (quadItem) {
+        newVisible.push(quadItem.cell);
+    });
+    // make sure that all owned is included
+    for (var i = 0; i < this.cells.length; i++) {
+        if (newVisible.indexOf(this.cells[i]) < 0)
+            newVisible.push(this.cells[i]);
     }
     return newVisible;
 };

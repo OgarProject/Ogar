@@ -1,3 +1,4 @@
+// TODO: fix this game mode has outdated code and probably will not works
 var Teams = require('./Teams.js');
 var Cell = require('../entity/Cell.js');
 var Food = require('../entity/Food.js');
@@ -106,7 +107,7 @@ TeamX.prototype.countNotInRange = function(client) {
     var count = 0;
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
-        if (!(cell.inRange === true)) {
+        if (!(cell.isRemoved === true)) {
             count++;
         }
     }
@@ -174,7 +175,7 @@ TeamX.prototype.onServerInit = function(gameServer) {
                 }
 
                 // if something already collided with this cell, don't check for other collisions
-                if (check.inRange) {
+                if (check.isRemoved) {
                     continue;
                 }
 
@@ -199,7 +200,7 @@ TeamX.prototype.onServerInit = function(gameServer) {
                 switch (check.getType()) {
                     case 1: // Food cell
                         list.push(check);
-                        check.inRange = true; // skip future collision checks for this food
+                        check.isRemoved = true; // skip future collision checks for this food
                         continue;
                     case 2: // Virus
                         multiplier = 1.33;
@@ -249,7 +250,7 @@ TeamX.prototype.onServerInit = function(gameServer) {
                 list.push(check);
 
                 // Something is about to eat this cell; no need to check for other collisions with it
-                check.inRange = true;
+                check.isRemoved = true;
             }
             return list;
         };

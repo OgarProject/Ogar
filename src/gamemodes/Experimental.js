@@ -34,7 +34,6 @@ Experimental.prototype.updateMotherCells = function(gameServer) {
 
         // Checks
         mother.update(gameServer);
-        mother.checkEat(gameServer);
     }
 };
 
@@ -97,7 +96,6 @@ Experimental.prototype.onServerInit = function(gameServer) {
 
     // Special virus mechanics
     Virus.prototype.feed = function(feeder, gameServer) {
-        gameServer.removeNode(feeder);
         // Pushes the virus
         // TODO: check distance
         this.setBoost(16 * 20, feeder.getAngle());
@@ -182,57 +180,9 @@ MotherCell.prototype.update = function(gameServer) {
     }
 };
 
-MotherCell.prototype.checkEat = function(gameServer) {
-    var safeMass = this.getMass() * .78;
-
-    // Loop for potential prey
-    for (var i in gameServer.nodesPlayer) {
-        var check = gameServer.nodesPlayer[i];
-        this.checkEatCell(check, safeMass, gameServer);
-    }
-
-    // Viruses might be literally in the mother cell when it becomes large. Prevent this
-    for (var i in gameServer.nodesVirus) {
-        var check = gameServer.nodesVirus[i];
-        this.checkEatCell(check, safeMass, gameServer);
-    }
-
-    // Check moving nodes
-    for (var i in gameServer.movingNodes) {
-        var check = gameServer.movingNodes[i];
-        this.checkEatCell(check, safeMass, gameServer);
-    }
-};
-
-MotherCell.prototype.checkEatCell = function (check, safeMass, gameServer) {
-    if ((check.getType() == 1) || (check.getMass() > safeMass)) {
-        // Too big to be consumed or check is a food cell
-        return;
-    }
-    
-    // Very simple yet very powerful
-    //var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
-    //var allowDist = this.getSize() - check.getEatingRange();
-    //if (dist < allowDist) {
-    //    // Eat it
-    //    gameServer.removeNode(check);
-    //    this.setMass(this.getMass() + check.getMass());
-    //}
-    if (this.getSize() <= check.getSize() * 1.15)
-        return;
-    var eatingRange = this.getSize() - check.getSize() / Math.PI;
-    var dx = this.position.x - check.position.x;
-    var dy = this.position.y - check.position.y;
-    if (dx * dx + dy * dy >= eatingRange * eatingRange)
-        return
-    // Eat it
-    gameServer.removeNode(check);
-    this.setMass(this.getMass() + check.getMass());
-};
-
-MotherCell.prototype.abs = function(n) {
-    // Because Math.abs is slow
-    return (n < 0) ? -n : n;
+MotherCell.prototype.canEat = function (cell) {
+    return cell.cellType == 0 ||    // can eat player cell
+        cell.cellType == 3;         // can eat ejected mass
 };
 
 MotherCell.prototype.spawnFood = function(gameServer) {
@@ -252,7 +202,7 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     gameServer.currentFood++;
 
     // Move engine
-    var dist = (Math.random() * 8) + 8; // Random distance
+    var dist = (Math.random() * 25) + 25; // Random distance
     // TODO: check distance
     f.setBoost(dist, angle);
 

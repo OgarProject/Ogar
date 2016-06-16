@@ -497,8 +497,8 @@ Commands.list = {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
-                    client.cells[j].position.x = pos.x;
-                    client.cells[j].position.y = pos.y;
+                    client.cells[j].setPosition(pos.x, pos.y);
+                    gameServer.updateNodeQuad(client.cells[j]);
                 }
 
                 console.log("[Console] Teleported " + client.name + " to (" + pos.x + " , " + pos.y + ")");

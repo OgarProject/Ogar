@@ -1,3 +1,4 @@
+// TODO: fix this game mode has outdated code and probably will not works
 var Mode = require('./Mode.js');
 var Cell = require('../entity/Cell.js');
 var Entity = require('../entity');
@@ -175,7 +176,7 @@ TeamZ.prototype.spawnDrug = function(gameServer, cell) { // spawn HERO or BRAIN
 
         // Spawn if no cells are colliding
         if (!collided) {
-            cell.position = pos;
+            cell.setPosition(pos.x, pos.y);
             gameServer.addNode(cell);
             return true; // SUCCESS with spawn
         }
@@ -418,7 +419,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             }
 
             // if something already collided with this cell, don't check for other collisions
-            if (check.inRange) {
+            if (check.isRemoved) {
                 continue;
             }
 
@@ -454,7 +455,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             switch (check.getType()) {
                 case 1: // Food cell
                     list.push(check);
-                    check.inRange = true; // skip future collision checks for this food
+                    check.isRemoved = true; // skip future collision checks for this food
                     continue;
                 case 2: // Virus
                     multiplier = 1.33;
@@ -504,7 +505,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             list.push(check);
 
             // Something is about to eat this cell; no need to check for other collisions with it
-            check.inRange = true;
+            check.isRemoved = true;
         }
         return list;
     };
@@ -964,8 +965,9 @@ TeamZ.prototype.onCellMove = function(x1, y1, cell) {
 
                 var move = collisionDist - dist;
 
-                check.position.x = check.position.x + (move * Math.sin(newAngle)) >> 0;
-                check.position.y = check.position.y + (move * Math.cos(newAngle)) >> 0;
+                check.setPosition(
+                    check.position.x + (move * Math.sin(newAngle)) >> 0,
+                    check.position.y + (move * Math.cos(newAngle)) >> 0);
             }
         }
     }

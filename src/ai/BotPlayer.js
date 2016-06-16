@@ -30,14 +30,6 @@ BotPlayer.prototype.getLowestCell = function() {
 };
 
 BotPlayer.prototype.update = function () { // Overrides the update function from player tracker
-    // Remove nodes from visible nodes if possible
-    for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
-        var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[i]);
-        if (index > -1) {
-            this.visibleNodes.splice(index, 1);
-        }
-    }
-    
     // Respawn if bot is dead
     if (this.cells.length <= 0) {
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
@@ -58,10 +50,6 @@ BotPlayer.prototype.update = function () { // Overrides the update function from
     
     // Action
     this.decide(cell);
-    
-    // Reset queues
-    this.nodeDestroyQueue = [];
-    this.nodeAdditionQueue = [];
 };
 
 // Custom

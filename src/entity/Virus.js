@@ -19,7 +19,6 @@ Virus.prototype.feed = function(feeder, gameServer) {
         this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
     this.setMass(this.getMass() + feeder.getMass());
     this.fed++; // Increase feed count
-    gameServer.removeNode(feeder);
 
     // Check if the virus is going to explode
     if (this.fed >= gameServer.config.virusFeedAmount) {
@@ -31,6 +30,11 @@ Virus.prototype.feed = function(feeder, gameServer) {
 };
 
 // Main Functions
+
+Virus.prototype.canEat = function (cell) {
+    return cell.cellType == 3; // virus can eat ejected mass only
+};
+
 
 Virus.prototype.onConsume = function(consumer, gameServer) {
     var client = consumer.owner;
@@ -84,10 +88,6 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
         angle = Math.random() * 6.28; // Random directions
         gameServer.splitPlayerCell(client, consumer, angle, splitMass);
     }
-
-    //// Prevent consumer cell from merging with other cells
-    //consumer.calcMergeTime(gameServer.getTick(), gameServer.config.playerRecombineTime);
-    // TODO: ttr fix?
 };
 
 Virus.prototype.onAdd = function(gameServer) {
