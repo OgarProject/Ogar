@@ -1,14 +1,12 @@
 function Vector(x, y) {
-    this.x = 0;
-    this.y = 0;
-    
     this.set(x, y);
 }
 
 module.exports = Vector;
 
 Vector.prototype.clone = function() {
-    return new Vector(this);
+    var x = this.x, y = this.y;
+    return new Vector(x, y);
 };
 
 Vector.prototype.set = function(x, y) {
@@ -17,10 +15,14 @@ Vector.prototype.set = function(x, y) {
             this.x = x.x;
             this.y = x.y;
         } else {
-            this.x = x || 0;
-            this.y = y || 0;
+            this.x = x;
+            this.y = y;
         }
+    } else {
+        this.x = 0;
+        this.y = 0;
     }
+    return this;
 };
 
 Vector.prototype.add = function(x, y) {
@@ -28,9 +30,16 @@ Vector.prototype.add = function(x, y) {
         this.x += x.x;
         this.y += x.y;
     } else {
-        this.x += x || 0;
-        this.y += y || 0;
+        this.x += x;
+        this.y += y;
     }
+    return this;
+};
+
+Vector.prototype.addDistance = function(n) {
+    var a = this.angle();
+    this.x += Math.sin(a) * n;
+    this.y += Math.cos(a) * n;
     return this;
 };
 
@@ -39,8 +48,8 @@ Vector.prototype.sub = function(x, y) {
         this.x -= x.x;
         this.y -= x.y;
     } else {
-        this.x -= x || 0;
-        this.y -= y || 0;
+        this.x -= x;
+        this.y -= y;
     }
     return this;
 };
@@ -55,6 +64,13 @@ Vector.prototype.round = function() {
     this.x = Math.round(this.x);
     this.y = Math.round(this.y);
     return this;
+};
+
+Vector.prototype.abs = function() {
+    return this.scale(
+        this.x < 0 ? -1 : 1,
+        this.y < 0 ? -1 : 1
+    );
 };
 
 Vector.prototype.floor = function() {
@@ -75,17 +91,17 @@ Vector.prototype.distanceTo = function(x, y) {
 
 Vector.prototype.sqDistanceTo = function(x, y) {
     if (x instanceof Vector) {
-        return this.clone().subtract(x).distanceSq();
+        return this.clone().sub(x).distanceSq();
     } else {
-        return this.clone().subtract(x || 0, y || 0).distanceSq();
+        return this.clone().sub(x, y).distanceSq();
     }
 };
 
 Vector.prototype.angleTo = function(x, y) {
     if (x instanceof Vector) {
-        return this.clone().subtract(x).angle();
+        return this.clone().sub(x).angle();
     } else {
-        return this.clone().subtract(x || 0, y || 0).angle();
+        return this.clone().sub(x, y).angle();
     }
 };
 
@@ -116,7 +132,7 @@ Vector.prototype.flipX = function() {
 };
 
 Vector.prototype.flipY = function() {
-    return this.scale(1, -1);
+    return this.scale(-1, 1);
 };
 
 Vector.prototype.angle = function() {
