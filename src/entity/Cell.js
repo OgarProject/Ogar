@@ -1,32 +1,25 @@
 var Vector = require('../modules/Vector');
 
-function Cell(nodeId, owner, startPos, mass, gameServer) {
+function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
     this.ticksLeft = 0; // Individual updates
+    
     this.color = {
         r: 0,
-        g: 255,
+        g: 0,
         b: 0
     };
-    this.lastPos = new Vector(0, 0); // Required for tracking last position at GameWorld
-    this.position = new Vector(0, 0); // The actual position
-    this.pos(startPos);
-    this._mass = 0;
-    this._size = 0;
-    this._squareSize = 0;
-    this.mass(mass);
-    this.hasChanged = true; // Whether should send update
-    
+    this.position;
+    if (position) this.position = new Vector(position.x, position.y);
+    this.mass = mass; // Starting mass of the cell
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     this.spiked = 0; // If 1, then this cell has spikes around it
 
     this.killedBy; // Cell that ate this cell
     this.gameServer = gameServer;
 
-    this.moveEngine = new Vector(0, 0);
-    this.moveEngineDecay = 0.9;
-    this.collisionRestoreTicks = 0; // Ticks left before cell starts checking for collision with client's cells
+    this.moveEngine = new Vector();
 }
 
 module.exports = Cell;
@@ -34,120 +27,115 @@ module.exports = Cell;
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 
 Cell.prototype.getName = function() {
-    if (this.owner)
+    if (this.owner) {
         return this.owner.name;
-    return "";
+    } else {
+        return "";
+    }
+};
+
+Cell.prototype.setColor = function(color) {
+    this.color.r = color.r;
+    this.color.g = color.g;
+    this.color.b = color.b;
 };
 
 Cell.prototype.getColor = function() {
-    if (this.owner)
-        return this.owner.color;
     return this.color;
 };
 
-Cell.prototype.pos = function(setTo) {
-    if (setTo) {
-        this.lastPos = this.position;
-        this.position = setTo.round();
-        this.hasChanged = true;
-        // Update GameWorld
-        this.gameServer.world.updateNode(this);
-    }
-    return this.position;
+Cell.prototype.getSize = function() {
+    // Calculates radius based on cell mass
+    return Math.ceil(Math.sqrt(100 * this.mass));
 };
 
-Cell.prototype.mass = function(toAdd) {
-    if (toAdd) {
-        this._mass += toAdd;
-        this._squareSize = this._mass * 100;
-        this._size = Math.ceil(Math.sqrt(this._squareSize));
-        this.hasChanged = true;
-    }
-    return this._mass;
+Cell.prototype.getSquareSize = function() {
+    // R * R
+    return (100 * this.mass) >> 0;
 };
 
-Cell.prototype.size = function() {
-    return this.size;
+Cell.prototype.addMass = function(n) {
+    this.mass += n;
 };
 
-Cell.prototype.squareSize = function() {
-    return this.squareSize;
+Cell.prototype.getKiller = function() {
+    return this.killedBy;
 };
 
-Cell.prototype.isColliding = function(check) {
-    return this.position.sqDistanceTo(check.position) < this._squareSize + check.squareSize();
+Cell.prototype.setKiller = function(cell) {
+    this.killedBy = cell;
 };
 
-Cell.prototype.moveEngineTick = function() {
-    // Move
-    this.pos(this.position.clone().add(this.moveEngine));
+Cell.prototype.visibleCheck = function(box, centerPos) {
+    var size = this.getSize();
+    var cartesian = this.position.clone().sub(centerPos.x, centerPos.y).sub(size, size).abs();
+
+    return cartesian.x < box.width && cartesian.y < box.height;
+};
+
+Cell.prototype.moveEngineTick = function(config) {
+    var toMove = this.moveEngine.clone().scale(0.5);
+    this.position.sub(toMove);
     
-    // Decay move speed
-    if (this.moveEngine.distance() > 0) this.hasChanged = true;
-    var toDecay = this.moveEngine.scale(this.moveEngineDecay).scale(0.5);
-    this.moveEngineDecay.sub(toDecay);
+    // Decreasing twice as slower
+    this.moveEngine.scale(0.935);
     
-    // Border check
-    this.borderCheck(true);
+    // Check for border passage
+    this.borderCheck(false);
     
-    // Cell-specific move actions
     this.move();
-    
-    this.position.round();
 };
 
 Cell.prototype.borderCheck = function(flipMoving) {
     if (flipMoving == undefined || flipMoving == null) flipMoving = false;
     
     // Border check - If flipMoving is true then bounce off
-    var border = this.gameServer.config.border;
-    var checkRadius = this.size() / 2;
+    var border = this.gameServer.borders();
+    var checkRadius = this.getSize() / 2;
     
-    if (this.pos.x - checkRadius < border.left) {
-        this.pos.x = border.left;
+    if (this.position.x - checkRadius < border.left) {
+        this.position.x = border.left + checkRadius;
         if (flipMoving) this.moveEngine.flipX();
     }
     
-    if (this.pos.y - checkRadius < border.top) {
-        this.pos.y = border.top;
-        if (flipMoving) this.moveEngine.flipY();
-    }
-    
-    if (this.pos.x + checkRadius < border.right) {
-        this.pos.x = border.right;
+    if (this.position.x + checkRadius > border.right) {
+        this.position.x = border.right - checkRadius;
         if (flipMoving) this.moveEngine.flipX();
     }
     
-    if (this.pos.y + checkRadius < border.bottom) {
-        this.pos.y = border.bottom;
+    if (this.position.y - checkRadius < border.top) {
+        this.position.y = border.top + checkRadius;
         if (flipMoving) this.moveEngine.flipY();
     }
-};
-
-Cell.prototype.shouldSendUpdate = function() {
-    // Whether should send update on next node update packet
-    var a = this.hasChanged ? true : false;
-    this.hasChanged = false;
-    return a;
+    
+    if (this.position.y + checkRadius > border.bottom) {
+        this.position.y = border.bottom - checkRadius;
+        if (flipMoving) this.moveEngine.flipY();
+    }
 };
 
 // Override these
-Cell.prototype.getEatingRange = function() {
-    return this.size() / 3.14;
+Cell.prototype.sendUpdate = function() {
+    // Whether or not to include this cell in the update packet
+    return true;
 };
-Cell.prototype.move = function() { };   // After moving, designed specially for player cells
-Cell.prototype.eat = function() { };    // On tick for eating, designed specially for player cells and ejected mass
-Cell.prototype.addMass = function(n) {
-    this.mass(n);
+
+Cell.prototype.onConsume = function(consumer, gameServer) {
+    // Called when the cell is consumed
 };
-Cell.prototype.onAdd = function() {
-    // Add node to XY tree
-    this.gameServer.world.addNode(this);
+
+Cell.prototype.onAdd = function(gameServer) {
+    // Called when this cell is added to the world
 };
-Cell.prototype.onRemove = function() {
-    // Remove node from XY tree
-    this.gameServer.world.deleteNode(this);
+
+Cell.prototype.onRemove = function(gameServer) {
+    // Called when this cell is removed
 };
-Cell.prototype.onConsume = function(consumer) {
-    consumer.addMass(this._mass);
+
+Cell.prototype.eat = function() {
+    // Calld on tick for eating
+};
+
+Cell.prototype.move = function(gameServer) {
+    // Called on each auto move engine tick
 };
