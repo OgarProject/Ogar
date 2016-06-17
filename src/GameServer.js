@@ -54,6 +54,7 @@ function GameServer() {
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
         serverMaxConnections: 64,   // Maximum amount of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum amount of connections from the same IP (0 for no limit)
+        serverIpBanList: 0,         // Set to 1 to use IP ban list; 0 to not use a ban list.
         serverPort: 443,            // Server port
         serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
         serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
@@ -66,7 +67,6 @@ function GameServer() {
         serverScrambleCoords: 1,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
-        serverUseBlacklist: 0,      // Set to 1 to use blacklist; 0 to not use a blacklist.
         borderLeft: 0,              // Left border of map (Vanilla value: 0)
         borderRight: 6000,          // Right border of map (Vanilla value: 14142.135623730952)
         borderTop: 0,               // Top border of map (Vanilla value: 0)
@@ -108,10 +108,11 @@ function GameServer() {
         tourneyAutoFillPlayers: 1,  // The timer for filling the server with bots will not count down unless there is this amount of real players
     };
     
-    this.blacklist = [];
+    this.ipBanList = [];
     
     // Parse config
     this.loadConfig();
+    this.loadIpBanList();
 
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
@@ -187,7 +188,7 @@ GameServer.prototype.onServerSocketOpen = function () {
 
 GameServer.prototype.onClientSocketOpen = function (ws) {
     // Check blacklist first (if enabled).
-    if (this.config.serverUseBlacklist == 1 && this.blacklist.indexOf(ws._socket.remoteAddress) > -1) {
+    if (this.ipBanList && this.ipBanList.length > 0 && this.ipBanList.indexOf(ws._socket.remoteAddress) >= 0) {
         // IP banned
         ws.close(1000, "IP banned");
         return;
@@ -199,7 +200,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
         if (socket == null || socket.isConnected == null)
             continue;
         totalConnections++;
-        if (socket.remoteAddress == ws._socket.remoteAddress)
+        if (socket.isConnected && socket.remoteAddress == ws._socket.remoteAddress)
             ipConnections++;
     }
     if (this.config.serverMaxConnections > 0 && totalConnections >= this.config.serverMaxConnections) {
@@ -236,11 +237,13 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     this.clients.push(ws);
 };
 
-GameServer.prototype.onClientSocketClose = function (ws, reason) {
+GameServer.prototype.onClientSocketClose = function (ws, code) {
     this.log.onDisconnect(ws.remoteAddress);
     
     ws.isConnected = false;
     ws.sendPacket = function (data) { };
+    ws.closeReason = { code: ws._closeCode, message: ws._closeMessage };
+
     ws.playerTracker.disconnect = this.config.playerDisconnectTime * 20;
     for (var i = 0; i < ws.playerTracker.cells.length; i++) {
         var cell = ws.playerTracker.cells[i];
@@ -1138,20 +1141,102 @@ GameServer.prototype.loadConfig = function() {
         // Create a new config
         fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
     }
-    
-    // Sorry for hijacking this function to add banning feature...
+};
+
+GameServer.prototype.loadIpBanList = function () {
+    if (!this.config.serverIpBanList)
+        return;
+    var fileName = "./ipbanlist.txt";
     try {
-        // Load and input the contents of the blacklist file
-        this.blacklist = fs.readFileSync("./blacklist.txt", "utf8").split(/[\r\n]+/).filter(function(x) {
-            return x != ''; // filter empty lines
-        });
-    } catch (err) {
-        // Only if blacklist toggle has been turned on
-        if (this.config.serverUseBlacklist != 0) {
-            // No blacklist file
-            console.log("[Game] Info: Blacklist enabled but file not found.");
+        if (fs.existsSync(fileName)) {
+            // Load and input the contents of the ipbanlist file
+            this.ipBanList = fs.readFileSync(fileName, "utf8").split(/[\r\n]+/).filter(function (x) {
+                return x != ''; // filter empty lines
+            });
+            console.log("[Game] " + this.ipBanList.length + " IP ban records loaded.");
+        } else {
+            console.log("[Game] " + fileName + " is missing.");
         }
+    } catch (err) {
+        console.log("[Game] Failed to load " + fileName + ": " + err.message);
     }
+};
+
+GameServer.prototype.saveIpBanList = function () {
+    if (!this.config.serverIpBanList)
+        return;
+    var fileName = "./ipbanlist.txt";
+    try {
+        var blFile = fs.createWriteStream(fileName);
+        // Sort the blacklist and write.
+        this.ipBanList.sort().forEach(function (v) {
+            blFile.write(v + '\n');
+        });
+        blFile.end();
+        console.log("[Game] " + this.ipBanList.length + " IP ban records saved.");
+    } catch (err) {
+        console.log("[Game] Failed to save " + fileName + ": " + err.message);
+    }
+};
+
+GameServer.prototype.banIp = function (ip) {
+    if (this.ipBanList.indexOf(ip) >= 0) {
+        console.log("[Game] " + ip + " already in the ban list!");
+        return;
+    }
+    this.ipBanList.push(ip);
+    this.clients.forEach(function (socket) {
+        if (socket == null || !socket.isConnected)
+            return;
+        // remove player cells
+        socket.playerTracker.cells.forEach(function (cell) {
+            this.removeNode(cell);
+        }, this);
+        // disconnect
+        socket.close(1000, "Banned from server");
+        var name = socket.playerTracker.getFriendlyName();
+        console.log("[Game] Banned \"" + name + "\" with IP " + ip);
+        this.sendChatMessage(null, null, "Banned \"" + name + "\""); // notify to don't confuse with server bug
+    }, this);
+    this.saveIpBanList();
+};
+
+GameServer.prototype.unbanIp = function (ip) {
+    var index = this.ipBanList.indexOf(ip);
+    if (index < 0) {
+        console.log("[Game] IP " + ip + " is not in the banlist");
+        return;
+    }
+    this.ipBanList.splice(index, 1);
+    console.log("[Game] Unbanned IP: " + ip);
+    this.saveIpBanList();
+};
+
+// Kick player by ID. Use ID = 0 to kick all players
+GameServer.prototype.kickId = function (id) {
+    var count = 0;
+    this.clients.forEach(function (socket) {
+        if (socket.isConnected == false)
+            return;
+        if (id != 0 && socket.playerTracker.pID != id)
+            return;
+        // remove player cells
+        socket.playerTracker.cells.forEach(function (cell) {
+            this.removeNode(cell);
+        }, this);
+        // disconnect
+        socket.close(1000, "Kicked from server");
+        var name = socket.playerTracker.getFriendlyName();
+        console.log("[Game] Kicked \"" + name + "\"");
+        this.sendChatMessage(null, null, "Kicked \"" + name + "\""); // notify to don't confuse with server bug
+        count++;
+    }, this);
+    if (count > 0)
+        return;
+    if (id == 0)
+        console.log("[Game] No players to kick!");
+    else
+        console.log("[Game] Player with ID="+id+" not found!");
 };
 
 // Stats server

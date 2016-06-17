@@ -74,6 +74,15 @@ module.exports = PlayerTracker;
 
 // Setters/Getters
 
+PlayerTracker.prototype.getFriendlyName = function () {
+    var name = this.getName();
+    if (!name) name = "";
+    name = name.trim();
+    if (name.length == 0)
+        name = "An unnamed cell";
+    return name;
+};
+
 PlayerTracker.prototype.setName = function(name) {
     this.name = name;
 };
