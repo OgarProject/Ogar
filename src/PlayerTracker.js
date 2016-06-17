@@ -169,6 +169,7 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
 };
 
 PlayerTracker.prototype.update = function () {
+    if (this.isRemoved) return;
     // Handles disconnection
     var time = +new Date;
     if (!this.socket.isConnected) {
@@ -176,25 +177,31 @@ PlayerTracker.prototype.update = function () {
         var dt = (time - this.socket.closeTime) / 1000;
         if (this.cells.length == 0 || dt >= this.gameServer.config.playerDisconnectTime) {
             // Remove all client cells
-            for (var i = 0; i < this.cells.length; i++) {
-                var cell = this.cells[0];
-                if (cell == null) continue;
-                this.gameServer.removeNode(cell);
+            var cells = this.cells;
+            this.cells = [];
+            for (var i = 0; i < cells.length; i++) {
+                this.gameServer.removeNode(cells[i]);
             }
             // Mark to remove
             this.isRemoved = true;
         }
+        // update visible nodes/mouse (for spectators, if any)
+        var nodes = this.getVisibleNodes();
+        nodes.sort(function (a, b) { return a.nodeId - b.nodeId; });
+        this.visibleNodes = nodes;
+        this.mouse.x = this.centerPos.x;
+        this.mouse.y = this.centerPos.y;
+        this.socket.packetHandler.pressSpace = false;
+        this.socket.packetHandler.pressW = false;
+        this.socket.packetHandler.pressQ = false;
         return;
     }
-    if (this.isCloseRequested)
-        return;
     // Check timeout
-    if (this.gameServer.config.serverTimeout) {
+    if (!this.isCloseRequested && this.gameServer.config.serverTimeout) {
         var dt = (time - this.socket.lastAliveTime) / 1000;
         if (dt >= this.gameServer.config.serverTimeout) {
             this.socket.close(1000, "Connection timeout");
             this.isCloseRequested = true;
-            return;
         }
     }
 

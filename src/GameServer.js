@@ -247,12 +247,11 @@ GameServer.prototype.onClientSocketClose = function (ws, code) {
     ws.closeReason = { code: ws._closeCode, message: ws._closeMessage };
     ws.closeTime = +new Date;
 
-    for (var i = 0; i < ws.playerTracker.cells.length; i++) {
-        var cell = ws.playerTracker.cells[i];
-        if (cell == null) continue;
-        
-        cell.calcMove = function () { }
-    }
+    this.getGrayColor
+    // disconnected effect
+    ws.playerTracker.cells.forEach(function (cell) {
+        cell.setColor(this.getGrayColor(cell.getColor()));
+    }, this);
 };
 
 GameServer.prototype.onClientSocketError = function (ws, error) {
@@ -330,6 +329,15 @@ GameServer.prototype.getRandomSpawn = function(mass) {
     //}
 
     return pos;
+};
+
+GameServer.prototype.getGrayColor = function (rgb) {
+    var luminance = Math.min(255, (rgb.r * 0.2125 + rgb.g * 0.7154 + rgb.b * 0.0721)) >>> 0;
+    return {
+        r: luminance,
+        g: luminance,
+        b: luminance
+    };
 };
 
 GameServer.prototype.getRandomColor = function() {
