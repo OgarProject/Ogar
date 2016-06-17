@@ -733,8 +733,9 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     manifold.cell1.checkBorder(border);
     manifold.cell2.checkBorder(border);
     // update quadTree
-    this.updateNodeQuad(manifold.cell1);
-    this.updateNodeQuad(manifold.cell2);
+    // it's too heavy operation we will update it when resolution will be completed
+    //this.updateNodeQuad(manifold.cell1);
+    //this.updateNodeQuad(manifold.cell2);
 };
 
 // Checks if collision is rigid body collision
@@ -891,14 +892,21 @@ GameServer.prototype.updateMoveEngine = function () {
     }
     
     // resolve rigid body collisions
-    //for (var z = 0; z < 4; z++) { // loop for better rigid body resolution quality (slow)
+    for (var z = 0; z < 2; z++) { // loop for better rigid body resolution quality (slow)
         for (var k = 0; k < rigidCollisions.length; k++) {
             var c = rigidCollisions[k];
             var manifold = this.checkCellCollision(c.cell1, c.cell2);
             if (manifold == null) continue;
             this.resolveRigidCollision(manifold, border);
+            // position changed! don't forgot to update quad-tree
         }
-    //}
+    }
+    // Update quad tree
+    for (var k = 0; k < rigidCollisions.length; k++) {
+        var c = rigidCollisions[k];
+        this.updateNodeQuad(c.cell1);
+        this.updateNodeQuad(c.cell2);
+    }
     rigidCollisions = null;
     
     // resolve eat collisions
@@ -962,6 +970,13 @@ GameServer.prototype.updateMoveEngine = function () {
         var manifold = this.checkCellCollision(c.cell1, c.cell2);
         if (manifold == null) continue;
         this.resolveRigidCollision(manifold, border);
+        // position changed! don't forgot to update quad-tree
+    }
+    // Update quad tree
+    for (var k = 0; k < rigidCollisions.length; k++) {
+        var c = rigidCollisions[k];
+        this.updateNodeQuad(c.cell1);
+        this.updateNodeQuad(c.cell2);
     }
     rigidCollisions = null;
     
