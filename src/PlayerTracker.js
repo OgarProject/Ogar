@@ -3,7 +3,8 @@ var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
-    this.disconnect = -1; // Disconnection
+    this.isRemoved = false;
+    this.isCloseRequested = false;
     this.name = "";
     this.skin = "";
     this.gameServer = gameServer;
@@ -168,8 +169,37 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
 };
 
 PlayerTracker.prototype.update = function () {
-    // if initialization is not complete yet then do not update
-    if (this.socket.packetHandler.protocol == 0)
+    // Handles disconnection
+    var time = +new Date;
+    if (!this.socket.isConnected) {
+        // wait for playerDisconnectTime
+        var dt = (time - this.socket.closeTime) / 1000;
+        if (this.cells.length == 0 || dt >= this.gameServer.config.playerDisconnectTime) {
+            // Remove all client cells
+            for (var i = 0; i < this.cells.length; i++) {
+                var cell = this.cells[0];
+                if (cell == null) continue;
+                this.gameServer.removeNode(cell);
+            }
+            // Mark to remove
+            this.isRemoved = true;
+        }
+        return;
+    }
+    if (this.isCloseRequested)
+        return;
+    // Check timeout
+    if (this.gameServer.config.serverTimeout) {
+        var dt = (time - this.socket.lastAliveTime) / 1000;
+        if (dt >= this.gameServer.config.serverTimeout) {
+            this.socket.close(1000, "Connection timeout");
+            this.isCloseRequested = true;
+            return;
+        }
+    }
+
+    // if initialization is not complete yet then do not send update
+    if (!this.socket.packetHandler.protocol)
         return;
     
     // Actions buffer (So that people cant spam packets)
@@ -238,29 +268,6 @@ PlayerTracker.prototype.update = function () {
         this.tickLeaderboard = 25;
     } else {
         this.tickLeaderboard--;
-    }
-    
-    // Handles disconnections
-    if (this.disconnect > -1) {
-        // Player has disconnected... remove it when the timer hits -1
-        this.disconnect--;
-        // Also remove it when its cells are completely eaten not to back up dead clients
-        if (this.disconnect == -1 || this.cells.length == 0) {
-            // Remove all client cells
-            var len = this.cells.length;
-            for (var i = 0; i < len; i++) {
-                var cell = this.socket.playerTracker.cells[0];
-                if (cell == null) continue;
-                
-                this.gameServer.removeNode(cell);
-            }
-            
-            // Remove from client list
-            var index = this.gameServer.clients.indexOf(this.socket);
-            if (index != -1) {
-                this.gameServer.clients.splice(index, 1);
-            }
-        }
     }
 };
 

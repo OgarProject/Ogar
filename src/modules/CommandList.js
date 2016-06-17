@@ -437,7 +437,7 @@ Commands.list = {
                 if (socket.closeReason.message)
                     reason += socket.closeReason.message;
                 console.log(" " + id + " | " + ip + " | " + protocol + " | " + reason);
-            } if (!socket.packetHandler.protocol) {
+            } else if (!socket.packetHandler.protocol) {
                 console.log(" " + id + " | " + ip + " | " + protocol + " | " + "[CONNECTING]");
             }else if (client.spectate) {
                 try {

@@ -84,7 +84,7 @@ FFA.prototype.updateLB = function(gameServer) {
         if (client == null) continue;
 
         var player = client.playerTracker;
-        if (player.disconnect > -1)
+        if (player.isRemoved)
             continue; // Don't add disconnected players to list
         
         var playerScore = player.getScore();

@@ -52,6 +52,7 @@ function GameServer() {
 
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
+        serverTimeout: 30,          // Seconds to keep connection alive for non-responding client
         serverMaxConnections: 64,   // Maximum amount of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum amount of connections from the same IP (0 for no limit)
         serverIpBanList: 0,         // Set to 1 to use IP ban list; 0 to not use a ban list.
@@ -216,6 +217,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.isConnected = true;
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
+    ws.lastAliveTime = +new Date;
     this.log.onConnect(ws.remoteAddress); // Log connections
     
     ws.playerTracker = new PlayerTracker(this, ws);
@@ -243,8 +245,8 @@ GameServer.prototype.onClientSocketClose = function (ws, code) {
     ws.isConnected = false;
     ws.sendPacket = function (data) { };
     ws.closeReason = { code: ws._closeCode, message: ws._closeMessage };
+    ws.closeTime = +new Date;
 
-    ws.playerTracker.disconnect = this.config.playerDisconnectTime * 20;
     for (var i = 0; i < ws.playerTracker.cells.length; i++) {
         var cell = ws.playerTracker.cells[i];
         if (cell == null) continue;
@@ -455,9 +457,17 @@ GameServer.prototype.updateSpawn = function() {
 
 GameServer.prototype.updateClients = function () {
     for (var i = 0; i < this.clients.length; i++) {
-        var client = this.clients[i];
-        if (client == null) continue;
-        client.playerTracker.update();
+        var socket = this.clients[i];
+        socket.playerTracker.update();
+    }
+    // remove dead clients
+    for (var i = 0; i < this.clients.length; ) {
+        var socket = this.clients[i];
+        if (socket.playerTracker.isRemoved) {
+            this.clients.splice(i, 1);
+        } else {
+            i++;
+        }
     }
 };
 

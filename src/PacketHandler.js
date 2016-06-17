@@ -22,7 +22,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         return;
     if (message.length > 2048) {
         // anti-spamming
-        this.socket.close(1000, "Spam");
+        this.socket.close(1009, "Spam");
         return;
     }
     var reader = new BinaryReader(message);
@@ -60,6 +60,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         this.isHandshakePassed = true;
         return;
     }
+    this.socket.lastAliveTime = +new Date;
 
     switch (packetId) {
         case 0:
