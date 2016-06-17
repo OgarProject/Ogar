@@ -1198,6 +1198,8 @@ GameServer.prototype.banIp = function (ip) {
     this.clients.forEach(function (socket) {
         if (socket == null || !socket.isConnected)
             return;
+        if (socket.remoteAddress != ip)
+            return;
         // remove player cells
         socket.playerTracker.cells.forEach(function (cell) {
             this.removeNode(cell);
