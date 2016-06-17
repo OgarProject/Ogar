@@ -3,7 +3,8 @@ var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
-    this.disconnect = -1; // Disconnection
+    this.isRemoved = false;
+    this.isCloseRequested = false;
     this.name = "";
     this.skin = "";
     this.gameServer = gameServer;
@@ -73,6 +74,15 @@ function PlayerTracker(gameServer, socket) {
 module.exports = PlayerTracker;
 
 // Setters/Getters
+
+PlayerTracker.prototype.getFriendlyName = function () {
+    var name = this.getName();
+    if (!name) name = "";
+    name = name.trim();
+    if (name.length == 0)
+        name = "An unnamed cell";
+    return name;
+};
 
 PlayerTracker.prototype.setName = function(name) {
     this.name = name;
@@ -159,8 +169,44 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
 };
 
 PlayerTracker.prototype.update = function () {
-    // if initialization is not complete yet then do not update
-    if (this.socket.packetHandler.protocol == 0)
+    if (this.isRemoved) return;
+    // Handles disconnection
+    var time = +new Date;
+    if (!this.socket.isConnected) {
+        // wait for playerDisconnectTime
+        var dt = (time - this.socket.closeTime) / 1000;
+        if (this.cells.length == 0 || dt >= this.gameServer.config.playerDisconnectTime) {
+            // Remove all client cells
+            var cells = this.cells;
+            this.cells = [];
+            for (var i = 0; i < cells.length; i++) {
+                this.gameServer.removeNode(cells[i]);
+            }
+            // Mark to remove
+            this.isRemoved = true;
+        }
+        // update visible nodes/mouse (for spectators, if any)
+        var nodes = this.getVisibleNodes();
+        nodes.sort(function (a, b) { return a.nodeId - b.nodeId; });
+        this.visibleNodes = nodes;
+        this.mouse.x = this.centerPos.x;
+        this.mouse.y = this.centerPos.y;
+        this.socket.packetHandler.pressSpace = false;
+        this.socket.packetHandler.pressW = false;
+        this.socket.packetHandler.pressQ = false;
+        return;
+    }
+    // Check timeout
+    if (!this.isCloseRequested && this.gameServer.config.serverTimeout) {
+        var dt = (time - this.socket.lastAliveTime) / 1000;
+        if (dt >= this.gameServer.config.serverTimeout) {
+            this.socket.close(1000, "Connection timeout");
+            this.isCloseRequested = true;
+        }
+    }
+
+    // if initialization is not complete yet then do not send update
+    if (!this.socket.packetHandler.protocol)
         return;
     
     // Actions buffer (So that people cant spam packets)
@@ -229,29 +275,6 @@ PlayerTracker.prototype.update = function () {
         this.tickLeaderboard = 25;
     } else {
         this.tickLeaderboard--;
-    }
-    
-    // Handles disconnections
-    if (this.disconnect > -1) {
-        // Player has disconnected... remove it when the timer hits -1
-        this.disconnect--;
-        // Also remove it when its cells are completely eaten not to back up dead clients
-        if (this.disconnect == -1 || this.cells.length == 0) {
-            // Remove all client cells
-            var len = this.cells.length;
-            for (var i = 0; i < len; i++) {
-                var cell = this.socket.playerTracker.cells[0];
-                if (cell == null) continue;
-                
-                this.gameServer.removeNode(cell);
-            }
-            
-            // Remove from client list
-            var index = this.gameServer.clients.indexOf(this.socket);
-            if (index != -1) {
-                this.gameServer.clients.splice(index, 1);
-            }
-        }
     }
 };
 
