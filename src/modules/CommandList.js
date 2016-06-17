@@ -437,7 +437,9 @@ Commands.list = {
                 if (socket.closeReason.message)
                     reason += socket.closeReason.message;
                 console.log(" " + id + " | " + ip + " | " + protocol + " | " + reason);
-            } else if (client.spectate) {
+            } if (!socket.packetHandler.protocol) {
+                console.log(" " + id + " | " + ip + " | " + protocol + " | " + "[CONNECTING]");
+            }else if (client.spectate) {
                 try {
                     nick = gameServer.largestClient.getFriendlyName();
                 } catch (e) {
