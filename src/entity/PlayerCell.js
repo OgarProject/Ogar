@@ -1,3 +1,4 @@
+var Vector = require('../modules/Vector');
 var Cell = require('./Cell');
 
 function PlayerCell() {
@@ -6,20 +7,13 @@ function PlayerCell() {
     this.cellType = 0;
     this.recombineTicks = 0; // Ticks passed after the cell has split
     this.shouldRecombine = false; // Should the cell combine. If true, collision with own cells happens
+    this.collisionRestoreTicks = 0; // Ticks left before cell starts checking for collision with client's cells
 }
 
 module.exports = PlayerCell;
 PlayerCell.prototype = new Cell();
 
 // Main Functions
-
-PlayerCell.prototype.simpleCollide = function(check, d) {
-    // Simple collision check
-    var len = 2 * d >> 0; // Width of cell + width of the box (Int)
-
-    return (this.abs(this.position.x - check.x) < len) &&
-        (this.abs(this.position.y - check.y) < len);
-};
 
 PlayerCell.prototype.calcMergeTime = function(base) {
     // Check for merging time
@@ -36,71 +30,57 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 
 // Movement
 
-PlayerCell.prototype.calcMove = function(x2, y2, gameServer) {
-    if (!this.owner.shouldMoveCells && this.owner.notMoved) return; // Mouse is in one place
+PlayerCell.prototype.getSpeed = function() {
+    // Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
+    // (should possibly have a config value for this?)
 
-    // Get angle of mouse
-    var deltaY = y2 - this.position.y;
-    var deltaX = x2 - this.position.x;
-    var angle = Math.atan2(deltaX, deltaY);
+    // Old formulas:
+    // return 5 + (20 * (1 - (this.mass/(70+this.mass))));
+    // return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
+    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.2101) / 1.25;
+};
 
-    if (isNaN(angle)) {
-        return;
-    }
+PlayerCell.prototype.getSplittingSpeed = function() {
+    // Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
+    // (should possibly have a config value for this?)
 
-    var dist = this.getDist(this.position.x, this.position.y, x2, y2);
-    var speed = Math.min(this.getSpeed(), dist) / 2; // Twice as slower
+    // Old formulas:
+    // return 5 + (20 * (1 - (this.mass/(70+this.mass))));
+    // return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
+    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.2101);
+};
+
+PlayerCell.prototype.move = function() {
+    // Get angle to mouse
+    var cartesian = this.position.clone().sub(this.owner.mouse);
+    var angle = cartesian.angle();
+    
+    var speed = Math.min(this.getSpeed(), cartesian.distance()); // Twice as slower
 
     // Move cell
-    this.position.x += Math.sin(angle) * speed;
-    this.position.y += Math.cos(angle) * speed;
-    this.owner.notMoved = false;
+    this.position.sub(
+        Math.sin(angle) * speed,
+        Math.cos(angle) * speed
+    );
 };
-
-PlayerCell.prototype.collision = function(gameServer) {
-    var config = gameServer.config;
-    var r = this.getSize(); // Cell radius
-
-    // Collision check for other cells
-    for (var i = 0; i < this.owner.cells.length; i++) {
-        var cell = this.owner.cells[i];
-
-        if (!cell) continue; // Error
-        if (this.nodeId == cell.nodeId) continue;
-
-        if ((!cell.shouldRecombine) || (!this.shouldRecombine)) {
-            // Cannot recombine - Collision with your own cells
-            var calcInfo = gameServer.checkCellCollision(this, cell); // Calculation info
-
-            // Further calculations
-            if (calcInfo.collided) { // Collided
-                // Cell with collision restore ticks on should not collide
-                if (this.collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) continue;
-
-                // Call gameserver's function to collide cells
-                gameServer.cellCollision(this, cell, calcInfo);
-            }
-        }
-    }
-
-    gameServer.gameMode.onCellMove(this, gameServer);
-
-    // Check to ensure we're not passing the world border (shouldn't get closer than a quarter of the cell's diameter)
-    if (this.position.x < -config.borderLeft + r / 2) {
-        this.position.x = -config.borderLeft + r / 2;
-    }
-    if (this.position.x > config.borderRight - r / 2) {
-        this.position.x = config.borderRight - r / 2;
-    }
-    if (this.position.y < -config.borderTop + r / 2) {
-        this.position.y = -config.borderTop + r / 2;
-    }
-    if (this.position.y > config.borderBottom - r / 2) {
-        this.position.y = config.borderBottom - r / 2;
-    }
-};
+// Collision is now handled by NodeHandler
 
 // Override
+
+PlayerCell.prototype.eat = function() {
+    for (var i = 0; i < this.owner.visibleNodes.length; i++) {
+        var node = this.owner.visibleNodes[i];
+        if (!node) continue;
+        
+        if (this.gameServer.collisionHandler.canEat(this, node)) {
+            // Eat node
+            node.inRange = true;
+            node.onConsume(this, this.gameServer);
+            node.setKiller(this);
+            this.gameServer.removeNode(node);
+        }
+    }
+};
 
 PlayerCell.prototype.getEatingRange = function() {
     return this.getSize() / 3.14;
@@ -137,22 +117,16 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     gameServer.gameMode.onCellRemove(this);
 };
 
-PlayerCell.prototype.moveDone = function(gameServer) {
-    // Well, nothing.
-};
-
-// Lib
-
-PlayerCell.prototype.abs = function(x) {
-    return x < 0 ? -x : x;
-};
-
-PlayerCell.prototype.getDist = function(x1, y1, x2, y2) {
-    var xs = x2 - x1;
-    xs = xs * xs;
-
-    var ys = y2 - y1;
-    ys = ys * ys;
-
-    return Math.sqrt(xs + ys);
+PlayerCell.prototype.addMass = function(n) {
+    // Check if the cell needs to autosplit before adding mass
+    if (this.mass > this.gameServer.config.playerMaxMass &&
+        this.owner.cells.length < this.gameServer.config.playerMaxCells) {
+        
+        // Autosplit
+        var randomAngle = Math.random() * 6.28; // Get random angle
+        this.gameServer.nodeHandler.createPlayerCell(this.owner, this, randomAngle, this.mass / 2);
+    } else {
+        this.mass = Math.min(this.mass, this.gameServer.config.playerMaxMass);
+    }
+    this.mass += n;
 };
