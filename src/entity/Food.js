@@ -8,7 +8,8 @@ function Food() {
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.shouldSendUpdate = false;
     
-    this.spawnedByServer = false;
+    // Set by GameServer or gamemode (Experimental), a list where it's contained to remove itself on death
+    this.insertedList;
 
     if (this.gameServer.config.foodMassGrow &&
         this.gameServer.config.foodMassGrowPossiblity > Math.floor(Math.random() * 101)) {
@@ -52,8 +53,10 @@ Food.prototype.sendUpdate = function() {
     return true;
 };
 
-Food.prototype.onRemove = function(gameServer) {
-    var index = this.gameServer.nodesFood.indexOf(this);
-    if (this.spawnedByServer && index != -1)
-        this.gameServer.nodesFood.splice(index, 1);
+Food.prototype.onRemove = function() {
+    if (this.insertedList) {
+        var index = this.insertedList.indexOf(this);
+        if (index != -1)
+            this.insertedList.splice(index, 1);
+    }
 };
