@@ -1,6 +1,6 @@
 function CollisionHandler() {
     // Can make config values for these
-    this.baseEatingDistanceDivisor = 4.42;
+    this.baseEatingDistanceDivisor = 3;
     this.baseEatingMassRequired = 1.3;
 }
 
@@ -52,6 +52,8 @@ CollisionHandler.prototype.canEat = function(cell, check) {
 
             // Can eat own cells with any mass
             multiplier = 1.0;
+        } else {
+            if (cell.owner.team == check.owner.team) return false; // Same team cells can't eat each other
         }
     }
     
@@ -59,8 +61,8 @@ CollisionHandler.prototype.canEat = function(cell, check) {
     if (check.mass * multiplier > cell.mass) return false;
     
     // Lastly, check eating distance
-    var dist = cell.position.distanceTo(check.position);
-    var minDist = cell.getSize() - check.getSize() / this.baseEatingDistanceDivisor;
+    var dist = cell.position.sqDistanceTo(check.position);
+    var minDist = cell.getSquareSize() - check.getSquareSize() / this.baseEatingDistanceDivisor;
 
     return dist < minDist;
 };
