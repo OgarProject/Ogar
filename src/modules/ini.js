@@ -3,6 +3,7 @@ exports.stringify = exports.encode = encode;
 
 exports.safe = safe;
 exports.unsafe = unsafe;
+exports.getLagMessage = getLagMessage;
 
 var eol = process.platform === "win32" ? "\r\n" : "\n";
 
@@ -188,3 +189,17 @@ function unsafe(val, doUnesc) {
 var isInt = function(n) {
     return parseInt(n) === n;
 };
+
+function getLagMessage(updateTimeAvg){
+	var lagMessage = "extreme high lag";
+	if (updateTimeAvg < 20)
+		lagMessage = "perfectly smooth";
+	else if (updateTimeAvg < 35)
+		lagMessage = "good";
+	else if (updateTimeAvg < 40)
+		lagMessage = "tiny lag";
+	else if (updateTimeAvg < 50)
+		lagMessage = "lag";
+	
+	return lagMessage;
+}

@@ -1314,6 +1314,7 @@ GameServer.prototype.getStats = function() {
         'spectators': this.clients.length - players,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
+		'update_time':this.updateTimeAvg.toFixed(3) + " [ms] (" + ini.getLagMessage(this.updateTimeAvg) + ")",
         'uptime': Math.round((new Date().getTime() - this.startTime)/1000/60)+" m",
         'start_time': this.startTime
     };
