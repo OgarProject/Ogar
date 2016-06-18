@@ -851,13 +851,6 @@ GameServer.prototype.updateMoveEngine = function () {
     // Move player cells
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
-        
-        // sort by size ascending
-        client.cells.sort(function (a, b) {
-            return a.getSize() - b.getSize();
-        });
-        
-        // Move
         for (var j = 0; j < client.cells.length; j++) {
             var cell1 = client.cells[j];
             if (cell1 == null || cell1.isRemoved)
