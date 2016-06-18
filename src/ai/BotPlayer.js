@@ -1,6 +1,5 @@
 var PlayerTracker = require('../PlayerTracker');
-var gameServer = require('../GameServer');
-var Vector = require('vector2-node');
+var Vector = require('../modules/Vector');
 
 function BotPlayer() {
     PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
@@ -16,9 +15,7 @@ BotPlayer.prototype = new PlayerTracker();
 
 BotPlayer.prototype.getLowestCell = function() {
     // Gets the cell with the lowest mass
-    if (this.cells.length <= 0) {
-        return null; // Error!
-    }
+    if (this.cells.length <= 0) return null;
 
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = this.cells.valueOf();
@@ -37,7 +34,7 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
             this.visibleNodes.splice(index, 1);
         }
     }
-
+    
     // Respawn if bot is dead
     if (this.cells.length <= 0) {
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
@@ -47,136 +44,117 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
             return;
         }
     }
-    
+        
     if (this.splitCooldown > 0) this.splitCooldown--;
+        
+    // Calculate nodes
+    this.visibleNodes = this.viewReset();
+    var cell = this.getLowestCell();
+    // Action
+    this.decide(cell);
     
-    setTimeout(function() {
-        // Calculate nodes
-        this.visibleNodes = this.calcViewBox();
-
-        // Calc predators/prey
-        var cell = this.getLowestCell();
-
-        // Action
-        this.decide(cell);
-
-        // Reset queues
-        this.nodeDestroyQueue = [];
-        this.nodeAdditionQueue = [];
-    }.bind(this), 0);
+    // Reset queues
+    this.nodeDestroyQueue = [];
+    this.nodeAdditionQueue = [];
 };
 
 // Custom
 BotPlayer.prototype.decide = function(cell) {
     if (!cell) return; // Cell was eaten, check in the next tick (I'm too lazy)
     
-    var cellPos = cell.position;
-    var result = new Vector(0, 0);
-    // Splitting
-    var split = false,
-        splitTarget = null,
-        threats = [];
+    var mouse = new Vector(0, 0),
+        possibleTargets = [],
+        splitThreatLevel = 0; // Nearby viruses or larger cells are considered split threats
 
     for (var i = 0; i < this.visibleNodes.length; i++) {
+        if (isNaN(mouse.x) || isNaN(mouse.y)) break;
         var check = this.visibleNodes[i];
+        if (!check) continue;
+        if (check.owner) if (this.pID == check.owner.pID) continue; // Owned cell
         
-        // Get attraction of the cells - avoid larger cells, viruses and same team cells
-        var influence = 0;
+        var attraction = 0;
+        
+        // Get attraction of the cell - avoid larger and same team cells, and target smaller
         if (check.cellType == 0) {
-            // Player cell
-            if (this.gameServer.gameMode.haveTeams && (cell.owner.team == check.owner.team)) influence = 0; // Same team cell
-            else if (cell.mass / 1.3 > check.mass) influence = check.getSize() * 2.5; // Can eat it
-            else if (check.mass / 1.3 > cell.mass) influence = -check.getSize(); // Can eat me
-        } else if (check.cellType == 1) {
+            // Player cells
+            if (check.owner.team == this.team) attraction = -check.mass; // My team
+            else {
+                if (cell.mass / 10 > check.mass) continue; // Too small to check
+                // Not my team - check for targets/threats
+                if (cell.mass / 1.3 > check.mass) {
+                    // Can eat it
+                    attraction = check.mass;
+                    if (cell.mass / 2.6 > check.mass) possibleTargets.push(check);
+                } else {
+                    if (check.mass / 1.3 > cell.mass) attraction = -check.mass; // Can eat me
+                    // Split threat - distance relative
+                    splitThreatLevel += cell.position.distanceTo(check.position) * (1 +check.mass - cell.mass);
+                }
+            }
+        }
+        if (check.cellType == 1) {
             // Food
-            influence = 1;
-        } else if (check.cellType == 2) {
+            if (cell.mass > 600) continue; // Too large to eat food
+            attraction = check.mass;
+        }
+        if (check.cellType == 2) {
             // Virus
             if (cell.mass / 1.3 > check.mass) {
-                // Can eat it
-                if (this.cells.length == this.gameServer.config.playerMaxCells) influence = check.getSize() * 2.5; // Won't explode
-                else influence = -1; // Can explode
+                if (this.cells.length >= this.gameServer.config.playerMaxCells) attraction = check.mass; // Won't explode
+                else {
+                    // Split threat - distance relative
+                    attraction = -check.mass;
+                    splitThreatLevel += cell.position.distanceTo(check.position);
+                }
             }
-        } else if (check.cellType == 3) {
+        }
+        if (check.cellType == 3) {
             // Ejected mass
-            if (cell.mass / 1.3 > check.mass) influence = check.getSize();
-        } else {
-            influence = check.getSize(); // Might be TeamZ
+            if (cell.mass / 1.3 > check.mass) attraction = check.mass; // Can eat it
         }
-
-        // Apply influence if it isn't 0 or my cell
-        if (influence == 0 || cell.owner == check.owner) continue;
         
-        // Calculate separation between cell and check
-        var checkPos = check.position;
-        var displacement = new Vector(checkPos.x - cellPos.x, checkPos.y - cellPos.y);
-
-        // Figure out distance between cells
-        var distance = displacement.length();
-        if (influence < 0) {
-            // Get edge distance
-            distance -= cell.getSize() + check.getSize();
-            if (check.cellType == 0) threats.push(check);
-        }
-
-        // The farther they are the smaller influnce it is
-        if (distance < 1) distance = 1; // Avoid NaN and positive influence with negative distance & attraction
-        influence /= distance;
-
-        // Produce force vector exerted by this entity on the cell
-        var force = displacement.normalize().scale(influence);
-
-        // Splitting conditions
-        if (check.cellType == 0 && cell.mass / 2.6 > check.mass && cell.mass / 5 < check.mass &&
-            (!split) && this.splitCooldown == 0 && this.cells.length < 3) {
-                
-            var endDist = Math.max(this.splitDistance(cell), cell.getSize() * 4);
-            
-            if (distance < endDist - cell.getSize() - check.getSize()) {
-                splitTarget = check;
-                split = true;
-            }
-        } else {
-            // Add up forces on the entity
-            result.add(force);
-        }
+        if (attraction == 0) continue; // Can't do anything with check
+        
+        // Get distance
+        var distance = cell.position.clone().sub(check.position);
+        console.log(distance);
+        
+        // Negative attraction - get edge distance
+        if (attraction < 0) distance.addDistance(-cell.position - check.position);
+        
+        // Apply to mouse
+        mouse.add(distance.normalize().scale(attraction));
     }
-
-    // Normalize the resulting vector
-    result.normalize();
-
-    // Check for splitkilling and threats
-    if (split) {
-        // Can be shortened but I'm too lazy
-        if (threats.length > 0) {
-            if (this.largest(threats).mass / 2.6 > cell.mass) { // ??? but works
-                // Splitkill the target
-                this.mouse = {
-                    x: splitTarget.position.x,
-                    y: splitTarget.position.y
-                };
+    console.log(i)
+    
+    if (possibleTargets.length > 0 && splitThreatLevel < cell.mass) {
+        // See for targets
+        possibleTargets.sort(function(a, b) {
+            return cell.position.sqDistanceTo(a.position) - cell.position.sqDistanceTo(b.position);
+        });
+        
+        for (var i = 0; i < possibleTargets.length; i++) {
+            var check = possibleTargets[i];
+            
+            // Check if I can splitkill it
+            var dist = cell.position.distanceTo(check.position);
+            var splitDist = Math.max(this.splitDistance(cell), cell.getSize() * 3);
+            
+            if (dist < splitDist) {
+                // Split-kill
+                this.mouse.x = check.position.x;
+                this.mouse.y = check.position.y;
                 this.splitCooldown = 16;
-                this.gameServer.splitCells(this);
+                this.gameServer.nodeHandler.splitCells(this);
                 return;
             }
         }
-        else {
-            // Still splitkill the target
-            this.mouse = {
-                x: splitTarget.position.x,
-                y: splitTarget.position.y
-            };
-            this.splitCooldown = 16;
-            this.gameServer.splitCells(this);
-            return;
-        }
     }
-    this.mouse = {
-        x: cellPos.x + result.x * 800,
-        y: cellPos.y + result.y * 800
-    };
-};
+    mouse.normalize().scale(800);
 
+    this.mouse.x = mouse.x;
+    this.mouse.y = mouse.y;
+};
 // Subfunctions
 
 BotPlayer.prototype.largest = function(list) {
