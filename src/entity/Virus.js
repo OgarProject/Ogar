@@ -76,6 +76,9 @@ Virus.prototype.onConsume = function(consumer) {
 };
 
 Virus.prototype.eat = function() {
+    // Maximum amount of viruses
+    if (this.gameServer.nodesVirus.length >= this.gameServer.config.virusMaxAmount) return;
+    
     // Virus will eat ejected cells no matter the size of it
     for (var i = 0; i < this.gameServer.nodesEjected.length; i++) {
         var node = this.gameServer.nodesEjected[i];
@@ -84,25 +87,27 @@ Virus.prototype.eat = function() {
         var dist = this.position.sqDistanceTo(node.position);
         var maxDist = this.getSquareSize();
         
-        if (dist < maxDist) {
-            // Eat it
-            node.inRange = true;
-            node.setKiller(this);
-            this.gameServer.removeNode(node);
-            
-            // On feed checks
-            this.fed++;
-            this.mass += node.mass;
-            // Set shooting angle if necessary
-            if (this.moveEngine.x + this.moveEngine.y < 5) this.shootAngle = node.moveEngine.angle();
-            if (this.fed >= this.gameServer.config.virusFeedAmount) {
-                // Shoot!
-                this.mass = this.gameServer.config.virusStartMass;
-                this.fed = 0;
-                
-                this.gameServer.nodeHandler.shootVirus(this);
-            }
-        }
+        if (dist < maxDist) this.feed(node);
+    }
+};
+
+Virus.prototype.feed = function(node) {
+    // Eat it
+    node.inRange = true;
+    node.setKiller(this);
+    this.gameServer.removeNode(node);
+    
+    // On feed checks
+    this.fed++;
+    this.mass += node.mass;
+    // Set shooting angle if necessary
+    if (this.moveEngine.x + this.moveEngine.y < 5) this.shootAngle = node.moveEngine.angle();
+    if (this.fed >= this.gameServer.config.virusFeedAmount) {
+        // Shoot!
+        this.mass = this.gameServer.config.virusStartMass;
+        this.fed = 0;
+        
+        this.gameServer.nodeHandler.shootVirus(this);
     }
 };
 
