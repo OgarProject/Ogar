@@ -4,6 +4,8 @@ var Vector = require('./modules/Vector');
 function NodeHandler(gameServer, collisionHandler) {
     this.gameServer = gameServer;
     this.collisionHandler = collisionHandler;
+    
+    this.currentFood = 0;
 }
 
 module.exports = NodeHandler;
@@ -115,7 +117,7 @@ NodeHandler.prototype.addFood = function(n) {
             this.gameServer.config.foodMass,
             this.gameServer
         );
-        food.spawnedByServer = true;
+        food.insertedList = this.gameServer.nodesFood;
         food.setColor(this.gameServer.getRandomColor());
         
         this.gameServer.addNode(food);
@@ -148,18 +150,16 @@ NodeHandler.prototype.getRandomPosition = function() {
 };
 
 NodeHandler.prototype.getRandomSpawn = function() {
-   /* // Find a random pellet
+    // Find a random pellet
     var pellet;
     while (true) {
-        var randomIndex = Math.ceil(Math.random() * this.gameServer.nonPlayerNodes.length);
-        var node = this.gameServer.nonPlayerNodes[randomIndex];
+        var randomIndex = Math.ceil(Math.random() * this.gameServer.nodesFood.length);
+        var node = this.gameServer.nodesFood[randomIndex];
         if (!node) continue;
+        if (node.inRange) continue;
         
-        if (node.cellType == 1) {
-            // Found one
-            pellet = node;
-            break;
-        }
+        pellet = node;
+        break;
     }
     
     // Generate random angle and distance
@@ -169,8 +169,8 @@ NodeHandler.prototype.getRandomSpawn = function() {
     // Apply angle and distance to a clone of pellet's pos
     return new Vector(
         pellet.position.x + Math.sin(randomAngle) * randomDist,
-        pellet.position.x + Math.cos(randomAngle) * randomDist
-    );*/return this.getRandomPosition();
+        pellet.position.y + Math.cos(randomAngle) * randomDist
+    );
 };
 
 NodeHandler.prototype.shootVirus = function(parent) {
