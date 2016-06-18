@@ -53,7 +53,8 @@ CollisionHandler.prototype.canEat = function(cell, check) {
             // Can eat own cells with any mass
             multiplier = 1.0;
         } else {
-            if (cell.owner.team == check.owner.team) return false; // Same team cells can't eat each other
+            if (this.gameServer.gameMode.haveTeams &&
+                cell.owner.team == check.owner.team) return false; // Same team cells can't eat each other
         }
     }
     
