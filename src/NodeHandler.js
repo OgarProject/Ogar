@@ -4,8 +4,6 @@ var Vector = require('./modules/Vector');
 function NodeHandler(gameServer, collisionHandler) {
     this.gameServer = gameServer;
     this.collisionHandler = collisionHandler;
-    
-    this.currentFood = 0;
 }
 
 module.exports = NodeHandler;
@@ -185,7 +183,7 @@ NodeHandler.prototype.shootVirus = function(parent) {
         this.gameServer.getNextNodeId(),
         null,
         parentPos,
-        this.config.virusStartMass,
+        this.gameServer.config.virusStartMass,
         this.gameServer
     );
     
@@ -220,10 +218,6 @@ NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
 
     // Minimum mass to split
     if (parent.mass < this.gameServer.config.playerMinMassSplit) return false;
-
-    // Calculate customized speed for splitting cells
-    var modifier = 3 + Math.log(1 + mass) / (10 + Math.log(1 + mass));
-    var splitSpeed = this.gameServer.config.playerSpeed * Math.min(Math.pow(mass, -0.0318) * modifier, 150);
     
     // Create cell
     var newCell = new Entity.PlayerCell(
@@ -233,6 +227,9 @@ NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
         mass,
         this.gameServer
     );
+    
+    // Set split boost's speed
+    var splitSpeed = newCell.getSplittingSpeed();
     newCell.moveEngine = new Vector(
         Math.sin(angle) * splitSpeed,
         Math.cos(angle) * splitSpeed
@@ -259,6 +256,7 @@ NodeHandler.prototype.canEjectMass = function(client) {
 };
 
 NodeHandler.prototype.ejectMass = function(client) {
+    // Need to fix this
     //if (!this.canEjectMass(client))
         //return;
     for (var i = 0; i < client.cells.length; i++) {
