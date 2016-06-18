@@ -25,7 +25,7 @@ function GameServer() {
     this.clients = [];
     
     // Handlers
-    this.collisionHandler = new CollisionHandler();
+    this.collisionHandler = new CollisionHandler(this);
     this.nodeHandler = new NodeHandler(this, this.collisionHandler);
     this.playerHandler = new PlayerHandler(this);
     
@@ -38,7 +38,6 @@ function GameServer() {
     this.nodesEjected = []; // Ejected mass nodes
     this.nodesPlayer = []; // Nodes controlled by players
 
-    this.currentFood = 0;
     this.leaderboard = [];
     this.largestClient; // Required for spectators
 
