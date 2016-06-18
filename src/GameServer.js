@@ -135,7 +135,7 @@ GameServer.prototype.start = function() {
         // Spawn starting food
         this.nodeHandler.addFood(this.config.foodStartAmount);
         // Start main loop
-        setInterval(this.mainLoop.bind(this), 1);
+        setTimeout(this.mainLoop.bind(this), 1);
 
         // Done
         console.log("[Game] Listening on port " + this.config.serverPort);
@@ -298,12 +298,10 @@ GameServer.prototype.addNode = function(node) {
         var client = this.clients[i].playerTracker;
         if (!client) continue;
         
-        if (node.visibleCheck(client.getBox(), client.centerPos, client.cells)) {
+        if (node.visibleCheck(client.getBox(), client.centerPos)) {
             client.nodeAdditionQueue.push(node);
         }
     }
-    // Have a border check as nodes can spawn out of the borders
-    //node.borderCheck(false);
 };
 
 GameServer.prototype.removeNode = function(node) {
@@ -335,6 +333,8 @@ GameServer.prototype.removeNode = function(node) {
 };
 
 GameServer.prototype.mainLoop = function() {
+    setTimeout(this.mainLoop.bind(this), 1);
+    
     // Timer
     var local = new Date();
     this.tick += (local - this.time);
@@ -358,7 +358,7 @@ GameServer.prototype.mainLoop = function() {
                 this.leaderboard = [];
                 this.gameMode.updateLB(this);
 
-                if (!this.gameMode.specByLeaderboard) {
+                if (!this.gameMode.specByLeaderboard && this.clients.length > 0) {
                     // Get client with largest score if gamemode doesn't have a leaderboard
                     var clients = this.clients.valueOf();
 
@@ -382,17 +382,22 @@ GameServer.prototype.mainLoop = function() {
     }
 };
 
-GameServer.prototype.spawnPlayer = function(player, pos, mass) {
+GameServer.prototype.spawnPlayer = function(player, pos, mass, color) {
     if (mass == null) { // Get starting mass
         mass = this.config.playerStartMass;
     }
+    
     if (pos == null) { // Get random pos
         pos = this.nodeHandler.getRandomSpawn();
+    }
+    
+    if (color == null) { // Get random pos
+        color = this.getRandomColor();
     }
 
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass, this);
-    cell.color = this.getRandomColor();
+    cell.color = color;
     this.addNode(cell);
 };
 
