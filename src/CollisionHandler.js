@@ -1,7 +1,8 @@
-function CollisionHandler() {
+function CollisionHandler(gameServer) {
     // Can make config values for these
     this.baseEatingDistanceDivisor = 3;
     this.baseEatingMassRequired = 1.3;
+    this.gameServer = gameServer;
 }
 
 module.exports = CollisionHandler;
