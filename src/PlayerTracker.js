@@ -227,12 +227,15 @@ PlayerTracker.prototype.update = function () {
     
     var newVisible = this.getVisibleNodes();
     newVisible.sort(function (a, b) { return a.nodeId - b.nodeId; });
-    var deleteNodes = [];
+    var delNodes = [];
     var eatNodes = [];
+    var addNodes = [];
+    var updNodes = [];
     var newIndex = 0;
     var oldIndex = 0;
     for (; newIndex < newVisible.length && oldIndex < this.visibleNodes.length;) {
         if (newVisible[newIndex].nodeId < this.visibleNodes[oldIndex].nodeId) {
+            addNodes.push(newVisible[newIndex]);
             newIndex++;
             continue;
         }
@@ -241,19 +244,25 @@ PlayerTracker.prototype.update = function () {
             if (node.isRemoved)
                 eatNodes.push(node);
             else
-                deleteNodes.push(node);
+                delNodes.push(node);
             oldIndex++;
             continue;
         }
+        updNodes.push(newVisible[newIndex]);
         newIndex++;
         oldIndex++;
+    }
+    for (; newIndex < newVisible.length; ) {
+        var node = newVisible[newIndex];
+        addNodes.push(newVisible[newIndex]);
+        newIndex++;
     }
     for (; oldIndex < this.visibleNodes.length; ) {
         var node = this.visibleNodes[oldIndex];
         if (node.isRemoved)
             eatNodes.push(node);
         else 
-            deleteNodes.push(node);
+            delNodes.push(node);
         oldIndex++;
     }
     this.visibleNodes = newVisible;
@@ -261,9 +270,10 @@ PlayerTracker.prototype.update = function () {
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(
         this,
+        addNodes,
+        updNodes,
         eatNodes,
-        this.visibleNodes,
-        deleteNodes));
+        delNodes));
     
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
