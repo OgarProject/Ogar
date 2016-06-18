@@ -31,31 +31,27 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 // Movement
 
 PlayerCell.prototype.getSpeed = function() {
-    // Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
-    // (should possibly have a config value for this?)
+    var base = this.gameServer.config.playerSpeed;
+    var modifier = 1 + Math.log(1 + this.mass) / (10 + Math.log(1 + this.mass));
+    var speed = Math.pow(this.mass, -0.2101) * modifier;
 
-    // Old formulas:
-    // return 5 + (20 * (1 - (this.mass/(70+this.mass))));
-    // return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
-    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.2101) / 1.25;
+    return base * speed;
 };
 
 PlayerCell.prototype.getSplittingSpeed = function() {
-    // Based on 50ms ticks. If updateMoveEngine interval changes, change 50 to new value
-    // (should possibly have a config value for this?)
+    var base = this.gameServer.config.playerSpeed;
+    var modifier = 3 + Math.log(1 + this.mass) / (10 + Math.log(1 + this.mass));
+    var splitSpeed = Math.min(Math.pow(this.mass, -0.0318) * modifier, 150);
 
-    // Old formulas:
-    // return 5 + (20 * (1 - (this.mass/(70+this.mass))));
-    // return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.22) * 50 / 40;
-    return this.gameServer.config.playerSpeed * Math.pow(this.mass, -0.2101);
+    return base * splitSpeed;
 };
 
 PlayerCell.prototype.move = function() {
     // Get angle to mouse
     var cartesian = this.position.clone().sub(this.owner.mouse);
     var angle = cartesian.angle();
-    
-    var speed = Math.min(this.getSpeed(), cartesian.distance()); // Twice as slower
+
+    var speed = Math.min(this.getSpeed(), cartesian.distance()) / 2; // Twice as slower
 
     // Move cell
     this.position.sub(
@@ -71,7 +67,7 @@ PlayerCell.prototype.eat = function() {
     for (var i = 0; i < this.owner.visibleNodes.length; i++) {
         var node = this.owner.visibleNodes[i];
         if (!node) continue;
-        
+
         if (this.gameServer.collisionHandler.canEat(this, node)) {
             // Eat node
             node.inRange = true;
@@ -109,19 +105,19 @@ PlayerCell.prototype.onRemove = function(gameServer) {
         this.owner.cells.splice(index, 1);
     }
     // Remove from special player controlled node list
-    index = gameServer.nodesPlayer.indexOf(this);
+    index = this.gameServer.nodesPlayer.indexOf(this);
     if (index != -1) {
-        gameServer.nodesPlayer.splice(index, 1);
+        this.gameServer.nodesPlayer.splice(index, 1);
     }
     // Gamemode actions
-    gameServer.gameMode.onCellRemove(this);
+    this.gameServer.gameMode.onCellRemove(this);
 };
 
 PlayerCell.prototype.addMass = function(n) {
     // Check if the cell needs to autosplit before adding mass
     if (this.mass > this.gameServer.config.playerMaxMass &&
         this.owner.cells.length < this.gameServer.config.playerMaxCells) {
-        
+
         // Autosplit
         var randomAngle = Math.random() * 6.28; // Get random angle
         this.gameServer.nodeHandler.createPlayerCell(this.owner, this, randomAngle, this.mass / 2);
