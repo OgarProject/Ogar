@@ -7,6 +7,9 @@ function Food() {
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.shouldSendUpdate = false;
+    
+    // Set by GameServer or gamemode (Experimental), a list where it's contained to remove itself on death
+    this.insertedList;
 
     if (this.gameServer.config.foodMassGrow &&
         this.gameServer.config.foodMassGrowPossiblity > Math.floor(Math.random() * 101)) {
@@ -25,8 +28,6 @@ Food.prototype.getSquareSize = function() {
     return this.squareSize;
 };
 
-Food.prototype.calcMove = null; // Food has no need to move
-
 // Main Functions
 
 Food.prototype.grow = function() {
@@ -44,9 +45,7 @@ Food.prototype.grow = function() {
 
 Food.prototype.sendUpdate = function() {
     // Whether or not to include this cell in the update packet
-    if (this.moveEngineTicks == 0) {
-        return false;
-    }
+    if (this.moveEngine.distanceSq() > 0) return true;
     if (this.shouldSendUpdate) {
         this.shouldSendUpdate = false;
         return true;
@@ -54,10 +53,10 @@ Food.prototype.sendUpdate = function() {
     return true;
 };
 
-Food.prototype.onRemove = function(gameServer) {
-    gameServer.currentFood--;
-};
-
-Food.prototype.onConsume = function(consumer, gameServer) {
-    consumer.addMass(this.mass);
+Food.prototype.onRemove = function() {
+    if (this.insertedList) {
+        var index = this.insertedList.indexOf(this);
+        if (index != -1)
+            this.insertedList.splice(index, 1);
+    }
 };

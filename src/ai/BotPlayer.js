@@ -1,6 +1,6 @@
 var PlayerTracker = require('../PlayerTracker');
 var gameServer = require('../GameServer');
-var Vector = require('vector2-node');
+var Vector = require('../modules/Vector');
 
 function BotPlayer() {
     PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
@@ -50,23 +50,21 @@ BotPlayer.prototype.update = function() { // Overrides the update function from 
     
     if (this.splitCooldown > 0) this.splitCooldown--;
     
-    setTimeout(function() {
-        // Calculate nodes
-        this.visibleNodes = this.calcViewBox();
+    
+    // Calculate nodes
+    this.visibleNodes = this.viewReset();
 
-        // Calc predators/prey
-        var cell = this.getLowestCell();
+    // Calc predators/prey
+    var cell = this.getLowestCell();
 
-        // Action
-        this.decide(cell);
+    // Action
+    this.decide(cell);
 
-        // Reset queues
-        this.nodeDestroyQueue = [];
-        this.nodeAdditionQueue = [];
-    }.bind(this), 0);
+    // Reset queues
+    this.nodeDestroyQueue = [];
+    this.nodeAdditionQueue = [];
 };
 
-// Custom
 BotPlayer.prototype.decide = function(cell) {
     if (!cell) return; // Cell was eaten, check in the next tick (I'm too lazy)
     
@@ -79,6 +77,7 @@ BotPlayer.prototype.decide = function(cell) {
 
     for (var i = 0; i < this.visibleNodes.length; i++) {
         var check = this.visibleNodes[i];
+        if (!check) continue;
         
         // Get attraction of the cells - avoid larger cells, viruses and same team cells
         var influence = 0;
@@ -112,7 +111,7 @@ BotPlayer.prototype.decide = function(cell) {
         var displacement = new Vector(checkPos.x - cellPos.x, checkPos.y - cellPos.y);
 
         // Figure out distance between cells
-        var distance = displacement.length();
+        var distance = displacement.distance();
         if (influence < 0) {
             // Get edge distance
             distance -= cell.getSize() + check.getSize();
@@ -151,30 +150,30 @@ BotPlayer.prototype.decide = function(cell) {
         if (threats.length > 0) {
             if (this.largest(threats).mass / 2.6 > cell.mass) { // ??? but works
                 // Splitkill the target
-                this.mouse = {
-                    x: splitTarget.position.x,
-                    y: splitTarget.position.y
-                };
+                this.mouse = new Vector(
+                    splitTarget.position.x,
+                    splitTarget.position.y
+                );
                 this.splitCooldown = 16;
-                this.gameServer.splitCells(this);
+                this.gameServer.nodeHandler.splitCells(this);
                 return;
             }
         }
         else {
             // Still splitkill the target
-            this.mouse = {
-                x: splitTarget.position.x,
-                y: splitTarget.position.y
-            };
+            this.mouse = new Vector(
+                splitTarget.position.x,
+                splitTarget.position.y
+            );
             this.splitCooldown = 16;
-            this.gameServer.splitCells(this);
+            this.gameServer.nodeHandler.splitCells(this);
             return;
         }
     }
-    this.mouse = {
-        x: cellPos.x + result.x * 800,
-        y: cellPos.y + result.y * 800
-    };
+    this.mouse = new Vector(
+        cellPos.x + result.x * 800,
+        cellPos.y + result.y * 800
+    );
 };
 
 // Subfunctions

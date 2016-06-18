@@ -12,15 +12,10 @@ function EjectedMass() {
 module.exports = EjectedMass;
 EjectedMass.prototype = new Cell();
 
-// Override functions that use 'owner' variable
+// Override getName which uses 'owner' variable
 EjectedMass.prototype.getName = function() {
     return "";
 };
-
-EjectedMass.prototype.addMass = function(n) {
-    return; // Do nothing, this is an ejected cell
-};
-
 
 // Cell-specific functions
 EjectedMass.prototype.getSize = function() {
@@ -30,8 +25,6 @@ EjectedMass.prototype.getSize = function() {
 EjectedMass.prototype.getSquareSize = function() {
     return this.squareSize;
 };
-
-EjectedMass.prototype.calcMove = null; // Only for player controlled movement
 
 // Main Functions
 
@@ -70,20 +63,12 @@ EjectedMass.prototype.onConsume = function(consumer, gameServer) {
     consumer.addMass(this.mass);
 };
 
-EjectedMass.prototype.onAutoMove = function(gameServer) {
-    if (gameServer.nodesVirus.length < gameServer.config.virusMaxAmount) {
-        // Check for viruses
-        var v = gameServer.getNearestVirus(this);
-        if (v) { // Feeds the virus if it exists
-            v.feed(this, gameServer);
-            return true;
-        }
+EjectedMass.prototype.move = function() {
+    // Collide with other ejected cells
+    for (var i = 0; i < this.gameServer.nodesEjected.length; i++) {
+        var node = this.gameServer.nodesEjected[i];
+        if (!node) continue;
+        
+        this.gameServer.collisionHandler.pushApart(this, node);
     }
-};
-
-EjectedMass.prototype.moveDone = function(gameServer) {
-    // Always apply anti-teaming
-    this.owner.actionMult += 0.02;
-    this.addedAntiTeam = true;
-    this.owner.checkForWMult = false;
 };

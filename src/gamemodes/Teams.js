@@ -8,7 +8,7 @@ function Teams() {
     this.decayMod = 1.5;
     this.packetLB = 50;
     this.haveTeams = true;
-    this.colorFuzziness = 32;
+    this.colorFuzziness = 24;
 
     // Special
     this.teamAmount = 3; // Amount of teams. Having more than 3 teams will cause the leaderboard to work incorrectly (client issue).
@@ -35,17 +35,21 @@ Teams.prototype = new Mode();
 
 Teams.prototype.fuzzColorComponent = function(component) {
     component += Math.random() * this.colorFuzziness >> 0;
-    return component;
+    return range(component, 0, 255);
 };
 
 Teams.prototype.getTeamColor = function(team) {
     var color = this.colors[team];
     return {
         r: this.fuzzColorComponent(color.r),
-        b: this.fuzzColorComponent(color.b),
-        g: this.fuzzColorComponent(color.g)
+        g: this.fuzzColorComponent(color.g),
+        b: this.fuzzColorComponent(color.b)
     };
 };
+
+function range(a, min, max) {
+    return Math.max(Math.min(a, max), min);
+}
 
 // Override
 
@@ -64,12 +68,16 @@ Teams.prototype.onServerInit = function(gameServer) {
 
     // migrate current players to team mode
     for (var i = 0; i < gameServer.clients.length; i++) {
-        var client = gameServer.clients[i].playerTracker;
+        var client = gameServer.clients[i];
+        if (!client) continue;
+        client = client.playerTracker;
+        
         this.onPlayerInit(client);
-        client.color = this.getTeamColor(client.team);
+        
+        client.color = this.getTeamColor(client.getTeam());
         for (var j = 0; j < client.cells.length; j++) {
             var cell = client.cells[j];
-            cell.setColor(client.color);
+            cell.setColor(this.getTeamColor(client.team));
             this.nodes[client.team].push(cell);
         }
     }
@@ -95,30 +103,18 @@ Teams.prototype.onCellRemove = function(cell) {
 
 Teams.prototype.onCellMove = function(cell, gameServer) {
     var team = cell.owner.getTeam();
-    var r = cell.getSize();
+    
+    if (cell.collisionRestoreTicks > 0) return; // Can't collide
 
-    // Find team
-    for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
-        // Only collide with player cells
-        var check = cell.owner.visibleNodes[i];
-
-        if ((check.getType() != 0) || (cell.owner == check.owner)) {
-            continue;
-        }
-
-        // Collision with teammates
-        if (check.owner.getTeam() == team) {
-            var calcInfo = gameServer.checkCellCollision(cell, check); // Calculation info
-
-            // Further calculations
-            if (calcInfo.collided) { // Collided
-                // Cell with collision restore ticks on should not collide
-                if (cell.collisionRestoreTicks > 0 || check.collisionRestoreTicks > 0) continue;
-
-                // Call gameserver's function to collide cells
-                gameServer.cellCollision(cell, check, calcInfo);
-            }
-        }
+    for (var i = 0; i < this.nodes[team].length; i++) {
+        var check = this.nodes[team][i];
+        if (!check) continue;
+        
+        if (cell.owner.pID == check.owner.pID) continue; // Same owner cells won't collide here
+        if (check.collisionRestoreTicks > 0) continue; // Check cell can't collide
+        
+        // Push cells apart
+        gameServer.collisionHandler.pushApart(cell, check);
     }
 };
 
