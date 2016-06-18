@@ -27,8 +27,9 @@ Commands.list = {
     help: function(gameServer, split) {
         console.log("[Console] ======================== HELP ======================");
         console.log("[Console] addbot [number]              : add bot to the server");
-        console.log("[Console] kickbot [number]             : kick an amount of bots");
+        console.log("[Console] kickbot [number]             : kick a number of bots");
         console.log("[Console] ban [PlayerID | IP]          : bans a(n) (player's) IP");
+        console.log("[Console] banlist                      : get list of banned IPs.");
         console.log("[Console] board [string] [string] ...  : set scoreboard text");
         console.log("[Console] boardreset                   : reset scoreboard text");
         console.log("[Console] change [setting] [value]     : change specified settings");
@@ -67,21 +68,44 @@ Commands.list = {
         console.log("[Console] Added " + add + " player bots");
     },
     ban: function (gameServer, split) {
+        // Error message
+        var logInvalid = "[Console] Please specify a valid player ID or IP address!";
+        
+        if (split[1] == null) {
+            // If no input is given; added to avoid error
+            console.log(logInvalid);
+            return;
+        }
+
         if (split[1].indexOf(".") >= 0) {
-            var ip = split[1];
             // If input is an IP address
-            if (ip.split(".").length != 4) {
+            var ip = split[1];
+            var ipParts = ip.split(".");
+            
+            // Check for invalid decimal numbers of the IP address
+            for (var i in ipParts) {
+                // If not numerical or if it's not between 0 and 255
+                // TODO: Catch string "e" as it means "10^".
+                if (isNaN(ipParts[i]) || ipParts[i] < 0 || ipParts[i] >= 256) {
+                    console.log(logInvalid);
+                    return;
+                }
+            }
+            
+            if (ipParts.length != 4) {
                 // an IP without 3 decimals
-                console.log("[Console] Please specify a valid player ID or IP address!");
+                console.log(logInvalid);
                 return;
             }
+            
             gameServer.banIp(ip);
             return;
         }
         // if input is a Player ID
         var id = parseInt(split[1]);
         if (isNaN(id)) {
-            console.log("[Console] Please specify a valid player ID or IP address!");
+            // If not numerical
+            console.log(logInvalid);
             return;
         }
         var ip = null;
@@ -98,6 +122,16 @@ Commands.list = {
             gameServer.banIp(ip);
         else
             console.log("[Console] Player ID " + id + " not found!");
+    },
+    banlist: function(gameServer, split) {
+        console.log("[Console] Showing " + gameServer.ipBanList.length + " banned IPs: ");
+        console.log(" IP              | IP ");
+        console.log("-----------------------------------");
+        for (var i = 0; i < gameServer.ipBanList.length; i += 2) {
+            console.log(" " + fillChar(gameServer.ipBanList[i], " ", 15) + " | " 
+                    + (gameServer.ipBanList.length === i+1 ? "" : gameServer.ipBanList[i+1] )
+            );
+        }
     },
     kickbot: function(gameServer, split) {
         var toRemove = parseInt(split[1]);

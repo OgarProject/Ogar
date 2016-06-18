@@ -55,7 +55,6 @@ function GameServer() {
         serverTimeout: 30,          // Seconds to keep connection alive for non-responding client
         serverMaxConnections: 64,   // Maximum amount of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum amount of connections from the same IP (0 for no limit)
-        serverIpBanList: 0,         // Set to 1 to use IP ban list; 0 to not use a ban list.
         serverPort: 443,            // Server port
         serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
         serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
@@ -147,7 +146,7 @@ GameServer.prototype.start = function() {
 GameServer.prototype.onServerSocketError = function (error) {
     switch (error.code) {
         case "EADDRINUSE":
-            console.log("[Error] Server could not bind to port! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
+            console.log("[Error] Server could not bind to port " + this.config.serverPort + "! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
             break;
         case "EACCES":
             console.log("[Error] Please make sure you are running Ogar with root privileges.");
@@ -1177,8 +1176,6 @@ GameServer.prototype.loadConfig = function() {
 };
 
 GameServer.prototype.loadIpBanList = function () {
-    if (!this.config.serverIpBanList)
-        return;
     var fileName = "./ipbanlist.txt";
     try {
         if (fs.existsSync(fileName)) {
@@ -1196,8 +1193,6 @@ GameServer.prototype.loadIpBanList = function () {
 };
 
 GameServer.prototype.saveIpBanList = function () {
-    if (!this.config.serverIpBanList)
-        return;
     var fileName = "./ipbanlist.txt";
     try {
         var blFile = fs.createWriteStream(fileName);
@@ -1214,23 +1209,25 @@ GameServer.prototype.saveIpBanList = function () {
 
 GameServer.prototype.banIp = function (ip) {
     if (this.ipBanList.indexOf(ip) >= 0) {
-        console.log("[Game] " + ip + " already in the ban list!");
+        console.log("[Game] " + ip + " is already in the ban list!");
         return;
     }
     this.ipBanList.push(ip);
+    console.log("[Game] The IP " + ip + " has been banned");
     this.clients.forEach(function (socket) {
-        if (socket == null || !socket.isConnected)
+        // If already disconnected or the ip does not match
+        if (socket == null || !socket.isConnected || socket.remoteAddress != ip)
             return;
-        if (socket.remoteAddress != ip)
-            return;
+        
         // remove player cells
         socket.playerTracker.cells.forEach(function (cell) {
             this.removeNode(cell);
         }, this);
+        
         // disconnect
         socket.close(1000, "Banned from server");
         var name = socket.playerTracker.getFriendlyName();
-        console.log("[Game] Banned \"" + name + "\" with IP " + ip);
+        console.log("[Game] Banned: \"" + name + "\" with Player ID " + socket.playerTracker.pID); // Redacted "with IP #.#.#.#" since it'll already be logged above
         this.sendChatMessage(null, null, "Banned \"" + name + "\""); // notify to don't confuse with server bug
     }, this);
     this.saveIpBanList();
@@ -1239,7 +1236,7 @@ GameServer.prototype.banIp = function (ip) {
 GameServer.prototype.unbanIp = function (ip) {
     var index = this.ipBanList.indexOf(ip);
     if (index < 0) {
-        console.log("[Game] IP " + ip + " is not in the banlist");
+        console.log("[Game] IP " + ip + " is not in the ban list!");
         return;
     }
     this.ipBanList.splice(index, 1);
@@ -1271,7 +1268,7 @@ GameServer.prototype.kickId = function (id) {
     if (id == 0)
         console.log("[Game] No players to kick!");
     else
-        console.log("[Game] Player with ID="+id+" not found!");
+        console.log("[Game] Player with ID "+id+" not found!");
 };
 
 // Stats server
@@ -1294,6 +1291,7 @@ GameServer.prototype.startStatsServer = function(port) {
     }.bind(this));
 
     var getStatsBind = this.getStats.bind(this);
+    // TODO: This causes error if something else already uses this port.  Catch the error.
     this.httpServer.listen(port, function () {
         // Stats server
         console.log("[Game] Loaded stats server on port " + port);
