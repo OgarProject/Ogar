@@ -17,8 +17,11 @@ CollisionHandler.prototype.pushApart = function(cell, check) {
     
     if (dist < maxDist) {
         // Push cell apart
-        var mult = Math.sqrt(check.getSize() / cell.getSize()) / 2.5;
+        var mult = Math.sqrt(check.mass / cell.mass) / 2.5;
         var outward = (maxDist - dist) * mult;
+        
+        // Resolve jittering
+        outward = Math.min(outward, maxDist - dist);
         
         cell.position.add(
             Math.sin(angle) * outward,
