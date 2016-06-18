@@ -5,13 +5,10 @@ function DrawLine(x, y) {
 
 module.exports = DrawLine;
 
-DrawLine.prototype.build = function() {
-    var buf = new ArrayBuffer(5);
-    var view = new DataView(buf);
-
-    view.setUint8(0, 21, true);
-    view.setUint16(1, this.x, true);
-    view.setUint16(3, this.y, true);
-
-    return buf;
+DrawLine.prototype.build = function(protocol) {
+    var buffer = new Buffer(5);
+    buffer.writeUInt8(0x15, 0);
+    buffer.writeInt16LE(this.x, 1);
+    buffer.writeInt16LE(this.y, 3);
+    return buffer;
 };

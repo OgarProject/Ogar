@@ -38,8 +38,7 @@ Mode.prototype.onPlayerSpawn = function(gameServer, player) {
 Mode.prototype.pressQ = function(gameServer, player) {
     // Called when the Q key is pressed
     if (player.spectate) {
-        if (!player.freeRoam) player.freeRoam = true;
-        else player.freeRoam = false;
+        player.freeRoam = !player.freeRoam;
     }
 };
 
@@ -61,10 +60,11 @@ Mode.prototype.onCellRemove = function(cell) {
     // Called when a player cell is removed
 };
 
-Mode.prototype.onCellMove = function(x1, y1, cell) {
+Mode.prototype.onCellMove = function(cell, gameServer) {
     // Called when a player cell is moved
 };
 
-Mode.prototype.updateLB = function(gameServer) {
+Mode.prototype.updateLB = function (gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     // Called when the leaderboard update function is called
 };

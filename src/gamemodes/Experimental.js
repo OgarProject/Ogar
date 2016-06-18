@@ -34,7 +34,6 @@ Experimental.prototype.updateMotherCells = function(gameServer) {
 
         // Checks
         mother.update(gameServer);
-        mother.checkEat(gameServer);
     }
 };
 
@@ -78,7 +77,7 @@ Experimental.prototype.spawnMotherCell = function(gameServer) {
         }
 
         // Spawn if no cells are colliding
-        var m = new MotherCell(gameServer.getNextNodeId(), null, pos, this.motherCellMass);
+        var m = new MotherCell(gameServer.getNextNodeId(), null, pos, this.motherCellMass, gameServer);
         gameServer.addNode(m);
     }
 };
@@ -89,23 +88,26 @@ Experimental.prototype.onServerInit = function(gameServer) {
     // Called when the server starts
     gameServer.run = true;
 
-    var mapSize = gameServer.config.borderLeft + gameServer.config.borderRight +
-        gameServer.config.borderTop + gameServer.config.borderRight;
+    var mapWidth = gameServer.config.borderRight - gameServer.config.borderLeft;
+    var mapHeight = gameServer.config.borderBottom - gameServer.config.borderTop;
+    var mapSize = Math.max(mapWidth, mapHeight);
 
-    this.motherMinAmount = Math.ceil(mapSize / 3194.382825); // 7 mother cells for agar.io map size
+    this.motherMinAmount = Math.ceil(mapSize / 2000); // 7 mother cells for vanilla map size
 
     // Special virus mechanics
     Virus.prototype.feed = function(feeder, gameServer) {
-        gameServer.removeNode(feeder);
         // Pushes the virus
-        // Effect on angle is smaller with larger move engine speed
-        var angle = this.getAngle() + feeder.getAngle(),
-            effect = Math.sqrt(this.moveEngineSpeed + 1);
-        angle += feeder.getAngle() / effect;
-        angle /= (1 + effect);
-        this.setAngle(angle); // Set direction if the virus explodes
-        this.moveEngineSpeed += 10;
-        this.moveDecay = 0.9;
+        // TODO: check distance
+        this.setBoost(16 * 20, feeder.getAngle());
+        //this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
+        //this.moveEngineTicks += 20; // Amount of times to loop the movement function
+        //this.moveEngineSpeed += 16;
+        //this.moveDecay = 0.875;
+
+        var index = gameServer.movingNodes.indexOf(this);
+        if (index == -1) {
+            gameServer.movingNodes.push(this);
+        }
     };
 
     // Override this
@@ -152,10 +154,6 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
 
 MotherCell.prototype = new Cell(); // Base
 
-MotherCell.prototype.getEatingRange = function() {
-    return this.getSize() / 3.14;
-};
-
 MotherCell.prototype.update = function(gameServer) {
     if (Math.random() * 100 > 97) {
         var maxFood = Math.random() * 2; // Max food spawned per tick
@@ -170,60 +168,21 @@ MotherCell.prototype.update = function(gameServer) {
             i++;
         }
     }
-    if (this.mass > 222) {
+    if (this.getMass() > 222) {
         // Always spawn food if the mother cell is larger than 222
         var cellSize = gameServer.config.foodMass;
-        var remaining = this.mass - 222;
+        var remaining = this.getMass() - 222;
         var maxAmount = Math.min(Math.floor(remaining / cellSize), 2);
         for (var i = 0; i < maxAmount; i++) {
             this.spawnFood(gameServer);
-            this.mass -= cellSize;
+            this.setMass(this.getMass() - cellSize);
         }
     }
 };
 
-MotherCell.prototype.checkEat = function(gameServer) {
-    var safeMass = this.mass * .78;
-
-    // Loop for potential prey
-    for (var i in gameServer.nodesPlayer) {
-        var check = gameServer.nodesPlayer[i];
-        this.checkEatCell(check, safeMass, gameServer);
-    }
-
-    // Viruses might be literally in the mother cell when it becomes large. Prevent this
-    for (var i in gameServer.nodesVirus) {
-        var check = gameServer.nodesVirus[i];
-        this.checkEatCell(check, safeMass, gameServer);
-    }
-
-    // Check ejected cells
-    for (var i in gameServer.nodesEjected) {
-        var check = gameServer.nodesEjected[i];
-        this.checkEatCell(check, safeMass, gameServer);
-    }
-};
-
-MotherCell.prototype.checkEatCell = function(check, safeMass, gameServer) {
-    if ((check.getType() == 1) || (check.mass > safeMass)) {
-        // Too big to be consumed or check is a food cell
-        return;
-    }
-
-    // Very simple yet very powerful
-    var dist = this.getDist(this.position.x, this.position.y, check.position.x, check.position.y);
-    var allowDist = this.getSize() - check.getEatingRange();
-    if (dist < allowDist) {
-        // Eat it
-        check.setKiller(this);
-        gameServer.removeNode(check);
-        this.mass += check.mass;
-    }
-};
-
-MotherCell.prototype.abs = function(n) {
-    // Because Math.abs is slow
-    return (n < 0) ? -n : n;
+MotherCell.prototype.canEat = function (cell) {
+    return cell.cellType == 0 ||    // can eat player cell
+        cell.cellType == 3;         // can eat ejected mass
 };
 
 MotherCell.prototype.spawnFood = function(gameServer) {
@@ -243,9 +202,11 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     gameServer.currentFood++;
 
     // Move engine
-    f.angle = angle;
-    var dist = (Math.random() * 8) + 8; // Random distance
-    f.setMoveEngineData(dist, 0.9);
+    var dist = (Math.random() * 25) + 25; // Random distance
+    // TODO: check distance
+    f.setBoost(dist, angle);
+
+    gameServer.setAsMovingNode(f);
 };
 
 MotherCell.prototype.onConsume = Virus.prototype.onConsume; // Copies the virus prototype function

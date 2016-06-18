@@ -9,11 +9,11 @@ download_and_extract () {
 if [ ! -d Ogar-master ]; then
 	if [ ! -f master.tar.gz ]; then
 			echo "No local master.tar.gz found, downloading with curl."
-			curl -O -L https://github.com/forairan/Ogar/archive/master.tar.gz
+			curl -O -L https://github.com/Barbosik/MultiOgar/archive/master.tar.gz
 	fi
 	if [ ! -f master.tar.gz ]; then
 		echo "curl failed to download master.tar.gz, trying wget."
-		wget https://github.com/forairan/Ogar/archive/master.tar.gz
+		wget https://github.com/Barbosik/MultiOgar/archive/master.tar.gz
 			if [ ! -f master.tar.gz ]; then
 					echo "wget failed as well. Aborting!"
 					exit 1

@@ -1,10 +1,13 @@
 var Packet = require('./packet');
+var BinaryReader = require('./packet/BinaryReader');
 
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
     // Detect protocol version - we can do something about it later
-    this.protocolVersion = 0;
+    this.protocol = 0;
+    this.isHandshakePassed = false;
+    this.lastChatTick = 0;
 
     this.pressQ = false;
     this.pressW = false;
@@ -14,51 +17,61 @@ function PacketHandler(gameServer, socket) {
 module.exports = PacketHandler;
 
 PacketHandler.prototype.handleMessage = function(message) {
-    function stobuf(buf) {
-        var length = buf.length;
-        var arrayBuf = new ArrayBuffer(length);
-        var view = new Uint8Array(arrayBuf);
-
-        for (var i = 0; i < length; i++) {
-            view[i] = buf[i];
-        }
-
-        return view.buffer;
-    }
-
     // Discard empty messages
-    if (message.length == 0) {
+    if (message.length == 0)
+        return;
+    if (message.length > 2048) {
+        // anti-spamming
+        this.socket.close(1009, "Spam");
         return;
     }
-
-    var buffer = stobuf(message);
-    var view = new DataView(buffer);
-    var packetId = view.getUint8(0, true);
+    var reader = new BinaryReader(message);
+    var packetId = reader.readUInt8();
+    
+    // no handshake?
+    if (!this.isHandshakePassed) { 
+        if (packetId != 254 || message.length != 5)
+            return; // wait handshake
+        
+        // Handshake request
+        this.protocol = reader.readUInt32();
+        if (this.protocol < 1 || this.protocol > 8) {
+            this.socket.close(1002, "Not supported protocol");
+            return;
+        }
+        // Send handshake response
+        this.socket.sendPacket(new Packet.ClearAll());
+        var border = {
+            left: this.gameServer.config.borderLeft,
+            top: this.gameServer.config.borderTop,
+            right: this.gameServer.config.borderRight,
+            bottom: this.gameServer.config.borderBottom
+        };
+        this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, border, this.gameServer.config.serverGamemode, "MultiOgar 1.0"));
+        // Send welcome message
+        this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
+        if (this.gameServer.config.serverChat == 0)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
+        if (this.protocol < 4) {
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Your client has protocol error!");
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Client sends invalid protocol version "+this.protocol);
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Server assumes it as protocol 4");
+        }        
+        this.isHandshakePassed = true;
+        return;
+    }
+    this.socket.lastAliveTime = +new Date;
 
     switch (packetId) {
         case 0:
-            // Set Nickname
-            if (this.protocolVersion == 5) {
-                // Check for invalid packets
-                if ((view.byteLength + 1) % 2 == 1) {
-                    break;
-                }
-                var nick = "";
-                var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
-                for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
-                    var charCode = view.getUint16(i, true);
-                    if (charCode == 0) {
-                        break;
-                    }
-    
-                    nick += String.fromCharCode(charCode);
-                }
-                this.setNickname(nick);
-            } else {
-                var name = message.slice(1, message.length - 1).toString().substr(0, this.gameServer.config.playerMaxNickLength);
-                this.setNickname(name);
-            }
+            var text = null;
+            if (this.protocol <= 5)
+                text = reader.readStringZeroUnicode();
+            else
+                text = reader.readStringZeroUtf8();
+            this.setNickname(text);
             break;
+
         case 1:
             // Spectate mode
             if (this.socket.playerTracker.cells.length <= 0) {
@@ -68,13 +81,24 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 16:
             // Set Target
-            if (view.byteLength == 13) {
-                var client = this.socket.playerTracker;
-                client.mouse.x = view.getInt32(1, true) - client.scrambleX;
-                client.mouse.y = view.getInt32(5, true) - client.scrambleY;
+            var client = this.socket.playerTracker;
+            if (message.length == 13) {
+                // protocol late 5, 6, 7
+                client.mouse.x = reader.readInt32() - client.scrambleX;
+                client.mouse.y = reader.readInt32() - client.scrambleY;
+            } else if (message.length == 9) {
+                // early protocol 5
+                client.mouse.x = reader.readInt16() - client.scrambleX;
+                client.mouse.y = reader.readInt16() - client.scrambleY;
+            } else if (message.length == 21) {
+                // protocol 4
+                client.mouse.x = reader.readDouble() - client.scrambleX;
+                client.mouse.y = reader.readDouble() - client.scrambleY;
+                if (isNaN(client.mouse.x))
+                    client.mouse.x = client.centerPos.x;
+                if (isNaN(client.mouse.y))
+                    client.mouse.y = client.centerPos.y;
             }
-
-            client.movePacketTriggered = true;
             break;
         case 17:
             // Space Press - Split cell
@@ -91,39 +115,56 @@ PacketHandler.prototype.handleMessage = function(message) {
             // W Press - Eject mass
             this.pressW = true;
             break;
-        case 254:
-            // Connection Start
-            if (view.byteLength == 5) {
-                this.protocolVersion = view.getUint32(1, true);
-                // Send on connection packets
-                this.socket.sendPacket(new Packet.ClearNodes(this.protocolVersion));
-                var c = this.gameServer.config;
-                this.socket.sendPacket(new Packet.SetBorder(
-                    c.borderLeft + this.socket.playerTracker.scrambleX,
-                    c.borderRight + this.socket.playerTracker.scrambleX,
-                    c.borderTop + this.socket.playerTracker.scrambleY,
-                    c.borderBottom + this.socket.playerTracker.scrambleY
-                ));
-            }
+        case 99:
+            // Chat
+            if (this.gameServer.config.serverChat == 0 || message.length < 3)             // first validation
+                break;
+            // chat anti-spam
+            // Just ignore if the time between two messages is smaller than 2 seconds
+            // The user should stop spamming for at least 2 seconds in order to send next chat message
+            var tick = this.gameServer.getTick();
+            var deltaTick = tick - this.lastChatTick;
+            this.lastChatTick = tick;
+            if (deltaTick < 40 * 2)
+                break;
+            
+            var flags = reader.readUInt8();    // flags
+            var rvLength = (flags & 2 ? 4:0) + (flags & 4 ? 8:0) + (flags & 8 ? 16:0);
+            if (message.length < 3 + rvLength) // second validation
+                break;
+            reader.skipBytes(rvLength);        // reserved
+            var text = null;
+            if (this.protocol <= 5)
+                text = reader.readStringZeroUnicode();
+            else
+                text = reader.readStringZeroUtf8();
+            this.gameServer.onChatMessage(this.socket.playerTracker, null, text);
             break;
         default:
             break;
     }
 };
 
-PacketHandler.prototype.setNickname = function(newNick) {
-    var client = this.socket.playerTracker;
-    if (client.cells.length < 1) {
-        // Set name first
-        client.setName(newNick);
-        
-        // Clear client's nodes
-        this.socket.sendPacket(new Packet.ClearNodes());
-
-        // If client has no cells... then spawn a player
-        this.gameServer.gameMode.onPlayerSpawn(this.gameServer, client);
-
-        // Turn off spectate mode
-        client.spectate = false;
+PacketHandler.prototype.setNickname = function (text) {
+    var name = "";
+    var skin = "";
+    if (text != null && text.length != 0) {
+        var n = -1;
+        if (text.charAt(0) == '<' && (n = text.indexOf('>', 1)) >= 0) {
+            skin = "%" + text.slice(1, n);
+            name = text.slice(n + 1);
+            //} else if (text[0] == "|" && (n = text.indexOf("|", 1)) >= 0) {
+            //    skin = ":http://i.imgur.com/" + text.slice(1, n);
+            //    name = text.slice(n + 1);
+        } else {
+            name = text;
+        }
     }
+    if (name.length > this.gameServer.config.playerMaxNickLength) {
+        name = name.substring(0, this.gameServer.config.playerMaxNickLength);
+    }
+    if (this.gameServer.gameMode.haveTeams) {
+        skin = "";
+    }
+    this.socket.playerTracker.joinGame(name, skin);
 };

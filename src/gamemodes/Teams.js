@@ -108,21 +108,18 @@ Teams.prototype.onCellMove = function(cell, gameServer) {
 
         // Collision with teammates
         if (check.owner.getTeam() == team) {
-            var calcInfo = gameServer.checkCellCollision(cell, check); // Calculation info
-
-            // Further calculations
-            if (calcInfo.collided) { // Collided
-                // Cell with collision restore ticks on should not collide
-                if (cell.collisionRestoreTicks > 0 || check.collisionRestoreTicks > 0) continue;
-
+            
+            var manifold = gameServer.checkCellCollision(cell, check); // Calculation info
+            if (manifold != null) { // Collided
                 // Call gameserver's function to collide cells
-                gameServer.cellCollision(cell, check, calcInfo);
+                gameServer.resolveCollision(manifold);
             }
         }
     }
 };
 
 Teams.prototype.updateLB = function(gameServer) {
+    gameServer.leaderboardType = this.packetLB;
     var total = 0;
     var teamMass = [];
     // Get mass
@@ -138,17 +135,19 @@ Teams.prototype.updateLB = function(gameServer) {
                 continue;
             }
 
-            teamMass[i] += cell.mass;
-            total += cell.mass;
+            teamMass[i] += cell.getMass();
+            total += cell.getMass();
         }
+    }
+    // No players
+    if (total <= 0) {
+        for (var i = 0; i < this.teamAmount; i++) {
+            gameServer.leaderboard[i] = 0;
+        }
+        return
     }
     // Calc percentage
     for (var i = 0; i < this.teamAmount; i++) {
-        // No players
-        if (total <= 0) {
-            continue;
-        }
-
         gameServer.leaderboard[i] = teamMass[i] / total;
     }
 };
