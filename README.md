@@ -41,6 +41,9 @@ http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends inv
 
 
 ## What's new:
+* Split behavior - fixed;
+* Protocol code optimized;
+* Massive performance improvement with quad-tree lookup;
 * Split/Eject - physics code rewritten;
 * Player speed - physics code rewritten;
 * Cell remerge - physics code rewritten;
