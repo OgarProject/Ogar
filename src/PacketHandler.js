@@ -53,9 +53,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         if (this.gameServer.config.serverChat == 0)
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
         if (this.protocol < 4) {
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Your client has protocol error!");
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Client sends invalid protocol version "+this.protocol);
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Server assumes it as protocol 4");
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Protocol " + this.protocol + " assumed as 4!");
         }        
         this.isHandshakePassed = true;
         return;
