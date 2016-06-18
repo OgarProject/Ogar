@@ -12,7 +12,7 @@ module.exports = NodeHandler;
 
 NodeHandler.prototype.update = function() {
     // Preset mass decay
-    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod * 0.375);
+    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod * 0.025);
     
     // First update client's cells
     for (var i = 0; i < this.gameServer.clients.length; i++) {
@@ -92,6 +92,7 @@ NodeHandler.prototype.update = function() {
         
         node.ticksLeft--;
         if (node.ticksLeft > 0) continue;
+        node.ticksLeft = 25;
         
         node.moveEngineTick();
         node.eat();
@@ -149,8 +150,7 @@ NodeHandler.prototype.getRandomPosition = function() {
 };
 
 NodeHandler.prototype.getRandomSpawn = function() {
-    // Experimental
-    /* // Find a random pellet
+   /* // Find a random pellet
     var pellet;
     while (true) {
         var randomIndex = Math.ceil(Math.random() * this.gameServer.nonPlayerNodes.length);
