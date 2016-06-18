@@ -994,15 +994,25 @@ GameServer.prototype.setAsMovingNode = function(node) {
 };
 
 GameServer.prototype.splitCells = function(client) {
-    var len = client.cells.length;
-    var splitCells = 0; // How many cells have been split
-    for (var i = 0; i < len; i++) {
+    // sort by size descending
+    client.cells.sort(function (a, b) {
+        return b.getSize() - a.getSize();
+    });
+    var cellToSplit = [];
+    for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
-
+        if (cell.getMass() < this.config.playerMinMassSplit)
+            continue;
+        cellToSplit.push(cell);
+        if (cellToSplit.length + client.cells.length >= this.config.playerMaxCells)
+            break;
+    }
+    var splitCells = 0; // How many cells have been split
+    for (var i = 0; i < cellToSplit.length; i++) {
+        var cell = cellToSplit[i];
         var dx = client.mouse.x - cell.position.x;
         var dy = client.mouse.y - cell.position.y;
         var angle = Math.atan2(dx, dy);
-        //if (angle == 0) angle = Math.PI / 2;
         if (isNaN(angle)) angle = 0;
 
         if (this.splitPlayerCell(client, cell, angle, cell.getMass() / 2) == true)
