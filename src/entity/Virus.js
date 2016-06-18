@@ -49,11 +49,11 @@ Virus.prototype.onConsume = function(consumer) {
         var m = endMass,
             i = 0;
         if (m > 466) { // Threshold
-            // While can split into an even smaller cell (1000 => 333, 167, etc)
-            var mult = 3.33;
+            // While can split into an even smaller cell (10000 => 2500, 1000, etc)
+            var mult = 4;
             while (m / mult > 24) {
                 m /= mult;
-                mult = 2.5; // First mult 3.33, the next ones 2.5
+                mult = 2.5; // First mult 4, the next ones 2.5
                 bigSplits.push(m >> 0);
                 i++;
             }
