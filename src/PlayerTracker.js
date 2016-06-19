@@ -2,13 +2,14 @@ var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
+    this.gameServer = gameServer;
+    this.socket = socket;
     this.pID = -1;
     this.isRemoved = false;
     this.isCloseRequested = false;
     this.name = "";
     this.skin = "";
-    this.gameServer = gameServer;
-    this.socket = socket;
+    this.color = { r: 0, g: 0, b: 0 };
     this.visibleNodes = [];
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
@@ -31,8 +32,8 @@ function PlayerTracker(gameServer, socket) {
     this.sightWidth = 0;
     this.sightHeight = 0;
     this.centerPos = { // Center of map
-        x: 3000,
-        y: 3000
+        x: 0,
+        y: 0
     };
     this.viewBox = {
         left: 0,
@@ -100,6 +101,20 @@ PlayerTracker.prototype.getSkin = function () {
     return this.skin;
 };
 
+PlayerTracker.prototype.getColor = function (color) {
+    return this.color;
+};
+
+PlayerTracker.prototype.setColor = function (color) {
+    this.color.r = color.r;
+    this.color.g = color.g;
+    this.color.b = color.b;
+};
+
+PlayerTracker.prototype.getTeam = function () {
+    return this.team;
+};
+
 PlayerTracker.prototype.getScore = function () {
     if (this.isMassChanged)
         this.updateMass();
@@ -133,17 +148,6 @@ PlayerTracker.prototype.updateMass = function () {
 
 PlayerTracker.prototype.massChanged = function () {
     this.isMassChanged = true;    
-};
-
-
-PlayerTracker.prototype.setColor = function(color) {
-    this.color.r = color.r;
-    this.color.g = color.g;
-    this.color.b = color.b;
-};
-
-PlayerTracker.prototype.getTeam = function() {
-    return this.team;
 };
 
 // Functions

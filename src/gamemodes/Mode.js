@@ -31,7 +31,7 @@ Mode.prototype.onPlayerInit = function(player) {
 
 Mode.prototype.onPlayerSpawn = function(gameServer, player) {
     // Called when a player is spawned
-    player.color = gameServer.getRandomColor(); // Random color
+    player.setColor(gameServer.getRandomColor()); // Random color
     gameServer.spawnPlayer(player);
 };
 

@@ -7,6 +7,7 @@ function Virus() {
     this.spiked = 1;
     this.fed = 0;
     this.isMotherCell = false; // Not to confuse bots
+    this.setColor({ r: 0, g: 255, b: 0 });
 }
 
 module.exports = Virus;

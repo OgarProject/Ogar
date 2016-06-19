@@ -107,11 +107,7 @@ TeamZ.prototype.updateZColor = function(client, mask) {
         g: (mask & 0x2) > 0 ? client.zColorFactor : 7,
         b: (mask & 0x1) > 0 ? client.zColorFactor : 7
     };
-    client.color = {
-        r: color.r,
-        g: color.g,
-        b: color.b
-    };
+    client.setColor(color);
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
         cell.setColor(color);
@@ -242,11 +238,11 @@ TeamZ.prototype.startGame = function(gameServer) {
         client.crazyTimer = 0;
         client.eatenHeroTimer = 0;
         client.eatenBrainTimer = 0;
-        client.color = gameServer.getRandomColor();
+        client.setColor(gameServer.getRandomColor());
         for (var j = 0; j < client.cells.length; j++) {
             var cell = client.cells[j];
             if (cell) {
-                cell.setColor(client.color);
+                cell.setColor(client.getColor());
                 cell.setMass(gameServer.config.playerStartMass);
                 this.resetSpeedCell(cell);
             }
@@ -662,7 +658,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             client.eatenBrainTimer = 0;
             client.eatenHeroTimer = 0;
             client.crazyTimer = 0;
-            client.color = this.defaultColor;
+            client.setColor(this.defaultColor);
             client.team = 1;
             for (var j = 0; j < client.cells.length; j++) {
                 var cell = client.cells[j];
@@ -784,7 +780,7 @@ TeamZ.prototype.onTick = function(gameServer) {
 
                     // reset color:
                     if (client.cured == true)
-                        cell.setColor(client.color);
+                        cell.setColor(client.getColor());
                 }
 
                 if (client.cured == true) {
@@ -800,7 +796,7 @@ TeamZ.prototype.onTick = function(gameServer) {
                     var blinkColor = null;
 
                     if (client.colorToggle == 20) {
-                        blinkColor = client.color;
+                        blinkColor = client.getColor();
                         client.colorToggle = 0;
                     } else {
                         if (client.cured == true) {
@@ -843,7 +839,7 @@ TeamZ.prototype.onTick = function(gameServer) {
                     }; // Yellow scheme
                 }
             } else {
-                color = client.color; // reset
+                color = client.getColor(); // reset
             }
 
             for (var j = 0; j < client.cells.length; j++) {
@@ -875,11 +871,7 @@ TeamZ.prototype.onCellAdd = function(cell) {
     var client = cell.owner;
     if (client.cells.length == 1) { // first cell
         client.team = client.pID;
-        client.color = {
-            r: cell.color.r,
-            g: cell.color.g,
-            b: cell.color.b
-        };
+        client.setColor(cell.getColor());
         client.eatenBrainTimer = 0;
         client.eatenHeroTimer = 0;
         client.crazyTimer = 0;
@@ -888,7 +880,7 @@ TeamZ.prototype.onCellAdd = function(cell) {
         if (this.state == GameState.IN_PROGRESS) {
             this.turnToZombie(client);
         } else {
-            client.color = this.defaultColor;
+            client.setColor(this.defaultColor);
             cell.setColor(this.defaultColor);
             client.team = 1; // game not started yet
         }
@@ -1053,11 +1045,7 @@ function Hero() {
 
     this.cellType = CellType.HERO;
     //this.spiked = 1;
-    this.color = {
-        r: 255,
-        g: 255,
-        b: 7
-    };
+    this.setColor({ r: 255, g: 255, b: 7 });
     this.setMass(60);
 }
 
@@ -1127,11 +1115,7 @@ function Brain() {
 
     this.cellType = CellType.BRAIN;
     //this.spiked = 1;
-    this.color = {
-        r: 255,
-        g: 7,
-        b: 255
-    };
+    this.setColor({ r: 255, g: 7, b: 255 });
     this.setMass(60);
 }
 

@@ -1,29 +1,28 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    if (gameServer != null)
-        this.tickOfBirth = gameServer.getTick();
-    this.color = {
-        r: 0,
-        g: 255,
-        b: 0
-    };
-    this.position = position;
+    this.gameServer = gameServer;
+    
+    this.tickOfBirth = 0;
+    this.color = { r: 0, g: 0, b: 0 };
+    this.position = { x: 0, y: 0 };
     this._size = 0;
     this._mass = 0;
     this._squareSize = 0;
-    this.setMass(mass); // Starting mass of the cell
-    this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
-    this.spiked = 0;    // If 1, then this cell has spikes around it
-
-    this.killedBy; // Cell that ate this cell
-    this.gameServer = gameServer;
+    this.cellType = -1;     // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
+    this.spiked = 0;        // If 1, then this cell has spikes around it
+    this.killedBy = null;   // Cell that ate this cell
 
     this.boostDistance = 0;
     this.boostDirection = { x: 1, y: 0, angle: 0 };
     this.ejector = null;
     
-    this.collisionRestoreTicks = 0; // Ticks left before cell starts checking for collision with client's cells
+    if (gameServer != null)
+        this.tickOfBirth = gameServer.getTick();
+    if (mass != null)
+        this.setMass(mass);
+    if (position != null)
+        this.setPosition(position.x, position.y);
 }
 
 module.exports = Cell;
@@ -187,7 +186,10 @@ Cell.prototype.setBoost = function (distance, angle) {
 };
 
 Cell.prototype.move = function (border) {
-    if (this.boostDistance <= 0) return;
+    if (this.boostDistance <= 0) {
+        this.boostDistance = 0;
+        return;
+    }
     
     var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
     var speed = Math.min(speed, 78);                // limit max speed with sqrt(780*780/100)

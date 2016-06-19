@@ -28,6 +28,11 @@ EjectedMass.prototype.sendUpdate = function() {
     return true;
 };
 
+EjectedMass.prototype.onAdd = function (gameServer) {
+    // Add to list of ejected mass
+    gameServer.nodesEjected.push(this);
+};
+
 EjectedMass.prototype.onRemove = function(gameServer) {
     // Remove from list of ejected mass
     var index = gameServer.nodesEjected.indexOf(this);

@@ -246,10 +246,11 @@ GameServer.prototype.onClientSocketClose = function (ws, code) {
     ws.closeReason = { code: ws._closeCode, message: ws._closeMessage };
     ws.closeTime = +new Date;
 
-    this.getGrayColor
+    var color = this.getGrayColor(ws.playerTracker.getColor());
+    ws.playerTracker.setColor(color);
     // disconnected effect
     ws.playerTracker.cells.forEach(function (cell) {
-        cell.setColor(this.getGrayColor(cell.getColor()));
+        cell.setColor(color);
     }, this);
 };
 
@@ -416,9 +417,9 @@ GameServer.prototype.addNode = function(node) {
     
     this.nodes.push(node);
 
-    // Adds to the owning player's screen excluding ejected cells
-    if (node.owner && node.cellType != 3) {
-        node.setColor(node.owner.color);
+    // Adds to the owning player's screen
+    if (node.owner) {
+        node.setColor(node.owner.getColor());
         node.owner.cells.push(node);
         node.owner.socket.sendPacket(new Packet.AddNode(node.owner, node));
     }
@@ -621,11 +622,31 @@ GameServer.prototype.spawnFood = function() {
 };
 
 GameServer.prototype.spawnPlayer = function(player, pos, mass) {
-    if (mass == null) { // Get starting mass
-        mass = this.config.playerStartMass;
+    // Check if there are ejected mass in the world.
+    if (this.nodesEjected.length > 0) {
+        var index = Math.floor(Math.random() * 100) + 1;
+        if (index >= this.config.ejectSpawnPlayer) {
+            // Get ejected cell
+            index = Math.floor(Math.random() * this.nodesEjected.length);
+            var e = this.nodesEjected[index];
+            if (e.boostDistance == 0) {
+                // Remove ejected mass
+                this.removeNode(e);
+                // Inherit
+                pos = {
+                    x: e.position.x,
+                    y: e.position.y
+                };
+            }
+        }
     }
-    if (pos == null) { // Get random pos
+    if (pos == null) {
+        // Get random pos
         pos = this.getRandomSpawn(mass);
+    }
+    if (mass == null) {
+        // Get starting mass
+        mass = this.config.playerStartMass;
     }
 
     // Spawn player and add to world
@@ -1041,7 +1062,6 @@ GameServer.prototype.splitPlayerCell = function(client, parent, angle, mass) {
     
     // Create cell
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, pos, mass, this);
-    newCell.ejector = parent;
     newCell.setBoost(780, angle);
     
     // Add to node list
@@ -1101,11 +1121,10 @@ GameServer.prototype.ejectMass = function(client) {
         
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, this.config.ejectMass, this);
+        ejected.ejector = cell;
         ejected.setColor(cell.getColor());
         ejected.setBoost(780, angle);
-        ejected.ejector = cell;
 
-        this.nodesEjected.push(ejected);
         this.addNode(ejected);
         this.setAsMovingNode(ejected);
     }

@@ -148,7 +148,7 @@ Rainbow.prototype.changeColor = function(node) {
         node.rainbow = 0;
     }
 
-    node.color = this.colors[node.rainbow];
+    node.setColor(this.colors[node.rainbow]);
     node.rainbow += this.speed;
 };
 

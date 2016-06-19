@@ -279,10 +279,10 @@ TeamX.prototype.onServerInit = function(gameServer) {
     for (var i = 0; i < gameServer.clients.length; i++) {
         var client = gameServer.clients[i].playerTracker;
         this.onPlayerInit(client);
-        client.color = this.getTeamColor(client.team);
+        client.setColor(this.getTeamColor(client.team));
         for (var j = 0; j < client.cells.length; j++) {
             var cell = client.cells[j];
-            cell.setColor(client.color);
+            cell.setColor(client.getColor());
             this.nodes[client.team].push(cell);
         }
     }
@@ -331,11 +331,7 @@ function MotherCell() { // Temporary - Will be in its own file if Zeach decides 
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2; // Copies virus cell
-    this.color = {
-        r: 205,
-        g: 85,
-        b: 100
-    };
+    this.setColor({ r: 205, g: 85, b: 100 });
     this.spiked = 1;
 }
 
