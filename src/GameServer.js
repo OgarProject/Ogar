@@ -764,32 +764,20 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
 GameServer.prototype.checkRigidCollision = function (manifold) {
     if (!manifold.cell1.owner || !manifold.cell2.owner)
         return false;
+    if (manifold.cell1.owner != manifold.cell2.owner) {
+        // Different owners
+        return this.gameMode.haveTeams && 
+            manifold.cell1.owner.getTeam() == manifold.cell2.owner.getTeam();
+    }
     // The same owner
-    if (manifold.cell1.owner == manifold.cell2.owner) {
-        var tick = this.getTick();
-        if ((manifold.cell1.boostDistance > 0 && manifold.cell1.getAge(tick) < 15) ||
-            (manifold.cell2.boostDistance > 0 && manifold.cell2.getAge(tick) < 15)) {
-            // just splited => ignore
-            return false;
-        }
-        if (manifold.cell1.owner.mergeOverride)
-            return false;
-        // not force remerge => check if can remerge
-        if (!manifold.cell1.canRemerge() || !manifold.cell2.canRemerge()) {
-            // cannot remerge => rigid
-            return true;
-        }
+    if (manifold.cell1.owner.mergeOverride)
+        return false;
+    var tick = this.getTick();
+    if (manifold.cell1.getAge(tick) < 15 || manifold.cell2.getAge(tick) < 15) {
+        // just splited => ignore
         return false;
     }
-    // Different owners
-    if (this.gameMode.haveTeams) {
-        // Team check
-        if (manifold.cell1.owner.getTeam() == manifold.cell2.owner.getTeam()) {
-            // cannot eat team member => rigid
-            return true;
-        }
-    }
-    return false;
+    return !manifold.cell1.canRemerge() || !manifold.cell2.canRemerge();
 };
 
 // Resolves non-rigid body collision
