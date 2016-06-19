@@ -547,7 +547,7 @@ Commands.list = {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
-                    client.cells[j].setPosition(pos.x, pos.y);
+                    client.cells[j].setPosition(pos);
                     gameServer.updateNodeQuad(client.cells[j]);
                 }
 

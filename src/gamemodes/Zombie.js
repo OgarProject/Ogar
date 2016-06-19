@@ -137,9 +137,10 @@ Zombie.prototype.onCellMove = function(x1, y1, cell) {
 
                 var move = collisionDist - dist;
                 
-                check.setPosition(
-                    check.position.x + (move * Math.sin(newAngle)) >> 0,
-                    check.position.y + (move * Math.cos(newAngle)) >> 0);
+                check.setPosition({
+                    x: check.position.x + (move * Math.sin(newAngle)) >> 0,
+                    y: check.position.y + (move * Math.cos(newAngle)) >> 0
+                });
             }
         }
     }

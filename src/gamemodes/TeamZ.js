@@ -172,7 +172,7 @@ TeamZ.prototype.spawnDrug = function(gameServer, cell) { // spawn HERO or BRAIN
 
         // Spawn if no cells are colliding
         if (!collided) {
-            cell.setPosition(pos.x, pos.y);
+            cell.setPosition(pos);
             gameServer.addNode(cell);
             return true; // SUCCESS with spawn
         }
@@ -957,9 +957,10 @@ TeamZ.prototype.onCellMove = function(x1, y1, cell) {
 
                 var move = collisionDist - dist;
 
-                check.setPosition(
-                    check.position.x + (move * Math.sin(newAngle)) >> 0,
-                    check.position.y + (move * Math.cos(newAngle)) >> 0);
+                check.setPosition({
+                    x: check.position.x + (move * Math.sin(newAngle)) >> 0,
+                    y: check.position.y + (move * Math.cos(newAngle)) >> 0
+                });
             }
         }
     }

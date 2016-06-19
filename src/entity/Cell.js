@@ -23,7 +23,7 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     if (mass != null)
         this.setMass(mass);
     if (position != null)
-        this.setPosition(position.x, position.y);
+        this.setPosition(position);
 }
 
 module.exports = Cell;
@@ -121,12 +121,13 @@ Cell.prototype.setKiller = function(cell) {
     this.killedBy = cell;
 };
 
-Cell.prototype.setPosition = function (x, y) {
-    if (isNaN(x) || isNaN(y)) {
+Cell.prototype.setPosition = function (pos) {
+    if (isNaN(pos.x) || isNaN(pos.y)) {
         console.log("[ERROR] Cell.setPosition: NaN");
         return;
     }
-    this.position = { x: x, y: y };
+    this.position.x = pos.x;
+    this.position.y = pos.y;
 };
 
 // Functions
@@ -291,7 +292,7 @@ Cell.prototype.checkBorder = function (border) {
     else if (this.position.y > border.bottom - r)
         y = border.bottom - r;
     if (x != this.position.x || y != this.position.y)
-        this.setPosition(x, y);
+        this.setPosition({ x: x, y: y });
 };
 
 
