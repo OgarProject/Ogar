@@ -15,6 +15,7 @@ var Logger = require('./modules/log');
 var CollisionHandler = require('./CollisionHandler');
 var NodeHandler = require('./NodeHandler');
 var PlayerHandler = require('./PlayerHandler');
+var Vector = require('./modules/Vector');
 
 // GameServer implementation
 function GameServer() {
