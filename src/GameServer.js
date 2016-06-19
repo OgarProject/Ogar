@@ -1005,8 +1005,13 @@ GameServer.prototype.splitCells = function(client) {
         var cell = cellToSplit[i];
         var dx = client.mouse.x - cell.position.x;
         var dy = client.mouse.y - cell.position.y;
+        var dl = dx * dx + dy * dy;
+        if (dl < 1) {
+            dx = 1;
+            dy = 0;
+        }
         var angle = Math.atan2(dx, dy);
-        if (isNaN(angle)) angle = 0;
+        if (isNaN(angle)) angle = Math.PI / 2;
 
         if (this.splitPlayerCell(client, cell, angle, cell.getMass() / 2) == true)
             splitCells++;
@@ -1069,14 +1074,24 @@ GameServer.prototype.ejectMass = function(client) {
 
         var dx = client.mouse.x - cell.position.x;
         var dy = client.mouse.y - cell.position.y;
-        var angle = Math.atan2(dx, dy);
-        if (isNaN(angle)) angle = 0;
-        
+        var dl = dx * dx + dy * dy;
+        if (dl < 1) {
+            dx = 1;
+            dy = 0;
+        } else {
+            dl = Math.sqrt(dl);
+            dx /= dl;
+            dy /= dl;
+        }
+
         // Get starting position
         var pos = {
-            x: cell.position.x + cell.getSize() * Math.sin(angle),
-            y: cell.position.y + cell.getSize() * Math.cos(angle)
+            x: cell.position.x + dx * cell.getSize(),
+            y: cell.position.y + dy * cell.getSize()
         };
+        
+        var angle = Math.atan2(dx, dy);
+        if (isNaN(angle)) angle = Math.PI / 2;
         
         // Randomize angle
         angle += (Math.random() * 0.6) - 0.3;

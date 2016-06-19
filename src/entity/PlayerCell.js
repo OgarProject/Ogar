@@ -67,7 +67,7 @@ PlayerCell.prototype.moveUser = function (border) {
     var dx = x - this.position.x;
     var dy = y - this.position.y;
     var squared = dx * dx + dy * dy;
-    if (squared == 0) return;
+    if (squared < 1) return;
     
     // distance
     var d = Math.sqrt(squared);

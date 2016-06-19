@@ -193,7 +193,7 @@ Cell.prototype.move = function (border) {
     var speed = Math.min(speed, 78);                // limit max speed with sqrt(780*780/100)
     speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
     this.boostDistance -= speed;
-    if (this.boostDistance <= 1) this.boostDistance = 0;
+    if (this.boostDistance < 1) this.boostDistance = 0;
     
     var v = this.clipVelocity(
         { x: this.boostDirection.x * speed, y: this.boostDirection.y * speed }, 
@@ -271,6 +271,7 @@ Cell.prototype.clipVelocity = function (v, border) {
     v.x = lx;
     v.y = ly;
     this.boostDistance += Math.sqrt(ldx * ldx + ldy * ldy);
+    if (this.boostDistance < 1) this.boostDistance = 0;
     return v;
 };
 
