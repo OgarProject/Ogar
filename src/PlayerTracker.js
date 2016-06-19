@@ -51,11 +51,8 @@ function PlayerTracker(gameServer, socket) {
 
     // Gamemode function
     if (gameServer) {
-        // Find center
-        var width = gameServer.config.borderRight - gameServer.config.borderLeft;
-        var height = gameServer.config.borderBottom - gameServer.config.borderTop;
-        this.centerPos.x = gameServer.config.borderLeft + width / 2;
-        this.centerPos.y = gameServer.config.borderTop + height / 2;
+        this.centerPos.x = gameServer.border.centerx;
+        this.centerPos.y = gameServer.border.centery;
         // Player id
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
@@ -63,8 +60,8 @@ function PlayerTracker(gameServer, socket) {
         // Only scramble if enabled in config
         if (gameServer.config.serverScrambleCoords == 1) {
             // avoid mouse packet limitations
-            var maxScrambleX = Math.max(0, 32767 - 2000 - width / 2);
-            var maxScrambleY = Math.max(0, 32767 - 2000 - height / 2);
+            var maxScrambleX = Math.max(0, 32767 - 1000 - gameServer.border.width / 2);
+            var maxScrambleY = Math.max(0, 32767 - 1000 - gameServer.border.height / 2);
             this.scrambleX = Math.floor(maxScrambleX * Math.random());
             this.scrambleY = Math.floor(maxScrambleY * Math.random());
         }
@@ -330,14 +327,10 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
     var x = this.centerPos.x + nx * speed;
     var y = this.centerPos.y + ny * speed;
     // check border
-    if (x < this.gameServer.config.borderLeft)
-        x = this.gameServer.config.borderLeft;
-    else if (y > this.gameServer.config.borderRight)
-        x = this.gameServer.config.borderRight;
-    if (y < this.gameServer.config.borderTop)
-        y = this.gameServer.config.borderTop;
-    else if (y > this.gameServer.config.borderBottom)
-        y = this.gameServer.config.borderBottom;
+    x = Math.max(x, this.gameServer.border.minx);
+    y = Math.max(y, this.gameServer.border.miny);
+    x = Math.min(x, this.gameServer.border.maxx);
+    y = Math.min(y, this.gameServer.border.maxy);
     this.setCenterPos(x, y);
 };
 
@@ -408,14 +401,10 @@ PlayerTracker.prototype.setCenterPos = function(x, y) {
 
 PlayerTracker.prototype.checkBorderPass = function() {
     // A check while in free-roam mode to avoid player going into nothingness
-    if (this.centerPos.x < this.gameServer.config.borderLeft)
-        this.centerPos.x = this.gameServer.config.borderLeft;
-    else if (this.centerPos.x > this.gameServer.config.borderRight)
-        this.centerPos.x = this.gameServer.config.borderRight;
-    if (this.centerPos.y < this.gameServer.config.borderTop)
-        this.centerPos.y = this.gameServer.config.borderTop;
-    else if (this.centerPos.y > this.gameServer.config.borderBottom)
-        this.centerPos.y = this.gameServer.config.borderBottom;
+    this.centerPos.x = Math.max(this.centerPos.x, this.gameServer.border.minx);
+    this.centerPos.y = Math.max(this.centerPos.y, this.gameServer.border.miny);
+    this.centerPos.x = Math.min(this.centerPos.x, this.gameServer.border.maxx);
+    this.centerPos.y = Math.min(this.centerPos.y, this.gameServer.border.maxy);
 };
 
 PlayerTracker.prototype.sendPosPacket = function() {

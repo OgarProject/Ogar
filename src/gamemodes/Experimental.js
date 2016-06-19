@@ -88,11 +88,10 @@ Experimental.prototype.onServerInit = function(gameServer) {
     // Called when the server starts
     gameServer.run = true;
 
-    var mapWidth = gameServer.config.borderRight - gameServer.config.borderLeft;
-    var mapHeight = gameServer.config.borderBottom - gameServer.config.borderTop;
-    var mapSize = Math.max(mapWidth, mapHeight);
+    var mapSize = Math.max(gameServer.border.width, gameServer.border.height);
 
-    this.motherMinAmount = Math.ceil(mapSize / 2000); // 7 mother cells for vanilla map size
+    // 7 mother cells for vanilla map size
+    this.motherMinAmount = Math.ceil(mapSize / 2000);
 
     // Special virus mechanics
     Virus.prototype.feed = function(feeder, gameServer) {

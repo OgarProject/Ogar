@@ -167,10 +167,10 @@ Cell.prototype.clipVelocity = function (v, border) {
         return v; // zero move, no calculations :)
     var r = this.getSize() / 2;
     var bound = {
-        minx: border.left + r,
-        miny: border.top + r,
-        maxx: border.right - r,
-        maxy: border.bottom - r
+        minx: border.minx + r,
+        miny: border.miny + r,
+        maxx: border.maxx - r,
+        maxy: border.maxy - r
     };
     var x = this.position.x + v.x;
     var y = this.position.y + v.y;
@@ -181,7 +181,7 @@ Cell.prototype.clipVelocity = function (v, border) {
     var pright = x <= bound.maxx ? null : this.getLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.maxx, bound.miny, bound.maxx, bound.maxy);
-    var ptop = y >= border.top ? null : this.getLineIntersection(
+    var ptop = y >= bound.miny ? null : this.getLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.minx, bound.miny, bound.maxx, bound.miny);
     var pbottom = y <= bound.maxy ? null : this.getLineIntersection(
@@ -235,16 +235,13 @@ Cell.prototype.checkBorder = function (border) {
     var r = this.getSize() / 2;
     var x = this.position.x;
     var y = this.position.y;
-    if (x < border.left + r)
-        x = border.left + r;
-    else if (x > border.right - r)
-        x = border.right - r;
-    if (y < border.top + r)
-        y = border.top + r;
-    else if (this.position.y > border.bottom - r)
-        y = border.bottom - r;
-    if (x != this.position.x || y != this.position.y)
+    x = Math.max(x, border.minx + r);
+    y = Math.max(y, border.miny + r);
+    x = Math.min(x, border.maxx - r);
+    y = Math.min(y, border.maxy - r);
+    if (x != this.position.x || y != this.position.y) {
         this.setPosition({ x: x, y: y });
+    }
 };
 
 

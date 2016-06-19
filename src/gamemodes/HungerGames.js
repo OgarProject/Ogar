@@ -92,11 +92,9 @@ HungerGames.prototype.spawnVirus = function(gameServer, pos) {
 };
 
 HungerGames.prototype.onPlayerDeath = function(gameServer) {
-    var config = gameServer.config;
-    config.borderLeft += this.borderDec;
-    config.borderRight -= this.borderDec;
-    config.borderTop += this.borderDec;
-    config.borderBottom -= this.borderDec;
+    gameServer.setBorder(
+        gameServer.border.width - this.borderDec * 2, 
+        gameServer.border.height - this.borderDec * 2);
 
     // Remove all cells
     var len = gameServer.nodes.length;
@@ -108,16 +106,16 @@ HungerGames.prototype.onPlayerDeath = function(gameServer) {
         }
 
         // Move
-        if (node.position.x < config.borderLeft) {
+        if (node.position.x < gameServer.border.minx) {
             gameServer.removeNode(node);
             i--;
-        } else if (node.position.x > config.borderRight) {
+        } else if (node.position.x > gameServer.border.maxx) {
             gameServer.removeNode(node);
             i--;
-        } else if (node.position.y < config.borderTop) {
+        } else if (node.position.y < gameServer.border.miny) {
             gameServer.removeNode(node);
             i--;
-        } else if (node.position.y > config.borderBottom) {
+        } else if (node.position.y > gameServer.border.maxy) {
             gameServer.removeNode(node);
             i--;
         }
@@ -139,10 +137,8 @@ HungerGames.prototype.onServerInit = function(gameServer) {
         gameServer.config.serverBots = this.maxContenders;
     }
     gameServer.config.spawnInterval = 20;
-    gameServer.config.borderLeft = 0;
-    gameServer.config.borderRight = 6400;
-    gameServer.config.borderTop = 0;
-    gameServer.config.borderBottom = 6400;
+    gameServer.config.borderWidth = 3200;
+    gameServer.config.borderHeight = 3200;
     gameServer.config.foodSpawnAmount = 5; // This is hunger games
     gameServer.config.foodStartAmount = 100;
     gameServer.config.foodMaxAmount = 200;
@@ -153,8 +149,8 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     gameServer.config.playerDisconnectTime = 10; // So that people dont disconnect and stall the game for too long
 
     // Spawn Initial Virus/Large food
-    var mapWidth = gameServer.config.borderRight - gameServer.config.borderLeft;
-    var mapHeight = gameServer.config.borderBottom - gameServer.config.borderTop;
+    var mapWidth = gameServer.border.width;
+    var mapHeight = gameServer.border.height;
 
     // Food
     this.spawnFood(gameServer, 200, {

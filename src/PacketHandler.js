@@ -41,13 +41,7 @@ PacketHandler.prototype.handleMessage = function(message) {
         }
         // Send handshake response
         this.socket.sendPacket(new Packet.ClearAll());
-        var border = {
-            left: this.gameServer.config.borderLeft,
-            top: this.gameServer.config.borderTop,
-            right: this.gameServer.config.borderRight,
-            bottom: this.gameServer.config.borderBottom
-        };
-        this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, border, this.gameServer.config.serverGamemode, "MultiOgar 1.0"));
+        this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.gameServer.border, this.gameServer.config.serverGamemode, "MultiOgar"));
         // Send welcome message
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
         if (this.gameServer.config.serverChat == 0)

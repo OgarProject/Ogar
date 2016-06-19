@@ -48,10 +48,11 @@ function GameServer() {
     
     this.tickCounter = 0;
     this.tickSpawn = 0; // Used with spawning food
-
+    
+    this.setBorder(10000, 10000);
 
     // Config
-    this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
+    this.config = {
         serverTimeout: 30,          // Seconds to keep connection alive for non-responding client
         serverMaxConnections: 64,   // Maximum amount of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum amount of connections from the same IP (0 for no limit)
@@ -67,10 +68,8 @@ function GameServer() {
         serverScrambleCoords: 1,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
-        borderLeft: 0,              // Left border of map (Vanilla value: 0)
-        borderRight: 6000,          // Right border of map (Vanilla value: 14142.135623730952)
-        borderTop: 0,               // Top border of map (Vanilla value: 0)
-        borderBottom: 6000,         // Bottom border of map (Vanilla value: 14142.135623730952)
+        borderWidth: 14142,         // Map border size (Vanilla value: 14142)
+        borderHeight: 14142,        // Map border size (Vanilla value: 14142)
         spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
         foodSpawnAmount: 10,        // The amount of food to spawn per interval
         foodStartAmount: 100,       // The starting amount of food in the map
@@ -159,13 +158,8 @@ GameServer.prototype.onServerSocketError = function (error) {
 };
 
 GameServer.prototype.onServerSocketOpen = function () {
-    var bound = {
-        minx: this.config.borderLeft,
-        miny: this.config.borderTop,
-        maxx: this.config.borderRight,
-        maxy: this.config.borderBottom
-    };
-    this.quadTree = new QuadNode(bound, 4, 1024);
+    this.setBorder(this.config.borderWidth, this.config.borderHeight);
+    this.quadTree = new QuadNode(this.border, 4, 100);
 
     // Spawn starting food
     this.startingFood();
@@ -263,6 +257,20 @@ GameServer.prototype.onClientSocketMessage = function (ws, message) {
     ws.packetHandler.handleMessage(message);
 };
 
+GameServer.prototype.setBorder = function(width, height) {
+    var hw = width / 2;
+    var hh = height / 2;
+    this.border = {
+        minx: -hw,
+        miny: -hh,
+        maxx: hw,
+        maxy: hh,
+        width: width,
+        height: height,
+        centerx: 0,
+        centery: 0
+    };
+};
 
 GameServer.prototype.getTick = function () {
     return this.tickCounter;
@@ -289,11 +297,9 @@ GameServer.prototype.getNewPlayerID = function() {
 };
 
 GameServer.prototype.getRandomPosition = function() {
-    var width = this.config.borderRight - this.config.borderLeft;
-    var height = this.config.borderBottom - this.config.borderTop;
     return {
-        x: Math.floor(this.config.borderLeft + width * Math.random()),
-        y: Math.floor(this.config.borderTop + height * Math.random())
+        x: Math.floor(this.border.minx + this.border.width * Math.random()),
+        y: Math.floor(this.border.miny + this.border.height * Math.random())
     };
 };
 
@@ -307,14 +313,10 @@ GameServer.prototype.getRandomSpawn = function(mass) {
     // just shift offset and try again
     var attempt = 1;
     var maxAttempt = 4;
-    var w = this.config.borderRight - this.config.borderLeft;
-    var h = this.config.borderBottom - this.config.borderTop;
-    var cx = this.config.borderLeft + w / 2;
-    var cy = this.config.borderTop + w / 2;
-    var dirx = pos.x < cx ? 1 : -1;
-    var diry = pos.y < cy ? 1 : -1;
-    var stepx = w / (2 * maxAttempt);
-    var stepy = h / (2 * maxAttempt);
+    var dirx = pos.x < this.border.centerx ? 1 : -1;
+    var diry = pos.y < this.border.centery ? 1 : -1;
+    var stepx = this.border.width / (2 * maxAttempt);
+    var stepy = this.border.height / (2 * maxAttempt);
     while (unsafe && attempt < maxAttempt) {
         pos.x += stepx * dirx;
         pos.y += stepy * diry;
@@ -863,12 +865,6 @@ GameServer.prototype.resolveCollision = function (manifold) {
 };
 
 GameServer.prototype.updateMoveEngine = function () {
-    var border = {
-        left: this.config.borderLeft,
-        top: this.config.borderTop,
-        right: this.config.borderRight,
-        bottom: this.config.borderBottom
-    };
     // Move player cells
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
@@ -876,8 +872,8 @@ GameServer.prototype.updateMoveEngine = function () {
             var cell1 = client.cells[j];
             if (cell1 == null || cell1.isRemoved)
                 continue;
-            cell1.moveUser(border);
-            cell1.move(border);
+            cell1.moveUser(this.border);
+            cell1.move(this.border);
             this.updateNodeQuad(cell1);
         }
     }
@@ -910,7 +906,7 @@ GameServer.prototype.updateMoveEngine = function () {
             var c = rigidCollisions[k];
             var manifold = this.checkCellCollision(c.cell1, c.cell2);
             if (manifold == null) continue;
-            this.resolveRigidCollision(manifold, border);
+            this.resolveRigidCollision(manifold, this.border);
             // position changed! don't forgot to update quad-tree
         }
     }
@@ -954,7 +950,7 @@ GameServer.prototype.updateMoveEngine = function () {
     for (var i = 0; i < this.movingNodes.length; i++) {
         var cell1 = this.movingNodes[i];
         if (cell1 == null || cell1.isRemoved) continue;
-        cell1.move(border);
+        cell1.move(this.border);
         this.updateNodeQuad(cell1);
     }
     
@@ -982,7 +978,7 @@ GameServer.prototype.updateMoveEngine = function () {
         var c = rigidCollisions[k];
         var manifold = this.checkCellCollision(c.cell1, c.cell2);
         if (manifold == null) continue;
-        this.resolveRigidCollision(manifold, border);
+        this.resolveRigidCollision(manifold, this.border);
         // position changed! don't forgot to update quad-tree
     }
     // Update quad tree
