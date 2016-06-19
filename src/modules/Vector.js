@@ -152,7 +152,7 @@ Vector.prototype.negate = function() {
 };
 
 Vector.prototype.normalize = function() {
-    return this.scale(this.distance());
+    return this.scale(1 / this.distance());
 };
 
 Vector.prototype.toString = function() {
