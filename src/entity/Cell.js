@@ -10,7 +10,8 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this._mass = 0;
     this._squareSize = 0;
     this.cellType = -1;     // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
-    this.spiked = 0;        // If 1, then this cell has spikes around it
+    this.isSpiked = false;  // If true, then this cell has spikes around it
+    this.isAgitated = false;// If true, then this cell has waves on it's outline
     this.killedBy = null;   // Cell that ate this cell
 
     this.boostDistance = 0;

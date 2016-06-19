@@ -51,9 +51,9 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
         writer.writeUInt8(color.b >>> 0);         // Color B
         
         var flags = 0;
-        if (node.spiked)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (false)
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
@@ -80,15 +80,18 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
         writer.writeUInt8(color.b >>> 0);         // Color B
         
         var flags = 0;
-        if (node.spiked)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (false)
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
         writer.writeUInt8(flags >>> 0);                  // Flags
         
-        writer.writeStringZeroUnicode(cellName);        // Name
+        if (node.owner != null && cellName != null && cellName.length > 0)
+            writer.writeStringZeroUnicode(cellName);        // Name
+        else
+            writer.writeUInt16(0);                          // Name
     }
     writer.writeUInt32(0);                              // Cell Update record terminator
 };
@@ -117,9 +120,9 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         writer.writeUInt8(color.b >>> 0);         // Color B
         
         var flags = 0;
-        if (node.spiked)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (false)
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
@@ -148,11 +151,11 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         writer.writeUInt8(color.b >>> 0);         // Color B
         
         var flags = 0;
-        if (node.spiked)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (!node.spiked && skinName != null && skinName.length > 0)
+        if (node.owner != null && skinName != null && skinName.length > 0)
             flags |= 0x04;      // isSkinPresent
-        if (false)
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
@@ -161,7 +164,10 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         if (flags & 0x04)
             writer.writeStringZeroUtf8(skinName);       // Skin Name in UTF8
         
-        writer.writeStringZeroUnicode(cellName);        // Cell Name
+        if (node.owner != null && cellName != null && cellName.length > 0)
+            writer.writeStringZeroUnicode(cellName);    // Name
+        else
+            writer.writeUInt16(0);                      // Name
     }
     writer.writeUInt32(0 >> 0);                         // Cell Update record terminator
 };
@@ -186,11 +192,11 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
         writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
         
         var flags = 0;
-        if (node.spiked)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
         if (node.cellType != 1 && node.cellType != 3)
             flags |= 0x02;      // isColorPresent (do not update for food and ejected mass)
-        if (false)
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
@@ -220,15 +226,17 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
         writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
         
         var flags = 0;
-        if (node.spiked)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
         if (true)
             flags |= 0x02;      // isColorPresent (always for added)
-        if (!(node.spiked & 1) && skinName != null && skinName.length > 1)
-            flags |= 0x04;      // isSkinPresent
-        if (!(node.spiked & 1) && cellName != null && cellName.length > 1)
-            flags |= 0x08;      // isNamePresent
-        if (false)
+        if (node.owner != null) {
+            if (skinName != null && skinName.length > 1)
+                flags |= 0x04;      // isSkinPresent
+            if (cellName != null && cellName.length > 1)
+                flags |= 0x08;      // isNamePresent
+        }
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected

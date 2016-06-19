@@ -1044,7 +1044,7 @@ function Hero() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = CellType.HERO;
-    //this.spiked = 1;
+    //this.isSpiked = true;
     this.setColor({ r: 255, g: 255, b: 7 });
     this.setMass(60);
 }
@@ -1114,7 +1114,7 @@ function Brain() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = CellType.BRAIN;
-    //this.spiked = 1;
+    //this.isSpiked = true;
     this.setColor({ r: 255, g: 7, b: 255 });
     this.setMass(60);
 }

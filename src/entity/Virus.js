@@ -4,7 +4,7 @@ function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = 2;
-    this.spiked = 1;
+    this.isSpiked = true;
     this.fed = 0;
     this.isMotherCell = false; // Not to confuse bots
     this.setColor({ r: 0, g: 255, b: 0 });
