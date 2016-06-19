@@ -52,9 +52,9 @@ EjectedMass.prototype.onRemove = function(gameServer) {
         } catch(ex) { } // Dont do anything whatever the error is
     }
     // Remove from list of ejected mass
-    var index = gameServer.nodesEjected.indexOf(this);
+    var index = this.gameServer.nodesEjected.indexOf(this);
     if (index != -1) {
-        gameServer.nodesEjected.splice(index, 1);
+        this.gameServer.nodesEjected.splice(index, 1);
     }
 };
 
