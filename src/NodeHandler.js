@@ -12,7 +12,7 @@ module.exports = NodeHandler;
 
 NodeHandler.prototype.update = function() {
     // Preset mass decay
-    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod * 0.025);
+    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod * 0.0375);
     
     // First update client's cells
     for (var i = 0; i < this.gameServer.clients.length; i++) {
@@ -75,7 +75,7 @@ NodeHandler.prototype.update = function() {
             cell.eat();
             
             // Recombining
-            if (sorted.length > 1) cell.recombineTicks += 0.025;
+            if (sorted.length > 1) cell.recombineTicks += 0.0375;
             else cell.recombineTicks = 0;
             cell.calcMergeTime(this.gameServer.config.playerRecombineTime);
             
@@ -227,6 +227,7 @@ NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
         mass,
         this.gameServer
     );
+    newCell.setColor(parent.getColor());
     
     // Set split boost's speed
     var splitSpeed = newCell.getSplittingSpeed();
