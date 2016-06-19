@@ -396,7 +396,8 @@ GameServer.prototype.spawnPlayer = function(player, pos, mass, color) {
 
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass, this);
-    cell.color = color;
+    
+    player.mouse = new Vector(pos.x, pos.y);
     this.addNode(cell);
 };
 
