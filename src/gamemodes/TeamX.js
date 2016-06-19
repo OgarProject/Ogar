@@ -190,7 +190,7 @@ TeamX.prototype.onServerInit = function(gameServer) {
                 }
 
                 // AABB Collision
-                if (!check.collisionCheck2(squareR, cell.position)) {
+                if (gameServer.checkCellCollision(cell, check) == null) {
                     continue;
                 }
 

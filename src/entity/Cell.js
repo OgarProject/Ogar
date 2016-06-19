@@ -132,54 +132,6 @@ Cell.prototype.setPosition = function (pos) {
 
 // Functions
 
-Cell.prototype.collisionCheck = function(left, top, right, bottom) {
-    return this.position.x > left && 
-        this.position.x < right &&
-        this.position.y > top && 
-        this.position.y < bottom;
-};
-
-// This collision checking function is based on CIRCLE shape
-Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
-    // IF (O1O2 + r <= R) THEN collided. (O1O2: distance b/w 2 centers of cells)
-    // (O1O2 + r)^2 <= R^2
-    // approximately, remove 2*O1O2*r because it requires sqrt(): O1O2^2 + r^2 <= R^2
-
-    var dx = this.position.x - objectPosition.x;
-    var dy = this.position.y - objectPosition.y;
-
-    return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
-};
-
-Cell.prototype.collisionCheckCircle = function(x, y, size) {
-    var dx = this.position.x - x;
-    var dy = this.position.y - y;
-    var r = this.getSize() + size;
-    return dx * dx + dy * dy < r * r;
-};
-
-Cell.prototype.visibleCheck = function (box) {
-    // Checks if this cell is visible to the player
-    if (this.cellType == 1) {
-        // dot collision detector
-        return this.position.x >= box.left && 
-            this.position.x <= box.right &&
-            this.position.y >= box.top && 
-            this.position.y <= box.bottom;
-    }
-    // rectangle collision detector
-    var cellSize = this.getSize();
-    var minx = this.position.x - cellSize;
-    var miny = this.position.y - cellSize;
-    var maxx = this.position.x + cellSize;
-    var maxy = this.position.y + cellSize;
-    var d1x = box.left - maxx;
-    var d1y = box.top - maxy;
-    var d2x = minx - box.right;
-    var d2y = miny - box.bottom;
-    return d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
-};
-
 Cell.prototype.setBoost = function (distance, angle) {
     if (isNaN(angle)) angle = 0;
     

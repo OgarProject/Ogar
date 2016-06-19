@@ -1145,30 +1145,13 @@ GameServer.prototype.shootVirus = function(parent) {
 };
 
 GameServer.prototype.getNearestVirus = function(cell) {
-    // More like getNearbyVirus
-    var virus = null;
-    var r = 100; // Checking radius
-
-    var topY = cell.position.y - r;
-    var bottomY = cell.position.y + r;
-
-    var leftX = cell.position.x - r;
-    var rightX = cell.position.x + r;
-
     // Loop through all viruses on the map. There is probably a more efficient way of doing this but whatever
-    var len = this.nodesVirus.length;
-    for (var i = 0; i < len; i++) {
+    for (var i = 0; i < this.nodesVirus.length; i++) {
         var check = this.nodesVirus[i];
         if (check === null) continue;
-
-        if (!check.collisionCheck(leftX, topY, rightX, bottomY))
-            continue;
-
-        // Add to list of cells nearby
-        virus = check;
-        break; // stop checking when a virus found
+        if (this.checkCellCollision(cell, check) != null)
+            return check;
     }
-    return virus;
 };
 
 GameServer.prototype.updateCells = function() {

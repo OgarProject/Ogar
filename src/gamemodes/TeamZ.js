@@ -336,13 +336,6 @@ TeamZ.prototype.onServerInit = function(gameServer) {
     GameServer.prototype.getNearestVirus = function(cell) {
         // More like getNearbyVirus
         var virus = null;
-        var r = 100; // Checking radius
-
-        var topY = cell.position.y - r;
-        var bottomY = cell.position.y + r;
-
-        var leftX = cell.position.x - r;
-        var rightX = cell.position.x + r;
 
         // loop through all heroes
         for (var i = 0; i < this.gameMode.heroes.length; i++) {
@@ -350,7 +343,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             if (typeof check === 'undefined') {
                 continue;
             }
-            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
+            if (this.checkCellCollision(cell, check) == null) {
                 continue;
             }
             virus = check;
@@ -365,7 +358,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             if (typeof check === 'undefined') {
                 continue;
             }
-            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
+            if (this.checkCellCollision(cell, check) == null) {
                 continue;
             }
             virus = check;
@@ -385,7 +378,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 continue;
             }
 
-            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
+            if (this.checkCellCollision(cell, check) == null) {
                 continue;
             }
 
@@ -441,7 +434,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             }
 
             // AABB Collision
-            if (!check.collisionCheck2(squareR, cell.position)) {
+            if (gameServer.checkCellCollision(cell, check)==null) {
                 continue;
             }
 
