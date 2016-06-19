@@ -47,27 +47,28 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
             // Get ejected cell
             index = Math.floor(Math.random() * gameServer.nodesEjected.length);
             var e = gameServer.nodesEjected[index];
-            if (e.boostDistance > 0) {
+            if (e.boostDistance === 0) {
                 // Ejected cell is currently moving
                 gameServer.spawnPlayer(player, pos, startMass);
+            
+
+                // Remove ejected mass
+                gameServer.removeNode(e);
+
+                 // Inherit
+                 pos = {
+                     x: e.position.x,
+                     y: e.position.y
+                };
+                startMass = Math.max(e.getMass(), gameServer.config.playerStartMass);
+
+                var color = e.getColor();
+                player.setColor({
+                    'r': color.r,
+                    'g': color.g,
+                    'b': color.b
+                });
             }
-
-            // Remove ejected mass
-            gameServer.removeNode(e);
-
-            // Inherit
-            pos = {
-                x: e.position.x,
-                y: e.position.y
-            };
-            startMass = Math.max(e.getMass(), gameServer.config.playerStartMass);
-
-            var color = e.getColor();
-            player.setColor({
-                'r': color.r,
-                'g': color.g,
-                'b': color.b
-            });
         }
     }
 
