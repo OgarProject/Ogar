@@ -111,7 +111,7 @@ function GameServer() {
     // Parse config
     this.loadConfig();
     this.loadIpBanList();
-
+    
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
 }
@@ -1175,6 +1175,9 @@ GameServer.prototype.loadConfig = function() {
         // Create a new config
         fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
     }
+    // check config (min player size = 32 => mass = 10.24)
+    this.config.playerStartMass = Math.max(10.24, this.config.playerStartMass);
+    this.config.playerMinMassDecay = Math.max(10.24, this.config.playerMinMassDecay);
 };
 
 GameServer.prototype.loadIpBanList = function () {
