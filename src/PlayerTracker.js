@@ -293,7 +293,7 @@ PlayerTracker.prototype.update = function () {
             this.socket.sendPacket(new Packet.SetBorder(this, bound));
         }
         this.borderCounter++;
-        if (this.borderCounter >= 10)
+        if (this.borderCounter >= 20)
             this.borderCounter = 0;
     }
 
