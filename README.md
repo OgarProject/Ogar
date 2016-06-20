@@ -37,10 +37,12 @@ URL | Protocol | Description
 --- | --- | ---
 http://ogar.mivabe.nl/?ip=127.0.0.1:50000 | early 5 | MivaBe, pretty smooth, custom graphics (anime)
 http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends invalid protocol=1)
+http://c0nsume.me/private4.php?ip=127.0.0.1:50000 | 5 | vanilla style
 
 
 
 ## What's new:
+* Massive perfromance improvement & reduce network traffic
 * Split behavior - fixed;
 * Protocol code optimized;
 * Massive performance improvement with quad-tree lookup;
