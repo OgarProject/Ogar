@@ -129,6 +129,8 @@ MotherCell.prototype.update = function(gameServer) {
         for (var i = 0; i < maxAmount; i++) {
             this.spawnFood(gameServer);
             this.setMass(this.getMass() - cellSize);
+            // update bounds
+            this.gameServer.updateNodeQuad(this);
         }
     }
 };
