@@ -560,10 +560,12 @@ GameServer.prototype.mainLoop = function() {
     var tStart = new Date().getTime();
     
     // Loop main functions
-    this.updateMoveEngine();
-    this.updateSpawn();
-    this.gameMode.onTick(this);
-    this.updateCells();
+    if (this.run) {
+        this.updateMoveEngine();
+        this.updateSpawn();
+        this.gameMode.onTick(this);
+        this.updateCells();
+    }
     this.updateClients();
     this.updateLeaderboard();
     
@@ -596,7 +598,9 @@ GameServer.prototype.mainLoop = function() {
     //    return tscTicks[0] * 1000 + tscTicks[1] / 1000000;
     //}
     
-    this.tickCounter++;
+    if (this.run) {
+        this.tickCounter++;
+    }
     var tEnd = new Date().getTime();
     this.updateTime = tEnd - tStart;
 };

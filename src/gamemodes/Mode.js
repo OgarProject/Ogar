@@ -43,11 +43,13 @@ Mode.prototype.pressQ = function(gameServer, player) {
 };
 
 Mode.prototype.pressW = function(gameServer, player) {
+    if (!gameServer.run) return;
     // Called when the W key is pressed
     gameServer.ejectMass(player);
 };
 
 Mode.prototype.pressSpace = function(gameServer, player) {
+    if (!gameServer.run) return;
     // Called when the Space bar is pressed
     gameServer.splitCells(player);
 };
