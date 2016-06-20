@@ -249,7 +249,10 @@ PlayerTracker.prototype.update = function () {
             oldIndex++;
             continue;
         }
-        updNodes.push(newVisible[newIndex]);
+        var node = newVisible[newIndex];
+        // skip food & eject if no moving
+        if (node.isMoving || (node.cellType != 1 && node.cellType != 3))
+            updNodes.push(node);
         newIndex++;
         oldIndex++;
     }
