@@ -16,6 +16,7 @@ function PlayerTracker(gameServer, socket) {
     this.score = 0; // Needed for leaderboard
     this.scale = 1;
     this.isMassChanged = true;
+    this.borderCounter = 0;
 
     this.mouse = {
         x: 0,
@@ -58,20 +59,30 @@ function PlayerTracker(gameServer, socket) {
         // Gamemode function
         gameServer.gameMode.onPlayerInit(this);
         // Only scramble if enabled in config
-        if (gameServer.config.serverScrambleCoords == 1) {
-            // avoid mouse packet limitations
-            var maxScrambleX = Math.max(0, 32767 - 1000 - gameServer.border.width / 2);
-            var maxScrambleY = Math.max(0, 32767 - 1000 - gameServer.border.height / 2);
-            this.scrambleX = Math.floor(maxScrambleX * Math.random());
-            this.scrambleY = Math.floor(maxScrambleY * Math.random());
-        }
-        this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
+        this.scramble();
     }
 }
 
 module.exports = PlayerTracker;
 
 // Setters/Getters
+
+PlayerTracker.prototype.scramble = function () {
+    this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
+    
+    if (!this.gameServer.config.serverScrambleCoords)
+        return;
+    // avoid mouse packet limitations
+    var maxx = Math.max(0, 32767 - 1000 - this.gameServer.border.width);
+    var maxy = Math.max(0, 32767 - 1000 - this.gameServer.border.height);
+    var x = maxx * Math.random();
+    var y = maxy * Math.random();
+    if (Math.random() >= 0.5) x = -x;
+    if (Math.random() >= 0.5) y = -y;
+    this.scrambleX = x;
+    this.scrambleY = y;
+    this.borderCounter = 0;
+};
 
 PlayerTracker.prototype.getFriendlyName = function () {
     var name = this.getName();
@@ -159,13 +170,13 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.freeRoam = false;
 
     // some old clients don't understand ClearAll message
-    // so we will not perform cleanup for old protocol
-    // to allow them to receive remove notifications
-    if (this.socket.packetHandler.protocol >= 6) {
-        this.socket.sendPacket(new Packet.ClearAll());
-        this.visibleNodes = [];
+    // so we will send update for them
+    if (this.socket.packetHandler.protocol < 6) {
+        this.socket.sendPacket(new Packet.UpdateNodes(this, [], [], [], this.visibleNodes));
     }
-
+    this.socket.sendPacket(new Packet.ClearAll());
+    this.visibleNodes = [];
+    this.scramble();
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
 
@@ -270,6 +281,21 @@ PlayerTracker.prototype.update = function () {
         oldIndex++;
     }
     this.visibleNodes = newVisible;
+    
+    if (this.gameServer.config.serverScrambleCoords) {
+        if (this.borderCounter == 0) {
+            var bound = {
+                minx: Math.max(this.gameServer.border.minx, this.viewBox.left - this.viewBox.halfWidth),
+                miny: Math.max(this.gameServer.border.miny, this.viewBox.top - this.viewBox.halfHeight),
+                maxx: Math.min(this.gameServer.border.maxx, this.viewBox.right + this.viewBox.halfWidth),
+                maxy: Math.min(this.gameServer.border.maxy, this.viewBox.bottom + this.viewBox.halfHeight)
+            };
+            this.socket.sendPacket(new Packet.SetBorder(this, bound));
+        }
+        this.borderCounter++;
+        if (this.borderCounter >= 10)
+            this.borderCounter = 0;
+    }
 
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(
