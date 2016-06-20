@@ -80,9 +80,11 @@ Cell.prototype.addMass = function (n) {
     // Check if the cell needs to autosplit before adding mass
     var newMass = this.getMass() + n;
     this.setMass(newMass);
-    if (this.getMass() <= this.gameServer.config.playerMaxMass)
+    if (!this.owner || this.owner.mergeOverride)
         return;
     if (this.owner.cells.length >= this.gameServer.config.playerMaxCells)
+        return;
+    if (this.getMass() <= this.gameServer.config.playerMaxMass)
         return;
     var splitMass = this.getMass() / 2;
     var randomAngle = Math.random() * 6.28; // Get random angle
