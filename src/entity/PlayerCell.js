@@ -56,7 +56,7 @@ PlayerCell.prototype.canEat = function (cell) {
 // Movement
 
 PlayerCell.prototype.moveUser = function (border) {
-    if (this.owner == null) {
+    if (this.owner == null || !this.owner.socket.isConnected) {
         return;
     }
     var x = this.owner.mouse.x;

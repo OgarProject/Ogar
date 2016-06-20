@@ -241,6 +241,7 @@ GameServer.prototype.onClientSocketClose = function (ws, code) {
 
     var color = this.getGrayColor(ws.playerTracker.getColor());
     ws.playerTracker.setColor(color);
+    ws.playerTracker.setSkin("");
     // disconnected effect
     ws.playerTracker.cells.forEach(function (cell) {
         cell.setColor(color);
