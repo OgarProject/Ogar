@@ -146,7 +146,7 @@ PacketHandler.prototype.setNickname = function (text) {
             skin = "%" + text.slice(1, n);
             name = text.slice(n + 1);
             //} else if (text[0] == "|" && (n = text.indexOf("|", 1)) >= 0) {
-            //    skin = ":http://i.imgur.com/" + text.slice(1, n);
+            //    skin = ":http://i.imgur.com/" + text.slice(1, n) + ".png";
             //    name = text.slice(n + 1);
         } else {
             name = text;
