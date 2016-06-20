@@ -847,6 +847,9 @@ GameServer.prototype.resolveCollision = function (manifold) {
     maxCell.onEat(minCell);
     minCell.onEaten(maxCell);
     
+    // update bounds
+    this.updateNodeQuad(maxCell);
+
     // Remove cell
     minCell.setKiller(maxCell);
     this.removeNode(minCell);
