@@ -87,7 +87,7 @@ HungerGames.prototype.spawnFood = function(gameServer, mass, pos) {
 };
 
 HungerGames.prototype.spawnVirus = function(gameServer, pos) {
-    var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass);
+    var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass, gameServer);
     gameServer.addNode(v);
 };
 

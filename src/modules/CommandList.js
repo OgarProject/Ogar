@@ -573,7 +573,7 @@ Commands.list = {
         }
 
         // Spawn
-        var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass);
+        var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass, gameServer);
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },

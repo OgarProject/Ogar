@@ -13,6 +13,7 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.isSpiked = false;  // If true, then this cell has spikes around it
     this.isAgitated = false;// If true, then this cell has waves on it's outline
     this.killedBy = null;   // Cell that ate this cell
+    this.isMoving = false;  // Indicate that cell is in boosted mode
 
     this.boostDistance = 0;
     this.boostDirection = { x: 1, y: 0, angle: 0 };
@@ -76,21 +77,12 @@ Cell.prototype.setMass = function (mass) {
         this.owner.massChanged();
 };
 
-Cell.prototype.addMass = function (n) {
-    // Check if the cell needs to autosplit before adding mass
-    var newMass = this.getMass() + n;
-    this.setMass(newMass);
-    if (!this.owner || this.owner.mergeOverride)
-        return;
-    if (this.getMass() <= this.gameServer.config.playerMaxMass)
-        return;
-    if (this.owner.cells.length >= this.gameServer.config.playerMaxCells) {
-        this.setMass(this.gameServer.config.playerMaxMass);
-        return;
-    }
-    var splitMass = this.getMass() / 2;
-    var randomAngle = Math.random() * 6.28; // Get random angle
-    this.gameServer.splitPlayerCell(this.owner, this, randomAngle, splitMass);
+Cell.prototype.setSize = function (size) {
+    this._size = size;
+    this._squareSize = size * size;
+    this._mass = this._squareSize / 100;
+    if (this.owner)
+        this.owner.massChanged();
 };
 
 Cell.prototype.getSpeed = function() {
@@ -141,14 +133,20 @@ Cell.prototype.setBoost = function (distance, angle) {
     
     this.boostDistance = distance;
     this.setAngle(angle);
+    this.isMoving = true;
+    if (!this.owner) {
+        var index = this.gameServer.movingNodes.indexOf(this);
+        if (index < 0)
+            this.gameServer.movingNodes.push(this);
+    }
 };
 
 Cell.prototype.move = function (border) {
-    if (this.boostDistance <= 0) {
+    if (this.isMoving && this.boostDistance <= 0) {
         this.boostDistance = 0;
+        this.isMoving = false;
         return;
     }
-    
     var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
     var speed = Math.min(speed, 78);                // limit max speed with sqrt(780*780/100)
     speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
@@ -232,6 +230,7 @@ Cell.prototype.clipVelocity = function (v, border) {
     v.y = ly;
     this.boostDistance += Math.sqrt(ldx * ldx + ldy * ldy);
     if (this.boostDistance < 1) this.boostDistance = 0;
+    this.isMoving = true;
     return v;
 };
 
@@ -261,8 +260,14 @@ Cell.prototype.canEat = function (cell) {
     return false;
 };
 
-Cell.prototype.onConsume = function(consumer, gameServer) {
-    // Called when the cell is consumed
+Cell.prototype.onEat = function (prey) {
+    // Called to eat prey cell
+    var size1 = this.getSize();
+    var size2 = prey.getSize() + 1;
+    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
+};
+
+Cell.prototype.onEaten = function (hunter) {
 };
 
 Cell.prototype.onAdd = function(gameServer) {

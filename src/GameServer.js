@@ -80,8 +80,8 @@ function GameServer() {
         foodMassLimit: 4,           // Maximum mass for a food can grow
         virusMinAmount: 10,         // Minimum amount of viruses on the map.
         virusMaxAmount: 50,         // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
-        virusStartMass: 100,        // Starting virus size (In mass)
-        virusFeedAmount: 7,         // Amount of times you need to feed a virus to shoot it
+        virusStartMass: 100,        // Starting virus mass
+        virusMaxMass: 200,          // Maximum virus mass
         ejectMass: 13.69,           // Mass of ejected cells
         ejectMassCooldown: 3,       // min ticks between ejects
         ejectMassLoss: 15,          // Mass lost when ejecting cells
@@ -93,7 +93,6 @@ function GameServer() {
         playerMinMassSplit: 36,     // Mass required to split
         playerMaxCells: 16,         // Max cells the player is allowed to have
         playerRecombineTime: 30,    // Base amount of seconds before a cell is allowed to recombine
-        playerMassAbsorbed: 1.0,    // Fraction of player cell's mass gained upon eating
         playerMassDecayRate: .002,  // Amount of mass lost per second
         playerMinMassDecay: 10.24,  // Minimum mass for decay to occur
         playerMaxNickLength: 15,    // Maximum nick length
@@ -845,7 +844,8 @@ GameServer.prototype.resolveCollision = function (manifold) {
     }
     
     // Consume effect
-    minCell.onConsume(maxCell, this);
+    maxCell.onEat(minCell);
+    minCell.onEaten(maxCell);
     
     // Remove cell
     minCell.setKiller(maxCell);
@@ -858,7 +858,7 @@ GameServer.prototype.updateMoveEngine = function () {
         var client = this.clients[i].playerTracker;
         for (var j = 0; j < client.cells.length; j++) {
             var cell1 = client.cells[j];
-            if (cell1 == null || cell1.isRemoved)
+            if (cell1.isRemoved)
                 continue;
             cell1.moveUser(this.border);
             cell1.move(this.border);
@@ -917,47 +917,48 @@ GameServer.prototype.updateMoveEngine = function () {
     
     //this.gameMode.onCellMove(cell1, this);
     
-    // Recycle unused moving nodes
-    for (var i = 0; i < this.movingNodes.length; i++) {
-        var check = this.movingNodes[i];
-        while (check == null && i < this.movingNodes.length) {
-            // Remove moving cells that are undefined
-            this.movingNodes.splice(i, 1);
-            check = this.movingNodes[i];
-        }
-        if (check.boostDistance <= 0) {
-            // Remove cell from list
-            var index = this.movingNodes.indexOf(cell1);
-            if (index != -1) {
-                this.movingNodes.splice(index, 1);
-            }
-        }
-    }
-    
     // Move moving cells
-    for (var i = 0; i < this.movingNodes.length; i++) {
+    for (var i = 0; i < this.movingNodes.length; ) {
         var cell1 = this.movingNodes[i];
-        if (cell1 == null || cell1.isRemoved) continue;
+        if (cell1.isRemoved)
+            continue;
         cell1.move(this.border);
         this.updateNodeQuad(cell1);
+        if (!cell1.isMoving)
+            this.movingNodes.splice(i, 1);
+        else 
+            i++;
     }
     
     // Scan for ejected cell collisions (scan for ejected or virus only)
     rigidCollisions = [];
     eatCollisions = [];
+    var self = this;
     for (var i = 0; i < this.movingNodes.length; i++) {
         var cell1 = this.movingNodes[i];
-        if (cell1 == null || cell1.isRemoved || cell1.cellType != 3) continue;
+        if (cell1.isRemoved) continue;
         this.quadTree.find(cell1.quadItem.bound, function (item) {
             var cell2 = item.cell;
-            if (cell2 == cell1 || (cell2.cellType != 3 && cell2.cellType!=2))
+            if (cell2 == cell1)
                 return;
             var manifold = self.checkCellCollision(cell1, cell2);
             if (manifold == null) return;
-            if (cell1.cellType==3 && cell2.cellType==3) // ejected/ejected
+            if (cell1.cellType == 3 && cell2.cellType == 3) {
+                // ejected/ejected
                 rigidCollisions.push({ cell1: cell1, cell2: cell2 });
-            else
+                // add to moving nodes if needed
+                if (!cell1.isMoving) {
+                    cell1.isMoving = true
+                    self.movingNodes.push(cell1);
+                }
+                if (!cell2.isMoving) {
+                    cell2.isMoving = true
+                    self.movingNodes.push(cell2);
+                }
+            }
+            else {
                 eatCollisions.push({ cell1: cell1, cell2: cell2 });
+            }
         });
     }
         
@@ -984,11 +985,6 @@ GameServer.prototype.updateMoveEngine = function () {
         if (manifold == null) continue;
         this.resolveCollision(manifold);
     }
-};
-
-GameServer.prototype.setAsMovingNode = function(node) {
-    if (this.movingNodes.indexOf(node) == -1)
-        this.movingNodes.push(node);
 };
 
 GameServer.prototype.splitCells = function(client) {
@@ -1110,7 +1106,6 @@ GameServer.prototype.ejectMass = function(client) {
         ejected.setBoost(780, angle);
 
         this.addNode(ejected);
-        this.setAsMovingNode(ejected);
     }
 };
 
@@ -1125,7 +1120,6 @@ GameServer.prototype.shootVirus = function(parent) {
 
     // Add to moving cells list
     this.addNode(newVirus);
-    this.setAsMovingNode(newVirus);
 };
 
 GameServer.prototype.getNearestVirus = function(cell) {

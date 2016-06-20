@@ -15,8 +15,6 @@ function Food() {
 module.exports = Food;
 Food.prototype = new Cell();
 
-Food.prototype.calcMove = null; // Food has no need to move
-
 // Main Functions
 
 Food.prototype.grow = function () {
@@ -42,8 +40,4 @@ Food.prototype.sendUpdate = function() {
 
 Food.prototype.onRemove = function(gameServer) {
     gameServer.currentFood--;
-};
-
-Food.prototype.onConsume = function(consumer, gameServer) {
-    consumer.addMass(this.getMass());
 };

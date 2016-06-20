@@ -89,12 +89,22 @@ PlayerCell.prototype.moveUser = function (border) {
 
 // Override
 
-PlayerCell.prototype.onConsume = function(consumer, gameServer) {
-    // Add an inefficiency for eating other players' cells
-    var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
-    // Anti-bot measure
-    factor = (consumer.getMass() >= 625 && this.getMass() <= 17 && gameServer.config.playerBotGrowEnabled == 1) ? 0 : factor;
-    consumer.addMass(factor * this.getMass());
+PlayerCell.prototype.onEat = function (prey) {
+    var size1 = this.getSize();
+    var size2 = prey.getSize() + 1;
+    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
+
+    if (this.owner.mergeOverride)
+        return;
+    if (this.getMass() <= this.gameServer.config.playerMaxMass)
+        return;
+    if (this.owner.cells.length >= this.gameServer.config.playerMaxCells) {
+        this.setMass(this.gameServer.config.playerMaxMass);
+        return;
+    }
+    var splitMass = this.getMass() / 2;
+    var randomAngle = Math.random() * 6.28; // Get random angle
+    this.gameServer.splitPlayerCell(this.owner, this, randomAngle, splitMass);
 };
 
 PlayerCell.prototype.onAdd = function(gameServer) {

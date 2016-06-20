@@ -13,38 +13,31 @@ function Virus() {
 module.exports = Virus;
 Virus.prototype = new Cell();
 
-Virus.prototype.calcMove = null; // Only for player controlled movement
-
-Virus.prototype.feed = function(feeder, gameServer) {
-    if (this.boostDistance <= 0)
-        this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-    this.setMass(this.getMass() + feeder.getMass());
-    this.fed++; // Increase feed count
-
-    // Check if the virus is going to explode
-    if (this.fed >= gameServer.config.virusFeedAmount) {
-        this.setMass(gameServer.config.virusStartMass); // Reset mass
-        this.fed = 0;
-        gameServer.shootVirus(this);
-    }
-
-};
-
 // Main Functions
 
 Virus.prototype.canEat = function (cell) {
     return cell.cellType == 3; // virus can eat ejected mass only
 };
 
+Virus.prototype.onEat = function (prey) {
+    // Called to eat prey cell
+    var size1 = this.getSize();
+    var size2 = prey.getSize() + 1;
+    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
+    if (prey.isMoving)
+        this.setAngle(prey.getAngle());
+    if (this.getMass() >= this.gameServer.config.virusMaxMass) {
+        this.setMass(this.gameServer.config.virusStartMass); // Reset mass
+        this.gameServer.shootVirus(this);
+    }
+};
 
-Virus.prototype.onConsume = function(consumer, gameServer) {
+Virus.prototype.onEaten = function(consumer) {
     var client = consumer.owner;
-
-    // Cell consumes mass before any calculation
-    consumer.addMass(this.getMass());
+    if (client == null) return;
 
     var maxSplits = Math.floor(consumer.getMass() / 16) - 1; // Maximum amount of splits
-    var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
+    var numSplits = this.gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
     numSplits = Math.min(numSplits, maxSplits);
     var splitMass = Math.min(consumer.getMass() / (numSplits + 1), 24); // Maximum size of new splits
 
@@ -81,13 +74,13 @@ Virus.prototype.onConsume = function(consumer, gameServer) {
 
     for (var k = 0; k < bigSplits.length; k++) {
         angle = Math.random() * 6.28; // Random directions
-        gameServer.splitPlayerCell(client, consumer, angle, bigSplits[k]);
+        this.gameServer.splitPlayerCell(client, consumer, angle, bigSplits[k]);
     }
 
     // Splitting
     for (var k = 0; k < numSplits; k++) {
         angle = Math.random() * 6.28; // Random directions
-        gameServer.splitPlayerCell(client, consumer, angle, splitMass);
+        this.gameServer.splitPlayerCell(client, consumer, angle, splitMass);
     }
 };
 

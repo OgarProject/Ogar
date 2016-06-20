@@ -420,11 +420,9 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     var dist = (Math.random() * 10) + 22; // Random distance
     // TODO: check distance
     f.setBoost(dist*15, angle);
-
-    gameServer.setAsMovingNode(f);
 };
 
-MotherCell.prototype.onConsume = Virus.prototype.onConsume; // Copies the virus prototype function
+MotherCell.prototype.onEaten = Virus.prototype.onEaten; // Copies the virus prototype function
 
 MotherCell.prototype.onAdd = function(gameServer) {
     gameServer.gameMode.nodesMother.push(this); // Temporary
