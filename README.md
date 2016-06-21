@@ -41,9 +41,10 @@ http://c0nsume.me/private4.php?ip=127.0.0.1:50000 | 5 | vanilla style
 
 ###MultiOgar Servers
 
-IP | Location
---- | ---
-164.132.48.230:600 | France
+IP | Location | Game Mode | Web Site
+--- | --- | --- | ---
+vps.simonorj.com:24270 | USA | Instant Merge | https://www.reddit.com/r/Agario/comments/4mufge
+164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
 
 
 ## What's new:
