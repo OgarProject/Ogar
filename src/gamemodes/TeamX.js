@@ -344,16 +344,15 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     };
 
     // Spawn food
-    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMinMass, gameServer);
-    f.setColor(gameServer.getRandomColor());
+    var cell = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMinMass, gameServer);
+    cell.setColor(gameServer.getRandomColor());
 
-    gameServer.addNode(f);
-    gameServer.currentFood++;
+    gameServer.addNode(cell);
 
     // Move engine
     var dist = (Math.random() * 10) + 22; // Random distance
     // TODO: check distance
-    f.setBoost(dist*15, angle);
+    cell.setBoost(dist*15, angle);
 };
 
 MotherCell.prototype.onEaten = Virus.prototype.onEaten; // Copies the virus prototype function

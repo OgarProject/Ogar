@@ -622,11 +622,15 @@ GameServer.prototype.updateFood = function() {
 };
 
 GameServer.prototype.spawnFood = function() {
-    var f = new Entity.Food(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMinMass, this);
-    f.setColor(this.getRandomColor());
-
-    this.addNode(f);
-    this.currentFood++;
+    var cell = new Entity.Food(this.getNextNodeId(), null, this.getRandomPosition(), this.config.foodMinMass, this);
+    if (this.config.foodMassGrow) {
+        var mass = cell.getMass();
+        var maxGrow = this.config.foodMaxMass - mass;
+        mass += maxGrow * Math.random();
+        cell.setMass(mass);
+    }
+    cell.setColor(this.getRandomColor());
+    this.addNode(cell);
 };
 
 GameServer.prototype.spawnPlayer = function(player, pos, mass) {

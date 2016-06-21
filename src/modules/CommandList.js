@@ -262,10 +262,9 @@ Commands.list = {
         }
 
         // Spawn
-        var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
-        f.setColor(gameServer.getRandomColor());
-        gameServer.addNode(f);
-        gameServer.currentFood++;
+        var cell = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
+        cell.setColor(gameServer.getRandomColor());
+        gameServer.addNode(cell);
         console.log("[Console] Spawned 1 food cell at (" + pos.x + " , " + pos.y + ")");
     },
     gamemode: function(gameServer, split) {

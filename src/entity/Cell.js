@@ -29,6 +29,7 @@ function Cell(nodeId, owner, position, mass, gameServer) {
 
 module.exports = Cell;
 
+
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 
 Cell.prototype.getName = function() {
