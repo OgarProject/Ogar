@@ -565,7 +565,10 @@ GameServer.prototype.mainLoop = function() {
         this.updateMoveEngine();
         this.updateSpawn();
         this.gameMode.onTick(this);
-        this.updateCells();
+        if ((this.getTick() % (1000 / 40)) == 0) {
+            // once per second
+            this.updateMassDecay();
+        }
     }
     this.updateClients();
     this.updateLeaderboard();
@@ -587,7 +590,7 @@ GameServer.prototype.mainLoop = function() {
     //this.gameMode.onTick(this);
     //this.t3 = toTime(process.hrtime(t));
     //t = process.hrtime();
-    //this.updateCells();
+    //this.updateMassDecay();
     //this.t4 = toTime(process.hrtime(t));
     //t = process.hrtime();
     //this.updateClients();
@@ -869,6 +872,7 @@ GameServer.prototype.updateMoveEngine = function () {
             var cell1 = client.cells[j];
             if (cell1.isRemoved)
                 continue;
+            cell1.updateRemerge(this);
             cell1.moveUser(this.border);
             cell1.move(this.border);
             this.updateNodeQuad(cell1);
@@ -1141,25 +1145,17 @@ GameServer.prototype.getNearestVirus = function(cell) {
     }
 };
 
-GameServer.prototype.updateCells = function() {
-    if (!this.run) {
-        // Server is paused
-        return;
-    }
-
+GameServer.prototype.updateMassDecay = function() {
     // Loop through all player cells
-    var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod * 0.05);
+    var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
     for (var i = 0; i < this.nodesPlayer.length; i++) {
         var cell = this.nodesPlayer[i];
         if (!cell) continue;
 
-        // Recombining
-        cell.updateRemerge(this);
-        
         // Mass decay
-        // TODO: needs to be updated rarely
-        if (cell.getMass() >= this.config.playerMinMassDecay) {
-            cell.setMass(cell.getMass() * massDecay);
+        if (cell.getMass() > this.config.playerMinMassDecay) {
+            var mass = Math.max(cell.getMass() * massDecay, this.config.playerMinMassDecay);
+            cell.setMass(mass);
         }
     }
 };

@@ -20,27 +20,22 @@ PlayerCell.prototype.simpleCollide = function(check, d) {
         (this.abs(this.position.y - check.y) < len);
 };
 
-PlayerCell.prototype.updateRemerge = function (gameServer) {
-    if (this.owner == null) {
+PlayerCell.prototype.updateRemerge = function () {
+    var age = this.getAge(this.gameServer.getTick());
+    if (age < 15) {
+        // do not remerge if cell age is smaller than 15 ticks
         this._canRemerge = false;
         return;
     }
-    var tick = gameServer.getTick();
-    var age = this.getAge(tick);
-    if (age < 3) {
-        // do not remerge if cell age is smaller than 3 ticks
-        this._canRemerge = false;
-        return;
-    }
-    var baseTtr = gameServer.config.playerRecombineTime;        // default baseTtr = 30
+    var baseTtr = this.gameServer.config.playerRecombineTime;        // default baseTtr = 30
     if (baseTtr == 0) {
         // instant merge
         this._canRemerge = true;
         return;
     }
     var ttr = Math.max(baseTtr, (this.getSize() * 0.2) >> 0);   // ttr in seconds
-    // seconds to ticks (tickStep = 0.040 sec)
-    ttr /= 0.040;
+    // seconds to ticks (tickStep = 0.040 sec => 1 / 0.040 = 25)
+    ttr *= 25;
     this._canRemerge = age >= ttr;
 }
 
