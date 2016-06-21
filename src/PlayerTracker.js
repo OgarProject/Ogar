@@ -86,6 +86,15 @@ PlayerTracker.prototype.getScore = function(reCalcScore) {
     return this.score >> 0;
 };
 
+PlayerTracker.prototype.getSizes = function() {
+    var s = 0;
+    for (var i = 0; i < this.cells.length; i++) {
+        if (!this.cells[i]) return; // Error
+        s += this.cells[i].getSize();
+    }
+    return s;
+};
+
 PlayerTracker.prototype.setColor = function(color) {
     this.color.r = color.r;
     this.color.g = color.g;
@@ -206,7 +215,7 @@ PlayerTracker.prototype.update = function() {
         this.tickLeaderboard--;
     }
     
-    var box = this.getBox();
+    //var box = this.getBox();
     /*
     if (this.cells.length == 0 && this.gameServer.config.serverScrambleMinimaps >= 1) {
         // Update map, it may have changed
@@ -286,14 +295,11 @@ PlayerTracker.prototype.applyTeaming = function(x, type) {
 // Viewing box
 
 PlayerTracker.prototype.getBox = function() { // For view distance
-    var totalSize = 1;
-    for (var i = 0; i < this.cells.length; i++) {
-        if (!this.cells[i]) continue;
-        totalSize += this.cells[i].getSize();
-    }
-    var w = this.gameServer.config.serverViewBaseX * Math.log(totalSize),
-        h = this.gameServer.config.serverViewBaseY * Math.log(totalSize);
-
+    var totalSize = this.getSizes();
+    var scale = Math.sqrt(totalSize) / Math.log(totalSize);
+    var w = this.gameServer.config.serverViewBaseX * scale,
+        h = this.gameServer.config.serverViewBaseY * scale;
+    
     return {
         width: w,
         height: h,
@@ -348,8 +354,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
 
         // Get spectate player's location and calculate zoom amount
-        var specZoom = Math.min(Math.sqrt(100 * specPlayer.getScore(false)), 555);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4);
+        var specZoom = Math.pow(Math.log(specPlayer.getScore(false)), -0.5);
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
@@ -376,8 +381,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
     this.checkBorderPass();
 
     // Now that we've updated center pos, get nearby cells
-    
-    var mult = 3.5; // To simplify multiplier, in case this needs editing later on
+    var mult = 1;
     var baseX = this.gameServer.config.serverViewBaseX * mult;
     var baseY = this.gameServer.config.serverViewBaseY * mult;
 
@@ -390,9 +394,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
         left: this.centerPos.x - baseX,
         right: this.centerPos.x + baseX
     });
-    var specZoom = 222;
-    specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6; // Constant zoom
-    this.sendPosPacket(specZoom);
+    this.sendPosPacket(0.5199);
     return newVisible;
 };
 
