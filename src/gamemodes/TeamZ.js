@@ -140,43 +140,20 @@ TeamZ.prototype.spawnDrug = function(gameServer, cell) { // spawn HERO or BRAIN
         var pos = gameServer.getRandomPosition();
 
         // Check for players
-        var collided = false;
-        for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
-            var check = gameServer.nodesPlayer[i];
-            var r = check.getSize(); // Radius of checking player cell
-
-            // Collision box
-            var topY = check.position.y - r;
-            var bottomY = check.position.y + r;
-            var leftX = check.position.x - r;
-            var rightX = check.position.x + r;
-
-            // Check for collisions
-            if (pos.y > bottomY) {
-                continue;
-            }
-            if (pos.y < topY) {
-                continue;
-            }
-            if (pos.x > rightX) {
-                continue;
-            }
-            if (pos.x < leftX) {
-                continue;
-            }
-
-            // Collided
-            collided = true;
-            break;
+        var size = cell.getSize();
+        var bound = {
+            minx: pos.x - size,
+            miny: pos.y - size,
+            maxx: pos.x + size,
+            maxy: pos.y + size
+        };
+        if (gameServer.quadTree.any(bound, function (item) { return item.cell.cellType == 0; })) {
+            // FAILED because of collision
+            return false;
         }
-
-        // Spawn if no cells are colliding
-        if (!collided) {
-            cell.setPosition(pos);
-            gameServer.addNode(cell);
-            return true; // SUCCESS with spawn
-        }
-        return false; // FAILED because of collision
+        cell.setPosition(pos);
+        gameServer.addNode(cell);
+        return true; // SUCCESS with spawn
     }
     return true; // SUCCESS without spawn
 };

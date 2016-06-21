@@ -65,38 +65,16 @@ TeamX.prototype.spawnMotherCell = function(gameServer) {
         var pos = gameServer.getRandomPosition();
 
         // Check for players
-        for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
-            var check = gameServer.nodesPlayer[i];
-
-            var r = check.getSize(); // Radius of checking player cell
-
-            // Collision box
-            var topY = check.position.y - r;
-            var bottomY = check.position.y + r;
-            var leftX = check.position.x - r;
-            var rightX = check.position.x + r;
-
-            // Check for collisions
-            if (pos.y > bottomY) {
-                continue;
-            }
-
-            if (pos.y < topY) {
-                continue;
-            }
-
-            if (pos.x > rightX) {
-                continue;
-            }
-
-            if (pos.x < leftX) {
-                continue;
-            }
-
-            // Collided
+        var size = Math.sqrt(this.motherCellMass * 100);
+        var bound = {
+            minx: pos.x - size,
+            miny: pos.y - size,
+            maxx: pos.x + size,
+            maxy: pos.y + size
+        };
+        if (gameServer.quadTree.any(bound, function (item) { return item.cell.cellType == 0; })) {
             return;
         }
-
         // Spawn if no cells are colliding
         var m = new MotherCell(gameServer.getNextNodeId(), null, pos, this.motherCellMass);
         gameServer.addNode(m);
@@ -354,50 +332,6 @@ MotherCell.prototype.update = function(gameServer) {
         this.setMass(this.getMass() - 1);
         i++;
     }
-};
-
-MotherCell.prototype.checkEat = function(gameServer) {
-    var safeMass = this.getMass() * .9;
-    var r = this.getSize(); // The box area that the checked cell needs to be in to be considered eaten
-
-    // Loop for potential prey
-    for (var i in gameServer.nodesPlayer) {
-        var check = gameServer.nodesPlayer[i];
-
-        if (check.getMass() > safeMass) {
-            // Too big to be consumed
-            continue;
-        }
-
-        // Calculations
-        var len = r - (check.getSize() / 2) >> 0;
-        if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
-            // Eats the cell
-            gameServer.removeNode(check);
-            this.setMass(this.getMass() + check.getMass());
-        }
-    }
-    for (var i in gameServer.movingNodes) {
-        var check = gameServer.movingNodes[i];
-
-        if ((check.getType() == 1) || (check.getMass() > safeMass)) {
-            // Too big to be consumed/ No player cells
-            continue;
-        }
-
-        // Calculations
-        var len = r >> 0;
-        if ((this.abs(this.position.x - check.position.x) < len) && (this.abs(this.position.y - check.position.y) < len)) {
-            // Eat the cell
-            gameServer.removeNode(check);
-            this.setMass(this.getMass() + check.getMass());
-        }
-    }
-};
-
-MotherCell.prototype.abs = function(n) {
-    // Because Math.abs is slow
-    return (n < 0) ? -n : n;
 };
 
 MotherCell.prototype.spawnFood = function(gameServer) {

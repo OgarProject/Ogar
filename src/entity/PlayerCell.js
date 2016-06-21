@@ -103,8 +103,6 @@ PlayerCell.prototype.onEat = function (prey) {
 };
 
 PlayerCell.prototype.onAdd = function(gameServer) {
-    // Add to special player node list
-    gameServer.nodesPlayer.push(this);
     // Gamemode actions
     gameServer.gameMode.onCellAdd(this);
 };
@@ -115,11 +113,6 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     index = this.owner.cells.indexOf(this);
     if (index != -1) {
         this.owner.cells.splice(index, 1);
-    }
-    // Remove from special player controlled node list
-    index = gameServer.nodesPlayer.indexOf(this);
-    if (index != -1) {
-        gameServer.nodesPlayer.splice(index, 1);
     }
     // Gamemode actions
     gameServer.gameMode.onCellRemove(this);

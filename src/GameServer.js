@@ -26,7 +26,6 @@ function GameServer() {
     this.nodes = [];
     this.nodesVirus = []; // Virus nodes
     this.nodesEjected = []; // Ejected mass nodes
-    this.nodesPlayer = []; // Nodes controlled by players
     this.quadTree = null;
 
     this.currentFood = 0;
