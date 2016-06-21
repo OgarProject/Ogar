@@ -74,11 +74,11 @@ BotPlayer.prototype.decide = function(cell) {
                 // Same team cell
                 influence = 0;
             }
-            else if (cell.getSize() > check.getSize() * 1.15) {//cell.getMass() / 1.3 > check.getMass()) {
+            else if (cell.getSize() > (check.getSize() + 4) * 1.15) {//cell.getMass() / 1.3 > check.getMass()) {
                 // Can eat it
                 influence = check.getSize() * 2.5;
             }
-            else if (check.getSize() >= cell.getSize() * 1.15) {//check.getMass() / 1.3 > cell.getMass()) {
+            else if (check.getSize() + 4 > cell.getSize() * 1.15) {//check.getMass() / 1.3 > cell.getMass()) {
                 // Can eat me
                 influence = -check.getSize();
             }
@@ -87,7 +87,7 @@ BotPlayer.prototype.decide = function(cell) {
             influence = 1;
         } else if (check.cellType == 2) {
             // Virus
-            if (cell.getSize() > check.getSize() * 1.15) {//cell.getMass() / 1.3 > check.getMass()) {
+            if (cell.getSize() > check.getSize() * 1.15) {
                 // Can eat it
                 if (this.cells.length == this.gameServer.config.playerMaxCells) {
                     // Won't explode
@@ -97,10 +97,14 @@ BotPlayer.prototype.decide = function(cell) {
                     // Can explode
                     influence = -1;
                 }
+            } else if (check.isMotherCell && check.getSize() > cell.getSize() * 1.15) {
+                // can eat me
+                influence = -1;
             }
         } else if (check.cellType == 3) {
             // Ejected mass
-            if (cell.getSize() > check.getSize() * 1.15)// cell.getMass() / 1.3 > check.getMass())
+            if (cell.getSize() > check.getSize() * 1.15)
+                // can eat
                 influence = check.getSize();
         } else {
             influence = check.getSize(); // Might be TeamZ
@@ -131,7 +135,7 @@ BotPlayer.prototype.decide = function(cell) {
 
         // Splitting conditions
         if (check.cellType == 0 && 
-            cell.getMass() / 2.6 > check.getMass() && 
+            cell.getSize() > (check.getSize() + 4) * 1.15 &&
             cell.getMass() / 5 < check.getMass() &&
             (!split) && 
             this.splitCooldown == 0 && 
