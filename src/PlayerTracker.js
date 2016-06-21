@@ -392,7 +392,7 @@ PlayerTracker.prototype.getVisibleNodes = function () {
         }
         // free roam spectate
         this.updateCenterFreeRoam();
-        this.scale = 0.25;
+        this.scale = this.gameServer.config.serverSpectatorScale;//0.25;
         this.sendPosPacket();
     } else {
         // in game
