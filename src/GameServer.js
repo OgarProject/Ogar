@@ -1045,13 +1045,14 @@ GameServer.prototype.splitPlayerCell = function(client, parent, angle, mass) {
         return false;
     }
     
+    // Remove mass from parent cell first
+    parent.setMass(parent.getMass() - mass);
+    
     // make a small shift to the cell position to prevent extrusion in wrong direction
     var pos = {
         x: parent.position.x + 40 * Math.sin(angle),
         y: parent.position.y + 40 * Math.cos(angle)
     };
-    
-    parent.setMass(parent.getMass() - mass); // Remove mass from parent cell
     
     // Create cell
     var newCell = new Entity.PlayerCell(this.getNextNodeId(), client, pos, mass, this);
@@ -1096,6 +1097,9 @@ GameServer.prototype.ejectMass = function(client) {
             dx /= dl;
             dy /= dl;
         }
+        
+        // Remove mass from parent cell first
+        cell.setMass(cell.getMass() - this.config.ejectMassLoss);
 
         // Get starting position
         var pos = {
@@ -1109,9 +1113,6 @@ GameServer.prototype.ejectMass = function(client) {
         // Randomize angle
         angle += (Math.random() * 0.6) - 0.3;
 
-        // Remove mass from parent cell
-        cell.setMass(cell.getMass() - this.config.ejectMassLoss);
-        
         // Create cell
         var ejected = new Entity.EjectedMass(this.getNextNodeId(), null, pos, this.config.ejectMass, this);
         ejected.ejector = cell;
