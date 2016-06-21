@@ -23,24 +23,22 @@ function PlayerTracker(gameServer, socket) {
         y: 0
     };
     this.tickLeaderboard = 0;
-    this.tickViewBox = 0;
 
     this.team = 0;
     this.spectate = false;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
 
-    // Viewing box
-    this.sightWidth = 0;
-    this.sightHeight = 0;
-    this.centerPos = { // Center of map
+    this.centerPos = {
         x: 0,
         y: 0
     };
     this.viewBox = {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
+        minx: 0,
+        miny: 0,
+        maxx: 0,
+        maxy: 0,
+        width: 0,
+        height: 0,
         halfWidth: 0,
         halfHeight: 0
     };
@@ -285,10 +283,10 @@ PlayerTracker.prototype.update = function () {
     if (this.gameServer.config.serverScrambleCoords) {
         if (this.borderCounter == 0) {
             var bound = {
-                minx: Math.max(this.gameServer.border.minx, this.viewBox.left - this.viewBox.halfWidth),
-                miny: Math.max(this.gameServer.border.miny, this.viewBox.top - this.viewBox.halfHeight),
-                maxx: Math.min(this.gameServer.border.maxx, this.viewBox.right + this.viewBox.halfWidth),
-                maxy: Math.min(this.gameServer.border.maxy, this.viewBox.bottom + this.viewBox.halfHeight)
+                minx: Math.max(this.gameServer.border.minx, this.viewBox.minx - this.viewBox.halfWidth),
+                miny: Math.max(this.gameServer.border.miny, this.viewBox.miny - this.viewBox.halfHeight),
+                maxx: Math.min(this.gameServer.border.maxx, this.viewBox.maxx + this.viewBox.halfWidth),
+                maxy: Math.min(this.gameServer.border.maxy, this.viewBox.maxy + this.viewBox.halfHeight)
             };
             this.socket.sendPacket(new Packet.SetBorder(this, bound));
         }
@@ -365,15 +363,17 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
 
 PlayerTracker.prototype.updateViewBox = function () {
     var scale = this.getScale();
-    this.sightWidth = (this.gameServer.config.serverViewBaseX + 100) / scale;
-    this.sightHeight = (this.gameServer.config.serverViewBaseY + 100) / scale;
-    var halfWidth = this.sightWidth / 2;
-    var halfHeight = this.sightHeight / 2;
+    var width = (this.gameServer.config.serverViewBaseX + 100) / scale;
+    var height = (this.gameServer.config.serverViewBaseY + 100) / scale;
+    var halfWidth = width / 2;
+    var halfHeight = height / 2;
     this.viewBox = {
-        left: this.centerPos.x - halfWidth,
-        top: this.centerPos.y - halfHeight,
-        right: this.centerPos.x + halfWidth,
-        bottom: this.centerPos.y + halfHeight,
+        minx: this.centerPos.x - halfWidth,
+        miny: this.centerPos.y - halfHeight,
+        maxx: this.centerPos.x + halfWidth,
+        maxy: this.centerPos.y + halfHeight,
+        width: width,
+        height: height,
         halfWidth: halfWidth,
         halfHeight: halfHeight
     };
@@ -405,21 +405,12 @@ PlayerTracker.prototype.getVisibleNodes = function () {
 
 PlayerTracker.prototype.calcVisibleNodes = function() {
     var newVisible = [];
-    var bound = {
-        minx: this.viewBox.left,
-        miny: this.viewBox.top,
-        maxx: this.viewBox.right,
-        maxy: this.viewBox.bottom
-    };
-    this.gameServer.quadTree.find(bound, function (quadItem) {
-        newVisible.push(quadItem.cell);
+    var self = this;
+    this.gameServer.quadTree.find(this.viewBox, function (quadItem) {
+        if (quadItem.cell.owner != self)
+            newVisible.push(quadItem.cell);
     });
-    // make sure that all owned is included
-    for (var i = 0; i < this.cells.length; i++) {
-        if (newVisible.indexOf(this.cells[i]) < 0)
-            newVisible.push(this.cells[i]);
-    }
-    return newVisible;
+    return newVisible.concat(this.cells);
 };
 
 PlayerTracker.prototype.setCenterPos = function(x, y) {
