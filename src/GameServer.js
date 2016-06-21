@@ -62,7 +62,7 @@ function GameServer() {
         serverBots: 0,              // Amount of player bots to spawn
         serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
         serverViewBaseY: 1080, 
-        serverSpectatorScale: 0.4,  // Scale used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
+        serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Amount of seconds per update for the server stats
         serverLogLevel: 1,          // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
