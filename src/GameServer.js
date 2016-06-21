@@ -1150,14 +1150,15 @@ GameServer.prototype.getNearestVirus = function(cell) {
 GameServer.prototype.updateMassDecay = function() {
     // Loop through all player cells
     var massDecay = 1 - (this.config.playerMassDecayRate * this.gameMode.decayMod);
-    for (var i = 0; i < this.nodesPlayer.length; i++) {
-        var cell = this.nodesPlayer[i];
-        if (!cell) continue;
-
-        // Mass decay
-        if (cell.getMass() > this.config.playerMinMassDecay) {
-            var mass = Math.max(cell.getMass() * massDecay, this.config.playerMinMassDecay);
-            cell.setMass(mass);
+    for (var i = 0; i < this.clients.length; i++) {
+        var playerTracker = this.clients[i].playerTracker;
+        for (var j = 0; j < playerTracker.cells.length; j++) {
+            var cell = playerTracker.cells[j];
+            // Mass decay
+            if (cell.getMass() > this.config.playerMinMassDecay) {
+                var mass = Math.max(cell.getMass() * massDecay, this.config.playerMinMassDecay);
+                cell.setMass(mass);
+            }
         }
     }
 };
