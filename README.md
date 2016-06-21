@@ -39,6 +39,10 @@ http://ogar.mivabe.nl/?ip=127.0.0.1:50000 | early 5 | MivaBe, pretty smooth, cus
 http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends invalid protocol=1)
 http://c0nsume.me/private4.php?ip=127.0.0.1:50000 | 5 | vanilla style
 
+###MultiOgar Servers
+
+IP | Links
+ws://164.132.48.230:600 | http://c0nsume.me/private4.php?ip=164.132.48.230:600 http://ogar.mivabe.nl/?ip=164.132.48.230:600 http://play.ogarul.tk/?ip=164.132.48.230:600
 
 
 ## What's new:
