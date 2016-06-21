@@ -878,6 +878,20 @@ GameServer.prototype.updateMoveEngine = function () {
             this.updateNodeQuad(cell1);
         }
     }
+    // Move moving cells
+    for (var i = 0; i < this.movingNodes.length; ) {
+        var cell1 = this.movingNodes[i];
+        if (cell1.isRemoved)
+            continue;
+        cell1.move(this.border);
+        this.updateNodeQuad(cell1);
+        if (!cell1.isMoving)
+            this.movingNodes.splice(i, 1);
+        else
+            i++;
+    }
+    
+    // === check for collisions ===
     
     // Scan for player cells collisions
     var self = this;
@@ -929,19 +943,6 @@ GameServer.prototype.updateMoveEngine = function () {
     eatCollisions = null;
     
     //this.gameMode.onCellMove(cell1, this);
-    
-    // Move moving cells
-    for (var i = 0; i < this.movingNodes.length; ) {
-        var cell1 = this.movingNodes[i];
-        if (cell1.isRemoved)
-            continue;
-        cell1.move(this.border);
-        this.updateNodeQuad(cell1);
-        if (!cell1.isMoving)
-            this.movingNodes.splice(i, 1);
-        else 
-            i++;
-    }
     
     // Scan for ejected cell collisions (scan for ejected or virus only)
     rigidCollisions = [];
