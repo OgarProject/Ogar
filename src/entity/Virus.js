@@ -24,11 +24,9 @@ Virus.prototype.onEat = function (prey) {
     var size1 = this.getSize();
     var size2 = prey.getSize() + 1;
     this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
-    if (prey.isMoving)
-        this.setAngle(prey.getAngle());
     if (this.getMass() >= this.gameServer.config.virusMaxMass) {
         this.setMass(this.gameServer.config.virusStartMass); // Reset mass
-        this.gameServer.shootVirus(this);
+        this.gameServer.shootVirus(this, prey.getAngle());
     }
 };
 

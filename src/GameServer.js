@@ -1124,14 +1124,14 @@ GameServer.prototype.ejectMass = function(client) {
     }
 };
 
-GameServer.prototype.shootVirus = function(parent) {
+GameServer.prototype.shootVirus = function(parent, angle) {
     var parentPos = {
         x: parent.position.x,
         y: parent.position.y,
     };
 
     var newVirus = new Entity.Virus(this.getNextNodeId(), null, parentPos, this.config.virusStartMass, this);
-    newVirus.setBoost(780, parent.getAngle());
+    newVirus.setBoost(780, angle);
 
     // Add to moving cells list
     this.addNode(newVirus);
