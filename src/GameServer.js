@@ -61,7 +61,7 @@ function GameServer() {
         serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0,              // Amount of player bots to spawn
         serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
-        serverViewBaseY: 1080, 
+        serverViewBaseY: 1080,      // min value is 1920x1080
         serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Amount of seconds per update for the server stats
