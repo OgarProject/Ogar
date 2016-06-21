@@ -194,8 +194,8 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
         var flags = 0;
         if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (node.cellType != 1 && node.cellType != 3)
-            flags |= 0x02;      // isColorPresent (do not update for food and ejected mass)
+        if (node.cellType == 0)
+            flags |= 0x02;      // isColorPresent (for players only)
         if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
