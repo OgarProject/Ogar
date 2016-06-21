@@ -43,7 +43,7 @@ http://c0nsume.me/private4.php?ip=127.0.0.1:50000 | 5 | vanilla style
 
 IP | Location
 --- | ---
-ws://164.132.48.230:600 | France
+164.132.48.230:600 | France
 
 
 ## What's new:
