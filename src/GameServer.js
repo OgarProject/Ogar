@@ -65,7 +65,7 @@ function GameServer() {
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Amount of seconds per update for the server stats
         serverLogLevel: 1,          // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
-        serverScrambleCoords: 0,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Some clients doesn't support it.
+        serverScrambleCoords: 1,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap, a little slow, some clients may not support it)
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
         borderWidth: 14142,         // Map border size (Vanilla value: 14142)

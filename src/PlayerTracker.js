@@ -68,17 +68,20 @@ module.exports = PlayerTracker;
 PlayerTracker.prototype.scramble = function () {
     this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
     
-    if (!this.gameServer.config.serverScrambleCoords)
-        return;
-    // avoid mouse packet limitations
-    var maxx = Math.max(0, 32767 - 1000 - this.gameServer.border.width);
-    var maxy = Math.max(0, 32767 - 1000 - this.gameServer.border.height);
-    var x = maxx * Math.random();
-    var y = maxy * Math.random();
-    if (Math.random() >= 0.5) x = -x;
-    if (Math.random() >= 0.5) y = -y;
-    this.scrambleX = x;
-    this.scrambleY = y;
+    if (!this.gameServer.config.serverScrambleCoords) {
+        this.scrambleX = 0;
+        this.scrambleY = 0;
+    } else {
+        // avoid mouse packet limitations
+        var maxx = Math.max(0, 32767 - 1000 - this.gameServer.border.width);
+        var maxy = Math.max(0, 32767 - 1000 - this.gameServer.border.height);
+        var x = maxx * Math.random();
+        var y = maxy * Math.random();
+        if (Math.random() >= 0.5) x = -x;
+        if (Math.random() >= 0.5) y = -y;
+        this.scrambleX = x;
+        this.scrambleY = y;
+    }
     this.borderCounter = 0;
 };
 
@@ -175,6 +178,10 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.socket.sendPacket(new Packet.ClearAll());
     this.visibleNodes = [];
     this.scramble();
+    if (this.gameServer.config.serverScrambleCoords < 2) {
+        // no scramble / lightweight scramble
+        this.socket.sendPacket(new Packet.SetBorder(this, this.gameServer.border));
+    }
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
 
@@ -280,7 +287,8 @@ PlayerTracker.prototype.update = function () {
     }
     this.visibleNodes = newVisible;
     
-    if (this.gameServer.config.serverScrambleCoords) {
+    if (this.gameServer.config.serverScrambleCoords == 2) {
+        // moving border scramble
         if (this.borderCounter == 0) {
             var bound = {
                 minx: Math.max(this.gameServer.border.minx, this.viewBox.minx - this.viewBox.halfWidth),
