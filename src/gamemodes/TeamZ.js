@@ -867,7 +867,8 @@ TeamZ.prototype.onCellRemove = function(cell) {
     }
 };
 
-TeamZ.prototype.onCellMove = function(x1, y1, cell) {
+// TODO: remove it (move physics is managed by GameServer)
+TeamZ.prototype.onCellMove = function (x1, y1, cell) {
     // Called when a player cell is moved
     var team = cell.owner.getTeam();
     var r = cell.getSize();

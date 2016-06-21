@@ -1,6 +1,5 @@
 var FFA = require('./FFA'); // Base gamemode
 var Food = require('../entity/Food');
-var FoodUp = require('../entity/Food').prototype.sendUpdate;
 
 function Rainbow() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
@@ -155,15 +154,9 @@ Rainbow.prototype.changeColor = function(node) {
 // Override
 
 Rainbow.prototype.onServerInit = function() {
-    // Overrides the update function
-    Food.prototype.sendUpdate = function() {
-        return true;
-    };
 };
 
 Rainbow.prototype.onChange = function() {
-    // Reset
-    Food.prototype.sendUpdate = FoodUp;
 };
 
 Rainbow.prototype.onTick = function(gameServer) {

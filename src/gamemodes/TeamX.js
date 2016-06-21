@@ -344,7 +344,7 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     };
 
     // Spawn food
-    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMass, gameServer);
+    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMinMass, gameServer);
     f.setColor(gameServer.getRandomColor());
 
     gameServer.addNode(f);

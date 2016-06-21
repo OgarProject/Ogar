@@ -96,7 +96,8 @@ Zombie.prototype.onCellRemove = function(cell) {
     }
 };
 
-Zombie.prototype.onCellMove = function(x1, y1, cell) {
+// TODO: remove it (move physics is managed by GameServer)
+Zombie.prototype.onCellMove = function (x1, y1, cell) {
     var team = cell.owner.getTeam();
     var r = cell.getSize();
 

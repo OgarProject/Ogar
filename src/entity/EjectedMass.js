@@ -9,18 +9,7 @@ function EjectedMass() {
 module.exports = EjectedMass;
 EjectedMass.prototype = new Cell();
 
-// Override functions that use 'owner' variable
-EjectedMass.prototype.getName = function() {
-    return "";
-};
-
 // Main Functions
-
-EjectedMass.prototype.sendUpdate = function() {
-    // Whether or not to include this cell in the update packet
-    // Always true since ejected cells can collide with themselves
-    return true;
-};
 
 EjectedMass.prototype.onAdd = function (gameServer) {
     // Add to list of ejected mass

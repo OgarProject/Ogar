@@ -12,12 +12,12 @@ PlayerCell.prototype = new Cell();
 
 // Main Functions
 
-PlayerCell.prototype.simpleCollide = function(check, d) {
-    // Simple collision check
-    var len = 2 * d >> 0; // Width of cell + width of the box (Int)
+PlayerCell.prototype.getName = function () {
+    return this.owner.name;
+};
 
-    return (this.abs(this.position.x - check.x) < len) &&
-        (this.abs(this.position.y - check.y) < len);
+PlayerCell.prototype.getSkin = function () {
+    return this.owner.skin;
 };
 
 PlayerCell.prototype.updateRemerge = function () {

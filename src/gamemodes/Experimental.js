@@ -123,7 +123,7 @@ MotherCell.prototype.update = function(gameServer) {
     }
     if (this.getMass() > 222) {
         // Always spawn food if the mother cell is larger than 222
-        var cellSize = gameServer.config.foodMass;
+        var cellSize = gameServer.config.foodMinMass;
         var remaining = this.getMass() - 222;
         var maxAmount = Math.min(Math.floor(remaining / cellSize), 2);
         for (var i = 0; i < maxAmount; i++) {
@@ -150,7 +150,7 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     };
 
     // Spawn food
-    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMass, gameServer);
+    var f = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMinMass, gameServer);
     f.setColor(gameServer.getRandomColor());
 
     gameServer.addNode(f);
