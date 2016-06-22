@@ -42,6 +42,8 @@ var playerCommands = {
         }
         var skinName = "";
         if (args) skinName = args.trim();
+        if (skinName.length > 16)
+            skinName = skinName.slice(0, 16);
         this.playerTracker.setSkin(skinName);
         if (skinName == "")
             this.writeLine("Your skin was removed");
