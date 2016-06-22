@@ -15,7 +15,7 @@ The goal is to cleanup the code, fix the bugs and improve physics.
 
 ## Clients
 
-Ogar clients and server trackers, that I found on internet
+This lists Ogar clients and server trackers that I found on internet.
 
 ###Ogar server trackers
 
@@ -23,15 +23,15 @@ URL | Description
 --- | ---
 http://ogar.mivabe.nl/master | MivaBe, tracks a lot of servers
 
-Now you can enable MultiOgar to be listed on server tracker.
-Just set serverTracker = 1 in the gameserver.ini and your server will appears
+Now you can allow MultiOgar to be listed on a server tracker.
+Just set `serverTracker = 1` in the gameserver.ini, and your server will appear
 on this page: http://ogar.mivabe.nl/master
-If you don't want to include your server to tracker list. 
-Just set serverTracker = 0 and server will not ping the server tracker.
+If you don't want to include your server to tracker list, 
+just set `serverTracker = 0` and the server will not ping the server tracker.
 
 
 ###Ogar clients
-Just replace ip:port in the url to play
+Just replace `127.0.0.1:50000` in the url to the server IP and port to play.
 
 URL | Protocol | Description
 --- | --- | ---
@@ -43,14 +43,14 @@ http://c0nsume.me/private4.php?ip=127.0.0.1:50000 | 5 | vanilla style
 
 IP | Location | Game Mode | Web Site
 --- | --- | --- | ---
-vps.simonorj.com:24270 | USA | Instant Merge | https://www.reddit.com/r/Agario/comments/4mufge
+vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
 
 
 ## What's new:
 * Massive perfromance improvement & reduce network traffic
 * Split behavior - fixed;
-* Protocol code optimized;
+* Protocol code - optimized;
 * Massive performance improvement with quad-tree lookup;
 * Split/Eject - physics code rewritten;
 * Player speed - physics code rewritten;
@@ -68,9 +68,9 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://www.reddit.com/r/Agario/c
 * Added anti-spam protection;
 * Added skin support (use name "< shark > Fish", remove space);
 * Color generator replaced with hsv model;
-* Memory leaks fixed;
+* Memory leaks - fixed;
 * Performance improved and optimized
 * Added support for server tracker ogar.mivabe.nl/master
 
-Most of the physics code from original ogar were rewritten.
+Most of the physics code from the original Ogar were rewritten.
 The physics engine in MultiOgar is pretty close to the old vanilla physics.

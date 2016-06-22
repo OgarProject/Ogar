@@ -57,6 +57,23 @@ Commands.list = {
         console.log("[Console] st                           : alias for status");
         console.log("[Console] ====================================================");
     },
+    debug: function(gameServer, split) {
+        // Used for checking node lengths (for now)
+        
+        // Count client cells
+        var clientCells = 0;
+        for (var i in gameServer.clients) {
+            clientCells += gameServer.clients[i].playerTracker.cells.length;
+        }
+        // Output node information
+        console.log("[Console] Clients:        " + fillChar(gameServer.clients.length, " ", 4, true)      + " / " + gameServer.config.serverMaxConnections + " + bots");
+        console.log("[Console] Total nodes:" + fillChar(gameServer.nodes.length, " ", 8, true));
+        console.log("[Console] - Client cells: " + fillChar(clientCells, " ", 4, true)                    + " / " + (gameServer.clients.length * gameServer.config.playerMaxCells));
+        console.log("[Console] - Ejected cells:" + fillChar(gameServer.nodesEjected.length, " ", 4, true));
+        console.log("[Console] - Foods:        " + fillChar(gameServer.currentFood, " ", 4, true)         + " / " + gameServer.config.foodMaxAmount);
+        console.log("[Console] - Viruses:      " + fillChar(gameServer.nodesVirus.length, " ", 4, true)   + " / " + gameServer.config.virusMaxAmount);
+        console.log("[Console] Moving nodes:   " + fillChar(gameServer.movingNodes.length, " ", 4, true));
+    },
     addbot: function(gameServer, split) {
         var add = parseInt(split[1]);
         if (isNaN(add)) {
