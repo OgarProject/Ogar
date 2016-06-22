@@ -191,15 +191,13 @@ var isInt = function(n) {
 };
 
 function getLagMessage(updateTimeAvg){
-	var lagMessage = "extreme high lag";
 	if (updateTimeAvg < 20)
-		lagMessage = "perfectly smooth";
-	else if (updateTimeAvg < 35)
-		lagMessage = "good";
-	else if (updateTimeAvg < 40)
-		lagMessage = "tiny lag";
-	else if (updateTimeAvg < 50)
-		lagMessage = "lag";
-	
-	return lagMessage;
+		return "perfectly smooth";
+	if (updateTimeAvg < 35)
+		return "good";
+	if (updateTimeAvg < 40)
+		return "tiny lag";
+	if (updateTimeAvg < 50)
+		return "lag";
+    return "extremely high lag";
 }
