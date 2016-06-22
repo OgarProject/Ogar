@@ -2,43 +2,43 @@ var Packet = require('./packet');
 var GameServer = require('./GameServer');
 
 function PlayerTracker(gameServer, socket) {
+    this.gameServer = gameServer;
+    this.socket = socket;
     this.pID = -1;
     this.isRemoved = false;
     this.isCloseRequested = false;
     this.name = "";
     this.skin = "";
-    this.gameServer = gameServer;
-    this.socket = socket;
+    this.color = { r: 0, g: 0, b: 0 };
     this.visibleNodes = [];
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
     this.score = 0; // Needed for leaderboard
     this.scale = 1;
     this.isMassChanged = true;
+    this.borderCounter = 0;
 
     this.mouse = {
         x: 0,
         y: 0
     };
     this.tickLeaderboard = 0;
-    this.tickViewBox = 0;
 
     this.team = 0;
     this.spectate = false;
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
 
-    // Viewing box
-    this.sightWidth = 0;
-    this.sightHeight = 0;
-    this.centerPos = { // Center of map
-        x: 3000,
-        y: 3000
+    this.centerPos = {
+        x: 0,
+        y: 0
     };
     this.viewBox = {
-        left: 0,
-        top: 0,
-        right: 0,
-        bottom: 0,
+        minx: 0,
+        miny: 0,
+        maxx: 0,
+        maxy: 0,
+        width: 0,
+        height: 0,
         halfWidth: 0,
         halfHeight: 0
     };
@@ -50,30 +50,40 @@ function PlayerTracker(gameServer, socket) {
 
     // Gamemode function
     if (gameServer) {
-        // Find center
-        var width = gameServer.config.borderRight - gameServer.config.borderLeft;
-        var height = gameServer.config.borderBottom - gameServer.config.borderTop;
-        this.centerPos.x = gameServer.config.borderLeft + width / 2;
-        this.centerPos.y = gameServer.config.borderTop + height / 2;
+        this.centerPos.x = gameServer.border.centerx;
+        this.centerPos.y = gameServer.border.centery;
         // Player id
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
         gameServer.gameMode.onPlayerInit(this);
         // Only scramble if enabled in config
-        if (gameServer.config.serverScrambleCoords == 1) {
-            // avoid mouse packet limitations
-            var maxScrambleX = Math.max(0, 32767 - 2000 - width / 2);
-            var maxScrambleY = Math.max(0, 32767 - 2000 - height / 2);
-            this.scrambleX = Math.floor(maxScrambleX * Math.random());
-            this.scrambleY = Math.floor(maxScrambleY * Math.random());
-        }
-        this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
+        this.scramble();
     }
 }
 
 module.exports = PlayerTracker;
 
 // Setters/Getters
+
+PlayerTracker.prototype.scramble = function () {
+    this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
+    
+    if (!this.gameServer.config.serverScrambleCoords) {
+        this.scrambleX = 0;
+        this.scrambleY = 0;
+    } else {
+        // avoid mouse packet limitations
+        var maxx = Math.max(0, 32767 - 1000 - this.gameServer.border.width);
+        var maxy = Math.max(0, 32767 - 1000 - this.gameServer.border.height);
+        var x = maxx * Math.random();
+        var y = maxy * Math.random();
+        if (Math.random() >= 0.5) x = -x;
+        if (Math.random() >= 0.5) y = -y;
+        this.scrambleX = x;
+        this.scrambleY = y;
+    }
+    this.borderCounter = 0;
+};
 
 PlayerTracker.prototype.getFriendlyName = function () {
     var name = this.getName();
@@ -98,6 +108,20 @@ PlayerTracker.prototype.setSkin = function (skin) {
 
 PlayerTracker.prototype.getSkin = function () {
     return this.skin;
+};
+
+PlayerTracker.prototype.getColor = function (color) {
+    return this.color;
+};
+
+PlayerTracker.prototype.setColor = function (color) {
+    this.color.r = color.r;
+    this.color.g = color.g;
+    this.color.b = color.b;
+};
+
+PlayerTracker.prototype.getTeam = function () {
+    return this.team;
 };
 
 PlayerTracker.prototype.getScore = function () {
@@ -135,17 +159,6 @@ PlayerTracker.prototype.massChanged = function () {
     this.isMassChanged = true;    
 };
 
-
-PlayerTracker.prototype.setColor = function(color) {
-    this.color.r = color.r;
-    this.color.g = color.g;
-    this.color.b = color.b;
-};
-
-PlayerTracker.prototype.getTeam = function() {
-    return this.team;
-};
-
 // Functions
 
 PlayerTracker.prototype.joinGame = function (name, skin) {
@@ -158,13 +171,17 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.freeRoam = false;
 
     // some old clients don't understand ClearAll message
-    // so we will not perform cleanup for old protocol
-    // to allow them to receive remove notifications
-    if (this.socket.packetHandler.protocol >= 6) {
-        this.socket.sendPacket(new Packet.ClearAll());
-        this.visibleNodes = [];
+    // so we will send update for them
+    if (this.socket.packetHandler.protocol < 6) {
+        this.socket.sendPacket(new Packet.UpdateNodes(this, [], [], [], this.visibleNodes));
     }
-
+    this.socket.sendPacket(new Packet.ClearAll());
+    this.visibleNodes = [];
+    this.scramble();
+    if (this.gameServer.config.serverScrambleCoords < 2) {
+        // no scramble / lightweight scramble
+        this.socket.sendPacket(new Packet.SetBorder(this, this.gameServer.border));
+    }
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
 
@@ -227,12 +244,15 @@ PlayerTracker.prototype.update = function () {
     
     var newVisible = this.getVisibleNodes();
     newVisible.sort(function (a, b) { return a.nodeId - b.nodeId; });
-    var deleteNodes = [];
+    var delNodes = [];
     var eatNodes = [];
+    var addNodes = [];
+    var updNodes = [];
     var newIndex = 0;
     var oldIndex = 0;
     for (; newIndex < newVisible.length && oldIndex < this.visibleNodes.length;) {
         if (newVisible[newIndex].nodeId < this.visibleNodes[oldIndex].nodeId) {
+            addNodes.push(newVisible[newIndex]);
             newIndex++;
             continue;
         }
@@ -241,29 +261,55 @@ PlayerTracker.prototype.update = function () {
             if (node.isRemoved)
                 eatNodes.push(node);
             else
-                deleteNodes.push(node);
+                delNodes.push(node);
             oldIndex++;
             continue;
         }
+        var node = newVisible[newIndex];
+        // skip food & eject if no moving
+        if (node.isMoving || (node.cellType != 1 && node.cellType != 3))
+            updNodes.push(node);
         newIndex++;
         oldIndex++;
+    }
+    for (; newIndex < newVisible.length; ) {
+        var node = newVisible[newIndex];
+        addNodes.push(newVisible[newIndex]);
+        newIndex++;
     }
     for (; oldIndex < this.visibleNodes.length; ) {
         var node = this.visibleNodes[oldIndex];
         if (node.isRemoved)
             eatNodes.push(node);
         else 
-            deleteNodes.push(node);
+            delNodes.push(node);
         oldIndex++;
     }
     this.visibleNodes = newVisible;
+    
+    if (this.gameServer.config.serverScrambleCoords == 2) {
+        // moving border scramble
+        if (this.borderCounter == 0) {
+            var bound = {
+                minx: Math.max(this.gameServer.border.minx, this.viewBox.minx - this.viewBox.halfWidth),
+                miny: Math.max(this.gameServer.border.miny, this.viewBox.miny - this.viewBox.halfHeight),
+                maxx: Math.min(this.gameServer.border.maxx, this.viewBox.maxx + this.viewBox.halfWidth),
+                maxy: Math.min(this.gameServer.border.maxy, this.viewBox.maxy + this.viewBox.halfHeight)
+            };
+            this.socket.sendPacket(new Packet.SetBorder(this, bound));
+        }
+        this.borderCounter++;
+        if (this.borderCounter >= 20)
+            this.borderCounter = 0;
+    }
 
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(
         this,
+        addNodes,
+        updNodes,
         eatNodes,
-        this.visibleNodes,
-        deleteNodes));
+        delNodes));
     
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
@@ -316,28 +362,26 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
     var x = this.centerPos.x + nx * speed;
     var y = this.centerPos.y + ny * speed;
     // check border
-    if (x < this.gameServer.config.borderLeft)
-        x = this.gameServer.config.borderLeft;
-    else if (y > this.gameServer.config.borderRight)
-        x = this.gameServer.config.borderRight;
-    if (y < this.gameServer.config.borderTop)
-        y = this.gameServer.config.borderTop;
-    else if (y > this.gameServer.config.borderBottom)
-        y = this.gameServer.config.borderBottom;
+    x = Math.max(x, this.gameServer.border.minx);
+    y = Math.max(y, this.gameServer.border.miny);
+    x = Math.min(x, this.gameServer.border.maxx);
+    y = Math.min(y, this.gameServer.border.maxy);
     this.setCenterPos(x, y);
 };
 
 PlayerTracker.prototype.updateViewBox = function () {
     var scale = this.getScale();
-    this.sightWidth = (this.gameServer.config.serverViewBaseX + 100) / scale;
-    this.sightHeight = (this.gameServer.config.serverViewBaseY + 100) / scale;
-    var halfWidth = this.sightWidth / 2;
-    var halfHeight = this.sightHeight / 2;
+    var width = (this.gameServer.config.serverViewBaseX + 100) / scale;
+    var height = (this.gameServer.config.serverViewBaseY + 100) / scale;
+    var halfWidth = width / 2;
+    var halfHeight = height / 2;
     this.viewBox = {
-        left: this.centerPos.x - halfWidth,
-        top: this.centerPos.y - halfHeight,
-        right: this.centerPos.x + halfWidth,
-        bottom: this.centerPos.y + halfHeight,
+        minx: this.centerPos.x - halfWidth,
+        miny: this.centerPos.y - halfHeight,
+        maxx: this.centerPos.x + halfWidth,
+        maxy: this.centerPos.y + halfHeight,
+        width: width,
+        height: height,
         halfWidth: halfWidth,
         halfHeight: halfHeight
     };
@@ -356,7 +400,7 @@ PlayerTracker.prototype.getVisibleNodes = function () {
         }
         // free roam spectate
         this.updateCenterFreeRoam();
-        this.scale = 0.25;
+        this.scale = this.gameServer.config.serverSpectatorScale;//0.25;
         this.sendPosPacket();
     } else {
         // in game
@@ -369,21 +413,12 @@ PlayerTracker.prototype.getVisibleNodes = function () {
 
 PlayerTracker.prototype.calcVisibleNodes = function() {
     var newVisible = [];
-    var bound = {
-        minx: this.viewBox.left,
-        miny: this.viewBox.top,
-        maxx: this.viewBox.right,
-        maxy: this.viewBox.bottom
-    };
-    this.gameServer.quadTree.find(bound, function (quadItem) {
-        newVisible.push(quadItem.cell);
+    var self = this;
+    this.gameServer.quadTree.find(this.viewBox, function (quadItem) {
+        if (quadItem.cell.owner != self)
+            newVisible.push(quadItem.cell);
     });
-    // make sure that all owned is included
-    for (var i = 0; i < this.cells.length; i++) {
-        if (newVisible.indexOf(this.cells[i]) < 0)
-            newVisible.push(this.cells[i]);
-    }
-    return newVisible;
+    return newVisible.concat(this.cells);
 };
 
 PlayerTracker.prototype.setCenterPos = function(x, y) {
@@ -394,14 +429,10 @@ PlayerTracker.prototype.setCenterPos = function(x, y) {
 
 PlayerTracker.prototype.checkBorderPass = function() {
     // A check while in free-roam mode to avoid player going into nothingness
-    if (this.centerPos.x < this.gameServer.config.borderLeft)
-        this.centerPos.x = this.gameServer.config.borderLeft;
-    else if (this.centerPos.x > this.gameServer.config.borderRight)
-        this.centerPos.x = this.gameServer.config.borderRight;
-    if (this.centerPos.y < this.gameServer.config.borderTop)
-        this.centerPos.y = this.gameServer.config.borderTop;
-    else if (this.centerPos.y > this.gameServer.config.borderBottom)
-        this.centerPos.y = this.gameServer.config.borderBottom;
+    this.centerPos.x = Math.max(this.centerPos.x, this.gameServer.border.minx);
+    this.centerPos.y = Math.max(this.centerPos.y, this.gameServer.border.miny);
+    this.centerPos.x = Math.min(this.centerPos.x, this.gameServer.border.maxx);
+    this.centerPos.y = Math.min(this.centerPos.y, this.gameServer.border.maxy);
 };
 
 PlayerTracker.prototype.sendPosPacket = function() {

@@ -41,21 +41,13 @@ PacketHandler.prototype.handleMessage = function(message) {
         }
         // Send handshake response
         this.socket.sendPacket(new Packet.ClearAll());
-        var border = {
-            left: this.gameServer.config.borderLeft,
-            top: this.gameServer.config.borderTop,
-            right: this.gameServer.config.borderRight,
-            bottom: this.gameServer.config.borderBottom
-        };
-        this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, border, this.gameServer.config.serverGamemode, "MultiOgar 1.0"));
+        this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.gameServer.border, this.gameServer.config.serverGamemode, "MultiOgar"));
         // Send welcome message
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
         if (this.gameServer.config.serverChat == 0)
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
         if (this.protocol < 4) {
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Your client has protocol error!");
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Client sends invalid protocol version "+this.protocol);
-            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Server assumes it as protocol 4");
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Protocol " + this.protocol + " assumed as 4!");
         }        
         this.isHandshakePassed = true;
         return;
@@ -154,7 +146,7 @@ PacketHandler.prototype.setNickname = function (text) {
             skin = "%" + text.slice(1, n);
             name = text.slice(n + 1);
             //} else if (text[0] == "|" && (n = text.indexOf("|", 1)) >= 0) {
-            //    skin = ":http://i.imgur.com/" + text.slice(1, n);
+            //    skin = ":http://i.imgur.com/" + text.slice(1, n) + ".png";
             //    name = text.slice(n + 1);
         } else {
             name = text;

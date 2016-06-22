@@ -2,11 +2,12 @@
 var BinaryWriter = require("./BinaryWriter");
 
 
-function UpdateNodes(playerTracker, eatNodes, updateNodes, removeNodes) {
+function UpdateNodes(playerTracker, addNodes, updNodes, eatNodes, delNodes) {
     this.playerTracker = playerTracker; 
+    this.addNodes = addNodes;
+    this.updNodes = updNodes;
     this.eatNodes = eatNodes;
-    this.updateNodes = updateNodes;
-    this.removeNodes = removeNodes;
+    this.delNodes = delNodes;
 }
 
 module.exports = UpdateNodes;
@@ -32,11 +33,38 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
     var scrambleY = this.playerTracker.scrambleY;
     var scrambleId = this.playerTracker.scrambleId;
 
-    for (var i = 0; i < this.updateNodes.length; i++) {
-        var node = this.updateNodes[i];
+    for (var i = 0; i < this.updNodes.length; i++) {
+        var node = this.updNodes[i];
         if (node.nodeId == 0)
             continue;
+        var cellX = node.position.x + scrambleX;
+        var cellY = node.position.y + scrambleY;
         
+        // Write update record
+        writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);         // Cell ID
+        writer.writeInt16(cellX >> 0);                // Coordinate X
+        writer.writeInt16(cellY >> 0);                // Coordinate Y
+        writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
+        var color = node.getColor();
+        writer.writeUInt8(color.r >>> 0);         // Color R
+        writer.writeUInt8(color.g >>> 0);         // Color G
+        writer.writeUInt8(color.b >>> 0);         // Color B
+        
+        var flags = 0;
+        if (node.isSpiked)
+            flags |= 0x01;      // isVirus
+        if (node.isAgitated)
+            flags |= 0x10;      // isAgitated
+        if (node.cellType == 3)
+            flags |= 0x20;      // isEjected
+        writer.writeUInt8(flags >>> 0);                  // Flags
+        
+        writer.writeUInt16(0);                          // Name
+    }
+    for (var i = 0; i < this.addNodes.length; i++) {
+        var node = this.addNodes[i];
+        if (node.nodeId == 0)
+            continue;
         var cellX = node.position.x + scrambleX;
         var cellY = node.position.y + scrambleY;
         var cellName = node.getName();
@@ -46,20 +74,24 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
         writer.writeInt16(cellX >> 0);                // Coordinate X
         writer.writeInt16(cellY >> 0);                // Coordinate Y
         writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
-        writer.writeUInt8(node.color.r >>> 0);         // Color R
-        writer.writeUInt8(node.color.g >>> 0);         // Color G
-        writer.writeUInt8(node.color.b >>> 0);         // Color B
+        var color = node.getColor();
+        writer.writeUInt8(color.r >>> 0);         // Color R
+        writer.writeUInt8(color.g >>> 0);         // Color G
+        writer.writeUInt8(color.b >>> 0);         // Color B
         
         var flags = 0;
-        if (node.spiked & 1)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (false)
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
         writer.writeUInt8(flags >>> 0);                  // Flags
         
-        writer.writeStringZeroUnicode(cellName);        // Name
+        if (node.owner != null && cellName != null && cellName.length > 0)
+            writer.writeStringZeroUnicode(cellName);        // Name
+        else
+            writer.writeUInt16(0);                          // Name
     }
     writer.writeUInt32(0);                              // Cell Update record terminator
 };
@@ -70,8 +102,36 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
     var scrambleY = this.playerTracker.scrambleY;
     var scrambleId = this.playerTracker.scrambleId;
     
-    for (var i = 0; i < this.updateNodes.length; i++) {
-        var node = this.updateNodes[i];
+    for (var i = 0; i < this.updNodes.length; i++) {
+        var node = this.updNodes[i];
+        if (node.nodeId == 0)
+            continue;
+        var cellX = node.position.x + scrambleX;
+        var cellY = node.position.y + scrambleY;
+        
+        // Write update record
+        writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);         // Cell ID
+        writer.writeInt32(cellX >> 0);                // Coordinate X
+        writer.writeInt32(cellY >> 0);                // Coordinate Y
+        writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
+        var color = node.getColor();
+        writer.writeUInt8(color.r >>> 0);         // Color R
+        writer.writeUInt8(color.g >>> 0);         // Color G
+        writer.writeUInt8(color.b >>> 0);         // Color B
+        
+        var flags = 0;
+        if (node.isSpiked)
+            flags |= 0x01;      // isVirus
+        if (node.isAgitated)
+            flags |= 0x10;      // isAgitated
+        if (node.cellType == 3)
+            flags |= 0x20;      // isEjected
+        writer.writeUInt8(flags >>> 0);                  // Flags
+        
+        writer.writeUInt16(0);                          // Cell Name
+    }
+    for (var i = 0; i < this.addNodes.length; i++) {
+        var node = this.addNodes[i];
         if (node.nodeId == 0)
             continue;
         
@@ -85,16 +145,17 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         writer.writeInt32(cellX >> 0);                // Coordinate X
         writer.writeInt32(cellY >> 0);                // Coordinate Y
         writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
-        writer.writeUInt8(node.color.r >>> 0);         // Color R
-        writer.writeUInt8(node.color.g >>> 0);         // Color G
-        writer.writeUInt8(node.color.b >>> 0);         // Color B
+        var color = node.getColor();
+        writer.writeUInt8(color.r >>> 0);         // Color R
+        writer.writeUInt8(color.g >>> 0);         // Color G
+        writer.writeUInt8(color.b >>> 0);         // Color B
         
         var flags = 0;
-        if (node.spiked & 1)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (!(node.spiked & 1) && skinName != null && skinName.length > 0)
+        if (node.owner != null && skinName != null && skinName.length > 0)
             flags |= 0x04;      // isSkinPresent
-        if (false)
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
@@ -103,7 +164,10 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         if (flags & 0x04)
             writer.writeStringZeroUtf8(skinName);       // Skin Name in UTF8
         
-        writer.writeStringZeroUnicode(cellName);        // Cell Name
+        if (node.owner != null && cellName != null && cellName.length > 0)
+            writer.writeStringZeroUnicode(cellName);    // Name
+        else
+            writer.writeUInt16(0);                      // Name
     }
     writer.writeUInt32(0 >> 0);                         // Cell Update record terminator
 };
@@ -113,9 +177,40 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
     var scrambleX = this.playerTracker.scrambleX;
     var scrambleY = this.playerTracker.scrambleY;
     var scrambleId = this.playerTracker.scrambleId;
-    
-    for (var i = 0; i < this.updateNodes.length; i++) {
-        var node = this.updateNodes[i];
+    for (var i = 0; i < this.updNodes.length; i++) {
+        var node = this.updNodes[i];
+        if (node.nodeId == 0)
+            continue;
+        
+        var cellX = node.position.x + scrambleX;
+        var cellY = node.position.y + scrambleY;
+        
+        // Write update record
+        writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);         // Cell ID
+        writer.writeInt32(cellX >> 0);                // Coordinate X
+        writer.writeInt32(cellY >> 0);                // Coordinate Y
+        writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
+        
+        var flags = 0;
+        if (node.isSpiked)
+            flags |= 0x01;      // isVirus
+        if (node.cellType == 0)
+            flags |= 0x02;      // isColorPresent (for players only)
+        if (node.isAgitated)
+            flags |= 0x10;      // isAgitated
+        if (node.cellType == 3)
+            flags |= 0x20;      // isEjected
+        writer.writeUInt8(flags >>> 0);                  // Flags
+        
+        if (flags & 0x02) {
+            var color = node.getColor();
+            writer.writeUInt8(color.r >>> 0);       // Color R
+            writer.writeUInt8(color.g >>> 0);       // Color G
+            writer.writeUInt8(color.b >>> 0);       // Color B
+        }
+    }
+    for (var i = 0; i < this.addNodes.length; i++) {
+        var node = this.addNodes[i];
         if (node.nodeId == 0)
             continue;
         
@@ -131,24 +226,27 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
         writer.writeUInt16(node.getSize() >>> 0);     // Cell Size (not to be confused with mass, because mass = size*size/100)
         
         var flags = 0;
-        if (node.spiked & 1)
+        if (node.isSpiked)
             flags |= 0x01;      // isVirus
         if (true)
-            flags |= 0x02;      // isColorPresent
-        if (!(node.spiked & 1) && skinName != null && skinName.length > 1)
-            flags |= 0x04;      // isSkinPresent
-        if (!(node.spiked & 1) && cellName != null && cellName.length > 1)
-            flags |= 0x08;      // isNamePresent
-        if (false)
+            flags |= 0x02;      // isColorPresent (always for added)
+        if (node.owner != null) {
+            if (skinName != null && skinName.length > 1)
+                flags |= 0x04;      // isSkinPresent
+            if (cellName != null && cellName.length > 1)
+                flags |= 0x08;      // isNamePresent
+        }
+        if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
             flags |= 0x20;      // isEjected
         writer.writeUInt8(flags >>> 0);                  // Flags
         
         if (flags & 0x02) {
-            writer.writeUInt8(node.color.r >>> 0);       // Color R
-            writer.writeUInt8(node.color.g >>> 0);       // Color G
-            writer.writeUInt8(node.color.b >>> 0);       // Color B
+            var color = node.getColor();
+            writer.writeUInt8(color.r >>> 0);       // Color R
+            writer.writeUInt8(color.g >>> 0);       // Color G
+            writer.writeUInt8(color.b >>> 0);       // Color B
         }
         if (flags & 0x04)
             writer.writeStringZeroUtf8(skinName);       // Skin Name in UTF8
@@ -176,7 +274,7 @@ UpdateNodes.prototype.writeEatItems = function (writer) {
 UpdateNodes.prototype.writeRemoveItems = function (writer, protocol) {
     var scrambleId = this.playerTracker.scrambleId;
     
-    var length = this.eatNodes.length + this.removeNodes.length;
+    var length = this.eatNodes.length + this.delNodes.length;
     if (protocol < 6)
         writer.writeUInt32(length >>> 0);          // RemoveRecordCount
     else
@@ -185,8 +283,8 @@ UpdateNodes.prototype.writeRemoveItems = function (writer, protocol) {
         var node = this.eatNodes[i];
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);                // Cell ID
     }
-    for (var i = 0; i < this.removeNodes.length; i++) {
-        var node = this.removeNodes[i];
+    for (var i = 0; i < this.delNodes.length; i++) {
+        var node = this.delNodes[i];
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);                // Cell ID
     }
 };

@@ -41,7 +41,7 @@ Zombie.prototype.leaderboardAddSort = function(player, leaderboard) {
 Zombie.prototype.makeZombie = function(player) {
     // turns a player into a zombie
     player.team = 0;
-    player.color = this.zombieColor;
+    player.setColor(this.zombieColor);
     for (var i = 0; i < player.cells.length; i++) {
         // remove cell from players array
         var index = this.players.indexOf(player.cells[i]);
@@ -49,7 +49,7 @@ Zombie.prototype.makeZombie = function(player) {
             this.players.splice(index, 1);
         }
         // change color of cell
-        player.cells[i].color = this.zombieColor;
+        player.cells[i].setColor(this.zombieColor);
         // add cell to zombie array
         this.zombies.push(player.cells[i]);
     }
@@ -61,11 +61,11 @@ Zombie.prototype.onPlayerSpawn = function(gameServer, player) {
     // make player a zombie if there are none
     if (this.zombies.length == 0) {
         player.team = 0;
-        player.color = this.zombieColor;
+        player.setColor(this.zombieColor);
     } else {
         // use player id as team so that bots are still able to fight (even though they probably turn into zombies very fast)
         player.team = player.pID;
-        player.color = gameServer.getRandomColor();
+        player.setColor(gameServer.getRandomColor());
     }
 
     // Spawn player
@@ -96,7 +96,8 @@ Zombie.prototype.onCellRemove = function(cell) {
     }
 };
 
-Zombie.prototype.onCellMove = function(x1, y1, cell) {
+// TODO: remove it (move physics is managed by GameServer)
+Zombie.prototype.onCellMove = function (x1, y1, cell) {
     var team = cell.owner.getTeam();
     var r = cell.getSize();
 
@@ -137,9 +138,10 @@ Zombie.prototype.onCellMove = function(x1, y1, cell) {
 
                 var move = collisionDist - dist;
                 
-                check.setPosition(
-                    check.position.x + (move * Math.sin(newAngle)) >> 0,
-                    check.position.y + (move * Math.cos(newAngle)) >> 0);
+                check.setPosition({
+                    x: check.position.x + (move * Math.sin(newAngle)) >> 0,
+                    y: check.position.y + (move * Math.cos(newAngle)) >> 0
+                });
             }
         }
     }

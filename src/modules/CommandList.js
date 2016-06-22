@@ -1,6 +1,7 @@
 // Imports
 var GameMode = require('../gamemodes');
 var Entity = require('../entity');
+var ini = require('./ini.js');
 
 function Commands() {
     this.list = {}; // Empty
@@ -261,10 +262,9 @@ Commands.list = {
         }
 
         // Spawn
-        var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
-        f.setColor(gameServer.getRandomColor());
-        gameServer.addNode(f);
-        gameServer.currentFood++;
+        var cell = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
+        cell.setColor(gameServer.getRandomColor());
+        gameServer.addNode(cell);
         console.log("[Console] Spawned 1 food cell at (" + pos.x + " , " + pos.y + ")");
     },
     gamemode: function(gameServer, split) {
@@ -314,10 +314,12 @@ Commands.list = {
     },
     killall: function(gameServer, split) {
         var count = 0;
-        var len = gameServer.nodesPlayer.length;
-        for (var i = 0; i < len; i++) {
-            gameServer.removeNode(gameServer.nodesPlayer[0]);
-            count++;
+        for (var i = 0; i < gameServer.clients.length; i++) {
+            var playerTracker = gameServer.clients[i].playerTracker;
+            while (playerTracker.cells.length > 0) {
+                gameServer.removeNode(playerTracker.cells[0]);
+                count++;
+            }
         }
         console.log("[Console] Removed " + count + " cells");
     },
@@ -517,22 +519,12 @@ Commands.list = {
             }
         }
         
-        var lagMessage = "extreme high lag";
-        if (gameServer.updateTimeAvg < 20)
-            lagMessage = "perfectly smooth";
-        else if (gameServer.updateTimeAvg < 35)
-            lagMessage = "good";
-        else if (gameServer.updateTimeAvg < 40)
-            lagMessage = "tiny lag";
-        else if (gameServer.updateTimeAvg < 50)
-            lagMessage = "lag";
-        
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
         console.log("[Console] Players: " + humans + " - Bots: " + bots);
         console.log("[Console] Server has been running for " + Math.floor(process.uptime()/60) + " minutes");
         console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10)/10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10)/10 + " mb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
-        console.log("[Console] Current update time: " + gameServer.updateTimeAvg.toFixed(3) + " [ms]  (" + lagMessage + ")");
+        console.log("[Console] Current update time: " + gameServer.updateTimeAvg.toFixed(3) + " [ms]  (" + ini.getLagMessage(gameServer.updateTimeAvg) + ")");
     },
     tp: function(gameServer, split) {
         var id = parseInt(split[1]);
@@ -556,7 +548,7 @@ Commands.list = {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
-                    client.cells[j].setPosition(pos.x, pos.y);
+                    client.cells[j].setPosition(pos);
                     gameServer.updateNodeQuad(client.cells[j]);
                 }
 
@@ -582,7 +574,7 @@ Commands.list = {
         }
 
         // Spawn
-        var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass);
+        var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass, gameServer);
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },

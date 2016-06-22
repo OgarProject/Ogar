@@ -37,10 +37,21 @@ URL | Protocol | Description
 --- | --- | ---
 http://ogar.mivabe.nl/?ip=127.0.0.1:50000 | early 5 | MivaBe, pretty smooth, custom graphics (anime)
 http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends invalid protocol=1)
+http://c0nsume.me/private4.php?ip=127.0.0.1:50000 | 5 | vanilla style
 
+###MultiOgar Servers
+
+IP | Location | Game Mode | Web Site
+--- | --- | --- | ---
+vps.simonorj.com:24270 | USA | Instant Merge | https://www.reddit.com/r/Agario/comments/4mufge
+164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
 
 
 ## What's new:
+* Massive perfromance improvement & reduce network traffic
+* Split behavior - fixed;
+* Protocol code optimized;
+* Massive performance improvement with quad-tree lookup;
 * Split/Eject - physics code rewritten;
 * Player speed - physics code rewritten;
 * Cell remerge - physics code rewritten;

@@ -1,44 +1,42 @@
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    if (gameServer != null)
-        this.tickOfBirth = gameServer.getTick();
-    this.color = {
-        r: 0,
-        g: 255,
-        b: 0
-    };
-    this.position = position;
+    this.gameServer = gameServer;
+    
+    this.tickOfBirth = 0;
+    this.color = { r: 0, g: 0, b: 0 };
+    this.position = { x: 0, y: 0 };
     this._size = 0;
     this._mass = 0;
     this._squareSize = 0;
-    this.setMass(mass); // Starting mass of the cell
-    this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
-    this.spiked = 0;    // If 1, then this cell has spikes around it
-
-    this.killedBy; // Cell that ate this cell
-    this.gameServer = gameServer;
+    this.cellType = -1;     // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
+    this.isSpiked = false;  // If true, then this cell has spikes around it
+    this.isAgitated = false;// If true, then this cell has waves on it's outline
+    this.killedBy = null;   // Cell that ate this cell
+    this.isMoving = false;  // Indicate that cell is in boosted mode
 
     this.boostDistance = 0;
     this.boostDirection = { x: 1, y: 0, angle: 0 };
     this.ejector = null;
     
-    this.collisionRestoreTicks = 0; // Ticks left before cell starts checking for collision with client's cells
+    if (gameServer != null)
+        this.tickOfBirth = gameServer.getTick();
+    if (mass != null)
+        this.setMass(mass);
+    if (position != null)
+        this.setPosition(position);
 }
 
 module.exports = Cell;
 
+
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 
 Cell.prototype.getName = function() {
-    if (this.owner)
-        return this.owner.name;
     return "";
 };
 
 Cell.prototype.getSkin = function () {
-    if (this.owner)
-        return this.owner.skin;
     return "";
 };
 
@@ -76,17 +74,12 @@ Cell.prototype.setMass = function (mass) {
         this.owner.massChanged();
 };
 
-Cell.prototype.addMass = function (n) {
-    // Check if the cell needs to autosplit before adding mass
-    var newMass = this.getMass() + n;
-    this.setMass(newMass);
-    if (this.getMass() <= this.gameServer.config.playerMaxMass)
-        return;
-    if (this.owner.cells.length >= this.gameServer.config.playerMaxCells)
-        return;
-    var splitMass = this.getMass() / 2;
-    var randomAngle = Math.random() * 6.28; // Get random angle
-    this.gameServer.splitPlayerCell(this.owner, this, randomAngle, splitMass);
+Cell.prototype.setSize = function (size) {
+    this._size = size;
+    this._squareSize = size * size;
+    this._mass = this._squareSize / 100;
+    if (this.owner)
+        this.owner.massChanged();
 };
 
 Cell.prototype.getSpeed = function() {
@@ -121,79 +114,41 @@ Cell.prototype.setKiller = function(cell) {
     this.killedBy = cell;
 };
 
-Cell.prototype.setPosition = function (x, y) {
-    if (isNaN(x) || isNaN(y)) {
+Cell.prototype.setPosition = function (pos) {
+    if (isNaN(pos.x) || isNaN(pos.y)) {
         console.log("[ERROR] Cell.setPosition: NaN");
         return;
     }
-    this.position = { x: x, y: y };
+    this.position.x = pos.x;
+    this.position.y = pos.y;
 };
 
 // Functions
-
-Cell.prototype.collisionCheck = function(left, top, right, bottom) {
-    return this.position.x > left && 
-        this.position.x < right &&
-        this.position.y > top && 
-        this.position.y < bottom;
-};
-
-// This collision checking function is based on CIRCLE shape
-Cell.prototype.collisionCheck2 = function(objectSquareSize, objectPosition) {
-    // IF (O1O2 + r <= R) THEN collided. (O1O2: distance b/w 2 centers of cells)
-    // (O1O2 + r)^2 <= R^2
-    // approximately, remove 2*O1O2*r because it requires sqrt(): O1O2^2 + r^2 <= R^2
-
-    var dx = this.position.x - objectPosition.x;
-    var dy = this.position.y - objectPosition.y;
-
-    return (dx * dx + dy * dy + this.getSquareSize() <= objectSquareSize);
-};
-
-Cell.prototype.collisionCheckCircle = function(x, y, size) {
-    var dx = this.position.x - x;
-    var dy = this.position.y - y;
-    var r = this.getSize() + size;
-    return dx * dx + dy * dy < r * r;
-};
-
-Cell.prototype.visibleCheck = function (box) {
-    // Checks if this cell is visible to the player
-    if (this.cellType == 1) {
-        // dot collision detector
-        return this.position.x >= box.left && 
-            this.position.x <= box.right &&
-            this.position.y >= box.top && 
-            this.position.y <= box.bottom;
-    }
-    // rectangle collision detector
-    var cellSize = this.getSize();
-    var minx = this.position.x - cellSize;
-    var miny = this.position.y - cellSize;
-    var maxx = this.position.x + cellSize;
-    var maxy = this.position.y + cellSize;
-    var d1x = box.left - maxx;
-    var d1y = box.top - maxy;
-    var d2x = minx - box.right;
-    var d2y = miny - box.bottom;
-    return d1x < 0 && d1y < 0 && d2x < 0 && d2y < 0;
-};
 
 Cell.prototype.setBoost = function (distance, angle) {
     if (isNaN(angle)) angle = 0;
     
     this.boostDistance = distance;
     this.setAngle(angle);
+    this.isMoving = true;
+    if (!this.owner) {
+        var index = this.gameServer.movingNodes.indexOf(this);
+        if (index < 0)
+            this.gameServer.movingNodes.push(this);
+    }
 };
 
 Cell.prototype.move = function (border) {
-    if (this.boostDistance <= 0) return;
-    
+    if (this.isMoving && this.boostDistance <= 0) {
+        this.boostDistance = 0;
+        this.isMoving = false;
+        return;
+    }
     var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
     var speed = Math.min(speed, 78);                // limit max speed with sqrt(780*780/100)
     speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
     this.boostDistance -= speed;
-    if (this.boostDistance <= 1) this.boostDistance = 0;
+    if (this.boostDistance < 1) this.boostDistance = 0;
     
     var v = this.clipVelocity(
         { x: this.boostDirection.x * speed, y: this.boostDirection.y * speed }, 
@@ -211,10 +166,10 @@ Cell.prototype.clipVelocity = function (v, border) {
         return v; // zero move, no calculations :)
     var r = this.getSize() / 2;
     var bound = {
-        minx: border.left + r,
-        miny: border.top + r,
-        maxx: border.right - r,
-        maxy: border.bottom - r
+        minx: border.minx + r,
+        miny: border.miny + r,
+        maxx: border.maxx - r,
+        maxy: border.maxy - r
     };
     var x = this.position.x + v.x;
     var y = this.position.y + v.y;
@@ -225,7 +180,7 @@ Cell.prototype.clipVelocity = function (v, border) {
     var pright = x <= bound.maxx ? null : this.getLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.maxx, bound.miny, bound.maxx, bound.maxy);
-    var ptop = y >= border.top ? null : this.getLineIntersection(
+    var ptop = y >= bound.miny ? null : this.getLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.minx, bound.miny, bound.maxx, bound.miny);
     var pbottom = y <= bound.maxy ? null : this.getLineIntersection(
@@ -271,6 +226,8 @@ Cell.prototype.clipVelocity = function (v, border) {
     v.x = lx;
     v.y = ly;
     this.boostDistance += Math.sqrt(ldx * ldx + ldy * ldy);
+    if (this.boostDistance < 1) this.boostDistance = 0;
+    this.isMoving = true;
     return v;
 };
 
@@ -278,33 +235,31 @@ Cell.prototype.checkBorder = function (border) {
     var r = this.getSize() / 2;
     var x = this.position.x;
     var y = this.position.y;
-    if (x < border.left + r)
-        x = border.left + r;
-    else if (x > border.right - r)
-        x = border.right - r;
-    if (y < border.top + r)
-        y = border.top + r;
-    else if (this.position.y > border.bottom - r)
-        y = border.bottom - r;
-    if (x != this.position.x || y != this.position.y)
-        this.setPosition(x, y);
+    x = Math.max(x, border.minx + r);
+    y = Math.max(y, border.miny + r);
+    x = Math.min(x, border.maxx - r);
+    y = Math.min(y, border.maxy - r);
+    if (x != this.position.x || y != this.position.y) {
+        this.setPosition({ x: x, y: y });
+    }
 };
 
 
 // Override these
-
-Cell.prototype.sendUpdate = function() {
-    // Whether or not to include this cell in the update packet
-    return true;
-};
 
 Cell.prototype.canEat = function (cell) {
     // by default cell cannot eat anyone
     return false;
 };
 
-Cell.prototype.onConsume = function(consumer, gameServer) {
-    // Called when the cell is consumed
+Cell.prototype.onEat = function (prey) {
+    // Called to eat prey cell
+    var size1 = this.getSize();
+    var size2 = prey.getSize() + 1;
+    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
+};
+
+Cell.prototype.onEaten = function (hunter) {
 };
 
 Cell.prototype.onAdd = function(gameServer) {

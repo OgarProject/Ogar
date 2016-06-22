@@ -12,35 +12,30 @@ PlayerCell.prototype = new Cell();
 
 // Main Functions
 
-PlayerCell.prototype.simpleCollide = function(check, d) {
-    // Simple collision check
-    var len = 2 * d >> 0; // Width of cell + width of the box (Int)
-
-    return (this.abs(this.position.x - check.x) < len) &&
-        (this.abs(this.position.y - check.y) < len);
+PlayerCell.prototype.getName = function () {
+    return this.owner.name;
 };
 
-PlayerCell.prototype.updateRemerge = function (gameServer) {
-    if (this.owner == null) {
+PlayerCell.prototype.getSkin = function () {
+    return this.owner.skin;
+};
+
+PlayerCell.prototype.updateRemerge = function () {
+    var age = this.getAge(this.gameServer.getTick());
+    if (age < 15) {
+        // do not remerge if cell age is smaller than 15 ticks
         this._canRemerge = false;
         return;
     }
-    var tick = gameServer.getTick();
-    var age = this.getAge(tick);
-    if (age < 3) {
-        // do not remerge if cell age is smaller than 3 ticks
-        this._canRemerge = false;
-        return;
-    }
-    var baseTtr = gameServer.config.playerRecombineTime;        // default baseTtr = 30
+    var baseTtr = this.gameServer.config.playerRecombineTime;        // default baseTtr = 30
     if (baseTtr == 0) {
         // instant merge
         this._canRemerge = true;
         return;
     }
     var ttr = Math.max(baseTtr, (this.getSize() * 0.2) >> 0);   // ttr in seconds
-    // seconds to ticks (tickStep = 0.040 sec)
-    ttr /= 0.040;
+    // seconds to ticks (tickStep = 0.040 sec => 1 / 0.040 = 25)
+    ttr *= 25;
     this._canRemerge = age >= ttr;
 }
 
@@ -56,7 +51,7 @@ PlayerCell.prototype.canEat = function (cell) {
 // Movement
 
 PlayerCell.prototype.moveUser = function (border) {
-    if (this.owner == null) {
+    if (this.owner == null || this.owner.socket.isConnected === false) {
         return;
     }
     var x = this.owner.mouse.x;
@@ -67,7 +62,7 @@ PlayerCell.prototype.moveUser = function (border) {
     var dx = x - this.position.x;
     var dy = y - this.position.y;
     var squared = dx * dx + dy * dy;
-    if (squared == 0) return;
+    if (squared < 1) return;
     
     // distance
     var d = Math.sqrt(squared);
@@ -89,17 +84,25 @@ PlayerCell.prototype.moveUser = function (border) {
 
 // Override
 
-PlayerCell.prototype.onConsume = function(consumer, gameServer) {
-    // Add an inefficiency for eating other players' cells
-    var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
-    // Anti-bot measure
-    factor = (consumer.getMass() >= 625 && this.getMass() <= 17 && gameServer.config.playerBotGrowEnabled == 1) ? 0 : factor;
-    consumer.addMass(factor * this.getMass());
+PlayerCell.prototype.onEat = function (prey) {
+    var size1 = this.getSize();
+    var size2 = prey.getSize() + 1;
+    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
+
+    if (this.owner.mergeOverride)
+        return;
+    if (this.getMass() <= this.gameServer.config.playerMaxMass)
+        return;
+    if (this.owner.cells.length >= this.gameServer.config.playerMaxCells) {
+        this.setMass(this.gameServer.config.playerMaxMass);
+        return;
+    }
+    var splitMass = this.getMass() / 2;
+    var randomAngle = Math.random() * 6.28; // Get random angle
+    this.gameServer.splitPlayerCell(this.owner, this, randomAngle, splitMass);
 };
 
 PlayerCell.prototype.onAdd = function(gameServer) {
-    // Add to special player node list
-    gameServer.nodesPlayer.push(this);
     // Gamemode actions
     gameServer.gameMode.onCellAdd(this);
 };
@@ -110,11 +113,6 @@ PlayerCell.prototype.onRemove = function(gameServer) {
     index = this.owner.cells.indexOf(this);
     if (index != -1) {
         this.owner.cells.splice(index, 1);
-    }
-    // Remove from special player controlled node list
-    index = gameServer.nodesPlayer.indexOf(this);
-    if (index != -1) {
-        gameServer.nodesPlayer.splice(index, 1);
     }
     // Gamemode actions
     gameServer.gameMode.onCellRemove(this);

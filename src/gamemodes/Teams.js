@@ -51,7 +51,7 @@ Teams.prototype.getTeamColor = function(team) {
 
 Teams.prototype.onPlayerSpawn = function(gameServer, player) {
     // Random color based on team
-    player.color = this.getTeamColor(player.team);
+    player.setColor(this.getTeamColor(player.team));
     // Spawn player
     gameServer.spawnPlayer(player);
 };
@@ -66,10 +66,10 @@ Teams.prototype.onServerInit = function(gameServer) {
     for (var i = 0; i < gameServer.clients.length; i++) {
         var client = gameServer.clients[i].playerTracker;
         this.onPlayerInit(client);
-        client.color = this.getTeamColor(client.team);
+        client.setColor(this.getTeamColor(client.team));
         for (var j = 0; j < client.cells.length; j++) {
             var cell = client.cells[j];
-            cell.setColor(client.color);
+            cell.setColor(client.getColor());
             this.nodes[client.team].push(cell);
         }
     }

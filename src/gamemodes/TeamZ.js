@@ -10,7 +10,7 @@ var GS_getNearestVirus = null;
 var GS_getCellsInRange = null;
 var GS_splitCells = null;
 var GS_newCellVirused = null;
-var Virus_onConsume = Virus.prototype.onConsume;
+var Virus_onEaten = Virus.prototype.onEaten;
 
 var GameState = {
     WF_PLAYERS: 0,
@@ -107,11 +107,7 @@ TeamZ.prototype.updateZColor = function(client, mask) {
         g: (mask & 0x2) > 0 ? client.zColorFactor : 7,
         b: (mask & 0x1) > 0 ? client.zColorFactor : 7
     };
-    client.color = {
-        r: color.r,
-        g: color.g,
-        b: color.b
-    };
+    client.setColor(color);
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
         cell.setColor(color);
@@ -144,43 +140,20 @@ TeamZ.prototype.spawnDrug = function(gameServer, cell) { // spawn HERO or BRAIN
         var pos = gameServer.getRandomPosition();
 
         // Check for players
-        var collided = false;
-        for (var i = 0; i < gameServer.nodesPlayer.length; i++) {
-            var check = gameServer.nodesPlayer[i];
-            var r = check.getSize(); // Radius of checking player cell
-
-            // Collision box
-            var topY = check.position.y - r;
-            var bottomY = check.position.y + r;
-            var leftX = check.position.x - r;
-            var rightX = check.position.x + r;
-
-            // Check for collisions
-            if (pos.y > bottomY) {
-                continue;
-            }
-            if (pos.y < topY) {
-                continue;
-            }
-            if (pos.x > rightX) {
-                continue;
-            }
-            if (pos.x < leftX) {
-                continue;
-            }
-
-            // Collided
-            collided = true;
-            break;
+        var size = cell.getSize();
+        var bound = {
+            minx: pos.x - size,
+            miny: pos.y - size,
+            maxx: pos.x + size,
+            maxy: pos.y + size
+        };
+        if (gameServer.quadTree.any(bound, function (item) { return item.cell.cellType == 0; })) {
+            // FAILED because of collision
+            return false;
         }
-
-        // Spawn if no cells are colliding
-        if (!collided) {
-            cell.setPosition(pos.x, pos.y);
-            gameServer.addNode(cell);
-            return true; // SUCCESS with spawn
-        }
-        return false; // FAILED because of collision
+        cell.setPosition(pos);
+        gameServer.addNode(cell);
+        return true; // SUCCESS with spawn
     }
     return true; // SUCCESS without spawn
 };
@@ -242,11 +215,11 @@ TeamZ.prototype.startGame = function(gameServer) {
         client.crazyTimer = 0;
         client.eatenHeroTimer = 0;
         client.eatenBrainTimer = 0;
-        client.color = gameServer.getRandomColor();
+        client.setColor(gameServer.getRandomColor());
         for (var j = 0; j < client.cells.length; j++) {
             var cell = client.cells[j];
             if (cell) {
-                cell.setColor(client.color);
+                cell.setColor(client.getColor());
                 cell.setMass(gameServer.config.playerStartMass);
                 this.resetSpeedCell(cell);
             }
@@ -340,13 +313,6 @@ TeamZ.prototype.onServerInit = function(gameServer) {
     GameServer.prototype.getNearestVirus = function(cell) {
         // More like getNearbyVirus
         var virus = null;
-        var r = 100; // Checking radius
-
-        var topY = cell.position.y - r;
-        var bottomY = cell.position.y + r;
-
-        var leftX = cell.position.x - r;
-        var rightX = cell.position.x + r;
 
         // loop through all heroes
         for (var i = 0; i < this.gameMode.heroes.length; i++) {
@@ -354,7 +320,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             if (typeof check === 'undefined') {
                 continue;
             }
-            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
+            if (this.checkCellCollision(cell, check) == null) {
                 continue;
             }
             virus = check;
@@ -369,7 +335,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             if (typeof check === 'undefined') {
                 continue;
             }
-            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
+            if (this.checkCellCollision(cell, check) == null) {
                 continue;
             }
             virus = check;
@@ -389,7 +355,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 continue;
             }
 
-            if (!check.collisionCheck(leftX, topY, rightX, bottomY)) {
+            if (this.checkCellCollision(cell, check) == null) {
                 continue;
             }
 
@@ -445,7 +411,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             }
 
             // AABB Collision
-            if (!check.collisionCheck2(squareR, cell.position)) {
+            if (gameServer.checkCellCollision(cell, check)==null) {
                 continue;
             }
 
@@ -560,9 +526,6 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 //split.recombineTicks = 2; // main-ticks, 1 main-tick = 1 s
                 //TODO: fix?
             }
-
-            // Add to moving cells list
-            this.setAsMovingNode(split);
             this.addNode(split);
         }
     };
@@ -596,19 +559,14 @@ TeamZ.prototype.onServerInit = function(gameServer) {
 
         // Add to moving cells list
         this.addNode(newCell);
-        this.setAsMovingNode(newCell);
     };
 
-    Virus.prototype.onConsume = function(consumer, gameServer) {
+    Virus.prototype.onEaten = function(consumer) {
         var client = consumer.owner;
-
         var maxSplits = Math.floor(consumer.getMass() / 16) - 1; // Maximum amount of splits
-        var numSplits = gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
+        var numSplits = this.gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
         numSplits = Math.min(numSplits, maxSplits);
         var splitMass = Math.min(consumer.getMass() / (numSplits + 1), 36); // Maximum size of new splits
-
-        // Cell consumes mass before splitting
-        consumer.addMass(this.getMass());
 
         // Cell cannot split any further
         if (numSplits <= 0) {
@@ -635,26 +593,26 @@ TeamZ.prototype.onServerInit = function(gameServer) {
         var angle = 0; // Starting angle
         for (var k = 0; k < numSplits; k++) {
             angle += 6 / numSplits; // Get directions of splitting cells
-            gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
+            this.gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
             consumer.setMass(consumer.getMass() - splitMass);
         }
 
         for (var k = 0; k < bigSplits; k++) {
             angle = Math.random() * 6.28; // Random directions
             splitMass = consumer.getMass() / 4;
-            gameServer.newCellVirused(client, consumer, angle, splitMass, 20);
+            this.gameServer.newCellVirused(client, consumer, angle, splitMass, 20);
             consumer.setMass(consumer.getMass() - splitMass);
         }
 
-        if (gameServer.gameMode.hasEatenHero(client)) {
+        if (this.gameServer.gameMode.hasEatenHero(client)) {
             //consumer.recombineTicks = 0;
             // TODO: fix?
         }
     };
 
     // Handle "gamemode" command:
-    for (var i = 0; i < gameServer.clients.length; i++) {
-        var client = gameServer.clients[i].playerTracker;
+    for (var i = 0; i < this.gameServer.clients.length; i++) {
+        var client = this.gameServer.clients[i].playerTracker;
         if (!client)
             continue;
 
@@ -662,7 +620,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             client.eatenBrainTimer = 0;
             client.eatenHeroTimer = 0;
             client.crazyTimer = 0;
-            client.color = this.defaultColor;
+            client.setColor(this.defaultColor);
             client.team = 1;
             for (var j = 0; j < client.cells.length; j++) {
                 var cell = client.cells[j];
@@ -705,7 +663,7 @@ TeamZ.prototype.onChange = function(gameServer) {
     GameServer.prototype.getCellsInRange = GS_getCellsInRange;
     GameServer.prototype.splitCells = GS_splitCells;
     GameServer.prototype.newCellVirused = GS_newCellVirused;
-    Virus.prototype.onConsume = Virus_onConsume;
+    Virus.prototype.onEaten = Virus_onEaten;
 };
 
 TeamZ.prototype.onTick = function(gameServer) {
@@ -784,7 +742,7 @@ TeamZ.prototype.onTick = function(gameServer) {
 
                     // reset color:
                     if (client.cured == true)
-                        cell.setColor(client.color);
+                        cell.setColor(client.getColor());
                 }
 
                 if (client.cured == true) {
@@ -800,7 +758,7 @@ TeamZ.prototype.onTick = function(gameServer) {
                     var blinkColor = null;
 
                     if (client.colorToggle == 20) {
-                        blinkColor = client.color;
+                        blinkColor = client.getColor();
                         client.colorToggle = 0;
                     } else {
                         if (client.cured == true) {
@@ -843,7 +801,7 @@ TeamZ.prototype.onTick = function(gameServer) {
                     }; // Yellow scheme
                 }
             } else {
-                color = client.color; // reset
+                color = client.getColor(); // reset
             }
 
             for (var j = 0; j < client.cells.length; j++) {
@@ -875,11 +833,7 @@ TeamZ.prototype.onCellAdd = function(cell) {
     var client = cell.owner;
     if (client.cells.length == 1) { // first cell
         client.team = client.pID;
-        client.color = {
-            r: cell.color.r,
-            g: cell.color.g,
-            b: cell.color.b
-        };
+        client.setColor(cell.getColor());
         client.eatenBrainTimer = 0;
         client.eatenHeroTimer = 0;
         client.crazyTimer = 0;
@@ -888,7 +842,7 @@ TeamZ.prototype.onCellAdd = function(cell) {
         if (this.state == GameState.IN_PROGRESS) {
             this.turnToZombie(client);
         } else {
-            client.color = this.defaultColor;
+            client.setColor(this.defaultColor);
             cell.setColor(this.defaultColor);
             client.team = 1; // game not started yet
         }
@@ -913,7 +867,8 @@ TeamZ.prototype.onCellRemove = function(cell) {
     }
 };
 
-TeamZ.prototype.onCellMove = function(x1, y1, cell) {
+// TODO: remove it (move physics is managed by GameServer)
+TeamZ.prototype.onCellMove = function (x1, y1, cell) {
     // Called when a player cell is moved
     var team = cell.owner.getTeam();
     var r = cell.getSize();
@@ -965,9 +920,10 @@ TeamZ.prototype.onCellMove = function(x1, y1, cell) {
 
                 var move = collisionDist - dist;
 
-                check.setPosition(
-                    check.position.x + (move * Math.sin(newAngle)) >> 0,
-                    check.position.y + (move * Math.cos(newAngle)) >> 0);
+                check.setPosition({
+                    x: check.position.x + (move * Math.sin(newAngle)) >> 0,
+                    y: check.position.y + (move * Math.cos(newAngle)) >> 0
+                });
             }
         }
     }
@@ -1052,12 +1008,8 @@ function Hero() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = CellType.HERO;
-    //this.spiked = 1;
-    this.color = {
-        r: 255,
-        g: 255,
-        b: 7
-    };
+    //this.isSpiked = true;
+    this.setColor({ r: 255, g: 255, b: 7 });
     this.setMass(60);
 }
 
@@ -1097,17 +1049,18 @@ Hero.prototype.feed = function(feeder, gameServer) {
     }
 };
 
-Hero.prototype.onConsume = function(consumer, gameServer) {
+Hero.prototype.onEaten = function(consumer) {
     // Called when the cell is consumed
     var client = consumer.owner;
-    consumer.addMass(this.getMass()); // delicious
+    
+    // delicious
 
-    if (gameServer.gameMode.isCrazy(client)) {
+    if (this.gameServer.gameMode.isCrazy(client)) {
         // Neutralize the Zombie effect
         client.cured = true;
     } else {
         // Become a hero
-        client.eatenHeroTimer = gameServer.gameMode.heroEffectDuration;
+        client.eatenHeroTimer = this.gameServer.gameMode.heroEffectDuration;
         client.heroColorFactor = 0;
 
         // Merge immediately
@@ -1126,12 +1079,8 @@ function Brain() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
 
     this.cellType = CellType.BRAIN;
-    //this.spiked = 1;
-    this.color = {
-        r: 255,
-        g: 7,
-        b: 255
-    };
+    //this.isSpiked = true;
+    this.setColor({ r: 255, g: 7, b: 255 });
     this.setMass(60);
 }
 
@@ -1171,13 +1120,14 @@ Brain.prototype.feed = function(feeder, gameServer) {
     }
 };
 
-Brain.prototype.onConsume = function(consumer, gameServer) {
+Brain.prototype.onEaten = function(consumer) {
     // Called when the cell is consumed
     var client = consumer.owner;
-    consumer.addMass(this.getMass()); // yummy!
+    
+    // yummy!
 
-    client.eatenBrainTimer = gameServer.gameMode.brainEffectDuration;
+    client.eatenBrainTimer = this.gameServer.gameMode.brainEffectDuration;
 
     // Boost speed
-    gameServer.gameMode.boostSpeed(client);
+    this.gameServer.gameMode.boostSpeed(client);
 };

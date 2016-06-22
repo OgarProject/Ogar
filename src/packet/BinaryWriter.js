@@ -17,7 +17,7 @@ module.exports = BinaryWriter;
 BinaryWriter.prototype.writeUInt8 = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeUInt8(value, offset);
+        buffer.writeUInt8(value, offset, true);
     });
     this._length += 1;
 };
@@ -25,7 +25,7 @@ BinaryWriter.prototype.writeUInt8 = function (value) {
 BinaryWriter.prototype.writeInt8 = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeInt8(value, offset);
+        buffer.writeInt8(value, offset, true);
     });
     this._length += 1;
 };
@@ -33,7 +33,7 @@ BinaryWriter.prototype.writeInt8 = function (value) {
 BinaryWriter.prototype.writeUInt16 = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeUInt16LE(value, offset);
+        buffer.writeUInt16LE(value, offset, true);
     });
     this._length += 2;
 };
@@ -41,7 +41,7 @@ BinaryWriter.prototype.writeUInt16 = function (value) {
 BinaryWriter.prototype.writeInt16 = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeInt16LE(value, offset);
+        buffer.writeInt16LE(value, offset, true);
     });
     this._length += 2;
 };
@@ -49,7 +49,7 @@ BinaryWriter.prototype.writeInt16 = function (value) {
 BinaryWriter.prototype.writeUInt32 = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeUInt32LE(value, offset);
+        buffer.writeUInt32LE(value, offset, true);
     });
     this._length += 4;
 };
@@ -57,7 +57,7 @@ BinaryWriter.prototype.writeUInt32 = function (value) {
 BinaryWriter.prototype.writeInt32 = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeInt32LE(value, offset);
+        buffer.writeInt32LE(value, offset, true);
     });
     this._length += 4;
 };
@@ -65,7 +65,7 @@ BinaryWriter.prototype.writeInt32 = function (value) {
 BinaryWriter.prototype.writeFloat = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeFloatLE(value, offset);
+        buffer.writeFloatLE(value, offset, true);
     });
     this._length += 4;
 };
@@ -73,7 +73,7 @@ BinaryWriter.prototype.writeFloat = function (value) {
 BinaryWriter.prototype.writeDouble = function (value) {
     var offset = this._length;
     this._writers.push(function (buffer) {
-        buffer.writeDoubleLE(value, offset);
+        buffer.writeDoubleLE(value, offset, true);
     });
     this._length += 8;
 };
