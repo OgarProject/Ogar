@@ -1311,20 +1311,32 @@ GameServer.prototype.startStatsServer = function(port) {
 };
 
 GameServer.prototype.getStats = function() {
-    var players = 0;
-    this.clients.forEach(function(client) {
-        if (client.playerTracker && client.playerTracker.cells.length > 0)
-            players++;
-    });
+    // Get server statistics
+    var totalPlayers = 0;
+    var alivePlayers = 0;
+    var spectatePlayers = 0;
+    for (var i = 0; i < this.clients.length; i++) {
+        var socket = this.clients[i];
+        if (socket == null || !socket.isConnected)
+            continue;
+        totalPlayers++;
+        if (socket.playerTracker.cells.length > 0)
+            alivePlayers++;
+        else
+            spectatePlayers++;
+    }
     var s = {
-        'current_players': this.clients.length,
-        'alive': players,
-        'spectators': this.clients.length - players,
+        'current_players': totalPlayers,
+        'alive': alivePlayers,
+        'spectators': spectatePlayers,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
-        'update_time':this.updateTimeAvg.toFixed(3) + " [ms] (" + ini.getLagMessage(this.updateTimeAvg) + ")",
-        'uptime': Math.round((new Date().getTime() - this.startTime)/1000/60)+" m",
-        'start_time': this.startTime
+        'update_time': this.updateTimeAvg.toFixed(3),
+        'uptime': Math.round((new Date().getTime() - this.startTime)/1000/60),
+        'start_time': this.startTime,
+        'border_width': this.border.width,
+        'border_height': this.border.height,
+        'chat_enabled': this.config.serverChat ? "true" : "false"
     };
     this.stats = JSON.stringify(s);
 };
