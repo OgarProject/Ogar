@@ -33,11 +33,11 @@ function PlayerTracker(gameServer, socket) {
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
 
     // Anti-teaming
-    this.massDecayMult = 1; // Anti-teaming multiplier
-    this.Wmult = 0; // W press multiplier, which will also account on duration of effect
     this.checkForWMult = false; // Prevent oveload with W multiplier
-    this.virusMult = 0; // Virus explosion multiplier
-    this.splittingMult = 0; // Splitting multiplier
+    this.massDecayMult = 1; // Anti-teaming multiplier
+
+    this.massLossMult = 0; // When mass is lost, it applies here
+    this.massGainMult = 0; // When mass is gained, it applies here
 
     // Scramble the coordinate system for anti-raga
     this.scrambleX = 0;
@@ -260,34 +260,27 @@ PlayerTracker.prototype.update = function() {
     }
 };
 
+PlayerTracker.prototype.getAntiteamMult = function() {
+    return Math.min((this.massLossMult + this.massGainMult) / (this.getScore(true) / 2), 2);
+};
+
 PlayerTracker.prototype.antiTeamTick = function() {
     // ANTI-TEAMING DECAY
     // Calculated even if anti-teaming is disabled.
-    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-    if (this.Wmult - 0.00028 > 0) this.Wmult -= 0.00028;
-    this.virusMult *= 0.999;
-    this.splittingMult *= 0.9982;
-    // Apply anti-teaming if required
-    if (effectSum > 2) this.massDecayMult = Math.min(effectSum / 2, 3.14);
-    else this.massDecayMult = 1;
+    this.massLossMult *= 0.997;
+    this.massGainMult *= 0.997;
+    var div = this.getAntiteamMult();
+    if (div > 1) this.massDecayMult = div;
 };
 
-PlayerTracker.prototype.applyTeaming = function(x, type) {
+PlayerTracker.prototype.applyTeaming = function(n, type) {
     // Called when player does an action which increases anti-teaming
-    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-
-    // Applied anti-teaming is 1.5x smaller if over the threshold
-    var n = effectSum > 1.5 ? x : x / 1.5;
-
     switch (type) {
-        case 0: // Ejected cell
-            this.Wmult += n;
+        case -1: // Loss
+            this.massLossMult += n * (0.5 + this.getAntiteamMult());
             break;
-        case 1: // Virus explosion
-            this.virusMult += n;
-            break;
-        case 2: // Splitting
-            this.splittingMult += n;
+        case 1: // Gain
+            this.massGainMult += n * (0.5 + this.getAntiteamMult());
             break;
     }
 };
@@ -381,7 +374,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
     this.checkBorderPass();
 
     // Now that we've updated center pos, get nearby cells
-    var mult = 1;
+    var mult = 2.5;
     var baseX = this.gameServer.config.serverViewBaseX * mult;
     var baseY = this.gameServer.config.serverViewBaseY * mult;
 
