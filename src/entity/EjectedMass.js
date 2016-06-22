@@ -35,22 +35,6 @@ EjectedMass.prototype.sendUpdate = function() {
 };
 
 EjectedMass.prototype.onRemove = function(gameServer) {
-    // Check for teaming and apply anti-teaming if required
-    if (!this.addedAntiTeam && this.owner.checkForWMult) {
-      try {
-            if (this.gameServer.gameMode.teamAmount > 0) {
-                // Apply teaming EXCEPT when exchanging mass to same team member
-                if (this.owner.team != this.killedBy.owner.team || this.owner == this.killedBy.owner) {
-                    this.owner.Wmult += 0.02;
-                    this.owner.checkForWMult = false;
-                };
-            } else {
-                // Always apply anti-teaming if there are no teams
-                this.owner.Wmult += 0.02;
-                this.owner.checkForWMult = false;
-            };
-        } catch(ex) { } // Dont do anything whatever the error is
-    }
     // Remove from list of ejected mass
     var index = this.gameServer.nodesEjected.indexOf(this);
     if (index != -1) {
@@ -61,6 +45,14 @@ EjectedMass.prototype.onRemove = function(gameServer) {
 EjectedMass.prototype.onConsume = function(consumer, gameServer) {
     // Adds mass to consumer
     consumer.addMass(this.mass);
+
+    // Check for teaming and apply anti-teaming if required
+    if (!this.addedAntiTeam && this.owner.checkForWMult) {
+        // Smaller W's get more attention
+        var influence = this.mass * (Math.log(this.mass) / Math.sqrt(this.mass)) * 2;
+        consumer.owner.applyTeaming(influence, 1);
+        this.owner.applyTeaming(influence, -1);
+    }
 };
 
 EjectedMass.prototype.move = function() {
