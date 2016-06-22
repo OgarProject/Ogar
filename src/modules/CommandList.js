@@ -58,21 +58,21 @@ Commands.list = {
         console.log("[Console] ====================================================");
     },
     debug: function(gameServer, split) {
-        // Used for checking node lengths
+        // Used for checking node lengths (for now)
         
-        // Calculate client cells
+        // Count client cells
         var clientCells = 0;
         for (var i in gameServer.clients) {
             clientCells += gameServer.clients[i].playerTracker.cells.length;
         }
-        
-        console.log("[Console] Clients:         " + gameServer.clients.length);
-        console.log("[Console] Total nodes:     " + gameServer.nodes.length);
-        console.log("[Console] - Client cells:  " + clientCells);
-        console.log("[Console] - Foods:         " + gameServer.currentFood);
-        console.log("[Console] - Ejected cells: " + gameServer.nodesEjected.length);
-        console.log("[Console] - Viruses:       " + gameServer.nodesVirus.length);
-        console.log("[Console] Moving nodes:    " + gameServer.movingNodes.length);
+        // Output node information
+        console.log("[Console] Clients:        " + fillChar(gameServer.clients.length, " ", 4, true)      + " / " + gameServer.config.serverMaxConnections + " + bots");
+        console.log("[Console] Total nodes:" + fillChar(gameServer.nodes.length, " ", 8, true));
+        console.log("[Console] - Client cells: " + fillChar(clientCells, " ", 4, true)                    + " / " + (gameServer.clients.length * gameServer.config.playerMaxCells));
+        console.log("[Console] - Ejected cells:" + fillChar(gameServer.nodesEjected.length, " ", 4, true));
+        console.log("[Console] - Foods:        " + fillChar(gameServer.currentFood, " ", 4, true)         + " / " + gameServer.config.foodMaxAmount);
+        console.log("[Console] - Viruses:      " + fillChar(gameServer.nodesVirus.length, " ", 4, true)   + " / " + gameServer.config.virusMaxAmount);
+        console.log("[Console] Moving nodes:   " + fillChar(gameServer.movingNodes.length, " ", 4, true));
     },
     addbot: function(gameServer, split) {
         var add = parseInt(split[1]);
