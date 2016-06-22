@@ -74,6 +74,7 @@ Cell.prototype.visibleCheck = function(box, centerPos) {
 };
 
 Cell.prototype.moveEngineTick = function(config) {
+    if (!this.gameServer) return;
     var toMove = this.moveEngine.clone().scale(0.5);
     this.position.sub(toMove);
     
@@ -81,7 +82,7 @@ Cell.prototype.moveEngineTick = function(config) {
     this.moveEngine.scale(0.935);
     
     // Check for border passage
-    this.borderCheck(false);
+    this.borderCheck(true);
     
     this.move();
 };
@@ -94,23 +95,31 @@ Cell.prototype.borderCheck = function(flipMoving) {
     var checkRadius = this.getSize() / 2;
     
     if (this.position.x - checkRadius < border.left) {
+        if (flipMoving) {
+            this.moveEngine.flipY();
+        }
         this.position.x = border.left + checkRadius;
-        if (flipMoving) this.moveEngine.flipX();
     }
     
     if (this.position.x + checkRadius > border.right) {
+        if (flipMoving) {
+            this.moveEngine.flipY();
+        }
         this.position.x = border.right - checkRadius;
-        if (flipMoving) this.moveEngine.flipX();
     }
     
     if (this.position.y - checkRadius < border.top) {
+        if (flipMoving) {
+            this.moveEngine.flipX();
+        }
         this.position.y = border.top + checkRadius;
-        if (flipMoving) this.moveEngine.flipY();
     }
     
     if (this.position.y + checkRadius > border.bottom) {
+        if (flipMoving) {
+            this.moveEngine.flipX();
+        }
         this.position.y = border.bottom - checkRadius;
-        if (flipMoving) this.moveEngine.flipY();
     }
 };
 
@@ -122,13 +131,14 @@ Cell.prototype.sendUpdate = function() {
 
 Cell.prototype.onConsume = function(consumer, gameServer) {
     // Called when the cell is consumed
+    consumer.addMass(this.mass);
 };
 
 Cell.prototype.onAdd = function(gameServer) {
     // Called when this cell is added to the world
 };
 
-Cell.prototype.onRemove = function(gameServer) {
+Cell.prototype.onRemove = function() {
     // Called when this cell is removed
 };
 

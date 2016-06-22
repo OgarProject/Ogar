@@ -33,11 +33,11 @@ function PlayerTracker(gameServer, socket) {
     this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
 
     // Anti-teaming
-    this.massDecayMult = 1; // Anti-teaming multiplier
-    this.Wmult = 0; // W press multiplier, which will also account on duration of effect
     this.checkForWMult = false; // Prevent oveload with W multiplier
-    this.virusMult = 0; // Virus explosion multiplier
-    this.splittingMult = 0; // Splitting multiplier
+    this.massDecayMult = 1; // Anti-teaming multiplier
+
+    this.massLossMult = 0; // When mass is lost, it applies here
+    this.massGainMult = 0; // When mass is gained, it applies here
 
     // Scramble the coordinate system for anti-raga
     this.scrambleX = 0;
@@ -84,6 +84,15 @@ PlayerTracker.prototype.getScore = function(reCalcScore) {
         }
     }
     return this.score >> 0;
+};
+
+PlayerTracker.prototype.getSizes = function() {
+    var s = 0;
+    for (var i = 0; i < this.cells.length; i++) {
+        if (!this.cells[i]) return; // Error
+        s += this.cells[i].getSize();
+    }
+    return s;
 };
 
 PlayerTracker.prototype.setColor = function(color) {
@@ -206,7 +215,7 @@ PlayerTracker.prototype.update = function() {
         this.tickLeaderboard--;
     }
     
-    var box = this.getBox();
+    //var box = this.getBox();
     /*
     if (this.cells.length == 0 && this.gameServer.config.serverScrambleMinimaps >= 1) {
         // Update map, it may have changed
@@ -251,34 +260,27 @@ PlayerTracker.prototype.update = function() {
     }
 };
 
+PlayerTracker.prototype.getAntiteamMult = function() {
+    return Math.min((this.massLossMult + this.massGainMult) / (this.getScore(true) / 2), 2);
+};
+
 PlayerTracker.prototype.antiTeamTick = function() {
     // ANTI-TEAMING DECAY
     // Calculated even if anti-teaming is disabled.
-    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-    if (this.Wmult - 0.00028 > 0) this.Wmult -= 0.00028;
-    this.virusMult *= 0.999;
-    this.splittingMult *= 0.9982;
-    // Apply anti-teaming if required
-    if (effectSum > 2) this.massDecayMult = Math.min(effectSum / 2, 3.14);
-    else this.massDecayMult = 1;
+    this.massLossMult *= 0.997;
+    this.massGainMult *= 0.997;
+    var div = this.getAntiteamMult();
+    if (div > 1) this.massDecayMult = div;
 };
 
-PlayerTracker.prototype.applyTeaming = function(x, type) {
+PlayerTracker.prototype.applyTeaming = function(n, type) {
     // Called when player does an action which increases anti-teaming
-    var effectSum = this.Wmult + this.virusMult + this.splittingMult;
-
-    // Applied anti-teaming is 1.5x smaller if over the threshold
-    var n = effectSum > 1.5 ? x : x / 1.5;
-
     switch (type) {
-        case 0: // Ejected cell
-            this.Wmult += n;
+        case -1: // Loss
+            this.massLossMult += n * (0.5 + this.getAntiteamMult());
             break;
-        case 1: // Virus explosion
-            this.virusMult += n;
-            break;
-        case 2: // Splitting
-            this.splittingMult += n;
+        case 1: // Gain
+            this.massGainMult += n * (0.5 + this.getAntiteamMult());
             break;
     }
 };
@@ -286,14 +288,11 @@ PlayerTracker.prototype.applyTeaming = function(x, type) {
 // Viewing box
 
 PlayerTracker.prototype.getBox = function() { // For view distance
-    var totalSize = 1;
-    for (var i = 0; i < this.cells.length; i++) {
-        if (!this.cells[i]) continue;
-        totalSize += this.cells[i].getSize();
-    }
-    var w = this.gameServer.config.serverViewBaseX * Math.log(totalSize),
-        h = this.gameServer.config.serverViewBaseY * Math.log(totalSize);
-
+    var totalSize = this.getSizes();
+    var scale = Math.sqrt(totalSize) / Math.log(totalSize);
+    var w = this.gameServer.config.serverViewBaseX * scale,
+        h = this.gameServer.config.serverViewBaseY * scale;
+    
     return {
         width: w,
         height: h,
@@ -348,8 +347,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
 
         // Get spectate player's location and calculate zoom amount
-        var specZoom = Math.min(Math.sqrt(100 * specPlayer.getScore(false)), 555);
-        specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4);
+        var specZoom = Math.pow(Math.log(specPlayer.getScore(false)), -0.5);
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
@@ -376,8 +374,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
     this.checkBorderPass();
 
     // Now that we've updated center pos, get nearby cells
-    
-    var mult = 3.5; // To simplify multiplier, in case this needs editing later on
+    var mult = 2.5;
     var baseX = this.gameServer.config.serverViewBaseX * mult;
     var baseY = this.gameServer.config.serverViewBaseY * mult;
 
@@ -390,9 +387,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
         left: this.centerPos.x - baseX,
         right: this.centerPos.x + baseX
     });
-    var specZoom = 222;
-    specZoom = Math.pow(Math.min(40.5 / specZoom, 1.0), 0.4) * 0.6; // Constant zoom
-    this.sendPosPacket(specZoom);
+    this.sendPosPacket(0.5199);
     return newVisible;
 };
 

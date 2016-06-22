@@ -4,15 +4,13 @@ var Vector = require('./modules/Vector');
 function NodeHandler(gameServer, collisionHandler) {
     this.gameServer = gameServer;
     this.collisionHandler = collisionHandler;
-    
-    this.currentFood = 0;
 }
 
 module.exports = NodeHandler;
 
 NodeHandler.prototype.update = function() {
     // Preset mass decay
-    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod * 0.025);
+    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod / 40);
     
     // First update client's cells
     for (var i = 0; i < this.gameServer.clients.length; i++) {
@@ -40,7 +38,7 @@ NodeHandler.prototype.update = function() {
         var thisDecay;
         if (this.gameServer.config.serverTeamingAllowed == 0) {
             // Anti-teaming is on
-            var teamMult = (client.massDecayMult - 1) / 1111 + 1; // Calculate anti-teaming multiplier for decay
+            var teamMult = (client.massDecayMult - 1) / 2222 + 1; // Calculate anti-teaming multiplier for decay
             thisDecay = 1 - (1 - massDecay * (1 / teamMult)); // Apply anti-teaming multiplier
         } else {
             // Anti-teaming is off
@@ -57,15 +55,13 @@ NodeHandler.prototype.update = function() {
             this.gameServer.gameMode.onCellMove(cell, this.gameServer);
             
             // Collide if required
-            if (cell.collisionRestoreTicks <= 0) {
-                for (var k = 0; k < sorted.length; k++) {
-                    if (!sorted[k]) continue;
+            for (var k = 0; k < sorted.length; k++) {
+                if (!sorted[k]) continue;
                     
-                    if (sorted[k].collisionRestoreTicks > 0 ||
-                        sorted[k].shouldRecombine && cell.shouldRecombine) continue;
+                if ((sorted[k].collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) ||
+                    (sorted[k].shouldRecombine && cell.shouldRecombine)) continue;
 
-                    this.collisionHandler.pushApart(cell, sorted[k]);
-                }
+                this.collisionHandler.pushApart(cell, sorted[k]);
             }
             
             // Collision restoring
@@ -75,7 +71,7 @@ NodeHandler.prototype.update = function() {
             cell.eat();
             
             // Recombining
-            if (sorted.length > 1) cell.recombineTicks += 0.025;
+            if (sorted.length > 1) cell.recombineTicks += 0.04;
             else cell.recombineTicks = 0;
             cell.calcMergeTime(this.gameServer.config.playerRecombineTime);
             
@@ -227,6 +223,7 @@ NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
         mass,
         this.gameServer
     );
+    newCell.setColor(parent.getColor());
     
     // Set split boost's speed
     var splitSpeed = newCell.getSplittingSpeed();

@@ -15,6 +15,7 @@ var Logger = require('./modules/log');
 var CollisionHandler = require('./CollisionHandler');
 var NodeHandler = require('./NodeHandler');
 var PlayerHandler = require('./PlayerHandler');
+var Vector = require('./modules/Vector');
 
 // GameServer implementation
 function GameServer() {
@@ -396,7 +397,8 @@ GameServer.prototype.spawnPlayer = function(player, pos, mass, color) {
 
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass, this);
-    cell.color = color;
+    
+    player.mouse = new Vector(pos.x, pos.y);
     this.addNode(cell);
 };
 

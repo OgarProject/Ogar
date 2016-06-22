@@ -10,9 +10,9 @@ PlayerHandler.prototype.update = function() {
         var client = this.gameServer.clients[i];
         if (!client) continue;
         
-        client.mapUpdate--;
+        client.playerTracker.mapUpdate--;
         if (client.mapUpdate > 0) continue;
-        client.mapUpdate = 40;
+        client.playerTracker.mapUpdate = 40;
         
         // Update client
         client.playerTracker.update();
