@@ -18,6 +18,7 @@ As Ogar is written in Node.js, you must have Node.js, its "ws" and "vector2-node
 Manual:
 ```sh
 ~$ git clone git://github.com/OgarProject/Ogar.git Ogar
+~$ cd Ogar
 ~$ npm install
 ~$ node Ogar
 ```
