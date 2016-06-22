@@ -66,12 +66,12 @@ module.exports = PlayerTracker;
 // Setters/Getters
 
 PlayerTracker.prototype.scramble = function () {
-    this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
-    
     if (!this.gameServer.config.serverScrambleCoords) {
+        this.scrambleId = 0;
         this.scrambleX = 0;
         this.scrambleY = 0;
     } else {
+        this.scrambleId = (Math.random() * 0xFFFFFFFF) >>> 0;
         // avoid mouse packet limitations
         var maxx = Math.max(0, 32767 - 1000 - this.gameServer.border.width);
         var maxy = Math.max(0, 32767 - 1000 - this.gameServer.border.height);
