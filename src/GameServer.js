@@ -68,6 +68,9 @@ function GameServer() {
         serverScrambleCoords: 1,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap, a little slow, some clients may not support it)
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
+        serverName: 'MultiOgar #1', // Server name
+        serverWelcome1: 'Welcome to MultiOgar server!',      // First server welcome message
+        serverWelcome2: '',         // Second server welcome message (for info, etc)
         borderWidth: 14142,         // Map border size (Vanilla value: 14142)
         borderHeight: 14142,        // Map border size (Vanilla value: 14142)
         spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
@@ -110,6 +113,9 @@ function GameServer() {
     // Parse config
     this.loadConfig();
     this.loadIpBanList();
+    
+    this.setBorder(this.config.borderWidth, this.config.borderHeight);
+    this.quadTree = new QuadNode(this.border, 4, 100);
     
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
@@ -156,9 +162,6 @@ GameServer.prototype.onServerSocketError = function (error) {
 };
 
 GameServer.prototype.onServerSocketOpen = function () {
-    this.setBorder(this.config.borderWidth, this.config.borderHeight);
-    this.quadTree = new QuadNode(this.border, 4, 100);
-
     // Spawn starting food
     this.startingFood();
     
@@ -1326,17 +1329,18 @@ GameServer.prototype.getStats = function() {
             spectatePlayers++;
     }
     var s = {
+        'server_name': this.config.serverName,
+        'server_chat': this.config.serverChat ? "true" : "false",
+        'border_width': this.border.width,
+        'border_height': this.border.height,
+        'gamemode': this.gameMode.name,
+        'max_players': this.config.serverMaxConnections,
         'current_players': totalPlayers,
         'alive': alivePlayers,
         'spectators': spectatePlayers,
-        'max_players': this.config.serverMaxConnections,
-        'gamemode': this.gameMode.name,
         'update_time': this.updateTimeAvg.toFixed(3),
         'uptime': Math.round((new Date().getTime() - this.startTime)/1000/60),
-        'start_time': this.startTime,
-        'border_width': this.border.width,
-        'border_height': this.border.height,
-        'chat_enabled': this.config.serverChat ? "true" : "false"
+        'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);
 };

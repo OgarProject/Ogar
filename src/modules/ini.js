@@ -106,7 +106,9 @@ function decode(str) {
 
         // safeguard against resetting a previously defined
         // array by accidentally forgetting the brackets
-        if (isInt(value)) {
+        if (isNaN(value)) {
+            p[key] = value;
+        } else if (isInt(value)) {
             p[key] = parseInt(value);
         } else {
             p[key] = parseFloat(value);
@@ -187,7 +189,7 @@ function unsafe(val, doUnesc) {
 }
 
 var isInt = function(n) {
-    return parseInt(n) === n;
+    return parseInt(n) == n;
 };
 
 function getLagMessage(updateTimeAvg){

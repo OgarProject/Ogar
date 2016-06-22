@@ -43,12 +43,14 @@ PacketHandler.prototype.handleMessage = function(message) {
         this.socket.sendPacket(new Packet.ClearAll());
         this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.gameServer.border, this.gameServer.config.serverGamemode, "MultiOgar"));
         // Send welcome message
-        this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
+        if (this.gameServer.config.serverWelcome1)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, this.gameServer.config.serverWelcome1);
+        if (this.gameServer.config.serverWelcome2)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, this.gameServer.config.serverWelcome2);
         if (this.gameServer.config.serverChat == 0)
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
-        if (this.protocol < 4) {
+        if (this.protocol < 4)
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Protocol " + this.protocol + " assumed as 4!");
-        }        
         this.isHandshakePassed = true;
         return;
     }
