@@ -72,7 +72,9 @@ Virus.prototype.onConsume = function(consumer) {
         this.gameServer.nodeHandler.createPlayerCell(client, consumer, angle, splitMass);
     }
 
-    client.applyTeaming(1.2, 1); // Apply anti-teaming
+    // Set teamers on fire
+    client.massGainMult *= 1.8;
+    client.massLossMult *= 1.8;
 };
 
 Virus.prototype.eat = function() {
