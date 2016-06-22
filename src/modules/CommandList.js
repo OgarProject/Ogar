@@ -57,6 +57,23 @@ Commands.list = {
         console.log("[Console] st                           : alias for status");
         console.log("[Console] ====================================================");
     },
+    debug: function(gameServer, split) {
+        // Used for checking node lengths
+        
+        // Calculate client cells
+        var clientCells = 0;
+        for (var i in gameServer.clients) {
+            clientCells += gameServer.clients[i].playerTracker.cells.length;
+        }
+        
+        console.log("[Console] Clients:         " + gameServer.clients.length);
+        console.log("[Console] Total nodes:     " + gameServer.nodes.length);
+        console.log("[Console] - Client cells:  " + clientCells);
+        console.log("[Console] - Foods:         " + gameServer.currentFood);
+        console.log("[Console] - Ejected cells: " + gameServer.nodesEjected.length);
+        console.log("[Console] - Viruses:       " + gameServer.nodesVirus.length);
+        console.log("[Console] Moving nodes:    " + gameServer.movingNodes.length);
+    },
     addbot: function(gameServer, split) {
         var add = parseInt(split[1]);
         if (isNaN(add)) {
