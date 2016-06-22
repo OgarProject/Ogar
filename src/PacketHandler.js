@@ -111,7 +111,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 99:
             // Chat
-            if (this.gameServer.config.serverChat == 0 || message.length < 3)             // first validation
+            if (message.length < 3)             // first validation
                 break;
             // chat anti-spam
             // Just ignore if the time between two messages is smaller than 2 seconds
@@ -141,7 +141,7 @@ PacketHandler.prototype.handleMessage = function(message) {
 
 PacketHandler.prototype.setNickname = function (text) {
     var name = "";
-    var skin = "";
+    var skin = null;
     if (text != null && text.length != 0) {
         var n = -1;
         if (text.charAt(0) == '<' && (n = text.indexOf('>', 1)) >= 0) {
@@ -156,9 +156,6 @@ PacketHandler.prototype.setNickname = function (text) {
     }
     if (name.length > this.gameServer.config.playerMaxNickLength) {
         name = name.substring(0, this.gameServer.config.playerMaxNickLength);
-    }
-    if (this.gameServer.gameMode.haveTeams) {
-        skin = "";
     }
     this.socket.playerTracker.joinGame(name, skin);
 };

@@ -5,6 +5,7 @@ var fs = require("fs");
 var ini = require('./modules/ini.js');
 var os = require("os");
 var QuadNode = require('./QuadNode.js');
+var PlayerCommand = require('./modules/PlayerCommand');
 
 // Project imports
 var Packet = require('./packet');
@@ -216,6 +217,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     
     ws.playerTracker = new PlayerTracker(this, ws);
     ws.packetHandler = new PacketHandler(this, ws);
+    ws.playerCommand = new PlayerCommand(this, ws.playerTracker);
     
     var gameServer = this;
     var onMessage = function (message) {
@@ -512,6 +514,16 @@ GameServer.prototype.onChatMessage = function (from, to, message) {
     if (message == null) return;
     message = message.trim();
     if (message == "") return;
+    if (from && message.length > 0 && message[0] == '/') {
+        // player command
+        message = message.slice(1, message.length);
+        from.socket.playerCommand.executeCommandLine(message);
+        return;
+    }
+    if (!this.config.serverChat) {
+        // chat is disabled
+        return;
+    }
     if (message.length > 128) message = message.slice(0, 128);
     //console.log("[CHAT] " + (from!=null && from.getName().length>0 ? from.getName() : "Spectator") + ": " + message);
     this.sendChatMessage(from, to, message);

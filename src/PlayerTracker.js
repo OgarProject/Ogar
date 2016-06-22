@@ -107,6 +107,9 @@ PlayerTracker.prototype.setSkin = function (skin) {
 };
 
 PlayerTracker.prototype.getSkin = function () {
+    if (this.gameServer.gameMode.haveTeams) {
+        return "";
+    }
     return this.skin;
 };
 
@@ -164,9 +167,9 @@ PlayerTracker.prototype.massChanged = function () {
 PlayerTracker.prototype.joinGame = function (name, skin) {
     if (this.cells.length > 0) return;
     if (name == null) name = "";
-    if (skin == null) skin = "";
     this.setName(name);
-    this.setSkin(skin);
+    if (skin != null)    
+        this.setSkin(skin);
     this.spectate = false;
     this.freeRoam = false;
 
