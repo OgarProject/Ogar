@@ -73,15 +73,8 @@ Commands.list = {
         console.log("[Console] - Foods:        " + fillChar(gameServer.currentFood, " ", 4, true)         + " / " + gameServer.config.foodMaxAmount);
         console.log("[Console] - Viruses:      " + fillChar(gameServer.nodesVirus.length, " ", 4, true)   + " / " + gameServer.config.virusMaxAmount);
         console.log("[Console] Moving nodes:   " + fillChar(gameServer.movingNodes.length, " ", 4, true));
-
-        function getQuadCount(quadNode) {
-            var count = 0;
-            for (var i = 0; i < quadNode.childNodes.length; i++)
-                count += getQuadCount(quadNode.childNodes[i]);
-            return 1 + count;
-        }
-        var quadCount = getQuadCount(gameServer.quadTree);
-        console.log("[Console] Quad nodes:     " + fillChar(quadCount, " ", 4, true));
+        console.log("[Console] Quad nodes:     " + fillChar(gameServer.quadTree.scanNodeCount(), " ", 4, true));
+        console.log("[Console] Quad items:     " + fillChar(gameServer.quadTree.scanItemCount(), " ", 4, true));
     },
     addbot: function(gameServer, split) {
         var add = parseInt(split[1]);
