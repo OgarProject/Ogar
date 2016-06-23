@@ -75,6 +75,11 @@ function decode(str) {
         section = null;
 
     lines.forEach(function(line, _, __) {
+        var testLine = line.trim();
+        if (testLine.length >= 2 && testLine[0] == '/' && testLine[1] == '/') {
+            // skip commented lines
+            return;
+        }
         if (!line || line.match(/^\s*[;#]/)) {
             return;
         }
