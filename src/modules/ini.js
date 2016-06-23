@@ -76,6 +76,10 @@ function decode(str) {
 
     lines.forEach(function(line, _, __) {
         var testLine = line.trim();
+        if (testLine.length == 0) {
+            // skip empty lines
+            return;
+        }
         if (testLine.length >= 2 && testLine[0] == '/' && testLine[1] == '/') {
             // skip commented lines
             return;
