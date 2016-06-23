@@ -59,7 +59,7 @@ var playerCommands = {
             var cell = this.playerTracker.cells[0];
             this.gameServer.removeNode(cell);
             // replace with food
-            var food = new Entity.Food(this.gameServer.getNextNodeId(), null, cell.position, this.gameServer.config.playerStartMass, this.gameServer);
+            var food = new Entity.Food(this.gameServer, null, cell.position, this.gameServer.config.playerMinSize);
             food.setColor(this.gameServer.getGrayColor(cell.getColor()));
             this.gameServer.addNode(food);
         }

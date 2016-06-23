@@ -1,7 +1,6 @@
-function Cell(nodeId, owner, position, mass, gameServer) {
-    this.nodeId = nodeId;
-    this.owner = owner; // playerTracker that owns this cell
+function Cell(gameServer, owner, position, size) {
     this.gameServer = gameServer;
+    this.owner = owner;     // playerTracker that owns this cell
     
     this.tickOfBirth = 0;
     this.color = { r: 0, g: 0, b: 0 };
@@ -16,15 +15,19 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.isMoving = false;  // Indicate that cell is in boosted mode
 
     this.boostDistance = 0;
-    this.boostDirection = { x: 1, y: 0, angle: 0 };
+    this.boostDirection = { x: 1, y: 0, angle: Math.PI / 2 };
     this.ejector = null;
     
-    if (gameServer != null)
-        this.tickOfBirth = gameServer.getTick();
-    if (mass != null)
-        this.setMass(mass);
-    if (position != null)
-        this.setPosition(position);
+    if (this.gameServer != null) {
+        this.nodeId = this.gameServer.getNextNodeId();
+        this.tickOfBirth = this.gameServer.getTick();
+        if (size != null) {
+            this.setSize(size);
+        }
+        if (position != null) {
+            this.setPosition(position);
+        }
+    }
 }
 
 module.exports = Cell;
@@ -54,6 +57,17 @@ Cell.prototype.getType = function() {
     return this.cellType;
 };
 
+Cell.prototype.setSize = function (size) {
+    if (isNaN(size)) {
+        throw new TypeError("Cell.setSize: size is NaN");
+    }
+    this._size = size;
+    this._squareSize = size * size;
+    this._mass = this._squareSize / 100;
+    if (this.owner)
+        this.owner.massChanged();
+};
+
 Cell.prototype.getSize = function() {
     return this._size;
 };
@@ -64,22 +78,6 @@ Cell.prototype.getMass = function () {
 
 Cell.prototype.getSquareSize = function () {
     return this._squareSize;
-};
-
-Cell.prototype.setMass = function (mass) {
-    this._size = Math.sqrt(mass * 100);
-    this._squareSize = this._size * this._size;
-    this._mass = this._squareSize / 100;
-    if (this.owner)
-        this.owner.massChanged();
-};
-
-Cell.prototype.setSize = function (size) {
-    this._size = size;
-    this._squareSize = size * size;
-    this._mass = this._squareSize / 100;
-    if (this.owner)
-        this.owner.massChanged();
 };
 
 Cell.prototype.getSpeed = function() {
@@ -106,12 +104,12 @@ Cell.prototype.getAge = function (tick) {
     return Math.max(0, tick - this.tickOfBirth);
 }
 
-Cell.prototype.getKiller = function() {
-    return this.killedBy;
+Cell.prototype.setKiller = function (cell) {
+    this.killedBy = cell;
 };
 
-Cell.prototype.setKiller = function(cell) {
-    this.killedBy = cell;
+Cell.prototype.getKiller = function () {
+    return this.killedBy;
 };
 
 Cell.prototype.setPosition = function (pos) {
@@ -121,6 +119,31 @@ Cell.prototype.setPosition = function (pos) {
     }
     this.position.x = pos.x;
     this.position.y = pos.y;
+};
+
+// Virtual
+
+Cell.prototype.canEat = function (cell) {
+    // by default cell cannot eat anyone
+    return false;
+};
+
+Cell.prototype.onEat = function (prey) {
+    // Called to eat prey cell
+    var size1 = this.getSize();
+    var size2 = prey.getSize();
+    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
+};
+
+Cell.prototype.onEaten = function (hunter) {
+};
+
+Cell.prototype.onAdd = function (gameServer) {
+    // Called when this cell is added to the world
+};
+
+Cell.prototype.onRemove = function (gameServer) {
+    // Called when this cell is removed
 };
 
 // Functions
@@ -174,16 +197,16 @@ Cell.prototype.clipVelocity = function (v, border) {
     var x = this.position.x + v.x;
     var y = this.position.y + v.y;
     // border check
-    var pleft = x >= bound.minx ? null : this.getLineIntersection(
+    var pleft = x >= bound.minx ? null : findLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.minx, bound.miny, bound.minx, bound.maxy);
-    var pright = x <= bound.maxx ? null : this.getLineIntersection(
+    var pright = x <= bound.maxx ? null : findLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.maxx, bound.miny, bound.maxx, bound.maxy);
-    var ptop = y >= bound.miny ? null : this.getLineIntersection(
+    var ptop = y >= bound.miny ? null : findLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.minx, bound.miny, bound.maxx, bound.miny);
-    var pbottom = y <= bound.maxy ? null : this.getLineIntersection(
+    var pbottom = y <= bound.maxy ? null : findLineIntersection(
         this.position.x, this.position.y, x, y,
         bound.minx, bound.maxy, bound.maxx, bound.maxy);
     var ph = pleft != null ? pleft : pright;
@@ -245,34 +268,9 @@ Cell.prototype.checkBorder = function (border) {
 };
 
 
-// Override these
-
-Cell.prototype.canEat = function (cell) {
-    // by default cell cannot eat anyone
-    return false;
-};
-
-Cell.prototype.onEat = function (prey) {
-    // Called to eat prey cell
-    var size1 = this.getSize();
-    var size2 = prey.getSize() + 1;
-    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
-};
-
-Cell.prototype.onEaten = function (hunter) {
-};
-
-Cell.prototype.onAdd = function(gameServer) {
-    // Called when this cell is added to the world
-};
-
-Cell.prototype.onRemove = function(gameServer) {
-    // Called when this cell is removed
-};
-
 // Lib
 
-Cell.prototype.getLineIntersection = function (p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+function findLineIntersection (p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
     var z1 = p1x - p0x;
     var z2 = p3x - p2x;
     var w1 = p1y - p0y;
@@ -285,13 +283,3 @@ Cell.prototype.getLineIntersection = function (p0x, p0y, p1x, p1y, p2x, p2y, p3x
     if (isNaN(px) || isNaN(py)) return null;
     return { x: px, y: py };
 }
-
-Cell.prototype.abs = function(x) {
-    return x < 0 ? -x : x;
-};
-
-Cell.prototype.getDist = function(x1, y1, x2, y2) {
-    var vx = x2 - x1;
-    var vy = y2 - x1;
-    return Math.sqrt(vx * vx + vy * vy);
-};

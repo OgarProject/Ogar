@@ -79,13 +79,13 @@ HungerGames.prototype.getPos = function() {
 };
 
 HungerGames.prototype.spawnFood = function(gameServer, mass, pos) {
-    var cell = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
+    var cell = new Entity.Food(gameServer, null, pos, mass);
     cell.setColor(gameServer.getRandomColor());
     gameServer.addNode(cell);
 };
 
 HungerGames.prototype.spawnVirus = function(gameServer, pos) {
-    var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, gameServer.config.virusStartMass, gameServer);
+    var v = new Entity.Virus(gameServer, null, pos, gameServer.config.virusMinSize);
     gameServer.addNode(v);
 };
 
@@ -138,9 +138,9 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     gameServer.config.borderWidth = 3200;
     gameServer.config.borderHeight = 3200;
     gameServer.config.foodSpawnAmount = 5; // This is hunger games
-    gameServer.config.foodStartAmount = 100;
+    gameServer.config.foodMinAmount = 100;
     gameServer.config.foodMaxAmount = 200;
-    gameServer.config.foodMinMass = 2; // Food is scarce, but its worth more
+    gameServer.config.foodMinSize = 10; // Food is scarce, but its worth more
     gameServer.config.virusMinAmount = 10; // We need to spawn some viruses in case someone eats them all
     gameServer.config.virusMaxAmount = 100;
     gameServer.config.ejectSpawnPlayer = 0;

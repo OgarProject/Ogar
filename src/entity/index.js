@@ -3,5 +3,6 @@ module.exports = {
     PlayerCell: require('./PlayerCell'),
     Food: require('./Food'),
     Virus: require('./Virus'),
+    MotherCell: require('./MotherCell'),
     EjectedMass: require('./EjectedMass'),
 };
