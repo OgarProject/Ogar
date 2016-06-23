@@ -113,9 +113,8 @@ Cell.prototype.getKiller = function () {
 };
 
 Cell.prototype.setPosition = function (pos) {
-    if (isNaN(pos.x) || isNaN(pos.y)) {
-        console.log("[ERROR] Cell.setPosition: NaN");
-        return;
+    if (pos == null || isNaN(pos.x) || isNaN(pos.y)) {
+        throw new TypeError("Cell.setPosition: position is NaN");
     }
     this.position.x = pos.x;
     this.position.y = pos.y;

@@ -379,6 +379,9 @@ GameServer.prototype.getRandomColor = function() {
 
 GameServer.prototype.updateNodeQuad = function (node) {
     var quadItem = node.quadItem;
+    if (quadItem == null) {
+        throw new TypeError("GameServer.updateNodeQuad: quadItem is null!");
+    }
     // check for change
     if (node.position.x == quadItem.x &&
         node.position.y == quadItem.y &&
