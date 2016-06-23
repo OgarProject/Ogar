@@ -1025,10 +1025,11 @@ GameServer.prototype.updateMoveEngine = function () {
 };
 
 GameServer.prototype.splitCells = function(client) {
-    // sort by size descending
-    client.cells.sort(function (a, b) {
-        return b.getSize() - a.getSize();
-    });
+    // it seems that vanilla uses order by cell age
+    //// sort by size descending
+    //client.cells.sort(function (a, b) {
+    //    return b.getSize() - a.getSize();
+    //});
     var cellToSplit = [];
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
