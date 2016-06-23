@@ -48,6 +48,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* Added scramble level 3 (anti-bot/anti-minimap protection), unsupported on some clients (unfortunately include vanilla, ogar.mivabe.nl works ok)
 * NOTE: there is major gameserver.ini change, previous version is incompatible!
 * Massive perfromance improvement & reduce network traffic
 * Split behavior - fixed;
