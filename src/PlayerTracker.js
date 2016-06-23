@@ -185,6 +185,13 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
         // no scramble / lightweight scramble
         this.socket.sendPacket(new Packet.SetBorder(this, this.gameServer.border));
     }
+    if (this.gameServer.config.serverScrambleCoords == 3) {
+        // Scramble level 3 (no border)
+        // Unsupported on some clients! (include vanilla)
+        // ogar.mivabe.nl works ok
+        // Ruins most known minimaps
+        this.socket.sendPacket(new Packet.SetBorder(this, {minx:1/0,miny:1/0,maxx:1/0,maxy:1/0}));
+    }
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
 
