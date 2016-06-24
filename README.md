@@ -45,9 +45,9 @@ IP | Location | Game Mode | Web Site
 --- | --- | --- | ---
 vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
-149.202.87.51:443 | Paris |	FFA	|
-134.119.17.230:443 | Germany | FFA |
-192.34.61.57:443 | New York | FFA |
+149.202.87.51:443 | Paris |	FFA	| http://agarlist.com/
+134.119.17.230:443 | Germany | FFA | http://agarlist.com/
+192.34.61.57:443 | New York | FFA | http://agarlist.com/
 
 
 ## What's new:
