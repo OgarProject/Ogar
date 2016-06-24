@@ -94,17 +94,6 @@ PlayerCell.prototype.onEat = function (prey) {
     var size1 = this.getSize();
     var size2 = prey.getSize();
     this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
-
-    if (this.owner.mergeOverride)
-        return;
-    if (this.getSize() <= this.gameServer.config.playerMaxSize)
-        return;
-    if (this.owner.cells.length >= this.gameServer.config.playerMaxCells) {
-        this.setSize(this.gameServer.config.playerMaxSize);
-        return;
-    }
-    var randomAngle = Math.random() * 2 * Math.PI; // Get random angle???
-    this.gameServer.splitPlayerCell(this.owner, this, randomAngle, null);
 };
 
 PlayerCell.prototype.onAdd = function(gameServer) {

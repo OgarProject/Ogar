@@ -889,9 +889,11 @@ GameServer.prototype.resolveCollision = function (manifold) {
 };
 
 GameServer.prototype.updateMoveEngine = function () {
+    var tick = this.getTick();
     // Move player cells
     for (var i in this.clients) {
         var client = this.clients[i].playerTracker;
+        var checkSize = !client.mergeOverride || client.cells.length == 1;
         for (var j = 0; j < client.cells.length; j++) {
             var cell1 = client.cells[j];
             if (cell1.isRemoved)
@@ -899,6 +901,28 @@ GameServer.prototype.updateMoveEngine = function () {
             cell1.updateRemerge(this);
             cell1.moveUser(this.border);
             cell1.move(this.border);
+            
+            // check size limit
+            if (checkSize && cell1.getSize() > this.config.playerMaxSize && cell1.getAge(tick) >= 15) {
+                if (client.cells.length >= this.config.playerMaxCells) {
+                    // cannot split => just limit
+                    cell1.setSize(this.config.playerMaxSize);
+                } else {
+                    // split
+                    var maxSplit = this.config.playerMaxCells - client.cells.length;
+                    var maxMass = this.config.playerMaxSize * this.config.playerMaxSize / 100;
+                    var count = (cell1.getMass() / maxMass) >> 0;
+                    var count = Math.min(count, maxSplit);
+                    var splitSize = cell1.getSize() / Math.sqrt(count + 1);
+                    var splitMass = splitSize * splitSize / 100;
+                    var angle = Math.random() * 2 * Math.PI;
+                    var step = 2 * Math.PI / count;
+                    for (var k = 0; k < count; k++) {
+                        this.splitPlayerCell(client, cell1, angle, splitMass);
+                        angle += step;
+                    }
+                }
+            }
             this.updateNodeQuad(cell1);
         }
     }
