@@ -75,6 +75,15 @@ function decode(str) {
         section = null;
 
     lines.forEach(function(line, _, __) {
+        var testLine = line.trim();
+        if (testLine.length == 0) {
+            // skip empty lines
+            return;
+        }
+        if (testLine.length >= 2 && testLine[0] == '/' && testLine[1] == '/') {
+            // skip commented lines
+            return;
+        }
         if (!line || line.match(/^\s*[;#]/)) {
             return;
         }
@@ -106,7 +115,9 @@ function decode(str) {
 
         // safeguard against resetting a previously defined
         // array by accidentally forgetting the brackets
-        if (isInt(value)) {
+        if (isNaN(value)) {
+            p[key] = value;
+        } else if (isInt(value)) {
             p[key] = parseInt(value);
         } else {
             p[key] = parseFloat(value);
@@ -187,7 +198,7 @@ function unsafe(val, doUnesc) {
 }
 
 var isInt = function(n) {
-    return parseInt(n) === n;
+    return parseInt(n) == n;
 };
 
 function getLagMessage(updateTimeAvg){

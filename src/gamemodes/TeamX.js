@@ -118,119 +118,10 @@ TeamX.prototype.onServerInit = function(gameServer) {
 
     // Special virus mechanics
     if (this.pushVirus) {
-        Virus.prototype.feed = function(feeder, gameServer) {
-            gameServer.removeNode(feeder);
+        Virus.prototype.onEat = function (prey) {
             // Pushes the virus
-            // TODO: check distance
-            this.setBoost(30 * 5, feeder.getAngle());
-            //this.setAngle(feeder.getAngle()); // Set direction if the virus explodes
-            //this.moveEngineTicks = 5; // Amount of times to loop the movement function
-            //this.moveEngineSpeed = 30;
-
-            var index = gameServer.movingNodes.indexOf(this);
-            if (index == -1) {
-                gameServer.movingNodes.push(this);
-            }
-        };
-    }
-
-    if (!this.teamCollision) {
-        this.onCellMove = function(x1, y1, cell) {}; // does nothing
-        if (GS_getCellsInRange == null)
-            GS_getCellsInRange = gameServer.getCellsInRange;
-
-        gameServer.getCellsInRange = function(cell) {
-            var list = new Array();
-            var squareR = cell.getSquareSize(); // Get cell squared radius
-
-            // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
-            var len = cell.owner.visibleNodes.length;
-            for (var i = 0; i < len; i++) {
-                var check = cell.owner.visibleNodes[i];
-
-                if (typeof check === 'undefined') {
-                    continue;
-                }
-
-                // if something already collided with this cell, don't check for other collisions
-                if (check.isRemoved) {
-                    continue;
-                }
-
-                // Can't eat itself
-                if (cell.nodeId == check.nodeId) {
-                    continue;
-                }
-
-                // Can't eat cells that have collision turned off
-                if ((cell.owner == check.owner) && (cell.ignoreCollision)) {
-                    continue;
-                }
-
-                // AABB Collision
-                if (gameServer.checkCellCollision(cell, check) == null) {
-                    continue;
-                }
-
-                // Cell type check - Cell must be bigger than this number times the mass of the cell being eaten
-                var multiplier = 1.25;
-
-                switch (check.getType()) {
-                    case 1: // Food cell
-                        list.push(check);
-                        check.isRemoved = true; // skip future collision checks for this food
-                        continue;
-                    case 2: // Virus
-                        multiplier = 1.33;
-                        break;
-                    case 0: // Players
-                        // Can't eat self if it's not time to recombine yet
-                        if (check.owner == cell.owner) {
-                            if (!cell.canRemerge() || !check.canRemerge()) {
-                                continue;
-                            }
-
-                            multiplier = 1.00;
-                        }
-
-                        // Can't eat team members
-                        if (this.gameMode.haveTeams) {
-                            if (!check.owner) { // Error check
-                                continue;
-                            }
-
-                            if ((check.owner != cell.owner) && (check.owner.getTeam() == cell.owner.getTeam()) && this.gameMode.countNotInRange(check.owner) == 1) {
-                                continue;
-                            }
-                        }
-                        break;
-                    default:
-                        break;
-                }
-
-                // Make sure the cell is big enough to be eaten.
-                if ((check.getMass() * multiplier) > cell.getMass()) {
-                    continue;
-                }
-
-                // Eating range
-                var xs = Math.pow(check.position.x - cell.position.x, 2);
-                var ys = Math.pow(check.position.y - cell.position.y, 2);
-                var dist = Math.sqrt(xs + ys);
-
-                var eatingRange = cell.getSize() - check.getSize() / Math.PI; // Eating range = radius of eating cell + 40% of the radius of the cell being eaten
-                if (dist > eatingRange) {
-                    // Not in eating range
-                    continue;
-                }
-
-                // Add to list of cells nearby
-                list.push(check);
-
-                // Something is about to eat this cell; no need to check for other collisions with it
-                check.isRemoved = true;
-            }
-            return list;
+            var angle = prey.isMoving ? prey.getAngle() : this.getAngle();
+            this.setBoost(16 * 20, angle);
         };
     }
 
@@ -317,7 +208,7 @@ MotherCell.prototype = new Cell(); // Base
 
 MotherCell.prototype.update = function(gameServer) {
     // Add mass
-    this.setMass(this.getMass() + .25);
+    this.setSize(Math.sqrt(this.getSize() * this.getSize() + 0.25 * 0.25));
 
     // Spawn food
     var maxFood = 10; // Max food spawned per tick
@@ -329,7 +220,7 @@ MotherCell.prototype.update = function(gameServer) {
         }
 
         // Incrementers
-        this.setMass(this.getMass() - 1);
+        this.setSize(Math.sqrt(this.getSize() * this.getSize() - 1));
         i++;
     }
 };
@@ -344,7 +235,7 @@ MotherCell.prototype.spawnFood = function(gameServer) {
     };
 
     // Spawn food
-    var cell = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMinMass, gameServer);
+    var cell = new Food(gameServer.getNextNodeId(), null, pos, gameServer.config.foodMinSize, gameServer);
     cell.setColor(gameServer.getRandomColor());
 
     gameServer.addNode(cell);

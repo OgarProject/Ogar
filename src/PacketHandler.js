@@ -43,12 +43,14 @@ PacketHandler.prototype.handleMessage = function(message) {
         this.socket.sendPacket(new Packet.ClearAll());
         this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.gameServer.border, this.gameServer.config.serverGamemode, "MultiOgar"));
         // Send welcome message
-        this.gameServer.sendChatMessage(null, this.socket.playerTracker, "Welcome to MultiOgar server!");
+        if (this.gameServer.config.serverWelcome1)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, this.gameServer.config.serverWelcome1);
+        if (this.gameServer.config.serverWelcome2)
+            this.gameServer.sendChatMessage(null, this.socket.playerTracker, this.gameServer.config.serverWelcome2);
         if (this.gameServer.config.serverChat == 0)
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
-        if (this.protocol < 4) {
+        if (this.protocol < 4)
             this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Protocol " + this.protocol + " assumed as 4!");
-        }        
         this.isHandshakePassed = true;
         return;
     }
@@ -109,7 +111,7 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 99:
             // Chat
-            if (this.gameServer.config.serverChat == 0 || message.length < 3)             // first validation
+            if (message.length < 3)             // first validation
                 break;
             // chat anti-spam
             // Just ignore if the time between two messages is smaller than 2 seconds
@@ -139,7 +141,7 @@ PacketHandler.prototype.handleMessage = function(message) {
 
 PacketHandler.prototype.setNickname = function (text) {
     var name = "";
-    var skin = "";
+    var skin = null;
     if (text != null && text.length != 0) {
         var n = -1;
         if (text.charAt(0) == '<' && (n = text.indexOf('>', 1)) >= 0) {
@@ -154,9 +156,6 @@ PacketHandler.prototype.setNickname = function (text) {
     }
     if (name.length > this.gameServer.config.playerMaxNickLength) {
         name = name.substring(0, this.gameServer.config.playerMaxNickLength);
-    }
-    if (this.gameServer.gameMode.haveTeams) {
-        skin = "";
     }
     this.socket.playerTracker.joinGame(name, skin);
 };

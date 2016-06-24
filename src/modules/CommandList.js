@@ -73,6 +73,8 @@ Commands.list = {
         console.log("[Console] - Foods:        " + fillChar(gameServer.currentFood, " ", 4, true)         + " / " + gameServer.config.foodMaxAmount);
         console.log("[Console] - Viruses:      " + fillChar(gameServer.nodesVirus.length, " ", 4, true)   + " / " + gameServer.config.virusMaxAmount);
         console.log("[Console] Moving nodes:   " + fillChar(gameServer.movingNodes.length, " ", 4, true));
+        console.log("[Console] Quad nodes:     " + fillChar(gameServer.quadTree.scanNodeCount(), " ", 4, true));
+        console.log("[Console] Quad items:     " + fillChar(gameServer.quadTree.scanItemCount(), " ", 4, true));
     },
     addbot: function(gameServer, split) {
         var add = parseInt(split[1]);
@@ -274,12 +276,13 @@ Commands.list = {
             return;
         }
 
-        if (isNaN(mass)) {
-            mass = gameServer.config.foodStartMass;
+        var size = gameServer.config.foodMinMass;
+        if (!isNaN(mass)) {
+            size = Math.sqrt(mass * 100);
         }
 
         // Spawn
-        var cell = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
+        var cell = new Entity.Food(gameServer, null, pos, size);
         cell.setColor(gameServer.getRandomColor());
         gameServer.addNode(cell);
         console.log("[Console] Spawned 1 food cell at (" + pos.x + " , " + pos.y + ")");
@@ -353,16 +356,17 @@ Commands.list = {
             console.log("[Console] Please specify a valid number");
             return;
         }
+        var size = Math.sqrt(amount * 100);
 
         // Sets mass to the specified amount
         for (var i in gameServer.clients) {
             if (gameServer.clients[i].playerTracker.pID == id) {
                 var client = gameServer.clients[i].playerTracker;
                 for (var j in client.cells) {
-                    client.cells[j].setMass(amount);
+                    client.cells[j].setSize(size);
                 }
 
-                console.log("[Console] Set mass of " + client.name + " to " + amount);
+                console.log("[Console] Set mass of " + client.name + " to " + (size*size/100).toFixed(3));
                 break;
             }
         }
@@ -586,12 +590,13 @@ Commands.list = {
             console.log("[Console] Invalid coordinates");
             return;
         }
-        if (isNaN(mass)) {
-            mass = gameServer.config.virusStartMass;
+        var size = gameServer.config.virusMinSize;
+        if (!isNaN(mass)) {
+            size = Math.sqrt(mass * 100);
         }
 
         // Spawn
-        var v = new Entity.Virus(gameServer.getNextNodeId(), null, pos, mass, gameServer);
+        var v = new Entity.Virus(gameServer, null, pos, size);
         gameServer.addNode(v);
         console.log("[Console] Spawned 1 virus at (" + pos.x + " , " + pos.y + ")");
     },

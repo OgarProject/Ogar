@@ -97,7 +97,18 @@ QuadNode.prototype.remove = function (item) {
     }
     this.items.splice(index, 1);
     item._quadNode = null;
-    // TODO: collapse node if empty
+    cleanup(this);
+};
+
+function cleanup (node) {
+    if (node.parent==null || node.items.length > 0) return;
+    for (var i = 0; i < node.childNodes.length; i++) {
+        var child = node.childNodes[i];
+        if (child.childNodes.length > 0 || child.items.length > 0)
+            return;
+    }
+    node.childNodes = [];
+    cleanup(node.parent);
 };
 
 QuadNode.prototype.update = function (item) {
@@ -166,6 +177,22 @@ QuadNode.prototype.any = function (bound, predicate) {
         }
     }
     return false;
+};
+
+QuadNode.prototype.scanNodeCount = function () {
+    var count = 0;
+    for (var i = 0; i < this.childNodes.length; i++) {
+        count += this.childNodes[i].scanNodeCount();
+    }
+    return 1 + count;
+};
+
+QuadNode.prototype.scanItemCount = function () {
+    var count = 0;
+    for (var i = 0; i < this.childNodes.length; i++) {
+        count += this.childNodes[i].scanItemCount();
+    }
+    return this.items.length + count;
 };
 
 // Returns quadrant for the bound.

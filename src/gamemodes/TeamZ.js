@@ -220,7 +220,7 @@ TeamZ.prototype.startGame = function(gameServer) {
             var cell = client.cells[j];
             if (cell) {
                 cell.setColor(client.getColor());
-                cell.setMass(gameServer.config.playerStartMass);
+                cell.setSize(gameServer.config.playerMinSize);
                 this.resetSpeedCell(cell);
             }
         }
@@ -490,7 +490,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 continue;
             }
 
-            if (cell.getMass() < this.config.playerMinMassSplit) {
+            if (cell.getSplitSize() < this.config.playerMinSize) {
                 continue;
             }
 
@@ -507,14 +507,12 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             };
             // Calculate mass and speed of splitting cell
             var splitSpeed = cell.getSpeed() * 6;
-            var newMass = cell.getMass() / 2;
-            cell.setMass(newMass);
+            var newSize = cell.getSplitSize();
+            cell.setSize(newSize);
             // Create cell
-            var split = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, newMass);
+            var split = new Entity.PlayerCell(this, client, startPos, newSize);
             // TODO: check distance
             split.setBoost(splitSpeed * 32, angle);
-            //split.setAngle(angle);
-            //split.setMoveEngineData(splitSpeed, 32, 0.85);
 
             // boost speed if zombie eats brain
             if (this.gameMode.hasEatenBrain(client) || this.gameMode.isCrazy(client)) {
@@ -538,8 +536,9 @@ TeamZ.prototype.onServerInit = function(gameServer) {
             y: parent.position.y
         };
 
+        var size = Math.sqrt(mass);
         // Create cell
-        newCell = new Entity.PlayerCell(this.getNextNodeId(), client, startPos, mass);
+        newCell = new Entity.PlayerCell(this, client, startPos, size);
         // TODO: check distance
         newCell.setBoost(speed * 10, angle);
         //newCell.setAngle(angle);
@@ -594,14 +593,14 @@ TeamZ.prototype.onServerInit = function(gameServer) {
         for (var k = 0; k < numSplits; k++) {
             angle += 6 / numSplits; // Get directions of splitting cells
             this.gameServer.newCellVirused(client, consumer, angle, splitMass, 150);
-            consumer.setMass(consumer.getMass() - splitMass);
+            consumer.setSize(Math.sqrt(consumer.getSize() * consumer.getSize() - splitMass*splitMass));
         }
 
         for (var k = 0; k < bigSplits; k++) {
             angle = Math.random() * 6.28; // Random directions
             splitMass = consumer.getMass() / 4;
             this.gameServer.newCellVirused(client, consumer, angle, splitMass, 20);
-            consumer.setMass(consumer.getMass() - splitMass);
+            consumer.setSize(Math.sqrt(consumer.getSize() * consumer.getSize() - splitMass * splitMass));
         }
 
         if (this.gameServer.gameMode.hasEatenHero(client)) {
@@ -1010,7 +1009,7 @@ function Hero() {
     this.cellType = CellType.HERO;
     //this.isSpiked = true;
     this.setColor({ r: 255, g: 255, b: 7 });
-    this.setMass(60);
+    this.setSize(78);
 }
 
 Hero.prototype = new Cell();
@@ -1081,7 +1080,7 @@ function Brain() {
     this.cellType = CellType.BRAIN;
     //this.isSpiked = true;
     this.setColor({ r: 255, g: 7, b: 255 });
-    this.setMass(60);
+    this.setSize(78);
 }
 
 Brain.prototype = new Cell();

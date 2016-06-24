@@ -48,6 +48,12 @@ PlayerCell.prototype.canEat = function (cell) {
     return true;
 };
 
+PlayerCell.prototype.getSplitSize = function () {
+    return this.getSize() * splitMultiplier;
+};
+
+var splitMultiplier = 1 / Math.sqrt(2);
+
 // Movement
 
 PlayerCell.prototype.moveUser = function (border) {
@@ -86,20 +92,8 @@ PlayerCell.prototype.moveUser = function (border) {
 
 PlayerCell.prototype.onEat = function (prey) {
     var size1 = this.getSize();
-    var size2 = prey.getSize() + 1;
+    var size2 = prey.getSize();
     this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
-
-    if (this.owner.mergeOverride)
-        return;
-    if (this.getMass() <= this.gameServer.config.playerMaxMass)
-        return;
-    if (this.owner.cells.length >= this.gameServer.config.playerMaxCells) {
-        this.setMass(this.gameServer.config.playerMaxMass);
-        return;
-    }
-    var splitMass = this.getMass() / 2;
-    var randomAngle = Math.random() * 6.28; // Get random angle
-    this.gameServer.splitPlayerCell(this.owner, this, randomAngle, splitMass);
 };
 
 PlayerCell.prototype.onAdd = function(gameServer) {

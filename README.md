@@ -1,17 +1,22 @@
 # MultiOgar
-Ogar game server with vanilla physics and multi-protocol support.
+Ogar game server with fast and smooth vanilla physics and multi-protocol support.
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-node.js-yellow.svg)
 [![License](https://img.shields.io/badge/license-APACHE2-blue.svg)](https://github.com/Barbosik/OgarMulti/blob/master/LICENSE.md)
 
-## [![Language](https://img.shields.io/badge/Ogar-Node-red.svg)](https://github.com/OgarProject/Ogar) Ogar
-Copy of Ogar that I heavily modified, and will continue to update. 
+MultiOgar code based on Ogar code that I heavily modified, and will continue to update. 
+Almost all physics and protocol code were rewritten and optimized.
 The [OgarProject](https://ogarproject.com) owns Ogar, and I do not claim it as mine! 
 Original Ogar found [here](https://github.com/OgarProject/Ogar)
 
 
-The goal is to cleanup the code, fix the bugs and improve physics.
+The goal is to make good and smooth physics and cleanup the code.
+
+## Screenshot
+
+Map 6000x6000, 300 bots, 5000 food, 10 viruses - works pretty smooth with no lags:
+![Screenshot](http://i.imgur.com/4Wg8s9b.png)
 
 ## Clients
 
@@ -46,9 +51,14 @@ IP | Location | Game Mode | Web Site
 --- | --- | --- | ---
 vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
+149.202.87.51:443 | Paris |	FFA	| http://agarlist.com/
+134.119.17.230:443 | Germany | FFA | http://agarlist.com/
+192.34.61.57:443 | New York | FFA | http://agarlist.com/
 
 
 ## What's new:
+* Added scramble level 3 (anti-bot/anti-minimap protection), unsupported on some clients (unfortunately include vanilla, ogar.mivabe.nl works ok)
+* NOTE: there is major gameserver.ini change, previous version is incompatible!
 * Massive perfromance improvement & reduce network traffic
 * Split behavior - fixed;
 * Protocol code - optimized;
