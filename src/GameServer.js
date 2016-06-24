@@ -636,7 +636,7 @@ GameServer.prototype.updateFood = function() {
 };
 
 GameServer.prototype.updateVirus = function () {
-    var maxCount = this.config.virusMaxAmount - this.nodesVirus.length;
+    var maxCount = this.config.virusMinAmount - this.nodesVirus.length;
     var spawnCount = Math.min(maxCount, 2);
     for (var i = 0; i < spawnCount; i++) {
         this.spawnVirus();
