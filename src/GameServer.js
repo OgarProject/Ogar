@@ -78,16 +78,16 @@ function GameServer() {
         
         foodMinSize: 10,            // Minimum food size (vanilla 10)
         foodMaxSize: 20,            // Maximum food size (vanilla 20)
-        foodMinAmount: 100,         // Minimum food cells on the map
-        foodMaxAmount: 500,         // Maximum food cells on the map
+        foodMinAmount: 100,         // Minimum number of food cells on the map
+        foodMaxAmount: 500,         // Maximum number of food cells on the map
         foodSpawnAmount: 10,        // The amount of food to spawn per interval
         foodMassGrow: 1,            // Enable food mass grow ?
         spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
         
         virusMinSize: 100,          // Minimum virus size (vanilla 100)
         virusMaxSize: 140,          // Maximum virus size (vanilla 140)
-        virusMinAmount: 10,         // Minimum amount of viruses on the map.
-        virusMaxAmount: 50,         // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
+        virusMinAmount: 10,         // Minimum number of viruses on the map.
+        virusMaxAmount: 50,         // Maximum number of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
         
         ejectSize: 37,              // Size of ejected cells (vanilla 37)
         ejectCooldown: 3,           // min ticks between ejects
@@ -1241,7 +1241,21 @@ GameServer.prototype.loadConfig = function() {
 
         // Replace all the default config's values with the loaded config's values
         for (var obj in load) {
-            this.config[obj] = load[obj];
+            // Mass to size conversion
+            if (obj.endsWith("Mass")) {
+                var obj2 = obj.replace("Mass","Size");
+                
+                // if Not a number
+                if(isNaN(load[obj])) continue;
+                // Rounding for ridding of float values
+                var size = Math.sqrt(load[obj]*100);
+                
+                this.config[obj2] = size;
+            }
+            // Normal replacement
+            else {
+                this.config[obj] = load[obj];
+            }
         }
     } catch (err) {
         // No config
