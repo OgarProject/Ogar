@@ -357,7 +357,7 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
     var dx = this.mouse.x - this.centerPos.x;
     var dy = this.mouse.y - this.centerPos.y;
     var squared = dx * dx + dy * dy;
-    if (squared == 0) return;     // stop threshold
+    if (squared < 1) return;     // stop threshold
     
     // distance
     var d = Math.sqrt(squared);
@@ -371,11 +371,6 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
     
     var x = this.centerPos.x + nx * speed;
     var y = this.centerPos.y + ny * speed;
-    // check border
-    x = Math.max(x, this.gameServer.border.minx);
-    y = Math.max(y, this.gameServer.border.miny);
-    x = Math.min(x, this.gameServer.border.maxx);
-    y = Math.min(y, this.gameServer.border.maxy);
     this.setCenterPos(x, y);
 };
 
@@ -404,14 +399,14 @@ PlayerTracker.prototype.getVisibleNodes = function () {
             // top player spectate
             this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
             this.scale = specPlayer.getScale();
-            this.sendPosPacket();
+            this.sendCameraPacket();
             this.updateViewBox();
             return specPlayer.visibleNodes.slice(0);
         }
         // free roam spectate
         this.updateCenterFreeRoam();
         this.scale = this.gameServer.config.serverSpectatorScale;//0.25;
-        this.sendPosPacket();
+        this.sendCameraPacket();
     } else {
         // in game
         this.updateCenterInGame();
@@ -432,21 +427,18 @@ PlayerTracker.prototype.calcVisibleNodes = function() {
 };
 
 PlayerTracker.prototype.setCenterPos = function(x, y) {
+    if (isNaN(x) || isNaN(y)) {
+        throw new TypeError("PlayerTracker.setCenterPos: NaN");
+    }
+    x = Math.max(x, this.gameServer.border.minx);
+    y = Math.max(y, this.gameServer.border.miny);
+    x = Math.min(x, this.gameServer.border.maxx);
+    y = Math.min(y, this.gameServer.border.maxy);
     this.centerPos.x = x;
     this.centerPos.y = y;
-    if (this.freeRoam) this.checkBorderPass();
 };
 
-PlayerTracker.prototype.checkBorderPass = function() {
-    // A check while in free-roam mode to avoid player going into nothingness
-    this.centerPos.x = Math.max(this.centerPos.x, this.gameServer.border.minx);
-    this.centerPos.y = Math.max(this.centerPos.y, this.gameServer.border.miny);
-    this.centerPos.x = Math.min(this.centerPos.x, this.gameServer.border.maxx);
-    this.centerPos.y = Math.min(this.centerPos.y, this.gameServer.border.maxy);
-};
-
-PlayerTracker.prototype.sendPosPacket = function() {
-    // TODO: Send packet elsewhere so it is sent more often
+PlayerTracker.prototype.sendCameraPacket = function() {
     this.socket.sendPacket(new Packet.UpdatePosition(
         this,
         this.centerPos.x,
