@@ -857,7 +857,7 @@ GameServer.prototype.resolveCollision = function (manifold) {
             }
         }
         // Size check
-        if (minCell.getSize() * 1.15 > maxCell.getSize()) {
+        if (maxCell.getSize() <= minCell.getSize() * 1.15) {
             // too large => can't eat
             return;
         }
