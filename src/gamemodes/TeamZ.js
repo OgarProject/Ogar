@@ -490,7 +490,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
                 continue;
             }
 
-            if (cell.getSplitSize() < this.config.playerMinSize) {
+            if (cell.getSize() < this.config.playerMinSplitSize) {
                 continue;
             }
 
