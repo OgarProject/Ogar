@@ -825,7 +825,7 @@ GameServer.prototype.resolveCollision = function (manifold) {
     }
     
     // check distance
-    var eatDistance = maxCell.getSize() - minCell.getSize() / Math.PI;
+    var eatDistance = maxCell.getSize() - minCell.getSize() / 3;
     if (manifold.squared >= eatDistance * eatDistance) {
         // too far => can't eat
         return;
