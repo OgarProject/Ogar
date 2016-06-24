@@ -1,2 +1,2 @@
-node --debug index.js
+node index.js
 pause
