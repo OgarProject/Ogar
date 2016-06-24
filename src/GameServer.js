@@ -95,6 +95,7 @@ function GameServer() {
         
         playerMinSize: 32,          // Minimym size of the player cell (mass = 32*32/100 = 10.24)
         playerMaxSize: 1500,        // Maximum size of the player cell (mass = 1500*1500/100 = 22500)
+        playerMinSplitSize: 60,     // Minimum player cell size allowed to split (mass = 60*60/100 = 36) 
         playerStartSize: 64,        // Start size of the player cell (mass = 64*64/100 = 41)
         playerMaxCells: 16,         // Max cells the player is allowed to have
         playerSpeed: 1,             // Player speed multiplier
@@ -1051,14 +1052,10 @@ GameServer.prototype.updateMoveEngine = function () {
 
 GameServer.prototype.splitCells = function(client) {
     // it seems that vanilla uses order by cell age
-    //// sort by size descending
-    //client.cells.sort(function (a, b) {
-    //    return b.getSize() - a.getSize();
-    //});
     var cellToSplit = [];
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
-        if (cell.getSplitSize() < this.config.playerMinSize) {
+        if (cell.getSize() < this.config.playerMinSplitSize) {
             continue;
         }
         cellToSplit.push(cell);
@@ -1147,6 +1144,9 @@ GameServer.prototype.ejectMass = function(client) {
             continue;
         }
 
+        if (cell.getSize() < this.config.playerMinSplitSize) {
+            continue;
+        }
         var size2 = this.config.ejectSize;
         var sizeSquared = cell.getSquareSize() - size2 * size2;
         if (sizeSquared < this.config.playerMinSize * this.config.playerMinSize) {
