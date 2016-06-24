@@ -1240,20 +1240,38 @@ GameServer.prototype.loadConfig = function() {
         var load = ini.parse(fs.readFileSync('./gameserver.ini', 'utf-8'));
 
         // Replace all the default config's values with the loaded config's values
+        var sizeMass = [];
         for (var obj in load) {
             // Mass to size conversion
             if (obj.endsWith("Mass")) {
                 var obj2 = obj.replace("Mass","Size");
                 
+                // Duplication check
+                if (sizeMass.indexOf(obj2) >= 0) {
+                    console.log("[Game] Duplicate Size/Mass found:" + obj);
+                    console.log("[Game] Using " + obj + " = " + load[obj]);
+                }
+                else
+                    sizeMass.push(obj2);
+            
+                
                 // if Not a number
                 if(isNaN(load[obj])) continue;
-                // Rounding for ridding of float values
                 var size = Math.sqrt(load[obj]*100);
                 
                 this.config[obj2] = size;
             }
             // Normal replacement
             else {
+                if (obj.endsWith("Size")) {
+                    // Duplication check
+                    if (sizeMass.indexOf(obj) >= 0) {
+                        console.log("[Game] Duplicate Size/Mass found:" + obj);
+                        console.log("[Game] Using " + obj + " = " + load[obj]);
+                    }
+                    else
+                        sizeMass.push(obj);
+                }
                 this.config[obj] = load[obj];
             }
         }
