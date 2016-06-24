@@ -1,17 +1,22 @@
 # MultiOgar
-Ogar game server with vanilla physics and multi-protocol support.
+Ogar game server with fast and smooth vanilla physics and multi-protocol support.
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-node.js-yellow.svg)
 [![License](https://img.shields.io/badge/license-APACHE2-blue.svg)](https://github.com/Barbosik/OgarMulti/blob/master/LICENSE.md)
 
-## [![Language](https://img.shields.io/badge/Ogar-Node-red.svg)](https://github.com/OgarProject/Ogar) Ogar
-Copy of Ogar that I heavily modified, and will continue to update. 
+MultiOgar code based on Ogar code that I heavily modified, and will continue to update. 
+Almost all physics and protocol code were rewritten and optimized.
 The [OgarProject](https://ogarproject.com) owns Ogar, and I do not claim it as mine! 
 Original Ogar found [here](https://github.com/OgarProject/Ogar)
 
 
-The goal is to cleanup the code, fix the bugs and improve physics.
+The goal is to make good and smooth physics and cleanup the code.
+
+## Screenshot
+
+Map 6000x6000, 300 bots, 5000 food, 10 viruses - works pretty smooth with no lags:
+![Screenshot](http://i.imgur.com/4Wg8s9b.png)
 
 ## Clients
 
