@@ -18,6 +18,41 @@ The goal is to make good and smooth physics and cleanup the code.
 Map 6000x6000, 300 bots, 5000 food, 10 viruses - works pretty smooth with no lags:
 ![Screenshot](http://i.imgur.com/4Wg8s9b.png)
 
+## Install
+
+#### Windows:
+1) Download and install node.js: https://nodejs.org/en/download/ (64-bit recommended)
+2) Download MultiOgar code: https://github.com/Barbosik/MultiOgar/archive/master.zip
+3) Unzip MultiOgar code into some folder
+4) Start command line and select folder with MultiOgar
+5) Execute:
+```
+npm install
+```
+and then:
+```
+node src/index.js
+```
+
+#### Linux:
+1) Install node.js:
+```
+sudo apt-get update
+sudo apt-get install nodejs
+sudo apt-get install npm
+```
+2) Download MultiOgar code: https://github.com/Barbosik/MultiOgar/archive/master.zip
+3) Unzip MultiOgar code into some folder
+4) Execute from MultiOgar folder:
+```
+npm install
+```
+and then:
+```
+node src/index.js
+```
+
+
 ## Clients
 
 This lists Ogar clients and server trackers that I found on internet.
