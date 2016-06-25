@@ -24,8 +24,7 @@ Map 6000x6000, 300 bots, 5000 food, 10 viruses - works pretty smooth with no lag
 * Download and install node.js: https://nodejs.org/en/download/ (64-bit recommended)
 * Download MultiOgar code: https://github.com/Barbosik/MultiOgar/archive/master.zip
 * Unzip MultiOgar code into some folder
-* Start command line and select folder with MultiOgar
-* Execute:
+* Start command line and execute from MultiOgar folder
 ```
 npm install
 ```
