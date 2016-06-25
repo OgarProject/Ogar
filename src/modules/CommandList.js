@@ -329,7 +329,9 @@ Commands.list = {
 
                 console.log("[Console] Removed " + count + " cells");
                 break;
-            }
+            } else {
+				console.log('[Console] Please specify a matching player ID');
+			}
         }
     },
     killall: function(gameServer, split) {
@@ -351,7 +353,7 @@ Commands.list = {
             return;
         }
 
-        var amount = Math.max(parseInt(split[2]), 9);
+        var amount = Math.max(parseInt(split[2]), 10);
         if (isNaN(amount)) {
             console.log("[Console] Please specify a valid number");
             return;
@@ -365,8 +367,8 @@ Commands.list = {
                 for (var j in client.cells) {
                     client.cells[j].setSize(size);
                 }
-
-                console.log("[Console] Set mass of " + client.name + " to " + (size*size/100).toFixed(3));
+				var name = (client.name === "") ? "An unnamed cell" : client.name;
+                console.log("[Console] Set mass of " + name + " to " + (size*size/100).toFixed(3));
                 break;
             }
         }
@@ -401,25 +403,8 @@ Commands.list = {
 
         // Set client's merge override
         var state;
-        if (set == "true") {
-            client.mergeOverride = true;
-            client.mergeOverrideDuration = 100;
-            state = true;
-        } else if (set == "false") {
-            client.mergeOverride = false;
-            client.mergeOverrideDuration = 0;
-            state = false;
-        } else {
-            if (client.mergeOverride) {
-                client.mergeOverride = false;
-                client.mergeOverrideDuration = 0;
-            } else {
-                client.mergeOverride = true;
-                client.mergeOverrideDuration = 100;
-            }
-
-            state = client.mergeOverride;
-        }
+		client.mergeOverride = !client.mergeOverride;
+        state = client.mergeOverride;
 
         // Log
         if (state) console.log("[Console] Player " + id + " is now force merging");
@@ -444,7 +429,8 @@ Commands.list = {
             var client = gameServer.clients[i].playerTracker;
 
             if (client.pID == id) {
-                console.log("[Console] Changing " + client.name + " to " + name);
+				var name1 = (client.name === "") ? "An unnamed cell" : client.name;
+                console.log("[Console] Changing " + name1 + " to " + name);
                 client.name = name;
                 return;
             }
@@ -572,8 +558,9 @@ Commands.list = {
                     client.cells[j].setPosition(pos);
                     gameServer.updateNodeQuad(client.cells[j]);
                 }
-
-                console.log("[Console] Teleported " + client.name + " to (" + pos.x + " , " + pos.y + ")");
+				
+				var name = (client.name === "") ? "An unnamed cell" : client.name;
+                console.log("[Console] Teleported " + name + " to (" + pos.x + " , " + pos.y + ")");
                 break;
             }
         }
