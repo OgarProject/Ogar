@@ -36,7 +36,8 @@ BotLoader.prototype.loadNames = function() {
         this.randomNames = fs.readFileSync("./botnames.txt", "utf8").split(/[\r\n]+/).filter(function(x) {
             return x != ''; // filter empty names
         });
-    } catch (e) {
+    } catch (err) {
+        Logger.error(err.stack);
         // Nothing, use the default names
     }
 

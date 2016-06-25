@@ -296,7 +296,8 @@ Commands.list = {
             gameServer.gameMode = gm; // Apply new gamemode
             gameServer.gameMode.onServerInit(gameServer); // Resets the server
             console.log("Changed game mode to " + gameServer.gameMode.name);
-        } catch (e) {
+        } catch (err) {
+            Logger.error(err.stack);
             Logger.error("Invalid game mode selected");
         }
     },
@@ -500,7 +501,8 @@ Commands.list = {
             }else if (client.spectate) {
                 try {
                     nick = gameServer.largestClient.getFriendlyName();
-                } catch (e) {
+                } catch (err) {
+                    Logger.error(err.stack);
                     // Specating in free-roam mode
                     nick = "in free-roam";
                 }

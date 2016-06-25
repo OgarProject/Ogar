@@ -172,7 +172,9 @@ function unsafe(val, doUnesc) {
         }
         try {
             val = JSON.parse(val);
-        } catch (_) {}
+        } catch (err) {
+            Logger.error(err.stack);
+        }
     } else {
         // walk the val to find the first not-escaped ; character
         var esc = false;

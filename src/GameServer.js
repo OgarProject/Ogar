@@ -1251,6 +1251,7 @@ GameServer.prototype.loadConfig = function () {
             }
         }
     } catch (err) {
+        Logger.error(err.stack);
         Logger.error("Failed to load " + configFileName + ": " + err.message);
     }
     // check config (min player size = 32 => mass = 10.24)
@@ -1270,6 +1271,7 @@ GameServer.prototype.loadIpBanList = function () {
             Logger.warn(fileName + " is missing.");
         }
     } catch (err) {
+        Logger.error(err.stack);
         Logger.error("Failed to load " + fileName + ": " + err.message);
     }
 };
@@ -1285,6 +1287,7 @@ GameServer.prototype.saveIpBanList = function () {
         blFile.end();
         Logger.info(this.ipBanList.length + " IP ban records saved.");
     } catch (err) {
+        Logger.error(err.stack);
         Logger.error("Failed to save " + fileName + ": " + err.message);
     }
 };
