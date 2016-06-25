@@ -268,7 +268,7 @@ PlayerTracker.prototype.update = function () {
         }
         if (newVisible[newIndex].nodeId > this.visibleNodes[oldIndex].nodeId) {
             var node = this.visibleNodes[oldIndex];
-            if (node.isRemoved)
+            if (node.isRemoved && node.getKiller() != null && node.owner != node.getKiller().owner)
                 eatNodes.push(node);
             else
                 delNodes.push(node);
@@ -289,9 +289,9 @@ PlayerTracker.prototype.update = function () {
     }
     for (; oldIndex < this.visibleNodes.length; ) {
         var node = this.visibleNodes[oldIndex];
-        if (node.isRemoved)
+        if (node.isRemoved && node.getKiller() != null && node.owner != node.getKiller().owner)
             eatNodes.push(node);
-        else 
+        else
             delNodes.push(node);
         oldIndex++;
     }
