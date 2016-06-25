@@ -32,7 +32,7 @@ MotherCell.prototype.onUpdate = function () {
     if (this.getSize() <= this.motherCellMinSize) { 
         return;
     }
-    var maxFood = this.gameServer.config.foodMaxAmount * 1.5;
+    var maxFood = this.gameServer.config.foodMaxAmount;
     if (this.gameServer.currentFood >= maxFood) {
         return;
     }
