@@ -3,7 +3,7 @@ Ogar game server with fast and smooth vanilla physics and multi-protocol support
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-node.js-yellow.svg)
-![License](https://img.shields.io/badge/license-APACHE2-blue.svg)(https://github.com/Barbosik/OgarMulti/blob/master/LICENSE.md)
+[![License](https://img.shields.io/badge/license-APACHE2-blue.svg)](https://github.com/Barbosik/OgarMulti/blob/master/LICENSE.md)
 
 MultiOgar code based on Ogar code that I heavily modified, and will continue to update. 
 Almost all physics and protocol code were rewritten and optimized.
