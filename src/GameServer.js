@@ -54,17 +54,17 @@ function GameServer() {
     // Config
     this.config = {
         serverTimeout: 30,          // Seconds to keep connection alive for non-responding client
-        serverMaxConnections: 64,   // Maximum amount of connections to the server. (0 for no limit)
-        serverIpLimit: 4,           // Maximum amount of connections from the same IP (0 for no limit)
+        serverMaxConnections: 64,   // Maximum number of connections to the server. (0 for no limit)
+        serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
         serverPort: 443,            // Server port
         serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
         serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
-        serverBots: 0,              // Amount of player bots to spawn
+        serverBots: 0,              // Number of player bots to spawn
         serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
         serverViewBaseY: 1080,      // min value is 1920x1080
         serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
-        serverStatsUpdate: 60,      // Amount of seconds per update for the server stats
+        serverStatsUpdate: 60,      // Update interval of server stats in seconds
         serverLogLevel: 1,          // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         serverScrambleCoords: 1,    // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap, a little slow, some clients may not support it)
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
@@ -80,14 +80,14 @@ function GameServer() {
         foodMaxSize: 20,            // Maximum food size (vanilla 20)
         foodMinAmount: 100,         // Minimum food cells on the map
         foodMaxAmount: 500,         // Maximum food cells on the map
-        foodSpawnAmount: 10,        // The amount of food to spawn per interval
+        foodSpawnAmount: 10,        // The number of food to spawn per interval
         foodMassGrow: 1,            // Enable food mass grow ?
         spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
         
         virusMinSize: 100,          // Minimum virus size (vanilla 100)
         virusMaxSize: 140,          // Maximum virus size (vanilla 140)
-        virusMinAmount: 10,         // Minimum amount of viruses on the map.
-        virusMaxAmount: 50,         // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
+        virusMinAmount: 10,         // Minimum number of viruses on the map.
+        virusMaxAmount: 50,         // Maximum number of viruses on the map. If this number is reached, then ejected cells will pass through viruses.
         
         ejectSize: 37,              // Size of ejected cells (vanilla 37)
         ejectCooldown: 3,           // min ticks between ejects
@@ -99,14 +99,14 @@ function GameServer() {
         playerStartSize: 64,        // Start size of the player cell (mass = 64*64/100 = 41)
         playerMaxCells: 16,         // Max cells the player is allowed to have
         playerSpeed: 1,             // Player speed multiplier
-        playerDecayRate: .002,      // Amount of size lost per second
-        playerRecombineTime: 30,    // Base amount of seconds before a cell is allowed to recombine
+        playerDecayRate: .002,      // Amount of player cell size lost per second
+        playerRecombineTime: 30,    // Base time in seconds before a cell is allowed to recombine
         playerMaxNickLength: 15,    // Maximum nick length
-        playerDisconnectTime: 60,   // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
+        playerDisconnectTime: 60,   // The time in seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
         
-        tourneyMaxPlayers: 12,      // Maximum amount of participants for tournament style game modes
-        tourneyPrepTime: 10,        // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
-        tourneyEndTime: 30,         // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
+        tourneyMaxPlayers: 12,      // Maximum number of participants for tournament style game modes
+        tourneyPrepTime: 10,        // Number of ticks to wait after all players are ready (1 tick = 1000 ms)
+        tourneyEndTime: 30,         // Number of ticks to wait after a player wins (1 tick = 1000 ms)
         tourneyTimeLimit: 20,       // Time limit of the game, in minutes.
         tourneyAutoFill: 0,         // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
         tourneyAutoFillPlayers: 1,  // The timer for filling the server with bots will not count down unless there is this amount of real players
@@ -1240,6 +1240,7 @@ GameServer.prototype.loadConfig = function() {
         var load = ini.parse(fs.readFileSync('./gameserver.ini', 'utf-8'));
 
         // Replace all the default config's values with the loaded config's values
+        var sizeMass = [];
         for (var obj in load) {
             this.config[obj] = load[obj];
         }

@@ -40,6 +40,7 @@ Just replace `127.0.0.1:50000` in the url to the server IP and port to play.
 
 URL | Protocol | Description
 --- | --- | ---
+http://agar.io/?ip=127.0.0.1:50000 | 8 | Official Client
 http://ogar.mivabe.nl/?ip=127.0.0.1:50000 | early 5 | MivaBe, pretty smooth, custom graphics (anime)
 http://play.ogarul.tk/?ip=127.0.0.1:50000 | 4 | OgarUL, vanilla style (sends invalid protocol=1)
 http://c0nsume.me/private4.php?ip=127.0.0.1:50000 | 5 | vanilla style

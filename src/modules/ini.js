@@ -76,18 +76,14 @@ function decode(str) {
 
     lines.forEach(function(line, _, __) {
         var testLine = line.trim();
-        if (testLine.length == 0) {
-            // skip empty lines
-            return;
-        }
-        if (testLine.length >= 2 && testLine[0] == '/' && testLine[1] == '/') {
+
+        // skip empty lines or commented lines
+        if (!line || line.match(/^\s*[;#]/)) {
             // skip commented lines
             return;
         }
-        if (!line || line.match(/^\s*[;#]/)) {
-            return;
-        }
-
+        // E.g. serverTimeout = 30
+        // Returns ["serverTimeout = 30", undefined, "serverTimeout ", "= 30", "30"]
         var match = line.match(re);
 
         if (!match) {
@@ -111,6 +107,13 @@ function decode(str) {
             } else if (!Array.isArray(p[key])) {
                 p[key] = [p[key]];
             }
+        }
+
+        // Mass to Size function catcher
+        if (value.startsWith("massToSize(") && value.endsWith(")")) {
+            // 11: length of "massToSize("
+            value = Math.sqrt(parseFloat(value.slice(11, value.length - 1)) * 100);
+            
         }
 
         // safeguard against resetting a previously defined
