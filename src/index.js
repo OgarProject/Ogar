@@ -1,4 +1,5 @@
 // Imports
+var Logger = require('./modules/Logger');
 var Commands = require('./modules/CommandList');
 var GameServer = require('./GameServer');
 
@@ -6,7 +7,8 @@ var GameServer = require('./GameServer');
 var showConsole = true;
 
 // Start msg
-console.log("[Game] MultiOgar - An open source multi-protocol ogar server");
+Logger.start();
+Logger.info("\u001B[1m\u001B[32mMultiOgar\u001B[37m - An open source multi-protocol ogar server\u001B[0m");
 
 // Handle arguments
 process.argv.forEach(function(val) {
@@ -49,7 +51,7 @@ function prompt() {
 
 function parseCommands(str) {
     // Log the string
-    gameServer.log.onCommand(str);
+    Logger.write(">" + str);
 
     // Don't process ENTER
     if (str === '')
@@ -66,6 +68,6 @@ function parseCommands(str) {
     if (typeof execute != 'undefined') {
         execute(gameServer, split);
     } else {
-        console.log("[Console] Invalid Command!");
+        Logger.warn("Invalid Command!");
     }
 }

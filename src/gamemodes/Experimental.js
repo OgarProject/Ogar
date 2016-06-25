@@ -1,5 +1,6 @@
 var FFA = require('./FFA'); // Base gamemode
 var Entity = require('../entity');
+var Logger = require('../modules/Logger');
 
 function Experimental() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
@@ -70,7 +71,7 @@ Experimental.prototype.onServerInit = function(gameServer) {
         if (index != -1) {
             self.nodesMother.splice(index, 1);
         } else {
-            console.log("[Warning] Tried to remove a non existing MotherCell!");
+            Logger.error("Experimental.onServerInit.MotherVirus.onRemove: Tried to remove a non existing virus!");
         }
     };
     //gameServer.getRandomSpawn = gameServer.getRandomPosition;

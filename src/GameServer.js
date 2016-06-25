@@ -14,7 +14,7 @@ var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var BotLoader = require('./ai/BotLoader');
-var Logger = require('./modules/log');
+var Logger = require('./modules/Logger');
 
 // GameServer implementation
 function GameServer() {
@@ -35,7 +35,6 @@ function GameServer() {
     this.leaderboardType = -1; // no type
 
     this.bots = new BotLoader(this);
-    this.log = new Logger();
     this.commands; // Command handler
 
     // Main loop tick
@@ -131,9 +130,6 @@ GameServer.prototype.start = function() {
     this.timerLoopBind = this.timerLoop.bind(this);
     this.mainLoopBind = this.mainLoop.bind(this);
     
-    // Logging
-    this.log.setup(this);
-    
     // Gamemode configurations
     this.gameMode.onServerInit(this);
     
@@ -153,13 +149,13 @@ GameServer.prototype.start = function() {
 GameServer.prototype.onServerSocketError = function (error) {
     switch (error.code) {
         case "EADDRINUSE":
-            console.log("[Error] Server could not bind to port " + this.config.serverPort + "! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
+            Logger.error("Server could not bind to port " + this.config.serverPort + "! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
             break;
         case "EACCES":
-            console.log("[Error] Please make sure you are running Ogar with root privileges.");
+            Logger.error("Please make sure you are running Ogar with root privileges.");
             break;
         default:
-            console.log("[Error] Unhandled error code: " + error.code);
+            Logger.error(error.code + ": " + error.message);
             break;
     }
     process.exit(1); // Exits the program
@@ -173,15 +169,15 @@ GameServer.prototype.onServerSocketOpen = function () {
     setTimeout(this.timerLoopBind, 1);
     
     // Done
-    console.log("[Game] Listening on port " + this.config.serverPort);
-    console.log("[Game] Current game mode is " + this.gameMode.name);
+    Logger.info("Listening on port " + this.config.serverPort);
+    Logger.info("Current game mode is " + this.gameMode.name);
     
     // Player bots (Experimental)
     if (this.config.serverBots > 0) {
         for (var i = 0; i < this.config.serverBots; i++) {
             this.bots.addBot();
         }
-        console.log("[Game] Loaded " + this.config.serverBots + " player bots");
+        Logger.info("Added " + this.config.serverBots + " player bots");
     }
 };
 
@@ -216,7 +212,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
     ws.lastAliveTime = +new Date;
-    this.log.onConnect(ws.remoteAddress); // Log connections
+    Logger.write("CONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + ws.upgradeReq.headers.origin + "\"");
     
     ws.playerTracker = new PlayerTracker(this, ws);
     ws.packetHandler = new PacketHandler(this, ws);
@@ -239,12 +235,11 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
 };
 
 GameServer.prototype.onClientSocketClose = function (ws, code) {
-    this.log.onDisconnect(ws.remoteAddress);
-    
     ws.isConnected = false;
     ws.sendPacket = function (data) { };
     ws.closeReason = { code: ws._closeCode, message: ws._closeMessage };
     ws.closeTime = +new Date;
+    Logger.write("DISCONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", code: " + ws._closeCode + ", reason: \"" + ws._closeMessage + "\", name: \""+ws.playerTracker.getName()+"\"");
 
     var color = this.getGrayColor(ws.playerTracker.getColor());
     ws.playerTracker.setColor(color);
@@ -524,7 +519,7 @@ GameServer.prototype.onChatMessage = function (from, to, message) {
         return;
     }
     if (message.length > 128) message = message.slice(0, 128);
-    //console.log("[CHAT] " + (from!=null && from.getName().length>0 ? from.getName() : "Spectator") + ": " + message);
+    //Logger.debug("[CHAT] " + (from!=null && from.getName().length>0 ? from.getName() : "Spectator") + ": " + message);
     this.sendChatMessage(from, to, message);
 };
 
@@ -1234,22 +1229,29 @@ GameServer.prototype.updateMassDecay = function() {
     }
 };
 
-GameServer.prototype.loadConfig = function() {
-    try {
-        // Load the contents of the config file
-        var load = ini.parse(fs.readFileSync('./gameserver.ini', 'utf-8'));
+var configFileName = './gameserver.ini';
 
-        // Replace all the default config's values with the loaded config's values
-        var sizeMass = [];
-        for (var obj in load) {
-            this.config[obj] = load[obj];
+GameServer.prototype.loadConfig = function () {
+    try {
+        if (!fs.existsSync(configFileName)) {
+            // No config
+            Logger.warn("Config not found... Generating new config");
+            // Create a new config
+            fs.writeFileSync(configFileName, ini.stringify(this.config), 'utf-8');
+        } else {
+            // Load the contents of the config file
+            var load = ini.parse(fs.readFileSync(configFileName, 'utf-8'));
+            // Replace all the default config's values with the loaded config's values
+            for (var key in load) {
+                if (this.config.hasOwnProperty(key)) {
+                    this.config[key] = load[key];
+                } else {
+                    Logger.error("Unknown gameserver.ini value: " + key);
+                }
+            }
         }
     } catch (err) {
-        // No config
-        console.log("[Game] Config not found... Generating new config");
-
-        // Create a new config
-        fs.writeFileSync('./gameserver.ini', ini.stringify(this.config));
+        Logger.error("Failed to load " + configFileName + ": " + err.message);
     }
     // check config (min player size = 32 => mass = 10.24)
     this.config.playerMinSize = Math.max(32, this.config.playerMinSize);
@@ -1263,12 +1265,12 @@ GameServer.prototype.loadIpBanList = function () {
             this.ipBanList = fs.readFileSync(fileName, "utf8").split(/[\r\n]+/).filter(function (x) {
                 return x != ''; // filter empty lines
             });
-            console.log("[Game] " + this.ipBanList.length + " IP ban records loaded.");
+            Logger.info(this.ipBanList.length + " IP ban records loaded.");
         } else {
-            console.log("[Game] " + fileName + " is missing.");
+            Logger.warn(fileName + " is missing.");
         }
     } catch (err) {
-        console.log("[Game] Failed to load " + fileName + ": " + err.message);
+        Logger.error("Failed to load " + fileName + ": " + err.message);
     }
 };
 
@@ -1281,19 +1283,19 @@ GameServer.prototype.saveIpBanList = function () {
             blFile.write(v + '\n');
         });
         blFile.end();
-        console.log("[Game] " + this.ipBanList.length + " IP ban records saved.");
+        Logger.info(this.ipBanList.length + " IP ban records saved.");
     } catch (err) {
-        console.log("[Game] Failed to save " + fileName + ": " + err.message);
+        Logger.error("Failed to save " + fileName + ": " + err.message);
     }
 };
 
 GameServer.prototype.banIp = function (ip) {
     if (this.ipBanList.indexOf(ip) >= 0) {
-        console.log("[Game] " + ip + " is already in the ban list!");
+        Logger.warn(ip + " is already in the ban list!");
         return;
     }
     this.ipBanList.push(ip);
-    console.log("[Game] The IP " + ip + " has been banned");
+    Logger.info("The IP " + ip + " has been banned");
     this.clients.forEach(function (socket) {
         // If already disconnected or the ip does not match
         if (socket == null || !socket.isConnected || socket.remoteAddress != ip)
@@ -1307,7 +1309,7 @@ GameServer.prototype.banIp = function (ip) {
         // disconnect
         socket.close(1000, "Banned from server");
         var name = socket.playerTracker.getFriendlyName();
-        console.log("[Game] Banned: \"" + name + "\" with Player ID " + socket.playerTracker.pID); // Redacted "with IP #.#.#.#" since it'll already be logged above
+        Logger.info("Banned: \"" + name + "\" with Player ID " + socket.playerTracker.pID); // Redacted "with IP #.#.#.#" since it'll already be logged above
         this.sendChatMessage(null, null, "Banned \"" + name + "\""); // notify to don't confuse with server bug
     }, this);
     this.saveIpBanList();
@@ -1316,11 +1318,11 @@ GameServer.prototype.banIp = function (ip) {
 GameServer.prototype.unbanIp = function (ip) {
     var index = this.ipBanList.indexOf(ip);
     if (index < 0) {
-        console.log("[Game] IP " + ip + " is not in the ban list!");
+        Logger.warn("IP " + ip + " is not in the ban list!");
         return;
     }
     this.ipBanList.splice(index, 1);
-    console.log("[Game] Unbanned IP: " + ip);
+    Logger.info("Unbanned IP: " + ip);
     this.saveIpBanList();
 };
 
@@ -1339,16 +1341,16 @@ GameServer.prototype.kickId = function (id) {
         // disconnect
         socket.close(1000, "Kicked from server");
         var name = socket.playerTracker.getFriendlyName();
-        console.log("[Game] Kicked \"" + name + "\"");
+        Logger.info("Kicked \"" + name + "\"");
         this.sendChatMessage(null, null, "Kicked \"" + name + "\""); // notify to don't confuse with server bug
         count++;
     }, this);
     if (count > 0)
         return;
     if (id == 0)
-        console.log("[Game] No players to kick!");
+        Logger.warn("No players to kick!");
     else
-        console.log("[Game] Player with ID "+id+" not found!");
+        Logger.warn("Player with ID "+id+" not found!");
 };
 
 // Stats server
@@ -1374,7 +1376,7 @@ GameServer.prototype.startStatsServer = function(port) {
     // TODO: This causes error if something else already uses this port.  Catch the error.
     this.httpServer.listen(port, function () {
         // Stats server
-        console.log("[Game] Loaded stats server on port " + port);
+        Logger.info("Started stats server on port " + port);
         setInterval(getStatsBind, this.config.serverStatsUpdate * 1000);
     }.bind(this));
 };
@@ -1471,11 +1473,11 @@ GameServer.prototype.pingServerTracker = function () {
     };
     var req = http.request(options, function (res) {
         if (res.statusCode != 200) {
-            console.log("\u001B[1m\u001B[31m[Tracker Error] " + res.statusCode + "\u001B[0m");
+            Logger.error("Tracker Error: " + res.statusCode);
         }
     });
     req.on('error', function (e) {
-        console.log("\u001B[1m\u001B[31m[Tracker Error] " + e.message + "\u001B[0m");
+        Logger.error("Tracker Error: " + e.message);
     });
     req.write(data);
     req.end()

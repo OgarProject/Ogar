@@ -1,4 +1,5 @@
 var Cell = require('./Cell');
+var Logger = require('../modules/Logger');
 
 function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
@@ -91,6 +92,6 @@ Virus.prototype.onRemove = function(gameServer) {
     if (index != -1) {
         gameServer.nodesVirus.splice(index, 1);
     } else {
-        console.log("[Warning] Tried to remove a non existing virus!");
+        Logger.error("Virus.onRemove: Tried to remove a non existing virus!");
     }
 };
