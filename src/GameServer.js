@@ -77,8 +77,8 @@ function GameServer() {
         
         foodMinSize: 10,            // Minimum food size (vanilla 10)
         foodMaxSize: 20,            // Maximum food size (vanilla 20)
-        foodMinAmount: 100,         // Minimum food cells on the map
-        foodMaxAmount: 500,         // Maximum food cells on the map
+        foodMinAmount: 1000,         // Minimum food cells on the map
+        foodMaxAmount: 2000,        // Maximum food cells on the map
         foodSpawnAmount: 10,        // The number of food to spawn per interval
         foodMassGrow: 1,            // Enable food mass grow ?
         spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
@@ -624,7 +624,7 @@ GameServer.prototype.startingFood = function() {
 };
 
 GameServer.prototype.updateFood = function() {
-    var maxCount = this.config.foodMaxAmount - this.currentFood;
+    var maxCount = this.config.foodMinAmount - this.currentFood;
     var spawnCount = Math.min(maxCount, this.config.foodSpawnAmount);
     for (var i = 0; i < spawnCount; i++) {
         this.spawnFood();
