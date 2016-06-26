@@ -40,21 +40,32 @@ node src/index.js
 ```
 
 #### Linux:
-* Install node.js:
+* First update your packages:
 ```
 sudo apt-get update
-sudo apt-get install nodejs
+```
+* Install git:
+```
+sudo apt-get install git
+```
+* Install node.js:
+```
+sudo apt-get install nodejs-legacy
 sudo apt-get install npm
 ```
-* Download MultiOgar code: https://github.com/Barbosik/MultiOgar/archive/master.zip
-* Unzip MultiOgar code into some folder
-* Execute from MultiOgar folder:
+* Clone MultiOgar:
 ```
+git clone git://github.com/Barbosik/MultiOgar.git
+```
+* Install dependencies:
+```
+cd MultiOgar
 npm install
 ```
-and then:
+* Run the server:
 ```
-node src/index.js
+cd src
+node index.js
 ```
 
 
