@@ -35,25 +35,6 @@ Mode.prototype.onPlayerSpawn = function(gameServer, player) {
     gameServer.spawnPlayer(player);
 };
 
-Mode.prototype.pressQ = function(gameServer, player) {
-    // Called when the Q key is pressed
-    if (player.spectate) {
-        player.freeRoam = !player.freeRoam;
-    }
-};
-
-Mode.prototype.pressW = function(gameServer, player) {
-    if (!gameServer.run) return;
-    // Called when the W key is pressed
-    gameServer.ejectMass(player);
-};
-
-Mode.prototype.pressSpace = function(gameServer, player) {
-    if (!gameServer.run) return;
-    // Called when the Space bar is pressed
-    gameServer.splitCells(player);
-};
-
 Mode.prototype.onCellAdd = function(cell) {
     // Called when a player cell is added
 };

@@ -26,7 +26,9 @@ function PlayerTracker(gameServer, socket) {
 
     this.team = 0;
     this.spectate = false;
-    this.freeRoam = false; // Free-roam mode enables player to move in spectate mode
+    this.freeRoam = false;      // Free-roam mode enables player to move in spectate mode
+    this.spectateTarget = null; // Spectate target, null for largest player
+    this.lastSpectateSwitchTick = 0;
 
     this.centerPos = {
         x: 0,
@@ -172,6 +174,7 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
         this.setSkin(skin);
     this.spectate = false;
     this.freeRoam = false;
+    this.spectateTarget = null;
 
     // some old clients don't understand ClearAll message
     // so we will send update for them
@@ -238,17 +241,17 @@ PlayerTracker.prototype.update = function () {
     
     // Actions buffer (So that people cant spam packets)
     if (this.socket.packetHandler.pressSpace) { // Split cell
-        if (!this.mergeOverride) this.gameServer.gameMode.pressSpace(this.gameServer, this);
+        this.pressSpace();
         this.socket.packetHandler.pressSpace = false;
     }
     
     if (this.socket.packetHandler.pressW) { // Eject mass
-        this.gameServer.gameMode.pressW(this.gameServer, this);
+        this.pressW();
         this.socket.packetHandler.pressW = false;
     }
     
     if (this.socket.packetHandler.pressQ) { // Q Press
-        this.gameServer.gameMode.pressQ(this.gameServer, this);
+        this.pressQ();
         this.socket.packetHandler.pressQ = false;
     }
     
@@ -322,15 +325,13 @@ PlayerTracker.prototype.update = function () {
         delNodes));
     
     // Update leaderboard
-    if (this.tickLeaderboard <= 0) {
+    if (++this.tickLeaderboard > 25) {
+        // 1 / 0.040 = 25 (once per second)
+        this.tickLeaderboard = 0;
         if (this.gameServer.leaderboardType >= 0) {
             var packet = new Packet.UpdateLeaderboard(this, this.gameServer.leaderboard, this.gameServer.leaderboardType);
             this.socket.sendPacket(packet);
         }
-        // 1 / 0.040 = 25 (once per second)
-        this.tickLeaderboard = 25;
-    } else {
-        this.tickLeaderboard--;
     }
 };
 
@@ -392,16 +393,98 @@ PlayerTracker.prototype.updateViewBox = function () {
     };
 };
 
+PlayerTracker.prototype.pressQ = function () {
+    if (this.spectate) {
+        // Check for spam first (to prevent too many add/del updates)
+        var tick = this.gameServer.getTick();
+        if (tick - this.lastSpectateSwitchTick < 40)
+            return;
+        this.lastSpectateSwitchTick = tick;
+
+        if (this.spectateTarget == null) {
+            this.freeRoam = !this.freeRoam;
+        }
+        this.spectateTarget = null;
+    }
+};
+
+PlayerTracker.prototype.pressW = function () {
+    if (this.spectate) {
+        return;
+    }
+    else if (this.gameServer.run) {
+        this.gameServer.ejectMass(this);
+    }
+};
+
+PlayerTracker.prototype.pressSpace = function () {
+    if (this.spectate) {
+        // Check for spam first (to prevent too many add/del updates)
+        var tick = this.gameServer.getTick();
+        if (tick - this.lastSpectateSwitchTick < 40)
+            return;
+        this.lastSpectateSwitchTick = tick;
+
+        // Space doesn't work for freeRoam mode
+        if (this.freeRoam)
+            return;
+        this.nextSpectateTarget();
+    } else if (this.gameServer.run) {
+        if (this.mergeOverride)
+            return;
+        this.gameServer.splitCells(this);
+    }
+};
+
+PlayerTracker.prototype.nextSpectateTarget = function () {
+    if (this.spectateTarget == null) {
+        this.spectateTarget = this.gameServer.largestClient;
+        return;
+    }
+    // lookup for next spectate target
+    var index = this.gameServer.clients.indexOf(this.spectateTarget.socket);
+    if (index < 0) {
+        this.spectateTarget = this.gameServer.largestClient;
+        return;
+    }
+    // find next
+    for (var i = index + 1; i < this.gameServer.clients.length; i++) {
+        var player = this.gameServer.clients[i].playerTracker;
+        if (player.cells.length > 0) {
+            this.spectateTarget = player;
+            return;
+        }
+    }
+    for (var i = 0; i <= index; i++) {
+        var player = this.gameServer.clients[i].playerTracker;
+        if (player.cells.length > 0) {
+            this.spectateTarget = player;
+            return;
+        }
+    }
+    // no alive players
+    this.spectateTarget = null;
+};
+
+PlayerTracker.prototype.getSpectateTarget = function () {
+    if (this.spectateTarget == null || this.spectateTarget.isRemoved) {
+        this.spectateTarget = null;
+        return this.gameServer.largestClient;
+    }
+    return this.spectateTarget;
+};
+
 PlayerTracker.prototype.getVisibleNodes = function () {
     if (this.spectate) {
-        var specPlayer = this.gameServer.largestClient;
-        if (!this.freeRoam && specPlayer != null) {
-            // top player spectate
-            this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
-            this.scale = specPlayer.getScale();
-            this.sendCameraPacket();
-            this.updateViewBox();
-            return specPlayer.visibleNodes.slice(0);
+        if (!this.freeRoam) {
+            var player = this.getSpectateTarget();
+            if (player != null) {
+                this.setCenterPos(player.centerPos.x, player.centerPos.y);
+                this.scale = player.getScale();
+                this.sendCameraPacket();
+                this.updateViewBox();
+                return player.visibleNodes.slice(0);
+            }
         }
         // free roam spectate
         this.updateCenterFreeRoam();
