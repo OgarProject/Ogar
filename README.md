@@ -34,36 +34,32 @@ Map 6000x6000, 300 bots, 5000 food, 10 viruses - works pretty smooth with no lag
 ```
 npm install
 ```
-and then:
+and run the server:
 ```
-node src/index.js
+cd src
+node index.js
 ```
 
 #### Linux:
-* First update your packages:
 ```
+# First update your packages:
 sudo apt-get update
-```
-* Install git:
-```
+
+# Install git:
 sudo apt-get install git
-```
-* Install node.js:
-```
+
+# Install node.js:
 sudo apt-get install nodejs-legacy
 sudo apt-get install npm
-```
-* Clone MultiOgar:
-```
+
+# Clone MultiOgar:
 git clone git://github.com/Barbosik/MultiOgar.git
-```
-* Install dependencies:
-```
+
+# Install dependencies:
 cd MultiOgar
 npm install
-```
-* Run the server:
-```
+
+# Run the server:
 cd src
 node index.js
 ```
@@ -108,6 +104,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* Added spectate walk through feature (use Space key in spectate mode to lock the current player or switch to the next one)
 * Fixed cell-split order, now split-run works ok
 * A little performance improvement for split/eject
 * Fixed min mass to split/eject
