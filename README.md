@@ -101,6 +101,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 * A little performance improvement for split/eject
 * Fixed min mass to split/eject
 * Fixed mass-limit behavior
+* Added chat player commands /skin and /kill (to change skin, just type /skin %shark in the chat)
 * Added scramble level 3 (anti-bot/anti-minimap protection), unsupported on some clients (unfortunately include vanilla, ogar.mivabe.nl works ok)
 * NOTE: there is major gameserver.ini change, previous version is incompatible!
 * Massive perfromance improvement & reduce network traffic
