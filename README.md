@@ -104,7 +104,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
-* Added spectate walk through feature (use Space key in spectate mode to lock the current player or switch to the next one)
+* Added spectate walk through feature (use Space key in spectate mode to lock the current player or switch to the next one. Use key Q to reset into the normal mode)
 * Fixed cell-split order, now split-run works ok
 * A little performance improvement for split/eject
 * Fixed min mass to split/eject
