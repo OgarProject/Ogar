@@ -426,7 +426,7 @@ PlayerTracker.prototype.pressSpace = function () {
         this.lastSpectateSwitchTick = tick;
 
         // Space doesn't work for freeRoam mode
-        if (this.freeRoam)
+        if (this.freeRoam || this.gameServer.largestClient==null)
             return;
         this.nextSpectateTarget();
     } else if (this.gameServer.run) {
@@ -467,7 +467,7 @@ PlayerTracker.prototype.nextSpectateTarget = function () {
 };
 
 PlayerTracker.prototype.getSpectateTarget = function () {
-    if (this.spectateTarget == null || this.spectateTarget.isRemoved) {
+    if (this.spectateTarget == null || this.spectateTarget.isRemoved || this.spectateTarget.cells.length < 1) {
         this.spectateTarget = null;
         return this.gameServer.largestClient;
     }
