@@ -90,7 +90,7 @@ function GameServer() {
         
         ejectSize: 38,              // Size of ejected cells (vanilla 38)
         ejectCooldown: 3,           // min ticks between ejects
-        ejectSpawnPlayer: 50,       // Chance for a player to spawn from ejected mass
+        ejectSpawnPlayer: 1,        // if 1 then player may be spawned from ejected mass
         
         playerMinSize: 32,          // Minimym size of the player cell (mass = 32*32/100 = 10.24)
         playerMaxSize: 1500,        // Maximum size of the player cell (mass = 1500*1500/100 = 22500)
@@ -663,20 +663,17 @@ GameServer.prototype.spawnVirus = function () {
 };
 
 GameServer.prototype.spawnPlayer = function(player, pos, size) {
-    // Check if there are ejected mass in the world.
-    if (this.nodesEjected.length > 0) {
-        var index = Math.floor(Math.random() * 100) + 1;
-        if (index >= this.config.ejectSpawnPlayer) {
-            // Get ejected cell
-            index = Math.floor(Math.random() * this.nodesEjected.length);
-            var e = this.nodesEjected[index];
-            if (e.boostDistance == 0) {
-                // Remove ejected mass
-                this.removeNode(e);
-                // Inherit
+    // Check if can spawn from ejected mass
+    if (!pos && this.config.ejectSpawnPlayer && this.nodesEjected.length > 0) {
+        if (Math.random() >= 0.5) {
+            // Spawn from ejected mass
+            var index = (this.nodesEjected.length - 1) * Math.random() >>> 0;
+            var eject = this.nodesEjected[index];
+            if (!eject.isRemoved) {
+                this.removeNode(eject);
                 pos = {
-                    x: e.position.x,
-                    y: e.position.y
+                    x: eject.position.x,
+                    y: eject.position.y
                 };
             }
         }
