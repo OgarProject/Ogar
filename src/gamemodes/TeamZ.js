@@ -373,7 +373,7 @@ TeamZ.prototype.onServerInit = function(gameServer) {
         if (this.gameMode.state != GameState.IN_PROGRESS)
             return list;
 
-        var squareR = cell.getSquareSize(); // Get cell squared radius
+        var squareR = cell.getSizeSquared(); // Get cell squared radius
 
         // Loop through all cells that are visible to the cell. There is probably a more efficient way of doing this but whatever
         var len = cell.owner.visibleNodes.length;

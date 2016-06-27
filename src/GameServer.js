@@ -1143,7 +1143,7 @@ GameServer.prototype.ejectMass = function(client) {
             continue;
         }
         var size2 = this.config.ejectSize;
-        var sizeSquared = cell.getSquareSize() - size2 * size2;
+        var sizeSquared = cell.getSizeSquared() - size2 * size2;
         if (sizeSquared < this.config.playerMinSize * this.config.playerMinSize) {
             continue;
         }
