@@ -675,6 +675,9 @@ GameServer.prototype.spawnPlayer = function(player, pos, size) {
                     x: eject.position.x,
                     y: eject.position.y
                 };
+                if (!size) {
+                    size = Math.max(eject.getSize(), this.config.playerStartSize);
+                }
             }
         }
     }
