@@ -90,12 +90,6 @@ PlayerCell.prototype.moveUser = function (border) {
 
 // Override
 
-PlayerCell.prototype.onEat = function (prey) {
-    var size1 = this.getSize();
-    var size2 = prey.getSize();
-    this.setSize(Math.sqrt(size1 * size1 + size2 * size2));
-};
-
 PlayerCell.prototype.onAdd = function(gameServer) {
     // Gamemode actions
     gameServer.gameMode.onCellAdd(this);
