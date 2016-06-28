@@ -46,7 +46,6 @@ function GameServer() {
     this.mainLoopBind = null;
     
     this.tickCounter = 0;
-    this.tickSpawn = 0; // Used with spawning food
     
     this.setBorder(10000, 10000);
 
