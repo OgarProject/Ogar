@@ -33,52 +33,32 @@ Virus.prototype.onEat = function (prey) {
 Virus.prototype.onEaten = function(consumer) {
     var client = consumer.owner;
     if (client == null) return;
-
-    var maxSplits = Math.floor(consumer.getMass() / 16) - 1; // Maximum amount of splits
-    var numSplits = this.gameServer.config.playerMaxCells - client.cells.length; // Get number of splits
-    numSplits = Math.min(numSplits, maxSplits);
-    var splitMass = Math.min(consumer.getMass() / (numSplits + 1), 24); // Maximum size of new splits
-
-    // Cell cannot split any further
-    if (numSplits <= 0) {
+    
+    var maxSplit = this.gameServer.config.playerMaxCells - consumer.owner.cells.length;
+    var masses = this.gameServer.splitMass(consumer.getMass(), maxSplit + 1);
+    if (masses.length < 2) {
         return;
     }
-
-    var mass = consumer.getMass(); // Mass of the consumer
-    var bigSplits = []; // Big splits
-
-    // Big cells will split into cells larger than 24 mass
-    // won't do the regular way unless it can split more than 4 times
-    if (numSplits == 1) bigSplits = [mass / 2];
-    else if (numSplits == 2) bigSplits = [mass / 4, mass / 4];
-    else if (numSplits == 3) bigSplits = [mass / 4, mass / 4, mass / 7];
-    else if (numSplits == 4) bigSplits = [mass / 5, mass / 7, mass / 8, mass / 10];
-    else {
-        var endMass = mass - numSplits * splitMass;
-        var m = endMass,
-            i = 0;
-        if (m > 466) { // Threshold
-            // While can split into an even smaller cell (10000 => 2500, 1000, etc)
-            var mult = 4;
-            while (m / mult > 24) {
-                m /= mult;
-                mult = 2.5; // First mult 4, the next ones 2.5
-                bigSplits.push(m >> 0);
-                i++;
-            }
+    
+    // Balance mass around center & skip first mass (==consumer mass)
+    var massesMix = [];
+    for (var i = 1; i < masses.length; i += 2)
+        massesMix.push(masses[i]);
+    for (var i = 2; i < masses.length; i += 2)
+        massesMix.push(masses[i]);
+    masses = massesMix;
+    
+    // Blow up the cell...
+    var angle = 2 * Math.PI * Math.random();
+    var step = 2 * Math.PI / masses.length;
+    for (var i = 0; i < masses.length; i++) {
+        if (!this.gameServer.splitPlayerCell(client, consumer, angle, masses[i])) {
+            break;
         }
-    }
-    numSplits -= bigSplits.length;
-
-    for (var k = 0; k < bigSplits.length; k++) {
-        angle = Math.random() * 2 * Math.PI; // Random directions
-        this.gameServer.splitPlayerCell(client, consumer, angle, bigSplits[k]);
-    }
-
-    // Splitting
-    for (var k = 0; k < numSplits; k++) {
-        angle = Math.random() * 2 * Math.PI; // Random directions
-        this.gameServer.splitPlayerCell(client, consumer, angle, splitMass);
+        angle += step;
+        if (angle >= 2 * Math.PI) {
+            angle -= 2 * Math.PI;
+        }
     }
 };
 
