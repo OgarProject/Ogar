@@ -61,7 +61,7 @@ npm install
 
 # Run the server:
 cd src
-node index.js
+sudo node index.js
 ```
 
 
