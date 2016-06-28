@@ -12,6 +12,7 @@ function PacketHandler(gameServer, socket) {
     this.pressQ = false;
     this.pressW = false;
     this.pressSpace = false;
+    this.lastStatTime = +new Date;
 }
 
 module.exports = PacketHandler;
@@ -133,6 +134,14 @@ PacketHandler.prototype.handleMessage = function(message) {
             else
                 text = reader.readStringZeroUtf8();
             this.gameServer.onChatMessage(this.socket.playerTracker, null, text);
+            break;
+        case 254:
+            // Server stat
+            var time = +new Date;
+            var dt = time - this.lastStatTime;
+            this.lastStatTime = time;
+            if (dt < 1000) break;
+            this.socket.sendPacket(new Packet.ServerStat(this.socket.playerTracker));
             break;
         default:
             break;
