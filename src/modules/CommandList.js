@@ -209,23 +209,30 @@ Commands.list = {
         gameServer.gameMode.updateLB = gm.updateLB;
         console.log("Successfully reset leaderboard");
     },
-    change: function(gameServer, split) {
+    change: function (gameServer, split) {
+        if (split.length < 3) {
+            Logger.warn("Invalid command arguments");
+            return;
+        }
         var key = split[1];
         var value = split[2];
-
+        
         // Check if int/float
         if (value.indexOf('.') != -1) {
             value = parseFloat(value);
         } else {
             value = parseInt(value);
         }
-
-        if (typeof gameServer.config[key] != 'undefined') {
-            gameServer.config[key] = value;
-            console.log("Set " + key + " to " + value);
-        } else {
-            console.log("Invalid config value");
+        if (value == null || isNaN(value)) {
+            Logger.warn("Invalid value: " + split[2]);
+            return;
         }
+        if (!gameServer.config.hasOwnProperty(key)) {
+            Logger.warn("Unknown config value: " + key);
+            return;
+        }
+        gameServer.config[key] = value;
+        console.log("Set " + key + " to " + value);
     },
     clear: function() {
         process.stdout.write("\u001b[2J\u001b[0;0H");
