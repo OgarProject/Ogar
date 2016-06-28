@@ -77,15 +77,15 @@ function GameServer() {
         
         foodMinSize: 10,            // Minimum food size (vanilla 10)
         foodMaxSize: 20,            // Maximum food size (vanilla 20)
-        foodMinAmount: 1000,         // Minimum food cells on the map
+        foodMinAmount: 1000,        // Minimum food cells on the map
         foodMaxAmount: 2000,        // Maximum food cells on the map
-        foodSpawnAmount: 10,        // The number of food to spawn per interval
+        foodSpawnAmount: 30,        // The number of food to spawn per interval
         foodMassGrow: 1,            // Enable food mass grow ?
         spawnInterval: 20,          // The interval between each food cell spawn in ticks (1 tick = 50 ms)
         
         virusMinSize: 100,          // Minimum virus size (vanilla 100)
         virusMaxSize: 140,          // Maximum virus size (vanilla 140)
-        virusMinAmount: 70,         // Minimum number of viruses on the map.
+        virusMinAmount: 50,         // Minimum number of viruses on the map.
         virusMaxAmount: 100,        // Maximum number of viruses on the map. If this number is reached, then ejected cells will pass through viruses.
         
         ejectSize: 38,              // Size of ejected cells (vanilla 38)
@@ -429,17 +429,6 @@ GameServer.prototype.removeNode = function(node) {
     node.onRemove(this);
 };
 
-GameServer.prototype.updateSpawn = function() {
-    // Spawn food
-    this.tickSpawn++;
-    if (this.tickSpawn >= this.config.spawnInterval) {
-        this.tickSpawn = 0; // Reset
-        
-        this.updateFood();  // Spawn food
-        this.updateVirus(); // Spawn viruses
-    }
-};
-
 GameServer.prototype.updateClients = function () {
     for (var i = 0; i < this.clients.length; i++) {
         var socket = this.clients[i];
@@ -547,9 +536,12 @@ GameServer.prototype.mainLoop = function() {
     // Loop main functions
     if (this.run) {
         this.updateMoveEngine();
-        this.updateSpawn();
+        if ((this.getTick() % this.config.spawnInterval) == 0) {
+            this.updateFood();  // Spawn food
+            this.updateVirus(); // Spawn viruses
+        }
         this.gameMode.onTick(this);
-        if ((this.getTick() % (1000 / 40)) == 0) {
+        if (((this.getTick()+3) % (1000 / 40)) == 0) {
             // once per second
             this.updateMassDecay();
         }
