@@ -51,7 +51,7 @@ function GameServer() {
 
     // Config
     this.config = {
-        serverTimeout: 30,          // Seconds to keep connection alive for non-responding client
+        serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
         serverMaxConnections: 64,   // Maximum number of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
         serverPort: 443,            // Server port
