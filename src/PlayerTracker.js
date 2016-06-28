@@ -287,7 +287,6 @@ PlayerTracker.prototype.update = function () {
         oldIndex++;
     }
     for (; newIndex < newVisible.length; ) {
-        var node = newVisible[newIndex];
         addNodes.push(newVisible[newIndex]);
         newIndex++;
     }
