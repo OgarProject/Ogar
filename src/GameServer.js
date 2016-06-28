@@ -305,29 +305,6 @@ GameServer.prototype.getRandomPosition = function() {
     };
 };
 
-GameServer.prototype.getRandomSpawn = function(size) {
-    // Random and secure spawns for players and viruses
-    var pos = this.getRandomPosition();
-    var unsafe = this.willCollide(pos, size);
-    if (!unsafe) return pos;
-    
-    // just shift offset and try again
-    var attempt = 1;
-    var maxAttempt = 4;
-    var dirx = pos.x < this.border.centerx ? 1 : -1;
-    var diry = pos.y < this.border.centery ? 1 : -1;
-    var stepx = this.border.width / (2 * maxAttempt);
-    var stepy = this.border.height / (2 * maxAttempt);
-    while (unsafe && attempt < maxAttempt) {
-        pos.x += stepx * dirx;
-        pos.y += stepy * diry;
-        unsafe = this.willCollide(pos, size);
-        attempt++;
-    }
-    // failed to find safe position
-    return null;
-};
-
 GameServer.prototype.getGrayColor = function (rgb) {
     var luminance = Math.min(255, (rgb.r * 0.2125 + rgb.g * 0.7154 + rgb.b * 0.0721)) >>> 0;
     return {
@@ -653,8 +630,8 @@ GameServer.prototype.spawnFood = function() {
 
 GameServer.prototype.spawnVirus = function () {
     // Spawns a virus
-    var pos = this.getRandomSpawn(this.config.virusMinSize);
-    if (pos == null) {
+    var pos = this.getRandomPosition();
+    if (this.willCollide(pos, this.config.virusMinSize)) {
         // cannot find safe position => do not spawn
         return;
     }
@@ -683,9 +660,9 @@ GameServer.prototype.spawnPlayer = function(player, pos, size) {
     }
     if (pos == null) {
         // Get random pos
-        pos = this.getRandomSpawn(this.config.playerMinSize);
-        if (pos == null) {
-            // cannot find safe position => spawn anyway at random position
+        var pos = this.getRandomPosition();
+        // 10 attempts to find safe position
+        for (var i = 0; i < 10 && this.willCollide(pos, this.config.playerMinSize); i++) {
             pos = this.getRandomPosition();
         }
     }
@@ -708,26 +685,16 @@ GameServer.prototype.spawnPlayer = function(player, pos, size) {
 GameServer.prototype.willCollide = function (pos, size) {
     // Look if there will be any collision with the current nodes
     var bound = {
-        minx: pos.x - size - 10,
-        miny: pos.y - size - 10,
-        maxx: pos.x + size + 10,
-        maxy: pos.y + size + 10
+        minx: pos.x - size,
+        miny: pos.y - size,
+        maxx: pos.x + size,
+        maxy: pos.y + size
     };
     return this.quadTree.any(
         bound, 
         function (item) {
-            return item.cell.cellType != 1; // ignore food
+            return item.cell.cellType == 0; // check players only
         });
-};
-
-GameServer.prototype.getDist = function (x1, y1, x2, y2) {
-    var dx = x2 - x1;
-    var dy = y2 - x1;
-    return Math.sqrt(dx * dx + dy * dy);
-};
-
-GameServer.prototype.abs = function (x) {
-    return x < 0 ? -x : x;
 };
 
 // Checks cells for collision.
@@ -1306,8 +1273,9 @@ GameServer.prototype.getNearestVirus = function(cell) {
     for (var i = 0; i < this.nodesVirus.length; i++) {
         var check = this.nodesVirus[i];
         if (check === null) continue;
-        if (this.checkCellCollision(cell, check) != null)
+        if (this.checkCellCollision(cell, check) != null) {
             return check;
+        }
     }
 };
 
@@ -1331,18 +1299,19 @@ GameServer.prototype.updateMassDecay = function() {
     }
 };
 
-var configFileName = './gameserver.ini';
+var fileNameConfig = './gameserver.ini';
+var fileNameIpBan = './ipbanlist.txt';
 
 GameServer.prototype.loadConfig = function () {
     try {
-        if (!fs.existsSync(configFileName)) {
+        if (!fs.existsSync(fileNameConfig)) {
             // No config
             Logger.warn("Config not found... Generating new config");
             // Create a new config
-            fs.writeFileSync(configFileName, ini.stringify(this.config), 'utf-8');
+            fs.writeFileSync(fileNameConfig, ini.stringify(this.config), 'utf-8');
         } else {
             // Load the contents of the config file
-            var load = ini.parse(fs.readFileSync(configFileName, 'utf-8'));
+            var load = ini.parse(fs.readFileSync(fileNameConfig, 'utf-8'));
             // Replace all the default config's values with the loaded config's values
             for (var key in load) {
                 if (this.config.hasOwnProperty(key)) {
@@ -1354,34 +1323,32 @@ GameServer.prototype.loadConfig = function () {
         }
     } catch (err) {
         Logger.error(err.stack);
-        Logger.error("Failed to load " + configFileName + ": " + err.message);
+        Logger.error("Failed to load " + fileNameConfig + ": " + err.message);
     }
     // check config (min player size = 32 => mass = 10.24)
     this.config.playerMinSize = Math.max(32, this.config.playerMinSize);
 };
 
 GameServer.prototype.loadIpBanList = function () {
-    var fileName = "./ipbanlist.txt";
     try {
-        if (fs.existsSync(fileName)) {
+        if (fs.existsSync(fileNameIpBan)) {
             // Load and input the contents of the ipbanlist file
-            this.ipBanList = fs.readFileSync(fileName, "utf8").split(/[\r\n]+/).filter(function (x) {
+            this.ipBanList = fs.readFileSync(fileNameIpBan, "utf8").split(/[\r\n]+/).filter(function (x) {
                 return x != ''; // filter empty lines
             });
             Logger.info(this.ipBanList.length + " IP ban records loaded.");
         } else {
-            Logger.warn(fileName + " is missing.");
+            Logger.warn(fileNameIpBan + " is missing.");
         }
     } catch (err) {
         Logger.error(err.stack);
-        Logger.error("Failed to load " + fileName + ": " + err.message);
+        Logger.error("Failed to load " + fileNameIpBan + ": " + err.message);
     }
 };
 
 GameServer.prototype.saveIpBanList = function () {
-    var fileName = "./ipbanlist.txt";
     try {
-        var blFile = fs.createWriteStream(fileName);
+        var blFile = fs.createWriteStream(fileNameIpBan);
         // Sort the blacklist and write.
         this.ipBanList.sort().forEach(function (v) {
             blFile.write(v + '\n');
@@ -1390,7 +1357,7 @@ GameServer.prototype.saveIpBanList = function () {
         Logger.info(this.ipBanList.length + " IP ban records saved.");
     } catch (err) {
         Logger.error(err.stack);
-        Logger.error("Failed to save " + fileName + ": " + err.message);
+        Logger.error("Failed to save " + fileNameIpBan + ": " + err.message);
     }
 };
 

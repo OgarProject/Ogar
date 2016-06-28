@@ -128,7 +128,7 @@ PacketHandler.prototype.handleMessage = function(message) {
                 break;
             reader.skipBytes(rvLength);        // reserved
             var text = null;
-            if (this.protocol <= 5)
+            if (this.protocol < 6)
                 text = reader.readStringZeroUnicode();
             else
                 text = reader.readStringZeroUtf8();
