@@ -78,7 +78,7 @@ Cell.prototype.visibleCheck = function(box, centerPos, cells) {
         isThere = (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
     }
     if (isThere) {
-        if(this.gameMode.disableEating) { if (this.cellType == 0) return 1; // <= added
+        if(this.gameMode.disableEating == false) { if (this.cellType == 0) return 1; // <= added
         // To save perfomance, check if any client's cell collides with this cell
         for (var i = 0; i < cells.length; i++) {
             var cell = cells[i];
