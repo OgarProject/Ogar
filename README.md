@@ -49,8 +49,7 @@ sudo apt-get update
 sudo apt-get install git
 
 # Install node.js:
-sudo apt-get install nodejs-legacy
-sudo apt-get install npm
+sudo apt-get install nodejs-legacy npm
 
 # Clone MultiOgar:
 git clone git://github.com/Barbosik/MultiOgar.git
