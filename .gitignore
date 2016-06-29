@@ -39,3 +39,5 @@ src/.readwarning
 # Prevent possible banned IP address leak
 src/ipbanlist.txt
 
+# Prevent user settings overwrite
+src/gameserver.ini
