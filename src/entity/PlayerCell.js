@@ -12,14 +12,6 @@ PlayerCell.prototype = new Cell();
 
 // Main Functions
 
-PlayerCell.prototype.getName = function () {
-    return this.owner.name;
-};
-
-PlayerCell.prototype.getSkin = function () {
-    return this.owner.skin;
-};
-
 PlayerCell.prototype.updateRemerge = function () {
     var age = this.getAge(this.gameServer.getTick());
     if (age < 15) {

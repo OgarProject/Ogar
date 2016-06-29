@@ -67,7 +67,10 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
             continue;
         var cellX = node.position.x + scrambleX;
         var cellY = node.position.y + scrambleY;
-        var cellName = node.getName();
+        var cellName = null;
+        if (node.owner) {
+            cellName = node.owner.getName();
+        }
         
         // Write update record
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);         // Cell ID
@@ -137,8 +140,12 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         
         var cellX = node.position.x + scrambleX;
         var cellY = node.position.y + scrambleY;
-        var skinName = node.getSkin();
-        var cellName = node.getName();
+        var skinName = null;
+        var cellName = null;
+        if (node.owner) {
+            skinName = node.owner.getSkin();
+            cellName = node.owner.getName();
+        }
         
         // Write update record
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);         // Cell ID
@@ -216,8 +223,12 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
         
         var cellX = node.position.x + scrambleX;
         var cellY = node.position.y + scrambleY;
-        var skinName = node.getSkin();
-        var cellName = node.getName();
+        var skinName = null;
+        var cellName = null;
+        if (node.owner) {
+            skinName = node.owner.getSkin();
+            cellName = node.owner.getName();
+        }
         
         // Write update record
         writer.writeUInt32((node.nodeId ^ scrambleId) >>> 0);         // Cell ID
