@@ -104,6 +104,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* Added server version, now you can check if your MultiOgar code is fresh
 * Significant performance improvement and more smooth physics
 * Added protocol optimizations to reduce lags on cell multi split
 * Fixed pop-split behavior
