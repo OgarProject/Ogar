@@ -104,6 +104,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* Significant performance improvement and more smooth physics
 * Added protocol optimizations to reduce lags on cell multi split
 * Fixed pop-split behavior
 * Added spectate walk through feature (use Space key in spectate mode to lock the current player or to lock the next one. Use key Q to reset into the normal mode. Locked player is highlighted on leaderboard)
