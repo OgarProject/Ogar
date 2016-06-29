@@ -519,6 +519,10 @@ GameServer.prototype.timerLoop = function () {
         setTimeout(this.timerLoopBind, 0);
         return;
     }
+    if (dt > 400) {
+        // too high lag => resynchronize
+        this.timeStamp = ts - 40;
+    }
     // update average
     this.updateTimeAvg += 0.5 * (this.updateTime - this.updateTimeAvg);
     // calculate next
