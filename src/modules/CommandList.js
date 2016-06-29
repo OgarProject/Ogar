@@ -506,12 +506,12 @@ Commands.list = {
             } else if (!socket.packetHandler.protocol && socket.isConnected) {
                 console.log(" " + id + " | " + ip + " | " + protocol + " | " + "[CONNECTING]");
             }else if (client.spectate) {
-                try {
-                    nick = gameServer.largestClient.getFriendlyName();
-                } catch (err) {
-                    Logger.error(err.stack);
-                    // Specating in free-roam mode
-                    nick = "in free-roam";
+                nick = "in free-roam";
+                if (!client.freeRoam) {
+                    var target = client.getSpectateTarget();
+                    if (target != null) {
+                        nick = target.getFriendlyName();
+                    }
                 }
                 data = fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
                 console.log(" " + id + " | " + ip + " | " + protocol + " | " + data);
