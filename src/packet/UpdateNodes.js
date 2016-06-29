@@ -69,7 +69,7 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
         var cellY = node.position.y + scrambleY;
         var cellName = null;
         if (node.owner) {
-            cellName = node.owner.getName();
+            cellName = node.owner.getNameUnicode();
         }
         
         // Write update record
@@ -91,8 +91,8 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
             flags |= 0x20;      // isEjected
         writer.writeUInt8(flags >>> 0);                  // Flags
         
-        if (node.owner != null && cellName != null && cellName.length > 0)
-            writer.writeStringZeroUnicode(cellName);        // Name
+        if (cellName != null)
+            writer.writeBytes(cellName);        // Name
         else
             writer.writeUInt16(0);                          // Name
     }
@@ -143,8 +143,8 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         var skinName = null;
         var cellName = null;
         if (node.owner) {
-            skinName = node.owner.getSkin();
-            cellName = node.owner.getName();
+            skinName = node.owner.getSkinUtf8();
+            cellName = node.owner.getNameUnicode();
         }
         
         // Write update record
@@ -160,7 +160,7 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         var flags = 0;
         if (node.isSpiked)
             flags |= 0x01;      // isVirus
-        if (node.owner != null && skinName != null && skinName.length > 0)
+        if (skinName != null)
             flags |= 0x04;      // isSkinPresent
         if (node.isAgitated)
             flags |= 0x10;      // isAgitated
@@ -169,10 +169,10 @@ UpdateNodes.prototype.writeUpdateItems5 = function (writer) {
         writer.writeUInt8(flags >>> 0);                  // Flags
         
         if (flags & 0x04)
-            writer.writeStringZeroUtf8(skinName);       // Skin Name in UTF8
+            writer.writeBytes(skinName);       // Skin Name in UTF8
         
-        if (node.owner != null && cellName != null && cellName.length > 0)
-            writer.writeStringZeroUnicode(cellName);    // Name
+        if (cellName != null)
+            writer.writeBytes(cellName);    // Name
         else
             writer.writeUInt16(0);                      // Name
     }
@@ -226,8 +226,8 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
         var skinName = null;
         var cellName = null;
         if (node.owner) {
-            skinName = node.owner.getSkin();
-            cellName = node.owner.getName();
+            skinName = node.owner.getSkinUtf8();
+            cellName = node.owner.getNameUtf8();
         }
         
         // Write update record
@@ -241,12 +241,10 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
             flags |= 0x01;      // isVirus
         if (true)
             flags |= 0x02;      // isColorPresent (always for added)
-        if (node.owner != null) {
-            if (skinName != null && skinName.length > 1)
-                flags |= 0x04;      // isSkinPresent
-            if (cellName != null && cellName.length > 1)
-                flags |= 0x08;      // isNamePresent
-        }
+        if (skinName != null)
+            flags |= 0x04;      // isSkinPresent
+        if (cellName != null)
+            flags |= 0x08;      // isNamePresent
         if (node.isAgitated)
             flags |= 0x10;      // isAgitated
         if (node.cellType == 3)
@@ -260,9 +258,9 @@ UpdateNodes.prototype.writeUpdateItems6 = function (writer) {
             writer.writeUInt8(color.b >>> 0);       // Color B
         }
         if (flags & 0x04)
-            writer.writeStringZeroUtf8(skinName);       // Skin Name in UTF8
+            writer.writeBytes(skinName);       // Skin Name in UTF8
         if (flags & 0x08)
-            writer.writeStringZeroUtf8(cellName);       // Cell Name in UTF8
+            writer.writeBytes(cellName);       // Cell Name in UTF8
     }
     writer.writeUInt32(0);                              // Cell Update record terminator
 };

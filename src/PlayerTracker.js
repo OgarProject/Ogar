@@ -1,5 +1,7 @@
 var Packet = require('./packet');
 var GameServer = require('./GameServer');
+var BinaryWriter = require("./packet/BinaryWriter");
+
 
 function PlayerTracker(gameServer, socket) {
     this.gameServer = gameServer;
@@ -7,8 +9,11 @@ function PlayerTracker(gameServer, socket) {
     this.pID = -1;
     this.isRemoved = false;
     this.isCloseRequested = false;
-    this.name = "";
-    this.skin = "";
+    this._name = "";
+    this._skin = "";
+    this._nameUtf8 = null;
+    this._nameUnicode = null;
+    this._skinUtf8 = null;
     this.color = { r: 0, g: 0, b: 0 };
     this.visibleNodes = [];
     this.cells = [];
@@ -97,23 +102,53 @@ PlayerTracker.prototype.getFriendlyName = function () {
 };
 
 PlayerTracker.prototype.setName = function(name) {
-    this.name = name;
+    this._name = name;
+    if (!name || name.length < 1) {
+        this._nameUnicode = null;
+        this._nameUtf8 = null;
+        return;
+    }
+    var writer = new BinaryWriter()
+    writer.writeStringZeroUnicode(name);
+    this._nameUnicode = writer.toBuffer();
+    writer = new BinaryWriter()
+    writer.writeStringZeroUtf8(name);
+    this._nameUtf8 = writer.toBuffer();
 };
 
 PlayerTracker.prototype.getName = function() {
-    return this.name;
+    return this._name;
 };
 
 PlayerTracker.prototype.setSkin = function (skin) {
-    this.skin = skin;
+    this._skin = skin;
+    if (!skin || skin.length < 1) {
+        this._skinUtf8 = null;
+        return;
+    }
+    var writer = new BinaryWriter()
+    writer.writeStringZeroUtf8(skin);
+    this._skinUtf8 = writer.toBuffer();
 };
 
 PlayerTracker.prototype.getSkin = function () {
     if (this.gameServer.gameMode.haveTeams) {
         return "";
     }
-    return this.skin;
+    return this._skin;
 };
+
+PlayerTracker.prototype.getNameUtf8 = function () {
+    return this._nameUtf8;
+}
+
+PlayerTracker.prototype.getNameUnicode = function () {
+    return this._nameUnicode;
+}
+
+PlayerTracker.prototype.getSkinUtf8 = function () {
+    return this._skinUtf8;
+}
 
 PlayerTracker.prototype.getColor = function (color) {
     return this.color;

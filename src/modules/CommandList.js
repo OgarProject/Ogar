@@ -375,7 +375,7 @@ Commands.list = {
                     client.cells[j].setSize(size);
                 }
 
-                console.log("Set mass of " + client.name + " to " + (size*size/100).toFixed(3));
+                console.log("Set mass of " + client.getFriendlyName() + " to " + (size*size/100).toFixed(3));
                 break;
             }
         }
@@ -453,8 +453,8 @@ Commands.list = {
             var client = gameServer.clients[i].playerTracker;
 
             if (client.pID == id) {
-                console.log("Changing " + client.name + " to " + name);
-                client.name = name;
+                console.log("Changing " + client.getFriendlyName() + " to " + name);
+                client.setName(name);
                 return;
             }
         }
@@ -583,7 +583,7 @@ Commands.list = {
                     gameServer.updateNodeQuad(client.cells[j]);
                 }
 
-                console.log("Teleported " + client.name + " to (" + pos.x + " , " + pos.y + ")");
+                console.log("Teleported " + client.getFriendlyName() + " to (" + pos.x + " , " + pos.y + ")");
                 break;
             }
         }
