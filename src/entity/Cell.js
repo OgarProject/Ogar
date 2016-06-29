@@ -66,12 +66,39 @@ Cell.prototype.setKiller = function(cell) {
     this.killedBy = cell;
 };
 
-Cell.prototype.visibleCheck = function(box, centerPos) {
-    var size = this.getSize();
-    var cartesian = this.position.clone().sub(centerPos.x, centerPos.y).sub(size, size).abs();
+Cell.prototype.visibleCheck = function(box, centerPos, cells) {
+    // Checks if this cell is visible to the player
+    var isThere = false;
+    if (this.mass < 100) isThere = this.collisionCheck(box.bottomY, box.topY, box.rightX, box.leftX);
+    else {
+        var cellSize = this.getSize();
+        var lenX = cellSize + box.width >> 0; // Width of cell + width of the box (Int)
+        var lenY = cellSize + box.height >> 0; // Height of cell + height of the box (Int)
+    
+        isThere = (this.abs(this.position.x - centerPos.x) < lenX) && (this.abs(this.position.y - centerPos.y) < lenY);
+    }
+    if (isThere) {
+        if(this.gameMode.disableEating) { if (this.cellType == 0) return 1; // <= added
+        // To save perfomance, check if any client's cell collides with this cell
+        for (var i = 0; i < cells.length; i++) {
+            var cell = cells[i];
+            if (!cell) continue;
 
-    return cartesian.x < box.width && cartesian.y < box.height;
+            var xs = this.position.x - cell.position.x;
+            var ys = this.position.y - cell.position.y;
+            var sqDist = xs * xs + ys * ys;
+
+            var collideDist = cell.getSquareSize() + this.getSquareSize();
+
+            if (sqDist < collideDist) {
+                return 2;
+            }// Colliding with one
+        }
+        return 1; // Not colliding with any
+    }
+    else return 0;
 };
+
 
 Cell.prototype.moveEngineTick = function(config) {
     if (!this.gameServer) return;
