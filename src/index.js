@@ -1,4 +1,5 @@
 // Imports
+var pjson = require('../package.json');
 var Logger = require('./modules/Logger');
 var Commands = require('./modules/CommandList');
 var GameServer = require('./GameServer');
@@ -8,7 +9,7 @@ var showConsole = true;
 
 // Start msg
 Logger.start();
-Logger.info("\u001B[1m\u001B[32mMultiOgar\u001B[37m - An open source multi-protocol ogar server\u001B[0m");
+Logger.info("\u001B[1m\u001B[32mMultiOgar "+pjson.version+"\u001B[37m - An open source multi-protocol ogar server\u001B[0m");
 
 // Handle arguments
 process.argv.forEach(function(val) {

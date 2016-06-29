@@ -2,8 +2,9 @@
 var WebSocket = require('ws');
 var http = require('http');
 var fs = require("fs");
-var ini = require('./modules/ini.js');
 var os = require("os");
+var pjson = require('../package.json');
+var ini = require('./modules/ini.js');
 var QuadNode = require('./QuadNode.js');
 var PlayerCommand = require('./modules/PlayerCommand');
 
@@ -1529,6 +1530,7 @@ GameServer.prototype.pingServerTracker = function () {
                '&name=Unnamed Server' +                 // we cannot use it, because other value will be used as dns name
                '&opp=' + os.platform() + ' ' + os.arch() + // "win32 x64"
                '&uptime=' + process.uptime() +          // Number of seconds server has been running
+               '&version=MultiOgar ' + pjson.version +
                '&start_time=' + this.startTime;
     var options ={
         host: 'ogar.mivabe.nl',
