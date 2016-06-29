@@ -17,7 +17,7 @@ The goal is to make good and smooth physics and cleanup the code.
 
 MultiOgar console:
 
-![Screenshot](http://i.imgur.com/pmECJCH.png)
+![Screenshot](https://i.imgur.com/NxQxSXZ.png)
 
 
 1000 bots, 500 viruses, 1000 foods, map 14142x14142 - works pretty smooth:
