@@ -23,6 +23,7 @@ function GameServer() {
     this.lastNodeId = 1;
     this.lastPlayerId = 1;
     this.clients = [];
+    this.socketCount = 0;
     this.largestClient; // Required for spectators
     this.nodes = [];
     this.nodesVirus = [];   // Virus nodes
@@ -181,31 +182,26 @@ GameServer.prototype.onServerSocketOpen = function () {
 };
 
 GameServer.prototype.onClientSocketOpen = function (ws) {
-    // Check blacklist first (if enabled).
-    if (this.ipBanList && this.ipBanList.length > 0 && this.ipBanList.indexOf(ws._socket.remoteAddress) >= 0) {
-        // IP banned
-        ws.close(1000, "IP banned");
-        return;
-    }
-    var totalConnections = 0;
-    var ipConnections = 0;
-    for (var i = 0; i < this.clients.length; i++) {
-        var socket = this.clients[i];
-        if (socket == null || socket.isConnected == null)
-            continue;
-        totalConnections++;
-        if (socket.isConnected && socket.remoteAddress == ws._socket.remoteAddress)
-            ipConnections++;
-    }
-    if (this.config.serverMaxConnections > 0 && totalConnections >= this.config.serverMaxConnections) {
-        // Server full
+    if (this.config.serverMaxConnections > 0 && this.socketCount >= this.config.serverMaxConnections) {
         ws.close(1000, "No slots");
         return;
     }
-    if (this.config.serverIpLimit > 0 && ipConnections >= this.config.serverIpLimit) {
-        // IP limit reached
-        ws.close(1000, "IP limit reached");
+    if (this.ipBanList && this.ipBanList.length > 0 && this.ipBanList.indexOf(ws._socket.remoteAddress) >= 0) {
+        ws.close(1000, "IP banned");
         return;
+    }
+    if (this.config.serverIpLimit > 0) {
+        var ipConnections = 0;
+        for (var i = 0; i < this.clients.length; i++) {
+            var socket = this.clients[i];
+            if (!socket.isConnected || socket.remoteAddress != ws._socket.remoteAddress)
+                continue;
+            ipConnections++;
+        }
+        if (ipConnections >= this.config.serverIpLimit) {
+            ws.close(1000, "IP limit reached");
+            return;
+        }
     }
     ws.isConnected = true;
     ws.remoteAddress = ws._socket.remoteAddress;
@@ -217,33 +213,39 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.packetHandler = new PacketHandler(this, ws);
     ws.playerCommand = new PlayerCommand(this, ws.playerTracker);
     
-    var gameServer = this;
+    var self = this;
     var onMessage = function (message) {
-        gameServer.onClientSocketMessage(ws, message);
+        self.onClientSocketMessage(ws, message);
     };
     var onError = function (error) {
-        gameServer.onClientSocketError(ws, error);
+        self.onClientSocketError(ws, error);
     };
     var onClose = function (reason) {
-        gameServer.onClientSocketClose(ws, reason);
+        self.onClientSocketClose(ws, reason);
     };
     ws.on('message', onMessage);
     ws.on('error', onError);
     ws.on('close', onClose);
+    this.socketCount++;
     this.clients.push(ws);
 };
 
 GameServer.prototype.onClientSocketClose = function (ws, code) {
+    if (this.socketCount < 1) {
+        Logger.error("GameServer.onClientSocketClose: socketCount=" + this.socketCount);
+    } else {
+        this.socketCount--;
+    }
     ws.isConnected = false;
     ws.sendPacket = function (data) { };
     ws.closeReason = { code: ws._closeCode, message: ws._closeMessage };
     ws.closeTime = +new Date;
     Logger.write("DISCONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", code: " + ws._closeCode + ", reason: \"" + ws._closeMessage + "\", name: \""+ws.playerTracker.getName()+"\"");
 
+    // disconnected effect
     var color = this.getGrayColor(ws.playerTracker.getColor());
     ws.playerTracker.setColor(color);
     ws.playerTracker.setSkin("");
-    // disconnected effect
     ws.playerTracker.cells.forEach(function (cell) {
         cell.setColor(color);
     }, this);
