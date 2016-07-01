@@ -432,43 +432,46 @@ GameServer.prototype.removeNode = function(node) {
 };
 
 GameServer.prototype.updateClients = function () {
-    for (var i = 0; i < this.clients.length; i++) {
-        var socket = this.clients[i];
-        socket.playerTracker.update();
-    }
-    // remove dead clients
+    // check dead clients
     for (var i = 0; i < this.clients.length; ) {
-        var socket = this.clients[i];
-        if (socket.playerTracker.isRemoved) {
+        var playerTracker = this.clients[i].playerTracker;
+        playerTracker.checkConnection();
+        if (playerTracker.isRemoved) {
+            // remove dead client
             this.clients.splice(i, 1);
         } else {
             i++;
         }
     }
+    // update
+    for (var i = 0; i < this.clients.length; i++) {
+        this.clients[i].playerTracker.updateTick();
+    }
+    for (var i = 0; i < this.clients.length; i++) {
+        this.clients[i].playerTracker.sendUpdate();
+    }
 };
 
 GameServer.prototype.updateLeaderboard = function () {
     // Update leaderboard with the gamemode's method
-    if ((this.tickCounter % 25) == 0) {
-        this.leaderboard = [];
-        this.leaderboardType = -1;
-        this.gameMode.updateLB(this);
-
-        if (!this.gameMode.specByLeaderboard) {
-            // Get client with largest score if gamemode doesn't have a leaderboard
-            var clients = this.clients.valueOf();
-            
-            // Use sort function
-            clients.sort(function (a, b) {
-                return b.playerTracker.getScore() - a.playerTracker.getScore();
-            });
-            //this.largestClient = clients[0].playerTracker;
-            this.largestClient = null;
-            if (clients[0] != null)
-                this.largestClient = clients[0].playerTracker;
-        } else {
-            this.largestClient = this.gameMode.rankOne;
-        }
+    this.leaderboard = [];
+    this.leaderboardType = -1;
+    this.gameMode.updateLB(this);
+    
+    if (!this.gameMode.specByLeaderboard) {
+        // Get client with largest score if gamemode doesn't have a leaderboard
+        var clients = this.clients.valueOf();
+        
+        // Use sort function
+        clients.sort(function (a, b) {
+            return b.playerTracker.getScore() - a.playerTracker.getScore();
+        });
+        //this.largestClient = clients[0].playerTracker;
+        this.largestClient = null;
+        if (clients[0] != null)
+            this.largestClient = clients[0].playerTracker;
+    } else {
+        this.largestClient = this.gameMode.rankOne;
     }
 };
 
@@ -537,7 +540,7 @@ GameServer.prototype.timerLoop = function () {
 };
 
 GameServer.prototype.mainLoop = function() {
-    var tStart = new Date().getTime();
+    var tStart = process.hrtime();
     
     // Loop main functions
     if (this.run) {
@@ -552,11 +555,17 @@ GameServer.prototype.mainLoop = function() {
             this.updateMassDecay();
         }
     }
+    
     this.updateClients();
-    this.updateLeaderboard();
+
+    if (((this.getTick()+7) % (1000 / 40)) == 0) {
+        // once per second
+        this.updateLeaderboard();
+    }
     
     // ping server tracker
     if (this.config.serverTracker && (this.getTick() % (30000/40)) == 0) {
+        // once per 30 seconds
         this.pingServerTracker();
     }
     
@@ -587,8 +596,8 @@ GameServer.prototype.mainLoop = function() {
     if (this.run) {
         this.tickCounter++;
     }
-    var tEnd = new Date().getTime();
-    this.updateTime = tEnd - tStart;
+    var tEnd = process.hrtime(tStart);
+    this.updateTime = tEnd[0] * 1000 + tEnd[1] / 1000000;
 };
 
 GameServer.prototype.startingFood = function() {

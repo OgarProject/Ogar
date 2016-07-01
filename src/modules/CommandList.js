@@ -159,27 +159,25 @@ Commands.list = {
         if (isNaN(toRemove)) {
             toRemove = -1; // Kick all bots if user doesnt specify a number
         }
-
-        var removed = 0;
-        var i = 0;
-        while (i < gameServer.clients.length && removed != toRemove) {
-            if (typeof gameServer.clients[i].remoteAddress == 'undefined') { // if client i is a bot kick him
-                var client = gameServer.clients[i].playerTracker;
-                var len = client.cells.length;
-                for (var j = 0; j < len; j++) {
-                    gameServer.removeNode(client.cells[0]);
-                }
-                client.socket.close();
-                removed++;
-            } else
-                i++;
+        if (toRemove < 1) {
+            Logger.warn("Invalid argument!");
+            return;
         }
-        if (toRemove == -1)
-            console.log("Kicked all bots (" + removed + ")");
+        var removed = 0;
+        for (var i = 0; i < gameServer.clients.length; i++) {
+            var socket = gameServer.clients[i];
+            if (socket.isConnected != null) continue;
+            socket.close();
+            removed++;
+            if (removed >= toRemove)
+                break;
+        }
+        if (removed == 0)
+            Logger.warn("Cannot find any bots");
         else if (toRemove == removed)
-            console.log("Kicked " + toRemove + " bots");
+            Logger.warn("Kicked " + removed + " bots");
         else
-            console.log("Only " + removed + " bots could be kicked");
+            Logger.warn("Only " + removed + " bots were kicked");
     },
     board: function(gameServer, split) {
         var newLB = [];

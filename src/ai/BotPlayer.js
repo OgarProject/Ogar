@@ -29,21 +29,27 @@ BotPlayer.prototype.getLowestCell = function() {
     return sorted[0];
 };
 
-BotPlayer.prototype.update = function () { // Overrides the update function from player tracker
+BotPlayer.prototype.checkConnection = function () {
+    if (this.socket.isCloseRequest) {
+        while (this.cells.length > 0) {
+            this.gameServer.removeNode(this.cells[0]);
+        }
+        this.isRemoved = true;
+        return;
+    }
+    
     // Respawn if bot is dead
     if (this.cells.length <= 0) {
         this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
         if (this.cells.length == 0) {
             // If the bot cannot spawn any cells, then disconnect it
             this.socket.close();
-            return;
         }
     }
-    
+}
+
+BotPlayer.prototype.sendUpdate = function () { // Overrides the update function from player tracker
     if (this.splitCooldown > 0) this.splitCooldown--;
-    
-    // Calculate nodes
-    this.visibleNodes = this.getVisibleNodes();
     
     // Calc predators/prey
     var cell = this.getLowestCell();
@@ -63,8 +69,9 @@ BotPlayer.prototype.decide = function(cell) {
         splitTarget = null,
         threats = [];
 
-    for (var i = 0; i < this.visibleNodes.length; i++) {
-        var check = this.visibleNodes[i];
+    for (var i = 0; i < this.viewNodes.length; i++) {
+        var check = this.viewNodes[i];
+        if (check.owner == this) continue;
         
         // Get attraction of the cells - avoid larger cells, viruses and same team cells
         var influence = 0;
@@ -167,7 +174,8 @@ BotPlayer.prototype.decide = function(cell) {
                     y: splitTarget.position.y
                 };
                 this.splitCooldown = 16;
-                this.gameServer.splitCells(this);
+                this.socket.packetHandler.pressSpace = true;
+                //this.gameServer.splitCells(this);
                 return;
             }
         }
@@ -178,7 +186,8 @@ BotPlayer.prototype.decide = function(cell) {
                 y: splitTarget.position.y
             };
             this.splitCooldown = 16;
-            this.gameServer.splitCells(this);
+            this.socket.packetHandler.pressSpace = true;
+            //this.gameServer.splitCells(this);
             return;
         }
     }
