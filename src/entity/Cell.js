@@ -1,10 +1,11 @@
 var Vector = require('../modules/Vector');
+var Rectangle = require('../modules/Rectangle');
 
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
     this.owner = owner; // playerTracker that owns this cell
-    this.ticksLeft = 0; // Individual updates
-    
+    this.updateTime = new Date(); // Individual updates
+
     this.color = {
         r: 0,
         g: 0,
@@ -66,59 +67,49 @@ Cell.prototype.setKiller = function(cell) {
     this.killedBy = cell;
 };
 
-Cell.prototype.visibleCheck = function(box, centerPos) {
-    var size = this.getSize();
-    var cartesian = this.position.clone().sub(centerPos.x, centerPos.y).sub(size, size).abs();
-
-    return cartesian.x < box.width && cartesian.y < box.height;
+Cell.prototype.getRange = function() {
+    var sz = this.getSize();
+    return new Rectangle(this.position.x, this.position.y, sz, sz);
 };
 
 Cell.prototype.moveEngineTick = function(config) {
     if (!this.gameServer) return;
     var toMove = this.moveEngine.clone().scale(0.5);
     this.position.sub(toMove);
-    
+
     // Decreasing twice as slower
     this.moveEngine.scale(0.935);
-    
+
     // Check for border passage
     this.borderCheck(true);
-    
+
     this.move();
 };
 
 Cell.prototype.borderCheck = function(flipMoving) {
     if (flipMoving == undefined || flipMoving == null) flipMoving = false;
-    
+
     // Border check - If flipMoving is true then bounce off
     var border = this.gameServer.borders();
     var checkRadius = this.getSize() / 2;
-    
+
     if (this.position.x - checkRadius < border.left) {
-        if (flipMoving) {
-            this.moveEngine.flipY();
-        }
+        if (flipMoving) this.moveEngine.flipY();
         this.position.x = border.left + checkRadius;
     }
-    
+
     if (this.position.x + checkRadius > border.right) {
-        if (flipMoving) {
-            this.moveEngine.flipY();
-        }
+        if (flipMoving) this.moveEngine.flipX();
         this.position.x = border.right - checkRadius;
     }
-    
+
     if (this.position.y - checkRadius < border.top) {
-        if (flipMoving) {
-            this.moveEngine.flipX();
-        }
+        if (flipMoving) this.moveEngine.flipY();
         this.position.y = border.top + checkRadius;
     }
-    
+
     if (this.position.y + checkRadius > border.bottom) {
-        if (flipMoving) {
-            this.moveEngine.flipX();
-        }
+        if (flipMoving) this.moveEngine.flipY();
         this.position.y = border.bottom - checkRadius;
     }
 };

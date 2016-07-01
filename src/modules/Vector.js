@@ -5,8 +5,7 @@ function Vector(x, y) {
 module.exports = Vector;
 
 Vector.prototype.clone = function() {
-    var x = this.x, y = this.y;
-    return new Vector(x, y);
+    return new Vector(this.x, this.y);
 };
 
 Vector.prototype.set = function(x, y) {
