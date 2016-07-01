@@ -22,7 +22,11 @@ MultiOgar console:
 
 ![Screenshot](https://i.imgur.com/GiJURq0.png)
 
-Version 1.2.8: 1000 bots, 500 viruses, 1000 foods, map 14142x14142 - works very-very smooth (with a little slower speed, but will not be noticed by user):
+Version 1.2.8: 
+1000 bots, 500 viruses, 1000 foods, map 14142x14142
+Works very-very smooth (with a little slower speed, but it will not be noticed by user).
+CPU load: 14% (x4 core)
+Memory usage: 70 MB
 
 ![Screenshot](http://i.imgur.com/XsXjT0o.png)
 
