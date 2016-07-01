@@ -41,7 +41,7 @@ PlayerCell.prototype.getSpeed = function() {
 PlayerCell.prototype.getSplittingSpeed = function() {
     var base = this.gameServer.config.playerSpeed;
     var modifier = 3 + Math.log(1 + this.mass) / (10 + Math.log(1 + this.mass));
-    var splitSpeed = Math.min(Math.pow(this.mass, -0.0318) * modifier, 150);
+    var splitSpeed = Math.min(Math.pow(this.mass, -0.0098) * modifier, 150);
 
     return base * splitSpeed;
 };
@@ -76,10 +76,6 @@ PlayerCell.prototype.eat = function() {
             this.gameServer.removeNode(node);
         }
     }
-};
-
-PlayerCell.prototype.getEatingRange = function() {
-    return this.getSize() / 3.14;
 };
 
 PlayerCell.prototype.onConsume = function(consumer, gameServer) {
