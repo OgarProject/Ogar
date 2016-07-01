@@ -22,9 +22,9 @@ MultiOgar console:
 
 ![Screenshot](https://i.imgur.com/GiJURq0.png)
 
-1000 bots, 500 viruses, 1000 foods, map 14142x14142 - works pretty smooth:
+Version 1.2.8: 1000 bots, 500 viruses, 1000 foods, map 14142x14142 - works very-very smooth (with a little slower speed, but will not be noticed by user):
 
-![Screenshot](https://i.imgur.com/NxQxSXZ.png)
+![Screenshot](http://i.imgur.com/XsXjT0o.png)
 
 
 ## Install
