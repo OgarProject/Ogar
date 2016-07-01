@@ -1,4 +1,5 @@
 var Vector = require('../modules/Vector');
+var Rectangle = require('../modules/Rectangle');
 
 function Cell(nodeId, owner, position, mass, gameServer) {
     this.nodeId = nodeId;
@@ -66,11 +67,9 @@ Cell.prototype.setKiller = function(cell) {
     this.killedBy = cell;
 };
 
-Cell.prototype.visibleCheck = function(box, centerPos) {
-    var size = this.getSize();
-    var cartesian = this.position.clone().sub(centerPos.x, centerPos.y).sub(size, size).abs();
-
-    return cartesian.x < box.width && cartesian.y < box.height;
+Cell.prototype.getRange = function() {
+    var sz = this.getSize();
+    return new Rectangle(this.position.x, this.position.y, sz, sz);
 };
 
 Cell.prototype.moveEngineTick = function(config) {
