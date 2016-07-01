@@ -16,20 +16,26 @@ var CollisionHandler = require('./CollisionHandler');
 var NodeHandler = require('./NodeHandler');
 var PlayerHandler = require('./PlayerHandler');
 var Vector = require('./modules/Vector');
+var Rectangle = require('./modules/Rectangle');
 
 // GameServer implementation
 function GameServer() {
     // Startup
     this.run = true;
-    
+
     this.lastPlayerId = 1;
     this.clients = [];
-    
+
     // Handlers
     this.collisionHandler = new CollisionHandler(this);
     this.nodeHandler = new NodeHandler(this, this.collisionHandler);
     this.playerHandler = new PlayerHandler(this);
-    
+
+    // Tick handling & statistics
+    this.tick = 0; // 1 ms
+    this.ticksNodeUpdate = 0;
+    this.ticksMapUpdate = 0;
+
     // Nodes
     this.lastNodeId = 1;
     this.nodes = [];
@@ -49,9 +55,8 @@ function GameServer() {
     // Main loop tick
     this.time = +new Date;
     this.startTime = this.time;
-    this.tick = 0; // 1 ms, 25 ms - collision update, next time all update
-    this.fullTick = 0; // 2 = all update
-    this.tickMain = 0; // 50 ms ticks, 20 of these = 1 leaderboard update
+    this.fullTick = 0;
+    this.tickMain = 0; // 50 ms ticks
     this.tickSpawn = 0; // Used with spawning food
 
     // Config
@@ -247,6 +252,17 @@ GameServer.prototype.borders = function() {
     };
 };
 
+GameServer.prototype.rangeBorders = function() {
+    var w = this.config.borderRight - this.config.borderLeft,
+        h = this.config.borderBottom - this.config.borderTop;
+    return new Rectangle(
+        this.config.borderLeft + w / 2,
+        this.config.borderTop + w / 2,
+        w / 2,
+        h / 2
+    );
+};
+
 GameServer.prototype.getMode = function() {
     return this.gameMode;
 };
@@ -297,10 +313,8 @@ GameServer.prototype.addNode = function(node) {
     for (var i = 0; i < this.clients.length; i++) {
         var client = this.clients[i].playerTracker;
         if (!client) continue;
-        
-        if (node.visibleCheck(client.getBox(), client.centerPos)) {
-            client.nodeAdditionQueue.push(node);
-        }
+
+        client.nodeAdditionQueue.push(node);
     }
 };
 
@@ -310,7 +324,7 @@ GameServer.prototype.removeNode = function(node) {
     if (index != -1) {
         this.nodes.splice(index, 1);
     }
-    
+
     if (node.cellType != 0) {
         // Remove from non-player node list
         index = this.nonPlayerNodes.indexOf(node);
@@ -334,17 +348,21 @@ GameServer.prototype.removeNode = function(node) {
 
 GameServer.prototype.mainLoop = function() {
     setTimeout(this.mainLoop.bind(this), 1);
-    
-    // Timer
-    var local = new Date();
-    this.tick += (local - this.time);
-    this.time = local;
 
     if (!this.run) return;
-    
+
+    // Timer
+    var local = new Date();
+    this.passedTicks = local - this.time;
+    this.tick += this.passedTicks;
+    this.time = local;
+
+    if (this.passedTicks <= 0) return; // Skip update
+
     // Update the handlers
     this.nodeHandler.update();
     this.playerHandler.update();
+
     // TODO: Cleanup this
     if (this.tick >= 25) {
         this.fullTick++;
@@ -382,22 +400,18 @@ GameServer.prototype.mainLoop = function() {
     }
 };
 
-GameServer.prototype.spawnPlayer = function(player, pos, mass, color) {
+GameServer.prototype.spawnPlayer = function(player, pos, mass) {
     if (mass == null) { // Get starting mass
         mass = this.config.playerStartMass;
     }
-    
+
     if (pos == null) { // Get random pos
         pos = this.nodeHandler.getRandomSpawn();
-    }
-    
-    if (color == null) { // Get random pos
-        color = this.getRandomColor();
     }
 
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass, this);
-    
+
     player.mouse = new Vector(pos.x, pos.y);
     this.addNode(cell);
 };
@@ -482,9 +496,7 @@ WebSocket.prototype.sendPacket = function(packet) {
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN && packet.build) {
         var buf = packet.build();
-        this.send(getBuf(buf), {
-            binary: true
-        });
+        this.send(buf, { binary: true });
     } else if (!packet.build) {
         // Do nothing
     } else {
@@ -492,4 +504,11 @@ WebSocket.prototype.sendPacket = function(packet) {
         this.emit('close');
         this.removeAllListeners();
     }
+};
+
+// Still not widely used but will be
+Array.prototype.remove = function(item) {
+    var index = this.indexOf(item);
+    if (index > -1) this.splice(index, 1);
+    return index > -1;
 };
