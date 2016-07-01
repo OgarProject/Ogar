@@ -569,30 +569,6 @@ GameServer.prototype.mainLoop = function() {
         this.pingServerTracker();
     }
     
-    //this.tt = 0;
-    //this.tc = 0;
-    //var t = process.hrtime();
-    //this.updateMoveEngine();
-    //this.t1 = toTime(process.hrtime(t));
-    //t = process.hrtime();
-    //this.updateSpawn();
-    //this.t2 = toTime(process.hrtime(t));
-    //t = process.hrtime();
-    //this.gameMode.onTick(this);
-    //this.t3 = toTime(process.hrtime(t));
-    //t = process.hrtime();
-    //this.updateMassDecay();
-    //this.t4 = toTime(process.hrtime(t));
-    //t = process.hrtime();
-    //this.updateClients();
-    //this.t5 = toTime(process.hrtime(t));
-    //t = process.hrtime();
-    //this.updateLeaderboard();
-    //this.t6 = toTime(process.hrtime(t));
-    //function toTime(tscTicks) {
-    //    return tscTicks[0] * 1000 + tscTicks[1] / 1000000;
-    //}
-    
     if (this.run) {
         this.tickCounter++;
     }
