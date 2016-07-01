@@ -17,9 +17,8 @@ BotLoader.prototype.getName = function() {
 
     // Picks a random name for the bot
     if (this.randomNames.length > 0) {
-        var index = Math.floor(Math.random() * this.randomNames.length);
+        var index = ((this.randomNames.length-1) * Math.random()) >>> 0;
         name = this.randomNames[index];
-        this.randomNames.splice(index, 1);
     } else {
         name = "bot" + ++this.nameIndex;
     }
