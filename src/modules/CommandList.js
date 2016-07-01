@@ -331,7 +331,6 @@ Commands.list = {
         var state;
         if (set == "true") {
             client.mergeOverride = true;
-            client.mergeOverrideDuration = 100;
             state = true;
         } else if (set == "false") {
             client.mergeOverride = false;
@@ -340,10 +339,8 @@ Commands.list = {
         } else {
             if (client.mergeOverride) {
                 client.mergeOverride = false;
-                client.mergeOverrideDuration = 0;
             } else {
                 client.mergeOverride = true;
-                client.mergeOverrideDuration = 100;
             }
 
             state = client.mergeOverride;
@@ -450,10 +447,8 @@ Commands.list = {
 
             if (client.playerTracker.pID == id) {
                 // Found client
-                client.playerTracker.massDecayMult = 1;
-                client.playerTracker.Wmult = 0;
-                client.playerTracker.virusMult = 0;
-                client.playerTracker.splittingMult = 0;
+                client.playerTracker.massGainMult = 0;
+                client.playerTracker.massLossMult = 0;
                 console.log("[Console] Successfully reset client's anti-team effect");
                 return;
             }
@@ -470,12 +465,14 @@ Commands.list = {
                 bots++;
             }
         }
-        //
+
         console.log("[Console] Connected players: " + gameServer.clients.length + "/" + gameServer.config.serverMaxConnections);
         console.log("[Console] Players: " + humans + " - Bots: " + bots);
-        console.log("[Console] Server has been running for " + Math.floor(process.uptime()/60) + " minutes");
-        console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10)/10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10)/10 + " mb");
+        console.log("[Console] Server has been running for " + Math.floor(process.uptime() / 60) + " minutes");
+        console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10) / 10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10) / 10 + " mb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
+        console.log("[Console] Update frequency: every " + gameServer.passedTicks + " tick(s)");
+        console.log("[Console] Ticks for updating nodes: " + gameServer.ticksNodeUpdate + ", for updating clients: " + gameServer.ticksMapUpdate);
     },
     tp: function(gameServer, split) {
         var id = parseInt(split[1]);
