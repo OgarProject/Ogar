@@ -496,7 +496,7 @@ WebSocket.prototype.sendPacket = function(packet) {
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN && packet.build) {
         var buf = packet.build();
-        this.send(buf, { binary: true });
+        this.send(getBuf(buf), { binary: true });
     } else if (!packet.build) {
         // Do nothing
     } else {
