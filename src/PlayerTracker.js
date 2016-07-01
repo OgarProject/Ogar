@@ -1,5 +1,6 @@
 var Packet = require('./packet');
 var Vector = require('./modules/Vector');
+var Rectangle = require('./modules/Rectangle');
 
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
@@ -7,26 +8,24 @@ function PlayerTracker(gameServer, socket) {
     this.name = "";
     this.gameServer = gameServer;
     this.socket = socket;
-    
+
     this.nodeAdditionQueue = [];
     this.nodeDestroyQueue = [];
     this.visibleNodes = [];
-    
+
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
     this.score = 0; // Needed for leaderboard
 
-    this.mouse = {
-        x: 0,
-        y: 0
-    };
+    this.mouse = new Vector(0, 0);
+    this.centerPos = new Vector(0, 0);
     this.ignoreNextMoveTick = false; // Screen mouse matches old screen mouse
-    this.mouseCells = []; // For individual cell movement
     this.tickLeaderboard = 0;
     this.tickViewBox = 0;
-    
-    this.mapUpdate = 0;  // Map update
-    this.cellUpdate = 0; // Owned cell update
+
+    // Tick handler
+    this.mapUpdateTime = new Date();
+    this.cellUpdateTime = new Date();
 
     this.team = 0;
     this.spectate = false;
@@ -45,11 +44,6 @@ function PlayerTracker(gameServer, socket) {
 
     // Gamemode function
     if (gameServer) {
-        // Find center
-        this.centerPos = new Vector(
-            (gameServer.config.borderLeft - gameServer.config.borderRight) / 2,
-            (gameServer.config.borderTop - gameServer.config.borderBottom) / 2
-        );
         // Player id
         this.pID = gameServer.getNewPlayerID();
         // Gamemode function
@@ -110,98 +104,85 @@ PlayerTracker.prototype.getTeam = function() {
 PlayerTracker.prototype.update = function() {
     // Don't send any messages if client didn't respond with protocol version
     if (this.socket.packetHandler.protocolVersion == 0) return;
-    
+
     // Actions buffer (So that people cant spam packets)
     if (this.socket.packetHandler.pressSpace) { // Split cell
         if (!this.mergeOverride) this.gameServer.gameMode.pressSpace(this.gameServer, this);
         this.socket.packetHandler.pressSpace = false;
     }
-    
+
     if (this.socket.packetHandler.pressW) { // Eject mass
         this.gameServer.gameMode.pressW(this.gameServer, this);
         this.socket.packetHandler.pressW = false;
         this.checkForWMult = true;
     }
-    
+
     if (this.socket.packetHandler.pressQ) { // Q Press
         this.gameServer.gameMode.pressQ(this.gameServer, this);
         this.socket.packetHandler.pressQ = false;
     }
-    
+
     var updateNodes = []; // Nodes that need to be updated via packet
+    var nonVisibleNodes = []; // Nodes that are not visible anymore
     
-    // Remove nodes from visible nodes if possible
-    var d = 0;
-    while (d < this.nodeDestroyQueue.length) {
-        var index = this.visibleNodes.indexOf(this.nodeDestroyQueue[d]);
-        if (index > -1) {
-            this.visibleNodes.splice(index, 1);
-            d++; // Increment
-        } else {
-            // Node was never visible anyways
-            this.nodeDestroyQueue.splice(d, 1);
-        }
+    // Update & remove nodes if necessary
+    for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
+        if (!(this.getBox().intersects(this.nodeAdditionQueue[i].getRange()))) continue;
+        this.visibleNodes.push(this.nodeAdditionQueue[i]);
+        updateNodes.push(this.nodeAdditionQueue[i]);
     }
-    
-    // Get visible nodes every 400 ms
-    var nonVisibleNodes = []; // Nodes that are not visible
+    for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
+        if (this.visibleNodes.indexOf(this.nodeDestoryQueue[i]) == -1) continue; // Wasn't visible anyway
+        this.visibleNodes.remove(this.nodeDestroyQueue[i]);
+        nonVisibleNodes.push(this.nodeDestroyQueue[i]);
+    }
+
+    // Reset view range every 200ms
     if (this.tickViewBox <= 0) {
-        var newVisible = this.viewReset();
-        try { // Add a try block in any case
-            // Compare and destroy nodes that are not seen
-            for (var i = 0; i < this.visibleNodes.length; i++) {
-                var index = newVisible.indexOf(this.visibleNodes[i]);
-                if (index == -1) {
-                    // Not seen by the client anymore
-                    nonVisibleNodes.push(this.visibleNodes[i]);
-                }
-            }
-    
-            // Add nodes to client's screen if client has not seen it already
-            for (var i = 0; i < newVisible.length; i++) {
-                var index = this.visibleNodes.indexOf(newVisible[i]);
-                if (index == -1) {
-                    updateNodes.push(newVisible[i]);
-                }
-            }
-        } catch(err) {
-            console.error(err);
+        var newNodes = this.viewReset(),
+            currentNodes = this.visibleNodes;
+
+        // Compare newly visible nodes to currently visible
+        for (var i = 0; i < newNodes.length; i++) {
+            var index = currentNodes.indexOf(newNodes[i]);
+            if (index == -1)
+                // New visible node
+                updateNodes.push(newNodes[i]);
         }
-    
-        this.visibleNodes = newVisible;
-        // Reset Ticks
-        this.tickViewBox = 0;
+
+        // Compare currently visible nodes to newly visible
+        for (var i = 0; i < currentNodes.length; i++) {
+            var index = newNodes.indexOf(currentNodes[i]);
+            if (index == -1)
+                // Not visible anymore
+                nonVisibleNodes.push(currentNodes[i]);
+        }
+
+        this.visibleNodes = newNodes;
+        this.tickViewBox = 5;
     } else {
         this.tickViewBox--;
-        // Add nodes to screen
-        for (var i = 0; i < this.nodeAdditionQueue.length; i++) {
-            var node = this.nodeAdditionQueue[i];
-            this.visibleNodes.push(node);
-            updateNodes.push(node);
-        }
     }
-    
-    // Update moving nodes
+
+    // Check currently visible nodes for updating
     for (var i = 0; i < this.visibleNodes.length; i++) {
-        var node = this.visibleNodes[i];
-        if (node.sendUpdate()) {
-            // Sends an update if cell is moving
-            updateNodes.push(node);
-        }
+        if (!this.visibleNodes[i]) continue;
+        // Don't check for update if it's going to be updated
+        if (updateNodes.indexOf(this.visibleNodes[i]) == -1 &&
+            this.visibleNodes[i].sendUpdate()) updateNodes.push(this.visibleNodes[i]);
     }
-    
+
     // Send packet
     this.socket.sendPacket(new Packet.UpdateNodes(
-        this.nodeDestroyQueue,
         updateNodes,
         nonVisibleNodes,
         this.scrambleX,
         this.scrambleY
     ));
-    
+
     this.nodeDestroyQueue = []; // Reset destroy queue
     this.nodeAdditionQueue = []; // Reset addition queue
-    
+
     // Update leaderboard
     if (this.tickLeaderboard <= 0) {
         this.socket.sendPacket(new Packet.UpdateLeaderboard(
@@ -214,7 +195,8 @@ PlayerTracker.prototype.update = function() {
     } else {
         this.tickLeaderboard--;
     }
-    
+
+    // TODO: Map obfuscation doesn't work, fix it
     //var box = this.getBox();
     /*
     if (this.cells.length == 0 && this.gameServer.config.serverScrambleMinimaps >= 1) {
@@ -234,7 +216,7 @@ PlayerTracker.prototype.update = function() {
             Math.min(this.centerPos.y + this.scrambleY + box.height, this.gameServer.config.borderBottom + this.scrambleY)
         ));
     }*/
-    
+
     // Handles disconnections
     if (this.disconnect > -1) {
         // Player has disconnected... remove it when the timer hits -1
@@ -243,7 +225,7 @@ PlayerTracker.prototype.update = function() {
         if (this.disconnect == -1 || this.cells.length == 0) {
             // Remove all client cells
             var len = this.cells.length;
-            
+
             for (var i = 0; i < len; i++) {
                 var cell = this.cells[i];
                 if (!cell) continue;
@@ -292,15 +274,13 @@ PlayerTracker.prototype.getBox = function() { // For view distance
     var scale = Math.sqrt(totalSize) / Math.log(totalSize);
     var w = this.gameServer.config.serverViewBaseX * scale,
         h = this.gameServer.config.serverViewBaseY * scale;
-    
-    return {
-        width: w,
-        height: h,
-        top: this.centerPos.y - h,
-        bottom: this.centerPos.y + h,
-        left: this.centerPos.x + w,
-        right: this.centerPos.x - w
-    };
+
+    return new Rectangle(
+        this.centerPos.x - w / 2,
+        this.centerPos.y - h / 2,
+        w,
+        h
+    );
 };
 
 PlayerTracker.prototype.updateCenter = function() { // Get center of cells
@@ -347,7 +327,8 @@ PlayerTracker.prototype.getSpectateNodes = function() {
         if (!specPlayer) return this.moveInFreeRoam(); // There are probably no players
 
         // Get spectate player's location and calculate zoom amount
-        var specZoom = Math.pow(Math.log(specPlayer.getScore(false)), -0.5);
+        var totalSize = specPlayer.getSizes();
+        var specZoom = 0.25 * Math.sqrt(totalSize) / Math.log(totalSize);
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
@@ -360,7 +341,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
 
 PlayerTracker.prototype.moveInFreeRoam = function() {
     // Player is in free roam
-    
+
     var dist = this.centerPos.distanceTo(this.mouse);
     var angle = this.centerPos.angleTo(this.mouse);
     var speed = Math.min(dist / 10, 30); // Not to break laws of universe by going faster than light speed
@@ -369,7 +350,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
         Math.sin(angle) * speed,
         Math.cos(angle) * speed
     );
-    
+
     // Check if went away from borders
     this.checkBorderPass();
 
@@ -379,14 +360,12 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
     var baseY = this.gameServer.config.serverViewBaseY * mult;
 
     // Use calcVisibleNodes's way of looking for nodes
-    var newVisible = this.calcVisibleNodes({
-        width: baseX,
-        height: baseY,
-        top: this.centerPos.y - baseY,
-        bottom: this.centerPos.y + baseY,
-        left: this.centerPos.x - baseX,
-        right: this.centerPos.x + baseX
-    });
+    var newVisible = this.calcVisibleNodes(new Rectangle(
+        this.centerPos.x - baseX / 2,
+        this.centerPos.y - baseY / 2,
+        baseX,
+        baseY
+    ));
     this.sendPosPacket(0.5199);
     return newVisible;
 };
@@ -399,8 +378,7 @@ PlayerTracker.prototype.calcVisibleNodes = function(box) {
             continue;
         }
 
-        var check = node.visibleCheck(box, this.centerPos);
-        if (check || node.owner == this) {
+        if (box.intersects(node.getRange()) || node.owner == this) {
             // Cell is in range of viewBox
             newVisible.push(node);
         }
@@ -416,18 +394,10 @@ PlayerTracker.prototype.setCenterPos = function(x, y) {
 
 PlayerTracker.prototype.checkBorderPass = function() {
     // A check while in free-roam mode to avoid player going into nothingness
-    if (this.centerPos.x < this.gameServer.config.borderLeft) {
-        this.centerPos.x = this.gameServer.config.borderLeft;
-    }
-    if (this.centerPos.x > this.gameServer.config.borderRight) {
-        this.centerPos.x = this.gameServer.config.borderRight;
-    }
-    if (this.centerPos.y < this.gameServer.config.borderTop) {
-        this.centerPos.y = this.gameServer.config.borderTop;
-    }
-    if (this.centerPos.y > this.gameServer.config.borderBottom) {
-        this.centerPos.y = this.gameServer.config.borderBottom;
-    }
+    if (this.centerPos.x < this.gameServer.config.borderLeft) this.centerPos.x = this.gameServer.config.borderLeft;
+    if (this.centerPos.x > this.gameServer.config.borderRight) this.centerPos.x = this.gameServer.config.borderRight;
+    if (this.centerPos.y < this.gameServer.config.borderTop) this.centerPos.y = this.gameServer.config.borderTop;
+    if (this.centerPos.y > this.gameServer.config.borderBottom) this.centerPos.y = this.gameServer.config.borderBottom;
 };
 
 PlayerTracker.prototype.sendPosPacket = function(specZoom) {
