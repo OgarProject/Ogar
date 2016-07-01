@@ -328,7 +328,7 @@ PlayerTracker.prototype.getSpectateNodes = function() {
 
         // Get spectate player's location and calculate zoom amount
         var totalSize = specPlayer.getSizes();
-        var specZoom = 0.25 * Math.sqrt(totalSize) / Math.log(totalSize);
+        var specZoom = 1.5 / (Math.sqrt(totalSize) / Math.log(totalSize));
 
         this.setCenterPos(specPlayer.centerPos.x, specPlayer.centerPos.y);
         this.sendPosPacket(specZoom);
@@ -366,7 +366,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
         baseX,
         baseY
     ));
-    this.sendPosPacket(0.5199);
+    this.sendPosPacket(0.4995);
     return newVisible;
 };
 
