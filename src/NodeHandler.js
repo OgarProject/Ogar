@@ -9,31 +9,43 @@ function NodeHandler(gameServer, collisionHandler) {
 module.exports = NodeHandler;
 
 NodeHandler.prototype.update = function() {
+    // Start recording time needed to update nodes
+    var time = new Date();
+
+    // Spawning food & viruses
+    var foodSpawn = Math.min(this.gameServer.config.foodMaxAmount - this.gameServer.nodesFood.length,
+        this.gameServer.config.foodSpawnAmount);
+    this.addFood(foodSpawn);
+
+    var virusSpawn = this.gameServer.config.virusMinAmount - this.gameServer.nodesVirus.length;
+    this.addViruses(virusSpawn);
+
     // Preset mass decay
     var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod / 40);
-    
+
     // First update client's cells
     for (var i = 0; i < this.gameServer.clients.length; i++) {
         var client = this.gameServer.clients[i];
         if (!client) continue;
-        
+
         // We need to go deeper
         client = client.playerTracker;
-        
-        client.cellUpdate--;
-        if (client.cellUpdate > 0) continue;
-        client.cellUpdate = 25;
-        
+
+        var rem = time - client.cellUpdateTime;
+        if (rem < 25) continue;
+
+        client.cellUpdateTime = time;
+
         // Merge override check
         if (client.cells.length <= 1)
             client.mergeOverride = false;
-        
+
         // Add cells and sort them
         var sorted = client.cells.slice(0);
         sorted.sort(function(a, b) {
             return b.mass - a.mass;
         });
-        
+
         // Precalculate decay multiplier
         var thisDecay;
         if (this.gameServer.config.serverTeamingAllowed == 0) {
@@ -44,63 +56,59 @@ NodeHandler.prototype.update = function() {
             // Anti-teaming is off
             thisDecay = massDecay;
         }
-        
+
         // Update the cells
         for (var j = 0; j < sorted.length; j++) {
             var cell = sorted[j];
             if (!cell) continue;
-            
+
             // Move engine
             cell.moveEngineTick();
             this.gameServer.gameMode.onCellMove(cell, this.gameServer);
-            
+
             // Collide if required
             for (var k = 0; k < sorted.length; k++) {
                 if (!sorted[k]) continue;
-                    
+
                 if ((sorted[k].collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) ||
                     (sorted[k].shouldRecombine && cell.shouldRecombine)) continue;
 
                 this.collisionHandler.pushApart(cell, sorted[k]);
             }
-            
+
             // Collision restoring
-            if (cell.collisionRestoreTicks > 0) cell.collisionRestoreTicks -= 0.75;
-            
+            if (cell.collisionRestoreTicks > 0) cell.collisionRestoreTicks -= 0.5;
+
             // Eating
             cell.eat();
-            
+
             // Recombining
             if (sorted.length > 1) cell.recombineTicks += 0.04;
             else cell.recombineTicks = 0;
             cell.calcMergeTime(this.gameServer.config.playerRecombineTime);
-            
+
             // Mass decay
             if (cell.mass >= this.gameServer.config.playerMinMassDecay)
                 cell.mass *= thisDecay;
         }
     }
-    
+
     // Client cells have been finished, now go the other cells
     for (var i = 0; i < this.gameServer.nonPlayerNodes.length; i++) {
         var node = this.gameServer.nonPlayerNodes[i];
         if (!node) continue;
-        
-        node.ticksLeft--;
-        if (node.ticksLeft > 0) continue;
-        node.ticksLeft = 25;
-        
+
+        var rem = time - node.updateTime;
+        if (rem < 25) continue;
+
+        node.updateTime = time;
+
         node.moveEngineTick();
         node.eat();
     }
-    
-    // Spawning food & viruses
-    var foodSpawn = Math.min(this.gameServer.config.foodMaxAmount - this.gameServer.nodesFood.length,
-        this.gameServer.config.foodSpawnAmount);
-    this.addFood(foodSpawn);
-    
-    var virusSpawn = this.gameServer.config.virusMinAmount - this.gameServer.nodesVirus.length;
-    this.addViruses(virusSpawn);
+
+    // Record time to update
+    this.gameServer.ticksNodeUpdate = new Date() - time;
 };
 
 NodeHandler.prototype.addFood = function(n) {
@@ -115,7 +123,7 @@ NodeHandler.prototype.addFood = function(n) {
         );
         food.insertedList = this.gameServer.nodesFood;
         food.setColor(this.gameServer.getRandomColor());
-        
+
         this.gameServer.addNode(food);
         this.gameServer.nodesFood.push(food);
     }
@@ -131,7 +139,7 @@ NodeHandler.prototype.addViruses = function(n) {
             this.gameServer.config.virusStartMass,
             this.gameServer
         );
-        
+
         this.gameServer.addNode(virus);
     }
 };
@@ -153,15 +161,15 @@ NodeHandler.prototype.getRandomSpawn = function() {
         var node = this.gameServer.nodesFood[randomIndex];
         if (!node) continue;
         if (node.inRange) continue;
-        
+
         pellet = node;
         break;
     }
-    
+
     // Generate random angle and distance
     var randomAngle = Math.random() * 6.28;
     var randomDist = Math.random() * 100;
-    
+
     // Apply angle and distance to a clone of pellet's pos
     return new Vector(
         pellet.position.x + Math.sin(randomAngle) * randomDist,
@@ -182,7 +190,7 @@ NodeHandler.prototype.shootVirus = function(parent) {
         this.gameServer.config.virusStartMass,
         this.gameServer
     );
-    
+
     newVirus.moveEngine = new Vector(
         Math.sin(parent.shootAngle) * 115,
         Math.cos(parent.shootAngle) * 115
@@ -214,24 +222,24 @@ NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
 
     // Minimum mass to split
     if (parent.mass < this.gameServer.config.playerMinMassSplit) return false;
-    
+
     // Create cell
     var newCell = new Entity.PlayerCell(
         this.gameServer.getNextNodeId(),
-        client, 
+        client,
         parent.position.clone(),
         mass,
         this.gameServer
     );
     newCell.setColor(parent.getColor());
-    
+
     // Set split boost's speed
     var splitSpeed = newCell.getSplittingSpeed();
     newCell.moveEngine = new Vector(
         Math.sin(angle) * splitSpeed,
         Math.cos(angle) * splitSpeed
     );
-    
+
     // Cells won't collide immediately
     newCell.collisionRestoreTicks = 12;
     parent.collisionRestoreTicks = 12;
@@ -259,15 +267,12 @@ NodeHandler.prototype.ejectMass = function(client) {
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
         if (!cell) continue;
-        
+
         // Double-check just in case
         if (cell.mass < this.gameServer.config.playerMinMassEject ||
             cell.mass < this.gameServer.config.ejectMass) continue;
 
         var angle = cell.position.angleTo(client.mouse);
-
-        // Randomize angle (creation)
-        angle += (Math.random() * 0.1) - 0.05;
 
         // Get starting position
         var size = cell.getSize() + 16;
@@ -278,8 +283,8 @@ NodeHandler.prototype.ejectMass = function(client) {
 
         // Remove mass from parent cell
         cell.mass -= this.gameServer.config.ejectMassLoss;
-        
-        // Randomize angle (movement)
+
+        // Randomize movement angle
         angle += (Math.random() * 0.6) - 0.3;
 
         // Create cell
