@@ -186,7 +186,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
         ws.close(1000, "No slots");
         return;
     }
-    if (this.ipBanList && this.ipBanList.length > 0 && this.ipBanList.indexOf(ws._socket.remoteAddress) >= 0) {
+    if (this.checkIpBan(ws._socket.remoteAddress)) {
         ws.close(1000, "IP banned");
         return;
     }
@@ -1343,16 +1343,52 @@ GameServer.prototype.saveIpBanList = function () {
     }
 };
 
+GameServer.prototype.checkIpBan = function (ipAddress) {
+    if (!this.ipBanList || this.ipBanList.length == 0 || ipAddress == "127.0.0.1") {
+        return false;
+    }
+    if (this.ipBanList.indexOf(ipAddress) >= 0) {
+        return true;
+    }
+    var ipBin = ipAddress.split('.');
+    if (ipBin.length != 4) {
+        // unknown IP format
+        return false;
+    }
+    var subNet2 = ipBin[0] + "." + ipBin[1] + "." + "255.255";
+    if (this.ipBanList.indexOf(subNet2) >= 0) {
+        return true;
+    }
+    var subNet1 = ipBin[0] + "." + ipBin[1] + "." + ipBin[2] + ".255";
+    if (this.ipBanList.indexOf(subNet1) >= 0) {
+        return true;
+    }
+    return false;
+};
+
 GameServer.prototype.banIp = function (ip) {
+    var ipBin = ip.split('.');
+    if (ipBin.length != 4) {
+        Logger.warn("Invalid IP format: " + ip);
+        return;
+    }
+    if (ipBin[0] == "127") {
+        Logger.warn("Cannot ban localhost");
+        return;
+    }
     if (this.ipBanList.indexOf(ip) >= 0) {
         Logger.warn(ip + " is already in the ban list!");
         return;
     }
     this.ipBanList.push(ip);
-    Logger.info("The IP " + ip + " has been banned");
+    if (ipBin[2]=="255" || ipBin[3] == "255") {
+        Logger.info("The IP sub-net " + ip + " has been banned");
+    } else {
+        Logger.info("The IP " + ip + " has been banned");
+    }
     this.clients.forEach(function (socket) {
         // If already disconnected or the ip does not match
-        if (socket == null || !socket.isConnected || socket.remoteAddress != ip)
+        if (socket == null || !socket.isConnected || !this.checkIpBan(socket.remoteAddress))
             return;
         
         // remove player cells
