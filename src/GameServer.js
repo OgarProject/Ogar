@@ -119,7 +119,7 @@ function GameServer() {
     this.loadIpBanList();
     
     this.setBorder(this.config.borderWidth, this.config.borderHeight);
-    this.quadTree = new QuadNode(this.border, 4, 100);
+    this.quadTree = new QuadNode(this.border, 16, 100);
     
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
