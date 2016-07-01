@@ -148,15 +148,14 @@ GameServer.prototype.start = function() {
 };
 
 GameServer.prototype.onServerSocketError = function (error) {
+    Logger.error("WebSocket: "+ error.code + " - " + error.message);
     switch (error.code) {
         case "EADDRINUSE":
-            Logger.error("Server could not bind to port " + this.config.serverPort + "! Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
+            Logger.error("Server could not bind to port " + this.config.serverPort + "!");
+            Logger.error("Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
             break;
         case "EACCES":
             Logger.error("Please make sure you are running Ogar with root privileges.");
-            break;
-        default:
-            Logger.error(error.code + ": " + error.message);
             break;
     }
     process.exit(1); // Exits the program
@@ -1426,9 +1425,11 @@ GameServer.prototype.startStatsServer = function(port) {
         res.writeHead(200);
         res.end(this.stats);
     }.bind(this));
+    this.httpServer.on('error', function (err) {
+        Logger.error("Stats Server: " + err.message);
+    });
 
     var getStatsBind = this.getStats.bind(this);
-    // TODO: This causes error if something else already uses this port.  Catch the error.
     this.httpServer.listen(port, function () {
         // Stats server
         Logger.info("Started stats server on port " + port);
