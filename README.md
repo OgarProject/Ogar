@@ -1,7 +1,7 @@
 # MultiOgar
 Ogar game server with fast and smooth vanilla physics and multi-protocol support.
 
-Current version: **1.2.8**
+Current version: **1.2.9**
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-node.js-yellow.svg)
@@ -110,6 +110,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* Added sub-net ban feature (use ban xx.xx.xx.255 to ban entire sub-network)
 * Added performance optimizations, now up to 700 bots with no lags at all
 * Fixed bug when some cell split/eject were shown with delay for some clients
 * Added a lot of protocol optimizations, now server works with no lags at all even with 64 connected players
