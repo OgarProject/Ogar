@@ -106,6 +106,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* Fixed bug when some cell split/eject were shown with delay for some clients
 * Added a lot of protocol optimizations, now server works with no lags at all even with 64 connected players
 * Added server version, now you can check if your MultiOgar code is fresh
 * Significant performance improvement and more smooth physics
