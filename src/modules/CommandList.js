@@ -105,6 +105,10 @@ Commands.list = {
             
             // Check for invalid decimal numbers of the IP address
             for (var i in ipParts) {
+                if (i > 1 && ipParts[i] == "*") {
+                    // mask for sub-net
+                    continue;
+                }
                 // If not numerical or if it's not between 0 and 255
                 // TODO: Catch string "e" as it means "10^".
                 if (isNaN(ipParts[i]) || ipParts[i] < 0 || ipParts[i] >= 256) {

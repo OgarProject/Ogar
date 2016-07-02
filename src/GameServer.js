@@ -1355,11 +1355,11 @@ GameServer.prototype.checkIpBan = function (ipAddress) {
         // unknown IP format
         return false;
     }
-    var subNet2 = ipBin[0] + "." + ipBin[1] + "." + "255.255";
+    var subNet2 = ipBin[0] + "." + ipBin[1] + "." + "*.*";
     if (this.ipBanList.indexOf(subNet2) >= 0) {
         return true;
     }
-    var subNet1 = ipBin[0] + "." + ipBin[1] + "." + ipBin[2] + ".255";
+    var subNet1 = ipBin[0] + "." + ipBin[1] + "." + ipBin[2] + ".*";
     if (this.ipBanList.indexOf(subNet1) >= 0) {
         return true;
     }
@@ -1381,7 +1381,7 @@ GameServer.prototype.banIp = function (ip) {
         return;
     }
     this.ipBanList.push(ip);
-    if (ipBin[2]=="255" || ipBin[3] == "255") {
+    if (ipBin[2]=="*" || ipBin[3] == "*") {
         Logger.info("The IP sub-net " + ip + " has been banned");
     } else {
         Logger.info("The IP " + ip + " has been banned");
@@ -1399,7 +1399,7 @@ GameServer.prototype.banIp = function (ip) {
         // disconnect
         socket.close(1000, "Banned from server");
         var name = socket.playerTracker.getFriendlyName();
-        Logger.info("Banned: \"" + name + "\" with Player ID " + socket.playerTracker.pID); // Redacted "with IP #.#.#.#" since it'll already be logged above
+        Logger.info("Banned: \"" + name + "\" with Player ID " + socket.playerTracker.pID);
         this.sendChatMessage(null, null, "Banned \"" + name + "\""); // notify to don't confuse with server bug
     }, this);
     this.saveIpBanList();
