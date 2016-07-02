@@ -475,8 +475,10 @@ Commands.list = {
         Logger.info("Showing " + gameServer.clients.length + " players: ");
         console.log(" ID     | IP              | P | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
         console.log(fillChar('', '-', ' ID     | IP              |   |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
-        for (var i = 0; i < gameServer.clients.length; i++) {
-            var socket = gameServer.clients[i];
+        var sockets = gameServer.clients.slice(0);
+        sockets.sort(function (a, b) { return a.playerTracker.pID - b.playerTracker.pID; });
+        for (var i = 0; i < sockets.length; i++) {
+            var socket = sockets[i];
             var client = socket.playerTracker;
 
             // ID with 3 digits length
