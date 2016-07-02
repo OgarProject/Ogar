@@ -19,8 +19,8 @@ function PlayerTracker(gameServer, socket) {
     this.clientNodes = [];
     this.cells = [];
     this.mergeOverride = false; // Triggered by console command
-    this.score = 0; // Needed for leaderboard
-    this.scale = 1;
+    this._score = 0; // Needed for leaderboard
+    this._scale = 1;
     this.isMassChanged = true;
     this.borderCounter = 0;
 
@@ -168,13 +168,13 @@ PlayerTracker.prototype.getTeam = function () {
 PlayerTracker.prototype.getScore = function () {
     if (this.isMassChanged)
         this.updateMass();
-    return this.score;
+    return this._score;
 };
 
 PlayerTracker.prototype.getScale = function () {
     if (this.isMassChanged)
         this.updateMass();
-    return this.scale;
+    return this._scale;
 };
 
 PlayerTracker.prototype.updateMass = function () {
@@ -188,10 +188,10 @@ PlayerTracker.prototype.updateMass = function () {
     }
     if (totalSize == 0) {
         //do not change scale for spectators or not in game players
-        this.score = 0;
+        this._score = 0;
     } else {
-        this.score = totalMass;
-        this.scale = Math.pow(Math.min(64 / totalSize, 1), 0.4);
+        this._score = totalMass;
+        this._scale = Math.pow(Math.min(64 / totalSize, 1), 0.4);
     }
     this.isMassChanged = false;
 };
@@ -289,7 +289,7 @@ PlayerTracker.prototype.updateTick = function () {
         if (this.freeRoam || this.getSpectateTarget() == null) {
             // free roam
             this.updateCenterFreeRoam();
-            this.scale = this.gameServer.config.serverSpectatorScale;//0.25;
+            this._scale = this.gameServer.config.serverSpectatorScale;//0.25;
         } else {
             // spectate target
             return;
@@ -315,7 +315,7 @@ PlayerTracker.prototype.sendUpdate = function () {
             var player = this.getSpectateTarget();
             if (player != null) {
                 this.setCenterPos(player.centerPos.x, player.centerPos.y);
-                this.scale = player.getScale();
+                this._scale = player.getScale();
                 this.viewBox = player.viewBox;
                 this.viewNodes = player.viewNodes;
             }
