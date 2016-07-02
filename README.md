@@ -89,7 +89,7 @@ just set `serverTracker = 0` and the server will not ping the server tracker.
 
 
 ###Ogar clients
-Just replace `127.0.0.1:50000` in the url to the server IP and port to play.
+Just replace `127.0.0.1:443` in the url to the server IP and port to play.
 
 URL | Protocol | Description
 --- | --- | ---
@@ -110,7 +110,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
-* Added sub-net ban feature (use ban xx.xx.xx.* or xx.xx.*.* to ban entire sub-network)
+* Added sub-net ban feature (use `ban xx.xx.xx.*` or `ban xx.xx.*.*` to ban entire sub-network)
 * Added performance optimizations, now up to 700 bots with no lags at all
 * Fixed bug when some cell split/eject were shown with delay for some clients
 * Added a lot of protocol optimizations, now server works with no lags at all even with 64 connected players
