@@ -5,8 +5,8 @@ function Cell(gameServer, owner, position, size) {
     this.tickOfBirth = 0;
     this.color = { r: 0, g: 0, b: 0 };
     this.position = { x: 0, y: 0 };
-    this._size = 0;
-    this._sizeSquared = 0;
+    this._size = null;
+    this._sizeSquared = null;
     this._mass = null;
     this._speed = null;
     this.cellType = -1;     // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
@@ -54,6 +54,7 @@ Cell.prototype.setSize = function (size) {
     if (isNaN(size)) {
         throw new TypeError("Cell.setSize: size is NaN");
     }
+    if (this._size === size) return;
     this._size = size;
     this._sizeSquared = size * size;
     this._mass = null;
