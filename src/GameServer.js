@@ -1355,7 +1355,7 @@ GameServer.prototype.checkIpBan = function (ipAddress) {
         // unknown IP format
         return false;
     }
-    var subNet2 = ipBin[0] + "." + ipBin[1] + "." + "*.*";
+    var subNet2 = ipBin[0] + "." + ipBin[1] + ".*.*";
     if (this.ipBanList.indexOf(subNet2) >= 0) {
         return true;
     }
