@@ -102,6 +102,7 @@ http://c0nsume.me/private4.php?ip=127.0.0.1:443 | 5 | vanilla style
 
 IP | Location | Game Mode | Web Site
 --- | --- | --- | ---
+146.185.167.9:443 | Netherlands | FFA | Test server (report issues here)
 vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
 149.202.87.51:443 | Paris |	FFA	| http://agarlist.com/
