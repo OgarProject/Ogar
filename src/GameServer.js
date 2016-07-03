@@ -1264,17 +1264,19 @@ GameServer.prototype.getNearestVirus = function(cell) {
 };
 
 GameServer.prototype.updateMassDecay = function() {
-    var decay = 1 - (this.config.playerDecayRate * this.gameMode.decayMod);
-    if (decay == 0) {
+    if (!this.config.playerDecayRate) {
         return;
     }
+    var decay = 1 - this.config.playerDecayRate * this.gameMode.decayMod;
     // Loop through all player cells
     for (var i = 0; i < this.clients.length; i++) {
         var playerTracker = this.clients[i].playerTracker;
         for (var j = 0; j < playerTracker.cells.length; j++) {
             var cell = playerTracker.cells[j];
-            // TODO: check if non linear will be better
-            var size = cell.getSize() * decay;
+            var size = cell.getSize();
+            if (size <= this.config.playerMinSize)
+                continue;
+            var size = Math.sqrt(size * size * decay);
             size = Math.max(size, this.config.playerMinSize);
             if (size != cell.getSize()) {
                 cell.setSize(size);
