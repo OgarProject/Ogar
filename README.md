@@ -80,10 +80,11 @@ This lists Ogar clients and server trackers that I found on internet.
 URL | Description
 --- | ---
 http://ogar.mivabe.nl/master | MivaBe, tracks a lot of servers
+http://c0nsume.me/tracker.php | c0nsume.me server tracker
 
 Now you can allow MultiOgar to be listed on a server tracker.
 Just set `serverTracker = 1` in the gameserver.ini, and your server will appear
-on this page: http://ogar.mivabe.nl/master
+on these pages: http://ogar.mivabe.nl/master , http://c0nsume.me/tracker.php
 If you don't want to include your server to tracker list, 
 just set `serverTracker = 0` and the server will not ping the server tracker.
 
