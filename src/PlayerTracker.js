@@ -132,7 +132,7 @@ PlayerTracker.prototype.update = function() {
         updateNodes.push(this.nodeAdditionQueue[i]);
     }
     for (var i = 0; i < this.nodeDestroyQueue.length; i++) {
-        if (this.visibleNodes.indexOf(this.nodeDestoryQueue[i]) == -1) continue; // Wasn't visible anyway
+        if (this.visibleNodes.indexOf(this.nodeDestroyQueue[i]) == -1) continue; // Wasn't visible anyway
         this.visibleNodes.remove(this.nodeDestroyQueue[i]);
         nonVisibleNodes.push(this.nodeDestroyQueue[i]);
     }
