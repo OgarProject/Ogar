@@ -1566,11 +1566,31 @@ GameServer.prototype.pingServerTracker = function () {
     };
     var req = http.request(options, function (res) {
         if (res.statusCode != 200) {
-            Logger.error("Tracker Error: " + res.statusCode);
+            Logger.error("Tracker Error(ogar.mivabe.nl): " + res.statusCode);
         }
     });
     req.on('error', function (e) {
-        Logger.error("Tracker Error: " + e.message);
+        Logger.error("Tracker Error(ogar.mivabe.nl): " + e.message);
+    });
+    req.write(data);
+    req.end()
+    var options = {
+        host: 'c0nsume.me',
+        port: '80',
+        path: '/tracker.php',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Length': Buffer.byteLength(data)
+        }
+    };
+    var req = http.request(options, function (res) {
+        if (res.statusCode != 200) {
+            Logger.error("Tracker Error(c0nsume.me): " + res.statusCode);
+        }
+    });
+    req.on('error', function (e) {
+        Logger.error("Tracker Error(c0nsume.me): " + e.message);
     });
     req.write(data);
     req.end()
