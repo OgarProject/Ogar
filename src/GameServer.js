@@ -72,6 +72,7 @@ function GameServer() {
         serverName: 'MultiOgar #1', // Server name
         serverWelcome1: 'Welcome to MultiOgar server!',      // First server welcome message
         serverWelcome2: '',         // Second server welcome message (for info, etc)
+        serverAdminIP: NaN,         // Change this to IP of the person you would like to be admin.
         
         borderWidth: 14142,         // Map border size (Vanilla value: 14142)
         borderHeight: 14142,        // Map border size (Vanilla value: 14142)
