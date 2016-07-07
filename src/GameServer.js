@@ -7,6 +7,7 @@ var pjson = require('../package.json');
 var ini = require('./modules/ini.js');
 var QuadNode = require('./QuadNode.js');
 var PlayerCommand = require('./modules/PlayerCommand');
+var HttpsServer = require('./HttpsServer');
 
 // Project imports
 var Packet = require('./packet');
@@ -20,6 +21,9 @@ var UserRoleEnum = require('./enum/UserRoleEnum');
 
 // GameServer implementation
 function GameServer() {
+    this.httpServer = null;
+    this.wsServer = null;
+    
     // Startup
     this.run = true;
     this.lastNodeId = 1;
@@ -138,34 +142,32 @@ GameServer.prototype.start = function() {
     // Gamemode configurations
     this.gameMode.onServerInit(this);
     
-    var options = {
-        port: this.config.serverPort,
-        perMessageDeflate: false
+    if (fs.existsSync('./ssl/key.pem') && fs.existsSync('./ssl/cert.pem')) {
+        // HTTP/TLS
+        var options = {
+            key: fs.readFileSync('./ssl/key.pem', 'utf8'),
+            cert: fs.readFileSync('./ssl/cert.pem', 'utf8')
+        };
+        Logger.info("TLS: supported");
+        this.httpServer = HttpsServer.createServer(options);
+    } else {
+        // HTTP only
+        Logger.warn("TLS: not supported (SSL certificate not found!)");
+        this.httpServer = http.createServer();
+    }
+    var wsOptions = {
+        server: this.httpServer, 
+        perMessageDeflate: true
     };
-
-    // Start the server
-    this.socketServer = new WebSocket.Server(options, this.onServerSocketOpen.bind(this));
-    this.socketServer.on('error', this.onServerSocketError.bind(this));
-    this.socketServer.on('connection', this.onClientSocketOpen.bind(this));
+    this.wsServer = new WebSocket.Server(wsOptions);
+    this.wsServer.on('error', this.onServerSocketError.bind(this));
+    this.wsServer.on('connection', this.onClientSocketOpen.bind(this));
+    this.httpServer.listen(this.config.serverPort, this.onHttpServerOpen.bind(this));
 
     this.startStatsServer(this.config.serverStatsPort);
 };
 
-GameServer.prototype.onServerSocketError = function (error) {
-    Logger.error("WebSocket: "+ error.code + " - " + error.message);
-    switch (error.code) {
-        case "EADDRINUSE":
-            Logger.error("Server could not bind to port " + this.config.serverPort + "!");
-            Logger.error("Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
-            break;
-        case "EACCES":
-            Logger.error("Please make sure you are running Ogar with root privileges.");
-            break;
-    }
-    process.exit(1); // Exits the program
-};
-
-GameServer.prototype.onServerSocketOpen = function () {
+GameServer.prototype.onHttpServerOpen = function () {
     // Spawn starting food
     this.startingFood();
     
@@ -183,6 +185,20 @@ GameServer.prototype.onServerSocketOpen = function () {
         }
         Logger.info("Added " + this.config.serverBots + " player bots");
     }
+};
+
+GameServer.prototype.onServerSocketError = function (error) {
+    Logger.error("WebSocket: " + error.code + " - " + error.message);
+    switch (error.code) {
+        case "EADDRINUSE":
+            Logger.error("Server could not bind to port " + this.config.serverPort + "!");
+            Logger.error("Please close out of Skype or change 'serverPort' in gameserver.ini to a different number.");
+            break;
+        case "EACCES":
+            Logger.error("Please make sure you are running Ogar with root privileges.");
+            break;
+    }
+    process.exit(1); // Exits the program
 };
 
 GameServer.prototype.onClientSocketOpen = function (ws) {
