@@ -1,5 +1,6 @@
 ﻿// Import
 var BinaryWriter = require("./BinaryWriter");
+var UserRoleEnum = require("../enum/UserRoleEnum");
 
 
 function ChatMessage(sender, message) {
@@ -29,7 +30,17 @@ ChatMessage.prototype.build = function (protocol) {
 
     var writer = new BinaryWriter();
     writer.writeUInt8(0x63);            // message id (decimal 99)
-    writer.writeUInt8(0x00);            // flags for client; for future use
+    
+    // flags
+    var flags = 0;
+    if (this.sender == null)
+        flags = 0x80;           // server message
+    else if (this.sender.userRole == UserRoleEnum.ADMIN)
+        flags = 0x40;           // admin message
+    else if (this.sender.userRole == UserRoleEnum.MODER)
+        flags = 0x20;           // moder message
+
+    writer.writeUInt8(flags);
     writer.writeUInt8(color.r >> 0);
     writer.writeUInt8(color.g >> 0);
     writer.writeUInt8(color.b >> 0);
