@@ -10,21 +10,27 @@ function ChatMessage(sender, message) {
 module.exports = ChatMessage;
 
 ChatMessage.prototype.build = function (protocol) {
-    var text = this.message;
-    if (text == null) text = "";
-    var name = "SERVER";
-    var color = { 'r': 0x9B, 'g': 0x9B, 'b': 0x9B };
+	// Variables
+    var text = this.message,
+	sender = this.sender,
+	config = this.gameServer.config,
+	color = { 'r': 0x9B, 'g': 0x9B, 'b': 0x9B },
+	name = "[SERVER]";
+    
+	if (text == null) text = "";
+	
     if (this.sender != null) {
-        name = this.sender.getName();
+        name = sender.getName();
         if (name == null || name.length == 0) {
-            if (this.sender.cells.length > 0)
-                name = "An unnamed cell";
-            else
-                name = "Spectator";
+            if (sender.cells.length > 0) name = "An unnamed cell";
+            else name = "Spectator";
         }
-        if (this.sender.cells.length > 0) {
-            color = this.sender.cells[0].getColor();
-        }
+		if (sender.socket.remoteAddress == config.serverAdminIP) {
+			color = { 'r' : 0x4B, 'g': 0x4B, 'b': 0x4B };
+			} else {
+			if (sender.cells.length > 0 && sender.socket.remoteAddress != config.serverAdminIP)
+				color = sender.cells[0].getColor();
+		}
     }
 
     var writer = new BinaryWriter();
