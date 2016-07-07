@@ -1,12 +1,14 @@
 var Packet = require('./packet');
 var GameServer = require('./GameServer');
 var BinaryWriter = require("./packet/BinaryWriter");
-
+var UserRoleEnum = require("./enum/UserRoleEnum");
 
 function PlayerTracker(gameServer, socket) {
     this.gameServer = gameServer;
     this.socket = socket;
     this.pID = -1;
+    this.userRole = UserRoleEnum.GUEST;
+    this.userAuth = null;
     this.isRemoved = false;
     this.isCloseRequested = false;
     this._name = "";

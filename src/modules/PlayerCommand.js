@@ -1,4 +1,7 @@
 ﻿var Entity = require('../entity');
+var Logger = require('./Logger');
+var UserRoleEnum = require("../enum/UserRoleEnum");
+
 
 function PlayerCommand(gameServer, playerTracker) {
     this.gameServer = gameServer;
@@ -64,6 +67,33 @@ var playerCommands = {
             this.gameServer.addNode(food);
         }
         this.writeLine("You killed yourself");
+    },
+    login: function (args) {
+        var password = (args || "").trim();
+        if (password.length < 1) {
+            this.writeLine("ERROR: missing password argument!");
+            return;
+        }
+        var user = this.gameServer.userLogin(this.playerTracker.socket.remoteAddress, password);
+        if (!user) {
+            this.writeLine("ERROR: login failed!");
+            return;
+        }
+        Logger.write("LOGIN        " + this.playerTracker.socket.remoteAddress + ":" + this.playerTracker.socket.remotePort + " as \"" + user.name + "\"");
+        this.playerTracker.userRole = user.role;
+        this.playerTracker.userAuth = user.name;
+        this.writeLine("Login done as \"" + user.name + "\"");
+        return;
+    },
+    logout: function (args) {
+        if (this.playerTracker.userRole == UserRoleEnum.GUEST) {
+            this.writeLine("ERROR: not logged in");
+            return;
+        }
+        Logger.write("LOGOUT       " + this.playerTracker.socket.remoteAddress + ":" + this.playerTracker.socket.remotePort + " as \"" + this.playerTracker.userAuth + "\"");
+        this.playerTracker.userRole = UserRoleEnum.GUEST;
+        this.playerTracker.userAuth = null;
+        this.writeLine("Logout done");
     }
 };
 

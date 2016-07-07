@@ -16,6 +16,7 @@ var Entity = require('./entity');
 var Gamemode = require('./gamemodes');
 var BotLoader = require('./ai/BotLoader');
 var Logger = require('./modules/Logger');
+var UserRoleEnum = require('./enum/UserRoleEnum');
 
 // GameServer implementation
 function GameServer() {
@@ -114,10 +115,12 @@ function GameServer() {
     };
     
     this.ipBanList = [];
+    this.userList = [];
     
     // Parse config
     this.loadConfig();
     this.loadIpBanList();
+    this.loadUserList();
     
     this.setBorder(this.config.borderWidth, this.config.borderHeight);
     this.quadTree = new QuadNode(this.border, 16, 100);
@@ -208,7 +211,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
     ws.lastAliveTime = +new Date;
-    Logger.write("CONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + ws.upgradeReq.headers.origin + "\"");
+    Logger.write("CONNECTED    " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + ws.upgradeReq.headers.origin + "\"");
     
     ws.playerTracker = new PlayerTracker(this, ws);
     ws.packetHandler = new PacketHandler(this, ws);
@@ -1287,6 +1290,7 @@ GameServer.prototype.updateMassDecay = function() {
 
 var fileNameConfig = './gameserver.ini';
 var fileNameIpBan = './ipbanlist.txt';
+var fileNameUsers = './userRoles.json';
 
 GameServer.prototype.loadConfig = function () {
     try {
@@ -1313,6 +1317,65 @@ GameServer.prototype.loadConfig = function () {
     }
     // check config (min player size = 32 => mass = 10.24)
     this.config.playerMinSize = Math.max(32, this.config.playerMinSize);
+};
+
+GameServer.prototype.loadUserList = function () {
+    try {
+        this.userList = [];
+        if (!fs.existsSync(fileNameUsers)) {
+            Logger.warn(fileNameUsers + " is missing.");
+            return;
+        }
+        var usersJson = fs.readFileSync(fileNameUsers, 'utf-8');
+        var list = JSON.parse(usersJson.trim());
+        for (var i = 0; i < list.length; ) {
+            var item = list[i];
+            if (!item.hasOwnProperty("ip") ||
+                !item.hasOwnProperty("password") ||
+                !item.hasOwnProperty("role") ||
+                !item.hasOwnProperty("name")) {
+                list.splice(i, 1);
+                continue;
+            }
+            if (!item.password || !item.password.trim()) {
+                Logger.warn("User account \"" + item.name + "\" disabled");
+                list.splice(i, 1);
+                continue;
+            }
+            if (item.ip) {
+                item.ip = item.ip.trim();
+            }
+            item.password = item.password.trim();
+            if (!UserRoleEnum.hasOwnProperty(item.role)) {
+                Logger.warn("Unknown user role: " + role);
+                item.role = UserRoleEnum.USER;
+            } else {
+                item.role = UserRoleEnum[item.role];
+            }
+            item.name = (item.name || "").trim();
+            i++;
+        }
+        this.userList = list;
+        Logger.info(this.userList.length + " user records loaded.");
+    } catch (err) {
+        Logger.error(err.stack);
+        Logger.error("Failed to load " + fileNameUsers + ": " + err.message);
+    }
+}
+
+GameServer.prototype.userLogin = function (ip, password) {
+    if (!password) return null;
+    password = password.trim();
+    if (!password) return null;
+    for (var i = 0; i < this.userList.length; i++) {
+        var user = this.userList[i];
+        if (user.password != password)
+            continue;
+        if (user.ip && user.ip != ip)
+            continue;
+        return user;
+    }
+    return null;
 };
 
 GameServer.prototype.loadIpBanList = function () {
