@@ -41,3 +41,6 @@ src/ipbanlist.txt
 
 # Prevent user settings overwrite
 src/gameserver.ini
+
+# Prevent certificate leak
+ssl/
