@@ -270,7 +270,7 @@ Commands.list = {
     },
     exit: function(gameServer, split) {
         Logger.warn("Closing server...");
-        gameServer.socketServer.close();
+        gameServer.wsServer.close();
         process.exit(1);
     },
     food: function(gameServer, split) {
