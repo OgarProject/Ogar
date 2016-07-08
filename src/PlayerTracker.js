@@ -76,7 +76,7 @@ module.exports = PlayerTracker;
 // Setters/Getters
 
 PlayerTracker.prototype.scramble = function () {
-    if (!this.gameServer.config.serverScrambleCoords) {
+    if (!this.gameServer.config.serverScrambleLevel) {
         this.scrambleId = 0;
         this.scrambleX = 0;
         this.scrambleY = 0;
@@ -222,16 +222,20 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     this.socket.sendPacket(new Packet.ClearAll());
     this.clientNodes = [];
     this.scramble();
-    if (this.gameServer.config.serverScrambleCoords < 2) {
+    if (this.gameServer.config.serverScrambleLevel < 2) {
         // no scramble / lightweight scramble
         this.socket.sendPacket(new Packet.SetBorder(this, this.gameServer.border));
     }
-    if (this.gameServer.config.serverScrambleCoords == 3) {
+    else if (this.gameServer.config.serverScrambleLevel == 3) {
         // Scramble level 3 (no border)
-        // Unsupported on some clients! (include vanilla)
-        // ogar.mivabe.nl works ok
         // Ruins most known minimaps
-        this.socket.sendPacket(new Packet.SetBorder(this, {minx:1/0,miny:1/0,maxx:1/0,maxy:1/0}));
+        var border = {
+            minx: this.gameServer.border.minx - (0x10000 + 10000000 * Math.random()),
+            miny: this.gameServer.border.miny - (0x10000 + 10000000 * Math.random()),
+            maxx: this.gameServer.border.maxx + (0x10000 + 10000000 * Math.random()),
+            maxy: this.gameServer.border.maxy + (0x10000 + 10000000 * Math.random())
+        };
+        this.socket.sendPacket(new Packet.SetBorder(this, border));
     }
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
@@ -325,7 +329,7 @@ PlayerTracker.prototype.sendUpdate = function () {
         this.sendCameraPacket();
     }
     
-    if (this.gameServer.config.serverScrambleCoords == 2) {
+    if (this.gameServer.config.serverScrambleLevel == 2) {
         // scramble (moving border)
         if (this.borderCounter == 0) {
             var bound = {
