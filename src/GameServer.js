@@ -95,7 +95,7 @@ function GameServer() {
         virusMaxAmount: 100,        // Maximum number of viruses on the map. If this number is reached, then ejected cells will pass through viruses.
         
         ejectSize: 38,              // Size of ejected cells (vanilla 38)
-        ejectSizeLoss: 1,           // Player cell size loss on each eject
+        ejectSizeLoss: 43,          // Eject size which will be substracted from player cell (vanilla 43?)
         ejectCooldown: 3,           // min ticks between ejects
         ejectSpawnPlayer: 1,        // if 1 then player may be spawned from ejected mass
         
@@ -1213,9 +1213,9 @@ GameServer.prototype.ejectMass = function(client) {
         if (cell.getSize() < this.config.playerMinSplitSize) {
             continue;
         }
-        var size1 = cell.getSize() - this.config.ejectSizeLoss;
         var size2 = this.config.ejectSize;
-        var sizeSquared = size1 * size1 - size2 * size2;
+        var sizeLoss = this.config.ejectSizeLoss;
+        var sizeSquared = cell.getSizeSquared() - sizeLoss * sizeLoss;
         if (sizeSquared < this.config.playerMinSize * this.config.playerMinSize) {
             continue;
         }
