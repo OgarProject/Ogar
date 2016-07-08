@@ -19,6 +19,7 @@ module.exports.error = error;
 module.exports.fatal = fatal;
 module.exports.print = print;
 module.exports.write = write;
+module.exports.writeError = writeError;
 module.exports.start = start;
 
 function debug(message) {
@@ -62,6 +63,11 @@ function write(message) {
     writeLog("[NONE ][" + getTimeString() + "] " + message);
 };
 
+function writeError(message) {
+    message = util.format(message);
+    writeLog("[ERROR][" + getTimeString() + "] " + message);
+};
+
 
 // --- utils ---
 
@@ -92,7 +98,7 @@ function getTimeString() {
     th = ("00" + th).slice(-2);
     tm = ("00" + tm).slice(-2);
     ts = ("00" + ts).slice(-2);
-    return th + "-" + tm + "-" + ts;
+    return th + ":" + tm + ":" + ts;
 };
 
 function writeCon(color, message) {

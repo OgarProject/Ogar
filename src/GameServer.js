@@ -1637,7 +1637,7 @@ GameServer.prototype.pingServerTracker = function () {
                '&uptime=' + process.uptime() +          // Number of seconds server has been running
                '&version=MultiOgar ' + pjson.version +
                '&start_time=' + this.startTime;
-    var options ={
+    var options1 = {
         host: 'ogar.mivabe.nl',
         port: '80',
         path: '/master',
@@ -1647,17 +1647,17 @@ GameServer.prototype.pingServerTracker = function () {
             'Content-Length': Buffer.byteLength(data)
         }
     };
-    var req = http.request(options, function (res) {
+    var req = http.request(options1, function (res) {
         if (res.statusCode != 200) {
-            Logger.error("Tracker Error(ogar.mivabe.nl): " + res.statusCode);
+            Logger.writeError("Tracker Error(" + options1.host + "): " + res.statusCode);
         }
     });
     req.on('error', function (e) {
-        Logger.error("Tracker Error(ogar.mivabe.nl): " + e.message);
+        Logger.writeError("Tracker Error(" + options1.host + "): " + e.message);
     });
     req.write(data);
     req.end()
-    var options = {
+    var options2 = {
         host: 'c0nsume.me',
         port: '80',
         path: '/tracker.php',
@@ -1667,13 +1667,13 @@ GameServer.prototype.pingServerTracker = function () {
             'Content-Length': Buffer.byteLength(data)
         }
     };
-    var req = http.request(options, function (res) {
+    var req = http.request(options2, function (res) {
         if (res.statusCode != 200) {
-            Logger.error("Tracker Error(c0nsume.me): " + res.statusCode);
+            Logger.writeError("Tracker Error(" + options2.host + "): " + res.statusCode);
         }
     });
     req.on('error', function (e) {
-        Logger.error("Tracker Error(c0nsume.me): " + e.message);
+        Logger.writeError("Tracker Error(" + options2.host + "): " + e.message);
     });
     req.write(data);
     req.end()
