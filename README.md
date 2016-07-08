@@ -112,6 +112,7 @@ vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* Added support for secure websocket connections (TLS)
 * Fixed mass decay
 * Added ejectSizeLoss
 * Added sub-net ban feature (use `ban xx.xx.xx.*` or `ban xx.xx.*.*` to ban entire sub-network)
