@@ -63,6 +63,7 @@ function GameServer() {
         serverMaxConnections: 64,   // Maximum number of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
         serverPort: 443,            // Server port
+        serverBind: '0.0.0.0',      // Network interface binding
         serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
         serverGamemode: 0,          // Gamemode, 0 = FFA, 1 = Teams
         serverBots: 0,              // Number of player bots to spawn
@@ -167,7 +168,7 @@ GameServer.prototype.start = function() {
     this.wsServer = new WebSocket.Server(wsOptions);
     this.wsServer.on('error', this.onServerSocketError.bind(this));
     this.wsServer.on('connection', this.onClientSocketOpen.bind(this));
-    this.httpServer.listen(this.config.serverPort, this.onHttpServerOpen.bind(this));
+    this.httpServer.listen(this.config.serverPort, this.config.serverBind, this.onHttpServerOpen.bind(this));
 
     this.startStatsServer(this.config.serverStatsPort);
 };
