@@ -2,7 +2,8 @@
 var WebSocket = require('ws');
 var http = require('http');
 var fs = require("fs");
-var os = require("os");
+var os = require('os');
+var path = require('path');
 var pjson = require('../package.json');
 var ini = require('./modules/ini.js');
 var QuadNode = require('./QuadNode.js');
@@ -142,11 +143,15 @@ GameServer.prototype.start = function() {
     // Gamemode configurations
     this.gameMode.onServerInit(this);
     
-    if (fs.existsSync('./ssl/key.pem') && fs.existsSync('./ssl/cert.pem')) {
+    var dirSsl = path.join(path.dirname(module.filename), '../ssl');
+    var pathKey = path.join(dirSsl, 'key.pem');
+    var pathCert = path.join(dirSsl, 'cert.pem');
+
+    if (fs.existsSync(pathKey) && fs.existsSync(pathCert)) {
         // HTTP/TLS
         var options = {
-            key: fs.readFileSync('./ssl/key.pem', 'utf8'),
-            cert: fs.readFileSync('./ssl/cert.pem', 'utf8')
+            key: fs.readFileSync(pathKey, 'utf8'),
+            cert: fs.readFileSync(pathCert, 'utf8')
         };
         Logger.info("TLS: supported");
         this.httpServer = HttpsServer.createServer(options);
