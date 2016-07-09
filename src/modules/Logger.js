@@ -89,8 +89,8 @@ function writeError(message) {
 function getDateTimeString() {
     var date = new Date();
     var dy = date.getFullYear();
-    var dm = date.getMonth();
-    var dd = date.getDay();
+    var dm = date.getMonth() + 1;
+    var dd = date.getDate();
     var th = date.getHours();
     var tm = date.getMinutes();
     var ts = date.getSeconds();
