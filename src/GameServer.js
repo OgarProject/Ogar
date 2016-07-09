@@ -59,6 +59,9 @@ function GameServer() {
 
     // Config
     this.config = {
+        logVerbosity: 4,            // Console log level (0=NONE; 1=FATAL; 2=ERROR; 3=WARN; 4=INFO; 5=DEBUG)
+        logFileVerbosity: 5,        // File log level
+        
         serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
         serverMaxConnections: 64,   // Maximum number of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
@@ -72,7 +75,6 @@ function GameServer() {
         serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Update interval of server stats in seconds
-        serverLogLevel: 1,          // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         serverScrambleLevel: 1,     // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap); 3 - high scrambling (no border)
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
@@ -1339,6 +1341,27 @@ GameServer.prototype.loadConfig = function () {
     }
     // check config (min player size = 32 => mass = 10.24)
     this.config.playerMinSize = Math.max(32, this.config.playerMinSize);
+    Logger.setVerbosity(this.config.logVerbosity);
+    Logger.setFileVerbosity(this.config.logFileVerbosity);
+};
+
+GameServer.prototype.changeConfig = function (name, value) {
+    if (value == null || isNaN(value)) {
+        Logger.warn("Invalid value: " + value);
+        return;
+    }
+    if (!this.config.hasOwnProperty(name)) {
+        Logger.warn("Unknown config value: " + name);
+        return;
+    }
+    this.config[name] = value;
+    
+    // update/validate
+    this.config.playerMinSize = Math.max(32, this.config.playerMinSize);
+    Logger.setVerbosity(this.config.logVerbosity);
+    Logger.setFileVerbosity(this.config.logFileVerbosity);
+
+    Logger.print("Set " + name + " = " + this.config[name]);
 };
 
 GameServer.prototype.loadUserList = function () {
@@ -1471,9 +1494,9 @@ GameServer.prototype.banIp = function (ip) {
     }
     this.ipBanList.push(ip);
     if (ipBin[2]=="*" || ipBin[3] == "*") {
-        Logger.info("The IP sub-net " + ip + " has been banned");
+        Logger.print("The IP sub-net " + ip + " has been banned");
     } else {
-        Logger.info("The IP " + ip + " has been banned");
+        Logger.print("The IP " + ip + " has been banned");
     }
     this.clients.forEach(function (socket) {
         // If already disconnected or the ip does not match
@@ -1488,7 +1511,7 @@ GameServer.prototype.banIp = function (ip) {
         // disconnect
         socket.close(1000, "Banned from server");
         var name = socket.playerTracker.getFriendlyName();
-        Logger.info("Banned: \"" + name + "\" with Player ID " + socket.playerTracker.pID);
+        Logger.print("Banned: \"" + name + "\" with Player ID " + socket.playerTracker.pID);
         this.sendChatMessage(null, null, "Banned \"" + name + "\""); // notify to don't confuse with server bug
     }, this);
     this.saveIpBanList();
@@ -1501,7 +1524,7 @@ GameServer.prototype.unbanIp = function (ip) {
         return;
     }
     this.ipBanList.splice(index, 1);
-    Logger.info("Unbanned IP: " + ip);
+    Logger.print("Unbanned IP: " + ip);
     this.saveIpBanList();
 };
 
@@ -1520,7 +1543,7 @@ GameServer.prototype.kickId = function (id) {
         // disconnect
         socket.close(1000, "Kicked from server");
         var name = socket.playerTracker.getFriendlyName();
-        Logger.info("Kicked \"" + name + "\"");
+        Logger.print("Kicked \"" + name + "\"");
         this.sendChatMessage(null, null, "Kicked \"" + name + "\""); // notify to don't confuse with server bug
         count++;
     }, this);

@@ -149,11 +149,11 @@ Commands.list = {
             Logger.warn("Player ID " + id + " not found!");
     },
     banlist: function(gameServer, split) {
-        Logger.info("Showing " + gameServer.ipBanList.length + " banned IPs: ");
-        console.log(" IP              | IP ");
-        console.log("-----------------------------------");
+        Logger.print("Showing " + gameServer.ipBanList.length + " banned IPs: ");
+        Logger.print(" IP              | IP ");
+        Logger.print("-----------------------------------");
         for (var i = 0; i < gameServer.ipBanList.length; i += 2) {
-            console.log(" " + fillChar(gameServer.ipBanList[i], " ", 15) + " | " 
+            Logger.print(" " + fillChar(gameServer.ipBanList[i], " ", 15) + " | " 
                     + (gameServer.ipBanList.length === i+1 ? "" : gameServer.ipBanList[i+1] )
             );
         }
@@ -225,16 +225,7 @@ Commands.list = {
         } else {
             value = parseInt(value);
         }
-        if (value == null || isNaN(value)) {
-            Logger.warn("Invalid value: " + split[2]);
-            return;
-        }
-        if (!gameServer.config.hasOwnProperty(key)) {
-            Logger.warn("Unknown config value: " + key);
-            return;
-        }
-        gameServer.config[key] = value;
-        console.log("Set " + key + " to " + value);
+        gameServer.changeConfig(key, value);
     },
     clear: function() {
         process.stdout.write("\u001b[2J\u001b[0;0H");
@@ -472,9 +463,9 @@ Commands.list = {
         gameServer.unbanIp(split[1].trim());
     },
     playerlist: function(gameServer, split) {
-        Logger.info("Showing " + gameServer.clients.length + " players: ");
-        console.log(" ID     | IP              | P | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
-        console.log(fillChar('', '-', ' ID     | IP              |   |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
+        Logger.print("Showing " + gameServer.clients.length + " players: ");
+        Logger.print(" ID     | IP              | P | " + fillChar('NICK', ' ', gameServer.config.playerMaxNickLength) + " | CELLS | SCORE  | POSITION    "); // Fill space
+        Logger.print(fillChar('', '-', ' ID     | IP              |   |  | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength));
         var sockets = gameServer.clients.slice(0);
         sockets.sort(function (a, b) { return a.playerTracker.pID - b.playerTracker.pID; });
         for (var i = 0; i < sockets.length; i++) {
@@ -506,9 +497,9 @@ Commands.list = {
                     reason += "[" + socket.closeReason.code + "] ";
                 if (socket.closeReason.message)
                     reason += socket.closeReason.message;
-                console.log(" " + id + " | " + ip + " | " + protocol + " | " + reason);
+                Logger.print(" " + id + " | " + ip + " | " + protocol + " | " + reason);
             } else if (!socket.packetHandler.protocol && socket.isConnected) {
-                console.log(" " + id + " | " + ip + " | " + protocol + " | " + "[CONNECTING]");
+                Logger.print(" " + id + " | " + ip + " | " + protocol + " | " + "[CONNECTING]");
             }else if (client.spectate) {
                 nick = "in free-roam";
                 if (!client.freeRoam) {
@@ -518,17 +509,17 @@ Commands.list = {
                     }
                 }
                 data = fillChar("SPECTATING: " + nick, '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(" " + id + " | " + ip + " | " + protocol + " | " + data);
+                Logger.print(" " + id + " | " + ip + " | " + protocol + " | " + data);
             } else if (client.cells.length > 0) {
                 nick = fillChar(client.getFriendlyName(), ' ', gameServer.config.playerMaxNickLength);
                 cells = fillChar(client.cells.length, ' ', 5, true);
                 score = fillChar(client.getScore() >> 0, ' ', 6, true);
                 position = fillChar(client.centerPos.x >> 0, ' ', 5, true) + ', ' + fillChar(client.centerPos.y >> 0, ' ', 5, true);
-                console.log(" " + id + " | " + ip + " | " + protocol + " | " + nick + " | " + cells + " | " + score + " | " + position);
+                Logger.print(" " + id + " | " + ip + " | " + protocol + " | " + nick + " | " + cells + " | " + score + " | " + position);
             } else {
                 // No cells = dead player or in-menu
                 data = fillChar('DEAD OR NOT PLAYING', '-', ' | CELLS | SCORE  | POSITION    '.length + gameServer.config.playerMaxNickLength, true);
-                console.log(" " + id + " | " + ip + " | " + protocol + " | " + data);
+                Logger.print(" " + id + " | " + ip + " | " + protocol + " | " + data);
             }
         }
     },

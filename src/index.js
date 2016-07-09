@@ -9,7 +9,19 @@ var showConsole = true;
 
 // Start msg
 Logger.start();
-Logger.info("\u001B[1m\u001B[32mMultiOgar "+pjson.version+"\u001B[37m - An open source multi-protocol ogar server\u001B[0m");
+
+process.on('exit', function (code) {
+    Logger.debug("process.exit(" + code + ")");
+    Logger.shutdown();
+});
+
+process.on('uncaughtException', function (err) {
+    Logger.fatal(err.stack);
+    process.exit(1);
+});
+
+Logger.info("\u001B[1m\u001B[32mMultiOgar " + pjson.version + "\u001B[37m - An open source multi-protocol ogar server\u001B[0m");
+
 
 // Handle arguments
 process.argv.forEach(function(val) {
