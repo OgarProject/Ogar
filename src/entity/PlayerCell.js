@@ -22,7 +22,11 @@ PlayerCell.prototype.updateRemerge = function () {
     var baseTtr = this.gameServer.config.playerRecombineTime;        // default baseTtr = 30
     if (baseTtr == 0) {
         // instant merge
-        this._canRemerge = true;
+        if (this.getSize() >= 780/2) {
+            this._canRemerge = age > 20;
+            return;
+        }
+        this._canRemerge = this.boostDistance < 100;
         return;
     }
     var ttr = Math.max(baseTtr, (this.getSize() * 0.2) >> 0);   // ttr in seconds

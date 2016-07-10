@@ -17,6 +17,7 @@ function Cell(gameServer, owner, position, size) {
 
     this.boostDistance = 0;
     this.boostDirection = { x: 1, y: 0, angle: Math.PI / 2 };
+    this.boostMaxSpeed = 78;    // boost speed limit, sqrt(780*780/100)
     this.ejector = null;
     
     if (this.gameServer != null) {
@@ -146,10 +147,14 @@ Cell.prototype.onRemove = function (gameServer) {
 
 // Functions
 
-Cell.prototype.setBoost = function (distance, angle) {
-    if (isNaN(angle)) angle = 0;
+// Note: maxSpeed > 78 may leads to bug when cell can fly 
+//       through other cell due to high speed
+Cell.prototype.setBoost = function (distance, angle, maxSpeed) {
+    if (isNaN(angle)) angle = Math.PI / 2;
+    if (!maxSpeed) maxSpeed = 78;
     
     this.boostDistance = distance;
+    this.boostMaxSpeed = maxSpeed;
     this.setAngle(angle);
     this.isMoving = true;
     if (!this.owner) {
@@ -166,7 +171,7 @@ Cell.prototype.move = function (border) {
         return;
     }
     var speed = Math.sqrt(this.boostDistance * this.boostDistance / 100);
-    var speed = Math.min(speed, 78);                // limit max speed with sqrt(780*780/100)
+    var speed = Math.min(speed, this.boostMaxSpeed);// limit max speed with sqrt(780*780/100)
     speed = Math.min(speed, this.boostDistance);    // avoid overlap 0
     this.boostDistance -= speed;
     if (this.boostDistance < 1) this.boostDistance = 0;
