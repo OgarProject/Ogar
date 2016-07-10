@@ -7,7 +7,7 @@
   "license": "Apache License, Version 2.0",
   "main": "src/index.js",
   "dependencies": {
-    "quad-node": "^1.0.3",
+    "quad-node": "latest",
     "vector2-node": "latest",
     "ws": "latest"
   },
