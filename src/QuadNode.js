@@ -11,8 +11,8 @@
 function QuadNode(bound, maxChildren, maxLevel, level, parent) {
     if (!level) level = 0;
     if (!parent) parent = null;
-    var width = bound.maxx - bound.minx;
-    var height = bound.maxy - bound.miny;
+    var halfWidth = (bound.maxx - bound.minx) / 2;
+    var halfHeight = (bound.maxy - bound.miny) / 2;
     
     this.level = level;
     this.parent = parent;
@@ -21,10 +21,10 @@ function QuadNode(bound, maxChildren, maxLevel, level, parent) {
         miny: bound.miny,
         maxx: bound.maxx,
         maxy: bound.maxy,
-        width: width,
-        height: height,
-        cx: bound.minx + width / 2,
-        cy: bound.miny + height / 2
+        halfWidth: halfWidth,
+        halfHeight: halfHeight,
+        cx: bound.minx + halfWidth,
+        cy: bound.miny + halfHeight
     };
     this.maxChildren = maxChildren;
     this.maxLevel = maxLevel;
@@ -54,8 +54,8 @@ QuadNode.prototype.insert = function (item) {
     // split and rebalance current node
     if (this.childNodes.length == 0) {
         // split
-        var w = this.bound.width / 2;
-        var h = this.bound.height / 2;
+        var w = this.bound.halfWidth;
+        var h = this.bound.halfHeight;
         var x0 = this.bound.minx + w;
         var y0 = this.bound.miny;
         var x1 = this.bound.minx;
