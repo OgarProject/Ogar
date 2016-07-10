@@ -96,7 +96,7 @@ URL | Protocol | Description
 --- | --- | ---
 http://agar.io/?ip=127.0.0.1:443 | 8 | Vanilla
 http://ogar.mivabe.nl/?ip=127.0.0.1:443 | early 5 | MivaBe, pretty smooth, custom graphics (anime)
-http://play.ogarul.tk/?ip=127.0.0.1:443 | 4 | OgarUL, vanilla style (sends invalid protocol=1)
+http://play.ogarul.tk/?ip=127.0.0.1:443 | 4 | OgarUL, vanilla style
 http://c0nsume.me/private4.php?ip=127.0.0.1:443 | 5 | vanilla style
 
 ###MultiOgar Servers
@@ -104,7 +104,7 @@ http://c0nsume.me/private4.php?ip=127.0.0.1:443 | 5 | vanilla style
 IP | Location | Game Mode | Web Site
 --- | --- | --- | ---
 146.185.167.9:443 | Netherlands | FFA | Test server (report issues here) http://agar.io/?ip=bubble-wars.tk:443
-vps.simonorj.com:24270 | USA | Instant Merge | https://redd.it/4mufge
+vps.simonorj.com:24270 | Montreal | Instant Merge | https://redd.it/4mufge
 164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
 149.202.87.51:443 | Paris |	FFA	| http://agarlist.com/
 134.119.17.230:443 | Germany | FFA | http://agarlist.com/
