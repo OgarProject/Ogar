@@ -33,7 +33,7 @@ function Server(tlsconfig, requestListener) {
         
         // copy from http.Server
         this.timeout = 2 * 60 * 1000;
-        this.allowHalfOpen = true;
+        this.allowHalfOpen = false;
         this.httpAllowHalfOpen = false;
     } else
         http.Server.call(this, requestListener);
