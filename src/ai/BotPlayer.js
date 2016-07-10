@@ -23,7 +23,7 @@ BotPlayer.prototype.getLowestCell = function() {
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = this.cells.valueOf();
     sorted.sort(function(a, b) {
-        return b.getMass() - a.getMass();
+        return b.getSize() - a.getSize();
     });
 
     return sorted[0];
@@ -81,13 +81,15 @@ BotPlayer.prototype.decide = function(cell) {
                 // Same team cell
                 influence = 0;
             }
-            else if (cell.getSize() > (check.getSize() + 4) * 1.15) {//cell.getMass() / 1.3 > check.getMass()) {
+            else if (cell.getSize() > (check.getSize() + 4) * 1.15) {
                 // Can eat it
                 influence = check.getSize() * 2.5;
             }
-            else if (check.getSize() + 4 > cell.getSize() * 1.15) {//check.getMass() / 1.3 > cell.getMass()) {
+            else if (check.getSize() + 4 > cell.getSize() * 1.15) {
                 // Can eat me
                 influence = -check.getSize();
+            } else {
+                influence = -(check.getSize()/cell.getSize()) / 3;
             }
         } else if (check.cellType == 1) {
             // Food
@@ -143,14 +145,14 @@ BotPlayer.prototype.decide = function(cell) {
         // Splitting conditions
         if (check.cellType == 0 && 
             cell.getSize() > (check.getSize() + 4) * 1.15 &&
-            cell.getMass() / 5 < check.getMass() &&
+            cell.getSize() < check.getSize() * 5 &&
             (!split) && 
             this.splitCooldown == 0 && 
             this.cells.length < 3) {
                 
-            var endDist = Math.max(this.splitDistance(cell), cell.getSize() * 4);
+            var endDist = 780 + 40 - cell.getSize() / 2 - check.getSize();
             
-            if (distance < endDist - cell.getSize() - check.getSize()) {
+            if (endDist > 0 && distance < endDist) {
                 splitTarget = check;
                 split = true;
             }
@@ -167,7 +169,7 @@ BotPlayer.prototype.decide = function(cell) {
     if (split) {
         // Can be shortened but I'm too lazy
         if (threats.length > 0) {
-            if (this.largest(threats).getMass() / 2.6 > cell.getMass()) { // ??? but works
+            if (this.largest(threats).getSize() > cell.getSize() * 1.5) {
                 // Splitkill the target
                 this.mouse = {
                     x: splitTarget.position.x,
@@ -197,25 +199,15 @@ BotPlayer.prototype.decide = function(cell) {
     };
 };
 
+
 // Subfunctions
 
 BotPlayer.prototype.largest = function(list) {
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = list.valueOf();
     sorted.sort(function(a, b) {
-        return b.getMass() - a.getMass();
+        return b.getSize() - a.getSize();
     });
 
     return sorted[0];
-};
-
-BotPlayer.prototype.splitDistance = function(cell) {
-    // Calculate split distance and check if it is larger than the raw distance
-    var mass = cell.getMass();
-    var t = Math.PI * Math.PI;
-    var modifier = 3 + Math.log(1 + mass) / 10;
-    var splitSpeed = cell.owner.gameServer.config.playerSpeed * 30 * Math.min(Math.pow(mass, -Math.PI / t / 10) * modifier, 150);
-    var endDist = Math.max(splitSpeed * 12.8, cell.getSize() * 2); // Checked via C#, final distance is near 6.512x splitSpeed
-    
-    return endDist;
 };

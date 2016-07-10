@@ -181,18 +181,17 @@ PlayerTracker.prototype.getScale = function () {
 
 PlayerTracker.prototype.updateMass = function () {
     var totalSize = 0;
-    var totalMass = 0;
+    var totalScore = 0;
     for (var i = 0; i < this.cells.length; i++) {
         var node = this.cells[i];
-        if (node == null) continue;
         totalSize += node.getSize();
-        totalMass += node.getMass();
+        totalScore += node.getSizeSquared();
     }
     if (totalSize == 0) {
         //do not change scale for spectators or not in game players
         this._score = 0;
     } else {
-        this._score = totalMass;
+        this._score = totalScore;
         this._scale = Math.pow(Math.min(64 / totalSize, 1), 0.4);
     }
     this.isMassChanged = false;
@@ -416,7 +415,6 @@ PlayerTracker.prototype.updateCenterInGame = function() { // Get center of cells
     var count = 0;
     for (var i = 0; i < len; i++) {
         var node = this.cells[i];
-        if (node == null) continue;
         cx += node.position.x;
         cy += node.position.y;
         count++;

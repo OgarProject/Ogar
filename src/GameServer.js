@@ -749,11 +749,11 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     var py = penetration * ny;
     
     // body impulse
-    var totalMass = manifold.cell1.getMass() + manifold.cell2.getMass();
+    var totalMass = manifold.cell1.getSizeSquared() + manifold.cell2.getSizeSquared();
     if (totalMass <= 0) return;
     var invTotalMass = 1 / totalMass;
-    var impulse1 = manifold.cell2.getMass() * invTotalMass;
-    var impulse2 = manifold.cell1.getMass() * invTotalMass;
+    var impulse1 = manifold.cell2.getSizeSquared() * invTotalMass;
+    var impulse2 = manifold.cell1.getSizeSquared() * invTotalMass;
     
     // apply extrusion force
     manifold.cell1.position.x -= px * impulse1;
@@ -883,8 +883,8 @@ GameServer.prototype.updateMoveEngine = function () {
                 } else {
                     // split
                     var maxSplit = this.config.playerMaxCells - client.cells.length;
-                    var maxMass = this.config.playerMaxSize * this.config.playerMaxSize / 100;
-                    var count = (cell1.getMass() / maxMass) >> 0;
+                    var maxMass = this.config.playerMaxSize * this.config.playerMaxSize;
+                    var count = (cell1.getSizeSquared() / maxMass) >> 0;
                     var count = Math.min(count, maxSplit);
                     var splitSize = cell1.getSize() / Math.sqrt(count + 1);
                     var splitMass = splitSize * splitSize / 100;

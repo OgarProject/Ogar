@@ -513,7 +513,7 @@ Commands.list = {
             } else if (client.cells.length > 0) {
                 nick = fillChar(client.getFriendlyName(), ' ', gameServer.config.playerMaxNickLength);
                 cells = fillChar(client.cells.length, ' ', 5, true);
-                score = fillChar(client.getScore() >> 0, ' ', 6, true);
+                score = fillChar((client.getScore()/100) >> 0, ' ', 6, true);
                 position = fillChar(client.centerPos.x >> 0, ' ', 5, true) + ', ' + fillChar(client.centerPos.y >> 0, ' ', 5, true);
                 Logger.print(" " + id + " | " + ip + " | " + protocol + " | " + nick + " | " + cells + " | " + score + " | " + position);
             } else {
