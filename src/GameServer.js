@@ -6,7 +6,7 @@ var os = require('os');
 var path = require('path');
 var pjson = require('../package.json');
 var ini = require('./modules/ini.js');
-var QuadNode = require('./QuadNode.js');
+var QuadNode = require('quad-node');
 var PlayerCommand = require('./modules/PlayerCommand');
 var HttpsServer = require('./HttpsServer');
 
