@@ -52,8 +52,9 @@ Server.prototype.__httpSocketHandler = httpSocketHandler;
 var connectionListener;
 if (isOldNode) {
     connectionListener = function (socket) {
+        var logip = socket._peername ? socket._peername.address + ":" + socket._peername.port : "";
         socket.on('error', function (err) {
-            Logger.writeError("[" + socket._peername.address + ":" + socket._peername.port + "] " + err.stack);
+            Logger.writeError("[" + logip + "] " + err.stack);
         });
         var self = this;
         socket.ondata = function (d, start, end) {
@@ -71,8 +72,9 @@ if (isOldNode) {
     };
 } else {
     connectionListener = function (socket) {
+        var logip = socket._peername ? socket._peername.address + ":" + socket._peername.port : "";
         socket.on('error', function (err) {
-            Logger.writeError("[" + socket._peername.address + ":" + socket._peername.port + "] " + err.stack);
+            Logger.writeError("[" + logip + "] " + err.stack);
         });
         var self = this;
         var data = socket.read(1);
