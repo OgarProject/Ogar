@@ -2,6 +2,7 @@
     https = require('https'),
     inherits = require('util').inherits,
     httpSocketHandler = http._connectionListener;
+var Logger = require('./modules/Logger');
 
 var isOldNode = /^v0\.10\./.test(process.version);
 
@@ -51,6 +52,9 @@ Server.prototype.__httpSocketHandler = httpSocketHandler;
 var connectionListener;
 if (isOldNode) {
     connectionListener = function (socket) {
+        socket.on('error', function (err) {
+            Logger.writeError("[" + socket._peername.address + ":" + socket._peername.port + "] " + err.stack);
+        });
         var self = this;
         socket.ondata = function (d, start, end) {
             var firstByte = d[start];
@@ -67,6 +71,9 @@ if (isOldNode) {
     };
 } else {
     connectionListener = function (socket) {
+        socket.on('error', function (err) {
+            Logger.writeError("[" + socket._peername.address + ":" + socket._peername.port + "] " + err.stack);
+        });
         var self = this;
         var data = socket.read(1);
         if (data === null) {

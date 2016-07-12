@@ -210,6 +210,10 @@ GameServer.prototype.onServerSocketError = function (error) {
 };
 
 GameServer.prototype.onClientSocketOpen = function (ws) {
+    var logip = ws._socket.remoteAddress + ":" + ws._socket.remotePort;
+    ws.on('error', function (err) {
+        Logger.writeError("[" + logip + "] " + err.stack);
+    });
     if (this.config.serverMaxConnections > 0 && this.socketCount >= this.config.serverMaxConnections) {
         ws.close(1000, "No slots");
         return;
@@ -281,7 +285,6 @@ GameServer.prototype.onClientSocketClose = function (ws, code) {
 
 GameServer.prototype.onClientSocketError = function (ws, error) {
     ws.sendPacket = function (data) { };
-    ws.close(1002, "Socket error");
 };
 
 GameServer.prototype.onClientSocketMessage = function (ws, message) {
