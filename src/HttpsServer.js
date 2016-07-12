@@ -52,7 +52,7 @@ Server.prototype.__httpSocketHandler = httpSocketHandler;
 var connectionListener;
 if (isOldNode) {
     connectionListener = function (socket) {
-        var logip = socket._peername ? socket._peername.address + ":" + socket._peername.port : "";
+        var logip = socket.remoteAddress + ":" + socket.remotePort;
         socket.on('error', function (err) {
             Logger.writeError("[" + logip + "] " + err.stack);
         });
@@ -72,7 +72,7 @@ if (isOldNode) {
     };
 } else {
     connectionListener = function (socket) {
-        var logip = socket._peername ? socket._peername.address + ":" + socket._peername.port : "";
+        var logip = socket.remoteAddress + ":" + socket.remotePort;
         socket.on('error', function (err) {
             Logger.writeError("[" + logip + "] " + err.stack);
         });
