@@ -65,6 +65,8 @@ function GameServer() {
         serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
         serverMaxConnections: 64,   // Maximum number of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
+        serverMinionThreshold: 10,  // max connections within serverMinionInterval time period, which will not be marked as minion
+        serverMinionInterval: 1000, // minion detection interval in milliseconds
         serverPort: 443,            // Server port
         serverBind: '0.0.0.0',      // Network interface binding
         serverTracker: 0,           // Set to 1 if you want to show your server on the tracker http://ogar.mivabe.nl/master
@@ -123,6 +125,7 @@ function GameServer() {
     };
     
     this.ipBanList = [];
+    this.minionTest = [];
     this.userList = [];
     
     // Parse config
@@ -260,6 +263,22 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.on('close', onClose);
     this.socketCount++;
     this.clients.push(ws);
+    
+    // Minion detection
+    if (this.config.serverMinionThreshold) {
+        if (this.minionTest.length >= this.config.serverMinionThreshold) {
+            ws.playerTracker.isMinion = true;
+            for (var i = 0; i < this.minionTest.length; i++) {
+                var playerTracker = this.minionTest[i];
+                if (!playerTracker.socket.isConnected) continue;
+                playerTracker.isMinion = true;
+            }
+            if (this.minionTest.length) {
+                this.minionTest.splice(0, 1);
+            }
+        }
+        this.minionTest.push(ws.playerTracker);
+    }
 };
 
 GameServer.prototype.onClientSocketClose = function (ws, code) {
@@ -462,6 +481,16 @@ GameServer.prototype.removeNode = function(node) {
 };
 
 GameServer.prototype.updateClients = function () {
+    // check minions
+    var dateTime = new Date;
+    for (var i = 0; i < this.minionTest.length; ) {
+        var playerTracker = this.minionTest[i];
+        if (dateTime - playerTracker.connectedTime > this.config.serverMinionInterval) {
+            this.minionTest.splice(i, 1);
+        } else {
+            i++;
+        }
+    }
     // check dead clients
     for (var i = 0; i < this.clients.length; ) {
         var playerTracker = this.clients[i].playerTracker;
@@ -842,6 +871,7 @@ GameServer.prototype.resolveCollision = function (manifold) {
         // maxCell don't want to eat
         return;
     }
+    
     // Now maxCell can eat minCell
     minCell.isRemoved = true;
     
@@ -852,12 +882,16 @@ GameServer.prototype.resolveCollision = function (manifold) {
         minCell.owner.mergeOverride = false;
     }
     
-    // Consume effect
-    maxCell.onEat(minCell);
-    minCell.onEaten(maxCell);
-    
-    // update bounds
-    this.updateNodeQuad(maxCell);
+    var isMinion = (maxCell.owner && maxCell.owner.isMinion) ||
+        (minCell.owner && minCell.owner.isMinion);
+    if (!isMinion) {
+        // Consume effect
+        maxCell.onEat(minCell);
+        minCell.onEaten(maxCell);
+        
+        // update bounds
+        this.updateNodeQuad(maxCell);
+    }
 
     // Remove cell
     minCell.setKiller(maxCell);

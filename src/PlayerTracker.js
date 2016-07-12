@@ -57,6 +57,10 @@ function PlayerTracker(gameServer, socket) {
     this.scrambleX = 0;
     this.scrambleY = 0;
     this.scrambleId = 0;
+    
+    this.connectedTime = new Date;
+    this.isMinion = false;
+    this.spawnCounter = 0;
 
     // Gamemode function
     if (gameServer) {
@@ -236,6 +240,7 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
         };
         this.socket.sendPacket(new Packet.SetBorder(this, border));
     }
+    this.spawnCounter++;
     this.gameServer.gameMode.onPlayerSpawn(this.gameServer, this);
 };
 
@@ -545,11 +550,13 @@ PlayerTracker.prototype.getSpectateTarget = function () {
 
 PlayerTracker.prototype.updateVisibleNodes = function() {
     this.viewNodes = [];
-    var self = this;
-    this.gameServer.quadTree.find(this.viewBox, function (quadItem) {
-        if (quadItem.cell.owner != self)
-            self.viewNodes.push(quadItem.cell);
-    });
+    if (!this.isMinion) {
+        var self = this;
+        this.gameServer.quadTree.find(this.viewBox, function (quadItem) {
+            if (quadItem.cell.owner != self)
+                self.viewNodes.push(quadItem.cell);
+        });
+    }
     this.viewNodes = this.viewNodes.concat(this.cells);
     this.viewNodes.sort(function (a, b) { return a.nodeId - b.nodeId; });
 };

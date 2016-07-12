@@ -62,6 +62,10 @@ PacketHandler.prototype.handleMessage = function(message) {
     }
     this.socket.lastAliveTime = +new Date;
     
+    if (this.socket.playerTracker.isMinion && this.socket.playerTracker.spawnCounter >= 2) {
+        return;
+    }
+    
     var reader = new BinaryReader(message);
     var packetId = reader.readUInt8();
 
