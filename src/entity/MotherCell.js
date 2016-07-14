@@ -11,7 +11,7 @@ function MotherCell() {
     this.setColor({ r: 205, g: 85, b: 100 });
     this.motherCellMinSize = 149;   // vanilla 149 (mass = 149*149/100 = 222.01)
     this.motherCellSpawnAmount = 2;
-    if (this.getSize() == 0) {
+    if (!this.getSize()) {
         this.setSize(this.motherCellMinSize);
     }
 }
