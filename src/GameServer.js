@@ -128,11 +128,13 @@ function GameServer() {
     this.ipBanList = [];
     this.minionTest = [];
     this.userList = [];
+    this.badWords = [];
     
     // Parse config
     this.loadConfig();
     this.loadIpBanList();
     this.loadUserList();
+    this.loadBadWords();
     
     this.setBorder(this.config.borderWidth, this.config.borderHeight);
     this.quadTree = new QuadNode(this.border, 16, 100);
@@ -551,8 +553,20 @@ GameServer.prototype.onChatMessage = function (from, to, message) {
         // chat is disabled
         return;
     }
-    if (message.length > 128) message = message.slice(0, 128);
-    //Logger.debug("[CHAT] " + (from!=null && from.getName().length>0 ? from.getName() : "Spectator") + ": " + message);
+    if (message.length > 64) {
+        message = message.slice(0, 64);
+    }
+    if (this.checkBadWord(message)) {
+        if (from) {
+            this.sendChatMessage(null, from, "Stop insulting others! Keep calm and be friendly please");
+        }
+        return;
+    }
+    if (from) {
+        Logger.writeDebug("[CHAT] [" + from.getFriendlyName() + "]: " + message);
+    } else {
+        Logger.writeDebug("[CHAT] []:" + message);
+    }
     this.sendChatMessage(from, to, message);
 };
 
@@ -1353,6 +1367,7 @@ GameServer.prototype.updateMassDecay = function() {
 };
 
 var fileNameConfig = './gameserver.ini';
+var fileNameBadWords = './badwords.txt';
 var fileNameIpBan = './ipbanlist.txt';
 var fileNameUsers = './userRoles.json';
 
@@ -1383,6 +1398,35 @@ GameServer.prototype.loadConfig = function () {
     this.config.playerMinSize = Math.max(32, this.config.playerMinSize);
     Logger.setVerbosity(this.config.logVerbosity);
     Logger.setFileVerbosity(this.config.logFileVerbosity);
+};
+
+GameServer.prototype.loadBadWords = function () {
+    try {
+        if (!fs.existsSync(fileNameBadWords)) {
+            Logger.warn(fileNameBadWords + " not found");
+        } else {
+            var words = fs.readFileSync(fileNameBadWords, 'utf-8');
+            words = words.split(/[\r\n]+/);
+            words = words.map(function (arg) { return arg.trim().toLowerCase(); });
+            words = words.filter(function (arg) { return !!arg; });
+            this.badWords = words;
+            Logger.info(this.badWords.length + " bad words loaded");
+        }
+    } catch (err) {
+        Logger.error(err.stack);
+        Logger.error("Failed to load " + fileNameBadWords + ": " + err.message);
+    }
+};
+
+GameServer.prototype.checkBadWord = function (value) {
+    value = value.toLowerCase().trim();
+    if (!value) return false;
+    for (var i = 0; i < this.badWords.length; i++) {
+        if (value.indexOf(this.badWords[i]) >= 0) {
+            return true;
+        }
+    }
+    return false;
 };
 
 GameServer.prototype.changeConfig = function (name, value) {
