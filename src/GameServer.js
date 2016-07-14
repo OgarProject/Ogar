@@ -563,9 +563,9 @@ GameServer.prototype.onChatMessage = function (from, to, message) {
         return;
     }
     if (from) {
-        Logger.writeDebug("[CHAT] [" + from.getFriendlyName() + "]: " + message);
+        Logger.writeDebug("[CHAT][" + from.socket.remoteAddress + ":" + from.socket.remotePort + "][" + from.getFriendlyName() + "] " + message);
     } else {
-        Logger.writeDebug("[CHAT] []:" + message);
+        Logger.writeDebug("[CHAT][][]: " + message);
     }
     this.sendChatMessage(from, to, message);
 };
