@@ -113,6 +113,7 @@ vps.simonorj.com:24270 | Montreal | Instant Merge | https://redd.it/4mufge
 
 
 ## What's new:
+* 1.2.47: Improved stability and performance; added mute/unmute command
 * Added support for secure websocket connections (TLS)
 * Fixed mass decay
 * Added ejectSizeLoss
