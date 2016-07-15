@@ -42,6 +42,8 @@ Commands.list = {
         console.log("gamemode [id]                : change server gamemode");
         console.log("kick [PlayerID]              : kick player or bot by client ID");
         console.log("kickall                      : kick all players and bots");
+        console.log("mute [PlayerID]              : mute player (block chat messages from him)");
+        console.log("unmute [PlayerID]            : unmute player (allow chat messages from him)");
         console.log("kill [PlayerID]              : kill cell(s) by client ID");
         console.log("killall                      : kill everyone");
         console.log("mass [PlayerID] [mass]       : set cell(s) mass by client ID");
@@ -308,6 +310,50 @@ Commands.list = {
             return;
         }
         gameServer.kickId(id);
+    },
+    mute: function (gameServer, args) {
+        if (!args || args.length < 2) {
+            Logger.warn("Please specify a valid player ID!");
+            return;
+        }
+        var id = parseInt(args[1]);
+        if (isNaN(id)) {
+            Logger.warn("Please specify a valid player ID!");
+            return;
+        }
+        var player = gameServer.getPlayerById(id);
+        if (player == null) {
+            Logger.warn("Player with id=" + id + " not found!");
+            return;
+        }
+        if (player.isMuted) {
+            Logger.warn("Player with id=" + id + " already muted!");
+            return;
+        }
+        Logger.print("Player \"" + player.getFriendlyName() + "\" were muted");
+        player.isMuted = true;
+    },
+    unmute: function (gameServer, args) {
+        if (!args || args.length < 2) {
+            Logger.warn("Please specify a valid player ID!");
+            return;
+        }
+        var id = parseInt(args[1]);
+        if (isNaN(id)) {
+            Logger.warn("Please specify a valid player ID!");
+            return;
+        }
+        var player = gameServer.getPlayerById(id);
+        if (player == null) {
+            Logger.warn("Player with id=" + id + " not found!");
+            return;
+        }
+        if (!player.isMuted) {
+            Logger.warn("Player with id=" + id + " already not muted!");
+            return;
+        }
+        Logger.print("Player \"" + player.getFriendlyName() + "\" were unmuted");
+        player.isMuted = false;
     },
     kickall: function (gameServer, split) {
         gameServer.kickId(0);

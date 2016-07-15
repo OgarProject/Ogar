@@ -61,6 +61,7 @@ function PlayerTracker(gameServer, socket) {
     this.connectedTime = new Date;
     this.isMinion = false;
     this.spawnCounter = 0;
+    this.isMuted = false;
     
     // Gamemode function
     if (gameServer) {

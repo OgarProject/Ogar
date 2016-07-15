@@ -554,6 +554,10 @@ GameServer.prototype.onChatMessage = function (from, to, message) {
         // chat is disabled
         return;
     }
+    if (from && from.isMuted) {
+        // player is muted
+        return;
+    }
     if (message.length > 64) {
         message = message.slice(0, 64);
     }
@@ -1365,6 +1369,17 @@ GameServer.prototype.updateMassDecay = function () {
             }
         }
     }
+};
+
+GameServer.prototype.getPlayerById = function (id) {
+    if (id == null) return null;
+    for (var i = 0; i < this.clients.length; i++) {
+        var playerTracker = this.clients[i].playerTracker;
+        if (playerTracker.pID == id) {
+            return playerTracker;
+        }
+    }
+    return null;
 };
 
 var fileNameConfig = './gameserver.ini';
