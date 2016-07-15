@@ -1,19 +1,19 @@
-var FFA = require('./FFA'); // Base gamemode
+﻿var FFA = require('./FFA'); // Base gamemode
 var Entity = require('../entity');
 var Logger = require('../modules/Logger');
 
 function Experimental() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.ID = 2;
     this.name = "Experimental";
     this.specByLeaderboard = true;
-
+    
     // Gamemode Specific Variables
     this.nodesMother = [];
     this.tickMotherSpawn = 0;
     this.tickMotherUpdate = 0;
-
+    
     // Config
     this.motherSpawnInterval = 25 * 5;  // How many ticks it takes to spawn another mother cell (5 seconds)
     this.motherUpdateInterval = 5;     // How many ticks it takes to spawn mother food (1 second)
@@ -44,21 +44,21 @@ Experimental.prototype.spawnMotherCell = function (gameServer) {
 
 // Override
 
-Experimental.prototype.onServerInit = function(gameServer) {
+Experimental.prototype.onServerInit = function (gameServer) {
     // Called when the server starts
     gameServer.run = true;
-
+    
     var mapSize = Math.max(gameServer.border.width, gameServer.border.height);
-
+    
     // 7 mother cells for vanilla map size
     //this.motherMinAmount = Math.ceil(mapSize / 2000);
     //this.motherMaxAmount = this.motherMinAmount * 2;
-
+    
     var self = this;
     // Override
     
     // Special virus mechanics
-    Entity.Virus.prototype.onEat = function(prey) {
+    Entity.Virus.prototype.onEat = function (prey) {
         // Pushes the virus
         var angle = prey.isMoving ? prey.getAngle() : this.getAngle();
         this.setBoost(16 * 20, angle);
@@ -88,7 +88,7 @@ Experimental.prototype.onChange = function (gameServer) {
     Entity.MotherCell.prototype.onRemove = require('../Entity/MotherCell').prototype.onRemove;
 };
 
-Experimental.prototype.onTick = function(gameServer) {
+Experimental.prototype.onTick = function (gameServer) {
     // Mother Cell Spawning
     if (this.tickMotherSpawn >= this.motherSpawnInterval) {
         this.tickMotherSpawn = 0;

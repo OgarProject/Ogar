@@ -21,7 +21,7 @@ PlayerCommand.prototype.executeCommandLine = function (commandLine) {
     var index = commandLine.indexOf(' ');
     if (index >= 0) {
         command = commandLine.slice(0, index);
-        args = commandLine.slice(index+1, commandLine.length);
+        args = commandLine.slice(index + 1, commandLine.length);
     }
     command = command.trim().toLowerCase();
     var execute = playerCommands[command];

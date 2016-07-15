@@ -1,11 +1,11 @@
-var PlayerTracker = require('../PlayerTracker');
+﻿var PlayerTracker = require('../PlayerTracker');
 var gameServer = require('../GameServer');
 var Vector = require('vector2-node');
 
 function BotPlayer() {
     PlayerTracker.apply(this, Array.prototype.slice.call(arguments));
     //this.setColor(gameServer.getRandomColor());
-
+    
     this.splitCooldown = 0;
 }
 
@@ -14,18 +14,18 @@ BotPlayer.prototype = new PlayerTracker();
 
 // Functions
 
-BotPlayer.prototype.getLowestCell = function() {
+BotPlayer.prototype.getLowestCell = function () {
     // Gets the cell with the lowest mass
     if (this.cells.length <= 0) {
         return null; // Error!
     }
-
+    
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = this.cells.valueOf();
-    sorted.sort(function(a, b) {
+    sorted.sort(function (a, b) {
         return b.getSize() - a.getSize();
     });
-
+    
     return sorted[0];
 };
 
@@ -59,7 +59,7 @@ BotPlayer.prototype.sendUpdate = function () { // Overrides the update function 
 };
 
 // Custom
-BotPlayer.prototype.decide = function(cell) {
+BotPlayer.prototype.decide = function (cell) {
     if (!cell) return; // Cell was eaten, check in the next tick (I'm too lazy)
     
     var cellPos = cell.position;
@@ -68,7 +68,7 @@ BotPlayer.prototype.decide = function(cell) {
     var split = false,
         splitTarget = null,
         threats = [];
-
+    
     for (var i = 0; i < this.viewNodes.length; i++) {
         var check = this.viewNodes[i];
         if (check.owner == this) continue;
@@ -89,7 +89,7 @@ BotPlayer.prototype.decide = function(cell) {
                 // Can eat me
                 influence = -check.getSize();
             } else {
-                influence = -(check.getSize()/cell.getSize()) / 3;
+                influence = -(check.getSize() / cell.getSize()) / 3;
             }
         } else if (check.cellType == 1) {
             // Food
@@ -118,7 +118,7 @@ BotPlayer.prototype.decide = function(cell) {
         } else {
             influence = check.getSize(); // Might be TeamZ
         }
-
+        
         // Apply influence if it isn't 0 or my cell
         if (influence == 0 || cell.owner == check.owner)
             continue;
@@ -126,7 +126,7 @@ BotPlayer.prototype.decide = function(cell) {
         // Calculate separation between cell and check
         var checkPos = check.position;
         var displacement = new Vector(checkPos.x - cellPos.x, checkPos.y - cellPos.y);
-
+        
         // Figure out distance between cells
         var distance = displacement.length();
         if (influence < 0) {
@@ -134,14 +134,14 @@ BotPlayer.prototype.decide = function(cell) {
             distance -= cell.getSize() + check.getSize();
             if (check.cellType == 0) threats.push(check);
         }
-
+        
         // The farther they are the smaller influnce it is
         if (distance < 1) distance = 1; // Avoid NaN and positive influence with negative distance & attraction
         influence /= distance;
-
+        
         // Produce force vector exerted by this entity on the cell
         var force = displacement.normalize().scale(influence);
-
+        
         // Splitting conditions
         if (check.cellType == 0 && 
             cell.getSize() > (check.getSize() + 4) * 1.15 &&
@@ -149,7 +149,7 @@ BotPlayer.prototype.decide = function(cell) {
             (!split) && 
             this.splitCooldown == 0 && 
             this.cells.length < 3) {
-                
+            
             var endDist = 780 + 40 - cell.getSize() / 2 - check.getSize();
             
             if (endDist > 0 && distance < endDist) {
@@ -161,10 +161,10 @@ BotPlayer.prototype.decide = function(cell) {
             result.add(force);
         }
     }
-
+    
     // Normalize the resulting vector
     result.normalize();
-
+    
     // Check for splitkilling and threats
     if (split) {
         // Can be shortened but I'm too lazy
@@ -202,12 +202,12 @@ BotPlayer.prototype.decide = function(cell) {
 
 // Subfunctions
 
-BotPlayer.prototype.largest = function(list) {
+BotPlayer.prototype.largest = function (list) {
     // Sort the cells by Array.sort() function to avoid errors
     var sorted = list.valueOf();
-    sorted.sort(function(a, b) {
+    sorted.sort(function (a, b) {
         return b.getSize() - a.getSize();
     });
-
+    
     return sorted[0];
 };

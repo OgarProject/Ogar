@@ -1,4 +1,4 @@
-function Cell(gameServer, owner, position, size) {
+﻿function Cell(gameServer, owner, position, size) {
     this.gameServer = gameServer;
     this.owner = owner;     // playerTracker that owns this cell
     
@@ -14,7 +14,7 @@ function Cell(gameServer, owner, position, size) {
     this.isAgitated = false;// If true, then this cell has waves on it's outline
     this.killedBy = null;   // Cell that ate this cell
     this.isMoving = false;  // Indicate that cell is in boosted mode
-
+    
     this.boostDistance = 0;
     this.boostDirection = { x: 1, y: 0, angle: Math.PI / 2 };
     this.boostMaxSpeed = 78;    // boost speed limit, sqrt(780*780/100)
@@ -37,17 +37,17 @@ module.exports = Cell;
 
 // Fields not defined by the constructor are considered private and need a getter/setter to access from a different class
 
-Cell.prototype.setColor = function(color) {
+Cell.prototype.setColor = function (color) {
     this.color.r = color.r;
     this.color.g = color.g;
     this.color.b = color.b;
 };
 
-Cell.prototype.getColor = function() {
+Cell.prototype.getColor = function () {
     return this.color;
 };
 
-Cell.prototype.getType = function() {
+Cell.prototype.getType = function () {
     return this.cellType;
 };
 
@@ -64,7 +64,7 @@ Cell.prototype.setSize = function (size) {
         this.owner.massChanged();
 };
 
-Cell.prototype.getSize = function() {
+Cell.prototype.getSize = function () {
     return this._size;
 };
 
@@ -74,12 +74,12 @@ Cell.prototype.getSizeSquared = function () {
 
 Cell.prototype.getMass = function () {
     if (this._mass == null) {
-        this._mass = this.getSizeSquared() / 100;    
-    }    
+        this._mass = this.getSizeSquared() / 100;
+    }
     return this._mass;
 };
 
-Cell.prototype.getSpeed = function() {
+Cell.prototype.getSpeed = function () {
     if (this._speed == null) {
         var speed = 2.1106 / Math.pow(this.getSize(), 0.449);
         // tickStep=40ms
@@ -88,7 +88,7 @@ Cell.prototype.getSpeed = function() {
     return this._speed;
 };
 
-Cell.prototype.setAngle = function(angle) {
+Cell.prototype.setAngle = function (angle) {
     this.boostDirection = {
         x: Math.sin(angle),
         y: Math.cos(angle),
@@ -96,7 +96,7 @@ Cell.prototype.setAngle = function(angle) {
     };
 };
 
-Cell.prototype.getAngle = function() {
+Cell.prototype.getAngle = function () {
     return this.boostDirection.angle;
 };
 
@@ -273,7 +273,7 @@ Cell.prototype.checkBorder = function (border) {
 
 // Lib
 
-function findLineIntersection (p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
+function findLineIntersection(p0x, p0y, p1x, p1y, p2x, p2y, p3x, p3y) {
     var z1 = p1x - p0x;
     var z2 = p3x - p2x;
     var w1 = p1y - p0y;

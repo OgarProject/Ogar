@@ -16,7 +16,7 @@ Contributions are appreciated in the form of pull requests. However, to maintain
       ...
   }
   ```
-* Unix-style line endings should be used (`\n`).
+* CR-LF line endings should be used (`\r\n`).
 * Please leave a blank line at the end of each file.
 * Conditional/loop statements (`if`, `for`, `while`, etc.) should always use braces, and the opening brace should be placed on the same line as the statement.
 * There should be a space after a conditional/loop statement and before the condition, as well as a space after the condition and before the brace. Example:

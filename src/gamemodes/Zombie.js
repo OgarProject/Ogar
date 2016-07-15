@@ -1,8 +1,8 @@
-var Mode = require('./Mode');
+﻿var Mode = require('./Mode');
 
 function Zombie() {
     Mode.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.ID = 12;
     this.name = "Zombie FFA";
     this.haveTeams = true;
@@ -20,7 +20,7 @@ Zombie.prototype = new Mode();
 
 // Gamemode Specific Functions
 
-Zombie.prototype.leaderboardAddSort = function(player, leaderboard) {
+Zombie.prototype.leaderboardAddSort = function (player, leaderboard) {
     // Adds the player and sorts the leaderboard
     var len = leaderboard.length - 1;
     var loop = true;
@@ -38,7 +38,7 @@ Zombie.prototype.leaderboardAddSort = function(player, leaderboard) {
     }
 };
 
-Zombie.prototype.makeZombie = function(player) {
+Zombie.prototype.makeZombie = function (player) {
     // turns a player into a zombie
     player.team = 0;
     player.setColor(this.zombieColor);
@@ -57,7 +57,7 @@ Zombie.prototype.makeZombie = function(player) {
 
 // Override
 
-Zombie.prototype.onPlayerSpawn = function(gameServer, player) {
+Zombie.prototype.onPlayerSpawn = function (gameServer, player) {
     // make player a zombie if there are none
     if (this.zombies.length == 0) {
         player.team = 0;
@@ -67,12 +67,12 @@ Zombie.prototype.onPlayerSpawn = function(gameServer, player) {
         player.team = player.pID;
         player.setColor(gameServer.getRandomColor());
     }
-
+    
     // Spawn player
     gameServer.spawnPlayer(player);
 };
 
-Zombie.prototype.onCellAdd = function(cell) {
+Zombie.prototype.onCellAdd = function (cell) {
     // Add to team list
     if (cell.owner.getTeam() == 0) {
         this.zombies.push(cell);
@@ -81,7 +81,7 @@ Zombie.prototype.onCellAdd = function(cell) {
     }
 };
 
-Zombie.prototype.onCellRemove = function(cell) {
+Zombie.prototype.onCellRemove = function (cell) {
     // Remove from team list
     if (cell.owner.getTeam() == 0) {
         var index = this.zombies.indexOf(cell);
@@ -100,16 +100,16 @@ Zombie.prototype.onCellRemove = function(cell) {
 Zombie.prototype.onCellMove = function (x1, y1, cell) {
     var team = cell.owner.getTeam();
     var r = cell.getSize();
-
+    
     // Find team
     for (var i = 0; i < cell.owner.visibleNodes.length; i++) {
         // Only collide with player cells
         var check = cell.owner.visibleNodes[i];
-
+        
         if ((check.getType() != 0) || (cell.owner == check.owner)) {
             continue;
         }
-
+        
         // Collision with zombies
         if (check.owner.getTeam() == team || check.owner.getTeam() == 0 || team == 0) {
             // Check if in collision range
@@ -118,10 +118,10 @@ Zombie.prototype.onCellMove = function (x1, y1, cell) {
                 // Skip
                 continue;
             }
-
+            
             // First collision check passed... now more precise checking
             dist = cell.getDist(cell.position.x, cell.position.y, check.position.x, check.position.y);
-
+            
             // Calculations
             if (dist < collisionDist) { // Collided
                 if (check.owner.getTeam() == 0 && team != 0) {
@@ -135,7 +135,7 @@ Zombie.prototype.onCellMove = function (x1, y1, cell) {
                 var newDeltaY = check.position.y - y1;
                 var newDeltaX = check.position.x - x1;
                 var newAngle = Math.atan2(newDeltaX, newDeltaY);
-
+                
                 var move = collisionDist - dist;
                 
                 check.setPosition({
@@ -147,7 +147,7 @@ Zombie.prototype.onCellMove = function (x1, y1, cell) {
     }
 };
 
-Zombie.prototype.updateLB = function(gameServer) {
+Zombie.prototype.updateLB = function (gameServer) {
     gameServer.leaderboardType = this.packetLB;
     var lb = gameServer.leaderboard;
     // Loop through all clients
@@ -155,13 +155,13 @@ Zombie.prototype.updateLB = function(gameServer) {
         if (typeof gameServer.clients[i] == "undefined" || gameServer.clients[i].playerTracker.team == 0) {
             continue;
         }
-
+        
         var player = gameServer.clients[i].playerTracker;
         var playerScore = player.getScore();
         if (player.cells.length <= 0) {
             continue;
         }
-
+        
         if (lb.length == 0) {
             // Initial player
             lb.push(player);
@@ -176,6 +176,6 @@ Zombie.prototype.updateLB = function(gameServer) {
             }
         }
     }
-
+    
     this.rankOne = lb[0];
 };

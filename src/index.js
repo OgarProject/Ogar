@@ -1,4 +1,4 @@
-// Imports
+﻿// Imports
 var pjson = require('../package.json');
 var Logger = require('./modules/Logger');
 var Commands = require('./modules/CommandList');
@@ -24,7 +24,7 @@ Logger.info("\u001B[1m\u001B[32mMultiOgar " + pjson.version + "\u001B[37m - An o
 
 
 // Handle arguments
-process.argv.forEach(function(val) {
+process.argv.forEach(function (val) {
     if (val == "--noconsole") {
         showConsole = false;
     } else if (val == "--help") {
@@ -53,7 +53,7 @@ if (showConsole) {
 // Console functions
 
 function prompt() {
-    in_.question(">", function(str) {
+    in_.question(">", function (str) {
         try {
             parseCommands(str);
         } finally {
@@ -65,17 +65,17 @@ function prompt() {
 function parseCommands(str) {
     // Log the string
     Logger.write(">" + str);
-
+    
     // Don't process ENTER
     if (str === '')
         return;
-
+    
     // Splits the string
     var split = str.split(" ");
-
+    
     // Process the first string value
     var first = split[0].toLowerCase();
-
+    
     // Get command function
     var execute = gameServer.commands[first];
     if (typeof execute != 'undefined') {

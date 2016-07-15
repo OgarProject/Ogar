@@ -1,4 +1,4 @@
-// Import
+﻿// Import
 var BinaryWriter = require("./BinaryWriter");
 
 

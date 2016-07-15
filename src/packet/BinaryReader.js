@@ -107,12 +107,12 @@ BinaryReader.prototype.readStringZeroUtf8 = function () {
 BinaryReader.prototype.readStringZeroUnicode = function () {
     var length = 0;
     var terminatorLength = ((this._buffer.length - this._offset) & 1) != 0 ? 1 : 0;
-    for (var i = this._offset; i+1 < this._buffer.length; i+=2) {
+    for (var i = this._offset; i + 1 < this._buffer.length; i += 2) {
         if (this._buffer.readUInt16LE(i) == 0) {
             terminatorLength = 2;
             break;
         }
-        length+=2;
+        length += 2;
     }
     var value = this.readStringUnicode(length);
     this._offset += terminatorLength;

@@ -1,12 +1,12 @@
-var Tournament = require('./Tournament');
+﻿var Tournament = require('./Tournament');
 var Entity = require('../entity');
 
 function HungerGames() {
     Tournament.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.ID = 11;
     this.name = "Hunger Games";
-
+    
     // Gamemode Specific Variables
     this.maxContenders = 12;
     this.baseSpawnPoints = [{
@@ -59,50 +59,50 @@ HungerGames.prototype = new Tournament();
 
 // Gamemode Specific Functions
 
-HungerGames.prototype.getPos = function() {
+HungerGames.prototype.getPos = function () {
     var pos = {
         x: 0,
         y: 0
     };
-
+    
     // Random Position
     if (this.contenderSpawnPoints.length > 0) {
         var index = Math.floor(Math.random() * this.contenderSpawnPoints.length);
         pos = this.contenderSpawnPoints[index];
         this.contenderSpawnPoints.splice(index, 1);
     }
-
+    
     return {
         x: pos.x,
         y: pos.y
     };
 };
 
-HungerGames.prototype.spawnFood = function(gameServer, mass, pos) {
+HungerGames.prototype.spawnFood = function (gameServer, mass, pos) {
     var cell = new Entity.Food(gameServer, null, pos, mass);
     cell.setColor(gameServer.getRandomColor());
     gameServer.addNode(cell);
 };
 
-HungerGames.prototype.spawnVirus = function(gameServer, pos) {
+HungerGames.prototype.spawnVirus = function (gameServer, pos) {
     var v = new Entity.Virus(gameServer, null, pos, gameServer.config.virusMinSize);
     gameServer.addNode(v);
 };
 
-HungerGames.prototype.onPlayerDeath = function(gameServer) {
+HungerGames.prototype.onPlayerDeath = function (gameServer) {
     gameServer.setBorder(
         gameServer.border.width - this.borderDec * 2, 
         gameServer.border.height - this.borderDec * 2);
-
+    
     // Remove all cells
     var len = gameServer.nodes.length;
     for (var i = 0; i < len; i++) {
         var node = gameServer.nodes[i];
-
+        
         if ((!node) || (node.getType() == 0)) {
             continue;
         }
-
+        
         // Move
         if (node.position.x < gameServer.border.minx) {
             gameServer.removeNode(node);
@@ -122,13 +122,13 @@ HungerGames.prototype.onPlayerDeath = function(gameServer) {
 
 // Override
 
-HungerGames.prototype.onServerInit = function(gameServer) {
+HungerGames.prototype.onServerInit = function (gameServer) {
     // Prepare
     this.prepare(gameServer);
-
+    
     // Resets spawn points
     this.contenderSpawnPoints = this.baseSpawnPoints.slice();
-
+    
     // Override config values
     if (gameServer.config.serverBots > this.maxContenders) {
         // The number of bots cannot exceed the maximum amount of contenders
@@ -145,11 +145,11 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     gameServer.config.virusMaxAmount = 100;
     gameServer.config.ejectSpawnPlayer = 0;
     gameServer.config.playerDisconnectTime = 10; // So that people dont disconnect and stall the game for too long
-
+    
     // Spawn Initial Virus/Large food
     var mapWidth = gameServer.border.width;
     var mapHeight = gameServer.border.height;
-
+    
     // Food
     this.spawnFood(gameServer, 200, {
         x: mapWidth * .5,
@@ -219,7 +219,7 @@ HungerGames.prototype.onServerInit = function(gameServer) {
         x: mapWidth * .4,
         y: mapHeight * .7
     });
-
+    
     // Virus
     this.spawnVirus(gameServer, {
         x: mapWidth * .6,
@@ -287,13 +287,13 @@ HungerGames.prototype.onServerInit = function(gameServer) {
     });
 };
 
-HungerGames.prototype.onPlayerSpawn = function(gameServer, player) {
+HungerGames.prototype.onPlayerSpawn = function (gameServer, player) {
     // Only spawn players if the game hasnt started yet
     if ((this.gamePhase == 0) && (this.contenders.length < this.maxContenders)) {
         player.setColor(gameServer.getRandomColor()); // Random color
         this.contenders.push(player); // Add to contenders list
         gameServer.spawnPlayer(player, this.getPos());
-
+        
         if (this.contenders.length == this.maxContenders) {
             // Start the game once there is enough players
             this.startGamePrep(gameServer);

@@ -1,4 +1,4 @@
-var Cell = require('./Cell');
+﻿var Cell = require('./Cell');
 
 function PlayerCell() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
@@ -22,7 +22,7 @@ PlayerCell.prototype.updateRemerge = function () {
     var baseTtr = this.gameServer.config.playerRecombineTime;        // default baseTtr = 30
     if (baseTtr == 0) {
         // instant merge
-        if (this.getSize() >= 780/2) {
+        if (this.getSize() >= 780 / 2) {
             this._canRemerge = age > 20;
             return;
         }
@@ -86,12 +86,12 @@ PlayerCell.prototype.moveUser = function (border) {
 
 // Override
 
-PlayerCell.prototype.onAdd = function(gameServer) {
+PlayerCell.prototype.onAdd = function (gameServer) {
     // Gamemode actions
     gameServer.gameMode.onCellAdd(this);
 };
 
-PlayerCell.prototype.onRemove = function(gameServer) {
+PlayerCell.prototype.onRemove = function (gameServer) {
     var index;
     // Remove from player cell list
     index = this.owner.cells.indexOf(this);

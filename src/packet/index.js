@@ -1,4 +1,4 @@
-module.exports = {
+﻿module.exports = {
     BinaryWriter: require('./BinaryWriter'),
     BinaryReader: require('./BinaryReader'),
     ChatMessage: require('./ChatMessage'),

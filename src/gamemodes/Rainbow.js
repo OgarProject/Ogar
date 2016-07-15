@@ -1,13 +1,13 @@
-var FFA = require('./FFA'); // Base gamemode
+﻿var FFA = require('./FFA'); // Base gamemode
 var Food = require('../entity/Food');
 
 function Rainbow() {
     FFA.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.ID = 20;
     this.name = "Rainbow FFA";
     this.specByLeaderboard = true;
-
+    
     this.colors = [{
             'r': 255,
             'g': 0,
@@ -138,37 +138,37 @@ Rainbow.prototype = new FFA();
 
 // Gamemode Specific Functions
 
-Rainbow.prototype.changeColor = function(node) {
+Rainbow.prototype.changeColor = function (node) {
     if (typeof node.rainbow == 'undefined') {
         node.rainbow = Math.floor(Math.random() * this.colors.length);
     }
-
+    
     if (node.rainbow >= this.colorsLength) {
         node.rainbow = 0;
     }
-
+    
     node.setColor(this.colors[node.rainbow]);
     node.rainbow += this.speed;
 };
 
 // Override
 
-Rainbow.prototype.onServerInit = function() {
+Rainbow.prototype.onServerInit = function () {
 };
 
-Rainbow.prototype.onChange = function() {
+Rainbow.prototype.onChange = function () {
 };
 
-Rainbow.prototype.onTick = function(gameServer) {
+Rainbow.prototype.onTick = function (gameServer) {
     var color, node;
     // Change color
     for (var i in gameServer.nodes) {
         node = gameServer.nodes[i];
-
+        
         if (!node) {
             continue;
         }
-
+        
         this.changeColor(node);
     }
 };

@@ -27,7 +27,7 @@ ChatMessage.prototype.build = function (protocol) {
             color = this.sender.cells[0].getColor();
         }
     }
-
+    
     var writer = new BinaryWriter();
     writer.writeUInt8(0x63);            // message id (decimal 99)
     
@@ -39,7 +39,7 @@ ChatMessage.prototype.build = function (protocol) {
         flags = 0x40;           // admin message
     else if (this.sender.userRole == UserRoleEnum.MODER)
         flags = 0x20;           // moder message
-
+    
     writer.writeUInt8(flags);
     writer.writeUInt8(color.r >> 0);
     writer.writeUInt8(color.g >> 0);

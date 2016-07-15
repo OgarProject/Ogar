@@ -1,4 +1,4 @@
-var pjson = require('../package.json');
+﻿var pjson = require('../package.json');
 var Packet = require('./packet');
 var BinaryReader = require('./packet/BinaryReader');
 
@@ -8,7 +8,7 @@ function PacketHandler(gameServer, socket) {
     this.protocol = 0;
     this.isHandshakePassed = false;
     this.lastChatTick = 0;
-
+    
     this.pressQ = false;
     this.pressW = false;
     this.pressSpace = false;
@@ -17,7 +17,7 @@ function PacketHandler(gameServer, socket) {
 
 module.exports = PacketHandler;
 
-PacketHandler.prototype.handleMessage = function(message) {
+PacketHandler.prototype.handleMessage = function (message) {
     // Validation
     if (message.length == 0) {
         return;
@@ -29,7 +29,7 @@ PacketHandler.prototype.handleMessage = function(message) {
     }
     
     // no handshake?
-    if (!this.isHandshakePassed) { 
+    if (!this.isHandshakePassed) {
         if (message[0] != 254 || message.length != 5) {
             // wait handshake
             return;
@@ -68,7 +68,7 @@ PacketHandler.prototype.handleMessage = function(message) {
     
     var reader = new BinaryReader(message);
     var packetId = reader.readUInt8();
-
+    
     switch (packetId) {
         case 0:
             if (this.socket.playerTracker.cells.length > 0) {

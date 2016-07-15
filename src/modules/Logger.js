@@ -117,7 +117,7 @@ function getTimeString() {
 };
 
 function writeCon(color, level, message) {
-    if (level > logVerbosity) return;    
+    if (level > logVerbosity) return;
     message = util.format(message);
     var prefix = "";
     if (level == LogLevelEnum.DEBUG)

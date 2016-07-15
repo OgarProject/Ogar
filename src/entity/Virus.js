@@ -1,9 +1,9 @@
-var Cell = require('./Cell');
+﻿var Cell = require('./Cell');
 var Logger = require('../modules/Logger');
 
 function Virus() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.cellType = 2;
     this.isSpiked = true;
     this.fed = 0;
@@ -23,14 +23,14 @@ Virus.prototype.canEat = function (cell) {
 Virus.prototype.onEat = function (prey) {
     // Called to eat prey cell
     this.setSize(Math.sqrt(this.getSizeSquared() + prey.getSizeSquared()));
-
+    
     if (this.getSize() >= this.gameServer.config.virusMaxSize) {
         this.setSize(this.gameServer.config.virusMinSize); // Reset mass
         this.gameServer.shootVirus(this, prey.getAngle());
     }
 };
 
-Virus.prototype.onEaten = function(consumer) {
+Virus.prototype.onEaten = function (consumer) {
     var client = consumer.owner;
     if (client == null) return;
     
@@ -62,11 +62,11 @@ Virus.prototype.onEaten = function(consumer) {
     }
 };
 
-Virus.prototype.onAdd = function(gameServer) {
+Virus.prototype.onAdd = function (gameServer) {
     gameServer.nodesVirus.push(this);
 };
 
-Virus.prototype.onRemove = function(gameServer) {
+Virus.prototype.onRemove = function (gameServer) {
     var index = gameServer.nodesVirus.indexOf(this);
     if (index != -1) {
         gameServer.nodesVirus.splice(index, 1);

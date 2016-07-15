@@ -1,8 +1,8 @@
-var Cell = require('./Cell');
+﻿var Cell = require('./Cell');
 
 function Food() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.cellType = 1;
 }
 
@@ -15,6 +15,6 @@ Food.prototype.onAdd = function (gameServer) {
     gameServer.currentFood++;
 };
 
-Food.prototype.onRemove = function(gameServer) {
+Food.prototype.onRemove = function (gameServer) {
     gameServer.currentFood--;
 };

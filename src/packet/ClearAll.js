@@ -1,4 +1,4 @@
-function ClearAll() { }
+﻿function ClearAll() { }
 
 module.exports = ClearAll;
 

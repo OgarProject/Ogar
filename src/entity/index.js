@@ -1,4 +1,4 @@
-module.exports = {
+﻿module.exports = {
     Cell: require('./Cell'),
     PlayerCell: require('./PlayerCell'),
     Food: require('./Food'),

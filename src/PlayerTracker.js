@@ -1,4 +1,4 @@
-var Packet = require('./packet');
+﻿var Packet = require('./packet');
 var GameServer = require('./GameServer');
 var BinaryWriter = require("./packet/BinaryWriter");
 var UserRoleEnum = require("./enum/UserRoleEnum");
@@ -25,19 +25,19 @@ function PlayerTracker(gameServer, socket) {
     this._scale = 1;
     this.isMassChanged = true;
     this.borderCounter = 0;
-
+    
     this.mouse = {
         x: 0,
         y: 0
     };
     this.tickLeaderboard = 0;
-
+    
     this.team = 0;
     this.spectate = false;
     this.freeRoam = false;      // Free-roam mode enables player to move in spectate mode
     this.spectateTarget = null; // Spectate target, null for largest player
     this.lastSpectateSwitchTick = 0;
-
+    
     this.centerPos = {
         x: 0,
         y: 0
@@ -52,7 +52,7 @@ function PlayerTracker(gameServer, socket) {
         halfWidth: 0,
         halfHeight: 0
     };
-
+    
     // Scramble the coordinate system for anti-raga
     this.scrambleX = 0;
     this.scrambleY = 0;
@@ -61,7 +61,7 @@ function PlayerTracker(gameServer, socket) {
     this.connectedTime = new Date;
     this.isMinion = false;
     this.spawnCounter = 0;
-
+    
     // Gamemode function
     if (gameServer) {
         this.centerPos.x = gameServer.border.centerx;
@@ -108,7 +108,7 @@ PlayerTracker.prototype.getFriendlyName = function () {
     return name;
 };
 
-PlayerTracker.prototype.setName = function(name) {
+PlayerTracker.prototype.setName = function (name) {
     this._name = name;
     if (!name || name.length < 1) {
         this._nameUnicode = null;
@@ -123,7 +123,7 @@ PlayerTracker.prototype.setName = function(name) {
     this._nameUtf8 = writer.toBuffer();
 };
 
-PlayerTracker.prototype.getName = function() {
+PlayerTracker.prototype.getName = function () {
     return this._name;
 };
 
@@ -202,7 +202,7 @@ PlayerTracker.prototype.updateMass = function () {
 };
 
 PlayerTracker.prototype.massChanged = function () {
-    this.isMassChanged = true;    
+    this.isMassChanged = true;
 };
 
 // Functions
@@ -211,12 +211,12 @@ PlayerTracker.prototype.joinGame = function (name, skin) {
     if (this.cells.length > 0) return;
     if (name == null) name = "";
     this.setName(name);
-    if (skin != null)    
+    if (skin != null)
         this.setSkin(skin);
     this.spectate = false;
     this.freeRoam = false;
     this.spectateTarget = null;
-
+    
     // some old clients don't understand ClearAll message
     // so we will send update for them
     if (this.socket.packetHandler.protocol < 6) {
@@ -294,7 +294,7 @@ PlayerTracker.prototype.updateTick = function () {
         this.pressQ();
         this.socket.packetHandler.pressQ = false;
     }
-
+    
     if (this.spectate) {
         if (this.freeRoam || this.getSpectateTarget() == null) {
             // free roam
@@ -412,7 +412,7 @@ PlayerTracker.prototype.sendUpdate = function () {
 
 // Viewing box
 
-PlayerTracker.prototype.updateCenterInGame = function() { // Get center of cells
+PlayerTracker.prototype.updateCenterInGame = function () { // Get center of cells
     var len = this.cells.length;
     if (len <= 0) return;
     var cx = 0;
@@ -474,7 +474,7 @@ PlayerTracker.prototype.pressQ = function () {
         if (tick - this.lastSpectateSwitchTick < 40)
             return;
         this.lastSpectateSwitchTick = tick;
-
+        
         if (this.spectateTarget == null) {
             this.freeRoam = !this.freeRoam;
         }
@@ -498,9 +498,9 @@ PlayerTracker.prototype.pressSpace = function () {
         if (tick - this.lastSpectateSwitchTick < 40)
             return;
         this.lastSpectateSwitchTick = tick;
-
+        
         // Space doesn't work for freeRoam mode
-        if (this.freeRoam || this.gameServer.largestClient==null)
+        if (this.freeRoam || this.gameServer.largestClient == null)
             return;
         this.nextSpectateTarget();
     } else if (this.gameServer.run) {
@@ -548,7 +548,7 @@ PlayerTracker.prototype.getSpectateTarget = function () {
     return this.spectateTarget;
 };
 
-PlayerTracker.prototype.updateVisibleNodes = function() {
+PlayerTracker.prototype.updateVisibleNodes = function () {
     this.viewNodes = [];
     if (!this.isMinion) {
         var self = this;
@@ -561,7 +561,7 @@ PlayerTracker.prototype.updateVisibleNodes = function() {
     this.viewNodes.sort(function (a, b) { return a.nodeId - b.nodeId; });
 };
 
-PlayerTracker.prototype.setCenterPos = function(x, y) {
+PlayerTracker.prototype.setCenterPos = function (x, y) {
     if (isNaN(x) || isNaN(y)) {
         throw new TypeError("PlayerTracker.setCenterPos: NaN");
     }
@@ -573,7 +573,7 @@ PlayerTracker.prototype.setCenterPos = function(x, y) {
     this.centerPos.y = y;
 };
 
-PlayerTracker.prototype.sendCameraPacket = function() {
+PlayerTracker.prototype.sendCameraPacket = function () {
     this.socket.sendPacket(new Packet.UpdatePosition(
         this,
         this.centerPos.x,

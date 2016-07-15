@@ -1,9 +1,9 @@
-// Import
+﻿// Import
 var BinaryWriter = require("./BinaryWriter");
 
 
 function UpdateNodes(playerTracker, addNodes, updNodes, eatNodes, delNodes) {
-    this.playerTracker = playerTracker; 
+    this.playerTracker = playerTracker;
     this.addNodes = addNodes;
     this.updNodes = updNodes;
     this.eatNodes = eatNodes;
@@ -18,11 +18,11 @@ UpdateNodes.prototype.build = function (protocol) {
     var writer = new BinaryWriter();
     writer.writeUInt8(0x10);                                // Packet ID
     this.writeEatItems(writer);
-
+    
     if (protocol < 5) this.writeUpdateItems4(writer);
     else if (protocol == 5) this.writeUpdateItems5(writer);
     else this.writeUpdateItems6(writer);
-
+    
     this.writeRemoveItems(writer, protocol);
     return writer.toBuffer();
 };
@@ -32,7 +32,7 @@ UpdateNodes.prototype.writeUpdateItems4 = function (writer) {
     var scrambleX = this.playerTracker.scrambleX;
     var scrambleY = this.playerTracker.scrambleY;
     var scrambleId = this.playerTracker.scrambleId;
-
+    
     for (var i = 0; i < this.updNodes.length; i++) {
         var node = this.updNodes[i];
         if (node.nodeId == 0)

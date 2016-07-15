@@ -1,4 +1,4 @@
-// Import
+﻿// Import
 var BinaryWriter = require("./BinaryWriter");
 
 
@@ -62,13 +62,13 @@ UpdateLeaderboard.prototype.buildFfa5 = function () {
     for (var i = 0; i < this.leaderboard.length; i++) {
         var item = this.leaderboard[i];
         if (item == null) return null;  // bad leaderboardm just don't send it
-
+        
         var name = item.getNameUnicode();
         var id = 0;
         if (item == player && item.cells.length > 0) {
             id = item.cells[0].nodeId ^ this.playerTracker.scrambleId;
         }
-
+        
         writer.writeUInt32(id >>> 0);   // Player cell Id
         if (name != null)
             writer.writeBytes(name);

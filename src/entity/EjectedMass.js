@@ -1,8 +1,8 @@
-var Cell = require('./Cell');
+﻿var Cell = require('./Cell');
 
 function EjectedMass() {
     Cell.apply(this, Array.prototype.slice.call(arguments));
-
+    
     this.cellType = 3;
 }
 
@@ -16,7 +16,7 @@ EjectedMass.prototype.onAdd = function (gameServer) {
     gameServer.nodesEjected.push(this);
 };
 
-EjectedMass.prototype.onRemove = function(gameServer) {
+EjectedMass.prototype.onRemove = function (gameServer) {
     // Remove from list of ejected mass
     var index = gameServer.nodesEjected.indexOf(this);
     if (index != -1) {
