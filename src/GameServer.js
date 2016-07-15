@@ -1721,9 +1721,10 @@ GameServer.prototype.getStats = function () {
 // Custom prototype functions
 WebSocket.prototype.sendPacket = function (packet) {
     if (packet == null) return;
-    
-    //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN) {
+        if (!this._socket.writable) {
+            return;
+        }
         var buffer = packet.build(this.playerTracker.socket.packetHandler.protocol);
         if (buffer != null) {
             this.send(buffer, { binary: true });
