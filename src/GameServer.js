@@ -562,6 +562,15 @@ GameServer.prototype.onChatMessage = function (from, to, message) {
     if (message.length > 64) {
         message = message.slice(0, 64);
     }
+    for (var i = 0; i < message.length; i++) {
+        var c = message.charCodeAt(i);
+        if (c < 0x20 || c > 0x7F) {
+            if (from) {
+                this.sendChatMessage(null, from, "You can use ASCII text only!");
+            }
+            return;
+        }
+    }
     if (this.checkBadWord(message)) {
         if (from) {
             this.sendChatMessage(null, from, "Stop insulting others! Keep calm and be friendly please");
