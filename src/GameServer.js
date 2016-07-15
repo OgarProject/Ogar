@@ -171,7 +171,8 @@ GameServer.prototype.start = function() {
     }
     var wsOptions = {
         server: this.httpServer, 
-        perMessageDeflate: true
+        perMessageDeflate: false,
+        maxPayload: 1024
     };
     this.wsServer = new WebSocket.Server(wsOptions);
     this.wsServer.on('error', this.onServerSocketError.bind(this));
