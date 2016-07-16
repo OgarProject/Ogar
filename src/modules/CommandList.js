@@ -48,6 +48,7 @@ Commands.list = {
         console.log("killall                      : kill everyone");
         console.log("mass [PlayerID] [mass]       : set cell(s) mass by client ID");
         console.log("merge [PlayerID]             : merge all client's cells once");
+        console.log("skin [PlayerID] [SkinName]   : change player skin");
         console.log("name [PlayerID] [name]       : change cell(s) name by client ID");
         console.log("playerlist                   : get list of players and bots");
         console.log("pause                        : pause game , freeze all cells");
@@ -418,6 +419,31 @@ Commands.list = {
                 break;
             }
         }
+    },
+    skin: function (gameServer, args) {
+        if (!args || args.length < 3) {
+            Logger.warn("Please specify a valid player ID and skin name!");
+            return;
+        }
+        var id = parseInt(args[1]);
+        if (isNaN(id)) {
+            Logger.warn("Please specify a valid player ID!");
+            return;
+        }
+        var skin = args[2].trim();
+        if (!skin) {
+            Logger.warn("Please specify skin name!");
+        }
+        var player = gameServer.getPlayerById(id);
+        if (player == null) {
+            Logger.warn("Player with id=" + id + " not found!");
+            return;
+        }
+        if (player.cells.length > 0) {
+            Logger.warn("Player is alive, skin will not be applied to existing cells");
+        }
+        Logger.print("Player \"" + player.getFriendlyName() + "\"'s skin is changed to " + skin);
+        player.setSkin(skin);
     },
     merge: function (gameServer, split) {
         // Validation checks

@@ -81,6 +81,8 @@ function GameServer() {
         serverScrambleLevel: 2,     // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap); 3 - high scrambling (no border)
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
+        serverChatAscii: 1,          // Set to 1 to disable non-ANSI letters in the chat (english only mode)
+        
         serverName: 'MultiOgar #1', // Server name
         serverWelcome1: 'Welcome to MultiOgar server!',      // First server welcome message
         serverWelcome2: '',         // Second server welcome message (for info, etc)
@@ -562,13 +564,15 @@ GameServer.prototype.onChatMessage = function (from, to, message) {
     if (message.length > 64) {
         message = message.slice(0, 64);
     }
-    for (var i = 0; i < message.length; i++) {
-        var c = message.charCodeAt(i);
-        if (c < 0x20 || c > 0x7F) {
-            if (from) {
-                this.sendChatMessage(null, from, "You can use ASCII text only!");
+    if (this.config.serverChatAscii) {
+        for (var i = 0; i < message.length; i++) {
+            var c = message.charCodeAt(i);
+            if (c < 0x20 || c > 0x7F) {
+                if (from) {
+                    this.sendChatMessage(null, from, "You can use ASCII text only!");
+                }
+                return;
             }
-            return;
         }
     }
     if (this.checkBadWord(message)) {
