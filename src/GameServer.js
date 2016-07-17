@@ -1745,7 +1745,6 @@ WebSocket.prototype.sendPacket = function (packet) {
     } else {
         this.readyState = WebSocket.CLOSED;
         this.emit('close');
-        this.removeAllListeners();
     }
 };
 
