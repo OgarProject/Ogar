@@ -94,13 +94,6 @@ DynamicBuffer.prototype.moveTemp = function(amount) {
             this.bytes.push(this.tempDataView.getUint8(i));
         }
     }
-    this.flush();
-};
-
-DynamicBuffer.prototype.flush = function() {
-    // Readies temp buffer for use
-    this.tempArrayBuffer = new ArrayBuffer(8);
-    this.tempDataView = new DataView(this.tempArrayBuffer);
 };
 
 DynamicBuffer.prototype.build = function() {
