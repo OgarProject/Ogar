@@ -1396,6 +1396,25 @@ GameServer.prototype.getPlayerById = function (id) {
     return null;
 };
 
+GameServer.prototype.checkSkinName = function (skinName) {
+    if (!skinName) {
+        return true;
+    }
+    if (skinName.length == 1 || skinName.length > 16) {
+        return false;
+    }
+    if (skinName[0] != '%' /* && skinName[0] != ':' */) {
+        return false;
+    }
+    for (var i = 1; i < skinName.length; i++) {
+        var c = skinName.charCodeAt(i);
+        if (c < 0x21 || c > 0x7F || c == '/' || c == '\\' || c == ':' || c == '%' || c == '?' || c == '&' || c == '<' || c == '>') {
+            return false;
+        }
+    }
+    return true;
+};
+
 var fileNameConfig = './gameserver.ini';
 var fileNameBadWords = './badwords.txt';
 var fileNameIpBan = './ipbanlist.txt';
@@ -1449,6 +1468,7 @@ GameServer.prototype.loadBadWords = function () {
 };
 
 GameServer.prototype.checkBadWord = function (value) {
+    if (!value) return false;
     value = value.toLowerCase().trim();
     if (!value) return false;
     for (var i = 0; i < this.badWords.length; i++) {

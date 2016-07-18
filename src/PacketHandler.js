@@ -166,17 +166,27 @@ PacketHandler.prototype.handleMessage = function (message) {
 PacketHandler.prototype.setNickname = function (text) {
     var name = "";
     var skin = null;
-    if (text != null && text.length != 0) {
+    if (text != null && text.length > 0) {
+        var skinName = null;
+        var userName = text;
         var n = -1;
-        if (text.charAt(0) == '<' && (n = text.indexOf('>', 1)) >= 0) {
-            skin = "%" + text.slice(1, n);
-            name = text.slice(n + 1);
-            //} else if (text[0] == "|" && (n = text.indexOf("|", 1)) >= 0) {
-            //    skin = ":http://i.imgur.com/" + text.slice(1, n) + ".png";
-            //    name = text.slice(n + 1);
-        } else {
-            name = text;
+        if (text[0] == '<' && (n = text.indexOf('>', 1)) >= 1) {
+            if (n > 1)
+                skinName = "%" + text.slice(1, n);
+            else
+                skinName = "";
+            userName = text.slice(n + 1);
         }
+        //else if (text[0] == "|" && (n = text.indexOf('|', 1)) >= 0) {
+        //    skinName = ":http://i.imgur.com/" + text.slice(1, n) + ".png";
+        //    userName = text.slice(n + 1);
+        //}
+        if (skinName && !this.gameServer.checkSkinName(skinName)) {
+            skinName = null;
+            userName = text;
+        }
+        skin = skinName;
+        name = userName;
     }
     if (name.length > this.gameServer.config.playerMaxNickLength) {
         name = name.substring(0, this.gameServer.config.playerMaxNickLength);
