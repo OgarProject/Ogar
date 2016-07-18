@@ -1400,7 +1400,7 @@ GameServer.prototype.checkSkinName = function (skinName) {
     if (!skinName) {
         return true;
     }
-    if (skinName.length == 1 || skinName.length > 16) {
+    if (skinName.length == 1 || skinName.length > 25) {
         return false;
     }
     if (skinName[0] != '%' /* && skinName[0] != ':' */) {
