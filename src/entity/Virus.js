@@ -31,22 +31,24 @@ Virus.prototype.onConsume = function(consumer) {
     if (massLeft < 466) {
         // Too small cell - split it entirely
         var splitAmount = 1;
-        while (splitAmount * 2 <= numSplits - 1 && massLeft > 0) {
+        while (massLeft > 0) {
             splitAmount *= 2;
-            massLeft -= 36;
+            massLeft = consumer.mass - splitAmount * 36;
         }
         // Calculate split mass
         var splitMass = consumer.mass / splitAmount;
 
         // Split the cells
-        for (var i = 0; i < splitAmount; i++) {
+        for (var i = 0; i < splitAmount - 1; i++) {
             var angle = Math.random() * 6.28;
+            if (consumer.mass <= 10) break; // add in any case
+
             this.gameServer.nodeHandler.createPlayerCell(client, consumer, angle, splitMass);
         }
     } else {
         // Too large cell - split it, also with larger cells
         // Begin calculating split masses
-        var splitMass = consumer.mass * Math.pow(numSplits, -0.2) / 2;
+        var splitMass = consumer.mass * Math.pow(numSplits, -0.27) / 2;
         while (true) {
             if (numSplits <= 0 || splitMass < 48) break;
             var angle = Math.random() * 6.28;
