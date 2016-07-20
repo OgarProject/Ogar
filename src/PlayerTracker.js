@@ -243,7 +243,7 @@ PlayerTracker.prototype.update = function() {
 };
 
 PlayerTracker.prototype.getAntiteamMult = function() {
-    return Math.min((this.massLossMult + this.massGainMult) / (this.getScore(true) / 2), 2);
+    return Math.min((this.massLossMult + this.massGainMult) / (this.getScore(true) / 2), 2.8);
 };
 
 PlayerTracker.prototype.antiTeamTick = function() {
@@ -259,10 +259,10 @@ PlayerTracker.prototype.applyTeaming = function(n, type) {
     // Called when player does an action which increases anti-teaming
     switch (type) {
         case -1: // Loss
-            this.massLossMult += n * (0.5 + this.getAntiteamMult());
+            this.massLossMult += n * (0.3 + this.getAntiteamMult());
             break;
         case 1: // Gain
-            this.massGainMult += n * (0.5 + this.getAntiteamMult());
+            this.massGainMult += n * (0.3 + this.getAntiteamMult());
             break;
     }
 };
@@ -270,7 +270,11 @@ PlayerTracker.prototype.applyTeaming = function(n, type) {
 // Viewing box
 
 PlayerTracker.prototype.getBox = function() { // For view distance
-    var totalSize = this.getSizes();
+    var totalSize;
+    
+    if (this.cells.length == 0) totalSize = 200; // Give a starting look
+    else totalSize = this.getSizes();
+    
     var scale = Math.sqrt(totalSize) / Math.log(totalSize);
     var w = this.gameServer.config.serverViewBaseX * scale,
         h = this.gameServer.config.serverViewBaseY * scale;
@@ -371,19 +375,20 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
 };
 
 PlayerTracker.prototype.calcVisibleNodes = function(box) {
-    var newVisible = [];
+    var visible = [];
+
     for (var i = 0; i < this.gameServer.nodes.length; i++) {
         var node = this.gameServer.nodes[i];
-        if (!node) {
+        if (!node) continue;
+        
+        if (node.owner) if (node.owner.pID == this.pID) {
+            visible.push(node);
             continue;
         }
-
-        if (box.intersects(node.getRange()) || node.owner == this) {
-            // Cell is in range of viewBox
-            newVisible.push(node);
-        }
+        if (box.intersects(node.getRange())) visible.push(node);
     }
-    return newVisible;
+
+    return visible;
 };
 
 PlayerTracker.prototype.setCenterPos = function(x, y) {
