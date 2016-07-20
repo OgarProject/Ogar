@@ -94,7 +94,7 @@ Cell.prototype.borderCheck = function(flipMoving) {
     var checkRadius = this.getSize() / 2;
 
     if (this.position.x - checkRadius < border.left) {
-        if (flipMoving) this.moveEngine.flipY();
+        if (flipMoving) this.moveEngine.flipX();
         this.position.x = border.left + checkRadius;
     }
 
