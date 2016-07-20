@@ -7,7 +7,7 @@ function Rectangle(x, y, w, h) {
 
 module.exports = Rectangle;
 
-Rectangle.prototype.fromCell = function(cell) {
+Rectangle.prototype.fromCell = module.exports.fromCell = function(cell) {
     var sz = cell.getSize();
     return new Rectangle(cell.position.x, cell.position.y, sz, sz);
 };
@@ -37,10 +37,10 @@ Rectangle.prototype.split = function() {
     // Split into 4 equally shaped rectangles
     var w2 = this.w / 2,
         h2 = this.h / 2,
-        w = this.w,
-        h = this.h;
-    var x = this.x - w2,
-        y = this.y - h2;
+        w = this.w * 2,
+        h = this.h * 2,
+        x = this.x,
+        y = this.y;
     
     var ret = [];
     ret[0] = this;
@@ -53,9 +53,9 @@ Rectangle.prototype.split = function() {
 };
 
 Rectangle.prototype.intersects = function(b) {
-    var xa = this.x, ya = this.y, wa = this.w, ha = this.h;
-    var xb = b.x, yb = b.y, wb = b.w, hb = b.h;
-    
+    var xa = this.x - this.w, ya = this.y - this.h, wa = this.w * 2, ha = this.h * 2,
+        xb = b.x - b.w, yb = b.y - b.h, wb = b.w * 2, hb = b.h * 2;
+
     return xa < xb + wb
         && xa + wa > xb
         && ya < yb + hb
