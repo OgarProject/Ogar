@@ -126,11 +126,11 @@ Vector.prototype.turnTo = function(radians) {
     this.y = len * Math.cos(radians);
 };
 
-Vector.prototype.flipX = function() {
-    return this.scale(-1, 1);
+Vector.prototype.flipY = function() {
+    return this.scale(1, -1);
 };
 
-Vector.prototype.flipY = function() {
+Vector.prototype.flipX = function() {
     return this.scale(-1, 1);
 };
 
