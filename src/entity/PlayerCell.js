@@ -32,18 +32,16 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 
 PlayerCell.prototype.getSpeed = function() {
     var base = this.gameServer.config.playerSpeed;
-    var modifier = 1 + Math.log(1 + this.mass) / (10 + Math.log(1 + this.mass));
-    var speed = Math.pow(this.mass, -0.2101) * modifier;
-
+    var speed = 100 / Math.pow(this.getSize(), 0.32) / 50;
+    
     return base * speed;
 };
 
 PlayerCell.prototype.getSplittingSpeed = function() {
     var base = this.gameServer.config.playerSpeed;
-    var modifier = 3 + Math.log(1 + this.mass) / (10 + Math.log(1 + this.mass));
-    var splitSpeed = Math.min(Math.pow(this.mass, -0.0098) * modifier, 150);
+    var speed = 3.5 / Math.pow(this.getSize(), 0.0122);
 
-    return base * splitSpeed;
+    return base * speed;
 };
 
 PlayerCell.prototype.move = function() {
@@ -52,6 +50,8 @@ PlayerCell.prototype.move = function() {
     var angle = cartesian.angle();
 
     var speed = Math.min(this.getSpeed(), cartesian.distance()) / 2; // Twice as slower
+    
+    if (isNaN(angle) || speed == 0) return;
 
     // Move cell
     this.position.sub(
@@ -82,7 +82,7 @@ PlayerCell.prototype.onConsume = function(consumer, gameServer) {
     // Add an inefficiency for eating other players' cells
     var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
     // Anti-bot measure
-    factor = (consumer.mass >= 625 && this.mass <= 17 && gameServer.config.playerBotGrowEnabled == 0) ? 0 : factor;
+    factor = (consumer.mass >= 625 && this.mass <= 17 && gameServer.config.playerBotGrowEnabled <= 0) ? 0 : factor;
     
     // Apply anti-teaming
     if (consumer.owner.pID != this.owner.pID) {
