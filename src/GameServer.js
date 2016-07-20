@@ -1,7 +1,7 @@
 // Library imports
 var WebSocket = require('ws');
 var http = require('http');
-var fs = require("fs");
+var fs = require('fs');
 var ini = require('./modules/ini.js');
 
 // Project imports
@@ -139,6 +139,7 @@ GameServer.prototype.start = function() {
     }, function() {
         // Spawn starting food
         this.nodeHandler.addFood(this.config.foodStartAmount);
+
         // Start main loop
         setTimeout(this.mainLoop.bind(this), 1);
 
@@ -408,11 +409,14 @@ GameServer.prototype.spawnPlayer = function(player, pos, mass) {
     if (pos == null) { // Get random pos
         pos = this.nodeHandler.getRandomSpawn();
     }
+    
+    // Reset player's lose multiplier for sake of playability
+    player.massLossMult = 0;
 
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass, this);
-
     player.mouse = new Vector(pos.x, pos.y);
+
     this.addNode(cell);
 };
 
