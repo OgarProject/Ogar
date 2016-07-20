@@ -1,4 +1,5 @@
 var Packet = require('./packet');
+var Vector = require('./modules/Vector');
 
 function PacketHandler(gameServer, socket) {
     this.gameServer = gameServer;
@@ -104,6 +105,16 @@ PacketHandler.prototype.handleMessage = function(message) {
                     c.borderTop + this.socket.playerTracker.scrambleY,
                     c.borderBottom + this.socket.playerTracker.scrambleY
                 ));
+            }
+            break;
+        case 255:
+            if (view.byteLength == 5) {
+                // Set client's center pos to middle of server
+                var borders = this.gameServer.rangeBorders(),
+                    playerTracker = this.socket.playerTracker;
+                
+                playerTracker.centerPos = new Vector(borders.x, borders.y);
+                playerTracker.sendPosPacket(1.5 / (Math.sqrt(200) / Math.log(200)));
             }
             break;
         default:
