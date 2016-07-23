@@ -3,6 +3,7 @@ var GameMode = require('../gamemodes');
 var Entity = require('../entity');
 var ini = require('./ini.js');
 var Logger = require('./Logger');
+var heapdump = null;
 
 function Commands() {
     this.list = {}; // Empty
@@ -683,5 +684,30 @@ Commands.list = {
     },
     pl: function (gameServer, split) {
         Commands.list.playerlist(gameServer, split);
+    },
+    heapdump: function (gameServer, args) {
+        if (heapdump == null) {
+            function tryLoadModule(name) {
+                try {
+                    return require(name);
+                } catch (err) {
+                    if (err.code === 'MODULE_NOT_FOUND')
+                        return null;
+                    Logger.error(err);
+                }
+                return null;
+            }            
+            heapdump = tryLoadModule('heapdump');
+        }
+        if (heapdump == null) {
+            Logger.warn("heapdump module not installed!");
+            return;
+        }
+        heapdump.writeSnapshot(function (err, filename) {
+            if (err)
+                Logger.error(err);
+            else
+                Logger.print('heapdump written to ' + filename);
+        });
     }
 };
