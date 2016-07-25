@@ -157,19 +157,6 @@ PacketHandler.prototype.handleMessage = function (message) {
             this.socket.sendPacket(new Packet.ServerStat(this.socket.playerTracker));
             break;
         
-        case 255:
-            if (message.length != 5) {
-                this.socket.close(1002, "Not supported protocol");
-                break;
-            }
-            if (this.protocol > 6) {
-                var key = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
-                if (key != 0) {
-                    this.socket.close(1002, "Not supported protocol");
-                }
-            }
-            break;
-
         default:
             break;
     }
