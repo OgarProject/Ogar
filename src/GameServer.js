@@ -659,7 +659,7 @@ GameServer.prototype.mainLoop = function () {
     }
     
     // ping server tracker
-    if (this.config.serverTracker && (this.getTick() % (30000 / 40)) == 0) {
+    if (this.config.serverTracker && (this.getTick() % (10000 / 40)) == 0) {
         // once per 30 seconds
         this.pingServerTracker();
     }
@@ -1776,17 +1776,53 @@ GameServer.prototype.pingServerTracker = function () {
     var totalPlayers = 0;
     var alivePlayers = 0;
     var spectatePlayers = 0;
+    var robotPlayers = 0;
     for (var i = 0; i < this.clients.length; i++) {
         var socket = this.clients[i];
-        if (socket == null || !socket.isConnected)
+        if (socket == null || socket.isConnected === false)
             continue;
-        totalPlayers++;
-        if (socket.playerTracker.cells.length > 0)
-            alivePlayers++;
-        else
-            spectatePlayers++;
+        if (socket.isConnected == null) {
+            robotPlayers++;
+        }
+        else {
+            totalPlayers++;
+            if (socket.playerTracker.cells.length > 0)
+                alivePlayers++;
+            else
+                spectatePlayers++;
+        }
     }
-    /* Sending Ping */
+    
+    // Send Ping...
+    
+    // ogar-tracker.tk
+    var obj = {
+        port: this.config.serverPort,               // [mandatory] web socket port which listens for game client connections
+        name: this.config.serverName,               // [mandatory] server name
+        mode: this.gameMode.name,                   // [mandatory] game mode
+        total: totalPlayers,                        // [mandatory] total online players (server bots is not included!)
+        alive: alivePlayers,                        // [mandatory] alive players (server bots is not included!)
+        spect: spectatePlayers,                     // [mandatory] spectate players (server bots is not included!)
+        robot: robotPlayers,                        // [mandatory] server bots
+        limit: this.config.serverMaxConnections,    // [mandatory] maximum allowed connection count
+        protocol: 'M',                              // [mandatory] required protocol id or 'M' for multiprotocol (if all protocols is supported)   
+        uptime: process.uptime() >>> 0,             // [mandatory] server uptime [seconds]
+        w: this.border.width >>> 0,                 // [mandatory] map border width [integer]
+        h: this.border.height >>> 0,                // [mandatory] map border height [integer]
+        version: 'MultiOgar ' + pjson.version,      // [optional]  server version
+        stpavg: this.updateTimeAvg >>> 0,           // [optional]  average server loop time
+        chat: this.config.serverChat ? 1 : 0,       // [optional]  0 - chat disabled, 1 - chat enabled
+        os: os.platform()                           // [optional]  operating system
+    };
+    trackerRequest({
+        host: 'ogar-tracker.tk',
+        port: 80,
+        path: '/api/ping',
+        method: 'PUT'
+    }, 'application/json', JSON.stringify(obj));
+    
+
+    // mivabe.nl
     // Why don't just to use JSON?
     var data = 'current_players=' + totalPlayers +
                '&alive=' + alivePlayers +
@@ -1800,45 +1836,38 @@ GameServer.prototype.pingServerTracker = function () {
                '&uptime=' + process.uptime() +          // Number of seconds server has been running
                '&version=MultiOgar ' + pjson.version +
                '&start_time=' + this.startTime;
-    var options1 = {
+    trackerRequest({
         host: 'ogar.mivabe.nl',
-        port: '80',
+        port: 80,
         path: '/master',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': Buffer.byteLength(data)
-        }
-    };
-    var req = http.request(options1, function (res) {
-        if (res.statusCode != 200) {
-            Logger.writeError("Tracker Error(" + options1.host + "): " + res.statusCode);
-        }
-    });
-    req.on('error', function (e) {
-        Logger.writeError("Tracker Error(" + options1.host + "): " + e.message);
-    });
-    req.write(data);
-    req.end()
-    var options2 = {
+        method: 'POST'
+    }, 'application/x-www-form-urlencoded', data);
+    
+    // c0nsume.me
+    trackerRequest({
         host: 'c0nsume.me',
-        port: '80',
+        port: 80,
         path: '/tracker.php',
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Content-Length': Buffer.byteLength(data)
-        }
-    };
-    var req = http.request(options2, function (res) {
-        if (res.statusCode != 200) {
-            Logger.writeError("Tracker Error(" + options2.host + "): " + res.statusCode);
-        }
-    });
-    req.on('error', function (e) {
-        Logger.writeError("Tracker Error(" + options2.host + "): " + e.message);
-    });
-    req.write(data);
-    req.end()
+        method: 'POST'
+    }, 'application/x-www-form-urlencoded', data);
 };
 
+function trackerRequest(options, type, body) {
+    if (options.headers == null)
+        options.headers = {};
+    options.headers['user-agent'] = 'MultiOgar' + pjson.version;
+    options.headers['content-type'] = type;
+    options.headers['content-length'] = body == null ? 0 : Buffer.byteLength(body, 'utf8');
+    var req = http.request(options, function (res) {
+        if (res.statusCode != 200) {
+            Logger.writeError("[Tracker][" + options.host + "]: statusCode = " + res.statusCode);
+            return;
+        }
+        res.setEncoding('utf8');
+    });
+    req.on('error', function (err) {
+        Logger.writeError("[Tracker][" + options.host + "]: " + err);
+    });
+    req.write(body);
+    req.end()
+};
