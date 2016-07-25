@@ -1,7 +1,7 @@
 ﻿# MultiOgar
 Ogar game server with fast and smooth vanilla physics and multi-protocol support.
 
-Current version: **1.2.53**
+Current version: **1.2.54**
 
 ## Project Info
 ![Language](https://img.shields.io/badge/language-node.js-yellow.svg)
