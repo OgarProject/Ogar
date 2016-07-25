@@ -164,16 +164,15 @@ PacketHandler.prototype.handleMessage = function (message) {
 
 PacketHandler.prototype.handleHandshake = function (message) {
     if (message.length != 5) {
-        this.socket.close(1002, "Invalid protocol");
         return;
     }
-    if (message[0] == 254) {
+    if (message[0] == 254 && this.handshakeProtocol == null) {
         this.handshakeProtocol = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
         if (this.handshakeProtocol < 1 || this.handshakeProtocol > 8) {
             this.socket.close(1002, "Not supported protocol");
         }
     }
-    if (message[0] == 255) {
+    else if (message[0] == 255 && this.handshakeKey == null) {
         this.handshakeKey = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
         if (this.handshakeProtocol > 6 && this.handshakeKey != 0) {
             this.socket.close(1002, "Not supported protocol");
