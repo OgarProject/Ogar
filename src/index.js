@@ -56,6 +56,8 @@ function prompt() {
     in_.question(">", function (str) {
         try {
             parseCommands(str);
+        } catch (err) {
+            Logger.error(err.stack);
         } finally {
             setTimeout(prompt, 0);
         }
