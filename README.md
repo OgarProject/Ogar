@@ -77,8 +77,11 @@ This lists Ogar clients and server trackers that I found on internet.
 
 ###Ogar server trackers
 
+Welcome to http://ogar-tracker.tk :)
+
 URL | Description
 --- | ---
+http://ogar-tracker.tk | Ogar tracker
 http://ogar.mivabe.nl/master | MivaBe, tracks a lot of servers
 http://c0nsume.me/tracker.php | c0nsume.me server tracker
 
