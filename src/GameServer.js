@@ -291,6 +291,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
 };
 
 GameServer.prototype.onClientSocketClose = function (ws, code) {
+    ws._socket.destroy();
     if (this.socketCount < 1) {
         Logger.error("GameServer.onClientSocketClose: socketCount=" + this.socketCount);
     } else {
