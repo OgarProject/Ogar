@@ -17,6 +17,7 @@ var NodeHandler = require('./NodeHandler');
 var PlayerHandler = require('./PlayerHandler');
 var Vector = require('./modules/Vector');
 var Rectangle = require('./modules/Rectangle');
+var QuadTree = require('./modules/QuadTree');
 
 // GameServer implementation
 function GameServer() {
@@ -70,10 +71,12 @@ function GameServer() {
         serverStatsPort: 88, // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60, // Amount of seconds per update for the server stats
         serverLogLevel: 1, // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
-        serverScrambleCoords: 1, // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
-        serverScrambleMinimaps: 1, // Toggles scrambling of borders to render maps unusable. 0 = No scrambling, 1 = scrambling. Default is 1.
         serverTeamingAllowed: 1, // Toggles anti-teaming. 0 = Anti-team enabled, 1 = Anti-team disabled
         serverMaxLB: 10, //	Controls the maximum players displayed on the leaderboard.
+        scrambleCoords: 1, // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
+        scrambleMinimaps: 1, // Toggles scrambling of borders to render maps unusable. 0 = No scrambling, 1 = scrambling. Default is 1.rray
+        scrambleIDs: 1,
+        scrambleColors: 0,
         borderLeft: 0, // Left border of map (Vanilla value: 0)
         borderRight: 6000, // Right border of map (Vanilla value: 14142.135623730952)
         borderTop: 0, // Top border of map (Vanilla value: 0)
@@ -84,7 +87,7 @@ function GameServer() {
         foodMaxAmount: 500, // Maximum food cells on the map
         foodMass: 1, // Starting food size (In mass)
         foodMassGrow: 1, // Enable food mass grow ?
-        foodMassGrowPossiblity: 50, // Chance for a food to has the ability to be self growing
+        foodMassGrowPossibility: 50, // Chance for a food to has the ability to be self growing
         foodMassLimit: 5, // Maximum mass for a food can grow
         foodMassTimeout: 120, // The amount of interval for a food to grow its mass (in seconds)
         virusMinAmount: 10, // Minimum amount of viruses on the map.
@@ -131,6 +134,9 @@ GameServer.prototype.start = function() {
 
     // Gamemode configurations
     this.gameMode.onServerInit(this);
+
+    // Create quadtree
+    this.quadTree = new QuadTree(null, this.rangeBorders(), 128, 12);
 
     // Start the server
     this.socketServer = new WebSocket.Server({
@@ -239,6 +245,7 @@ GameServer.prototype.start = function() {
         ws.on('error', close.bind(bindObject));
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
+        this.playerHandler.addClient(ws);
     }
 
     this.startStatsServer(this.config.serverStatsPort);
@@ -304,11 +311,14 @@ GameServer.prototype.addNode = function(node) {
     if (node.owner && node.cellType != 3) {
         node.setColor(node.owner.color);
         node.owner.cells.push(node);
-        node.owner.socket.sendPacket(new Packet.AddNode(node));
+        node.owner.socket.sendPacket(new Packet.AddNode(node, node.owner.scrambleID));
     }
 
     // Special on-add actions
     node.onAdd(this);
+    this.quadTree.add(node);
+
+    if (node.cellType != 0) this.nodeHandler.toUpdateNodes.push(node);
 
     // Add to visible nodes
     for (var i = 0; i < this.clients.length; i++) {
@@ -335,7 +345,9 @@ GameServer.prototype.removeNode = function(node) {
     }
 
     // Special on-remove actions
+    node.eaten = true;
     node.onRemove(this);
+    this.quadTree.remove(node);
 
     // Animation when eating
     for (var i = 0; i < this.clients.length; i++) {
@@ -412,6 +424,9 @@ GameServer.prototype.spawnPlayer = function(player, pos, mass) {
     
     // Reset player's lose multiplier for sake of playability
     player.massLossMult = 0;
+
+    // Reset player's scramblers
+    player.resetScramble();
 
     // Spawn player and add to world
     var cell = new Entity.PlayerCell(this.getNextNodeId(), player, pos, mass, this);
