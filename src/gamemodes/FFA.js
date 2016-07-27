@@ -11,26 +11,6 @@ function FFA() {
 module.exports = FFA;
 FFA.prototype = new Mode();
 
-// Gamemode Specific Functions
-
-FFA.prototype.leaderboardAddSort = function(player, leaderboard) {
-    // Adds the player and sorts the leaderboard
-    var len = leaderboard.length - 1;
-    var loop = true;
-    while ((len >= 0) && (loop)) {
-        // Start from the bottom of the leaderboard
-        if (player.getScore(false) <= leaderboard[len].getScore(false)) {
-            leaderboard.splice(len + 1, 0, player);
-            loop = false; // End the loop if a spot is found
-        }
-        len--;
-    }
-    if (loop) {
-        // Add to top of the list because no spots were found
-        leaderboard.splice(0, 0, player);
-    }
-};
-
 // Override
 
 FFA.prototype.onPlayerSpawn = function(gameServer, player) {
