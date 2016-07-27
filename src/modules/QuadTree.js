@@ -1,8 +1,4 @@
-var id = 1;
-
 function QuadTree(parent, range, maxNodes, maxLevel) {
-    this.id = id++;
-
     this.parent = parent;
     this.level = parent ? parent.level + 1 : 1;
 
@@ -57,7 +53,6 @@ QuadTree.prototype.remove = function(item, merge) {
 
         var index = item.__quad.nodes.indexOf(item);
         if (index != -1) item.__quad.nodes.splice(index, 1);
-        else console.log("[Warning] Node assigned to quadtree without being in quadtree's node array");
 
         if (merge) item.__quad.merge();
         item.__quad = null;
@@ -75,12 +70,25 @@ QuadTree.prototype.split = function() {
 
     var split = this.range.split();
 
-    this.branches.push(new QuadTree(this, split[1], this.maxNodes, this.maxLevel));
-    this.branches.push(new QuadTree(this, split[2], this.maxNodes, this.maxLevel));
-    this.branches.push(new QuadTree(this, split[3], this.maxNodes, this.maxLevel));
-    this.branches.push(new QuadTree(this, split[4], this.maxNodes, this.maxLevel));
+    var _1 = new QuadTree(this, split[1], this.maxNodes, this.maxLevel),
+        _2 = new QuadTree(this, split[2], this.maxNodes, this.maxLevel),
+        _3 = new QuadTree(this, split[3], this.maxNodes, this.maxLevel),
+        _4 = new QuadTree(this, split[4], this.maxNodes, this.maxLevel);
 
-    this.update(this.nodes, false);
+    for (var i = 0; i < this.nodes.length; i++) {
+        var node = this.nodes[i];
+        if (!node) continue;
+        if (_1.add(node)) continue;
+        if (_2.add(node)) continue;
+        if (_3.add(node)) continue;
+        if (_4.add(node)) continue;
+    }
+
+    this.branches.push(_1);
+    this.branches.push(_2);
+    this.branches.push(_3);
+    this.branches.push(_4);
+    this.nodes = [];
 };
 
 QuadTree.prototype.merge = function() {
