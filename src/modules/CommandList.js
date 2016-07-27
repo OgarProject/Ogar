@@ -471,6 +471,7 @@ Commands.list = {
         console.log("[Console] Server has been running for " + Math.floor(process.uptime() / 60) + " minutes");
         console.log("[Console] Current memory usage: " + Math.round(process.memoryUsage().heapUsed / 1048576 * 10) / 10 + "/" + Math.round(process.memoryUsage().heapTotal / 1048576 * 10) / 10 + " mb");
         console.log("[Console] Current game mode: " + gameServer.gameMode.name);
+        console.log("[Console] Node amount: " + gameServer.nodes.length + ", quadtree node amount: " + gameServer.quadTree.getNodes().length);
         console.log("[Console] Update frequency: every " + gameServer.passedTicks + " tick(s)");
         console.log("[Console] Ticks for updating nodes: " + gameServer.ticksNodeUpdate + ", for updating clients: " + gameServer.ticksMapUpdate);
     },
