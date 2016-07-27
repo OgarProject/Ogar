@@ -126,21 +126,20 @@ MotherCell.prototype.eat = function() {
             this.mass -= cellSize;
         }
     }
+
+    var nearby = this.gameServer.quadTree.query(this.getRange(), function(node) {
+        if (!node) return false;
+        return node.cellType != 1; // Don't check food
+    });
     
     // Loop for potential prey
-    for (var i in this.gameServer.nodesPlayer) {
-        var check = this.gameServer.nodesPlayer[i];
-        this.checkEatCell(check, this.gameServer);
-    }
-
-    // Check ejected cells
-    for (var i in this.gameServer.nodesEjected) {
-        var check = this.gameServer.nodesEjected[i];
-        this.checkEatCell(check, this.gameServer);
+    for (var i = 0; i < nearby.length; i++) {
+        this.checkEatCell(nearby[i], this.gameServer);
     }
 };
 
 MotherCell.prototype.checkEatCell = function(check, gameServer) {
+    if (!check) return;
     if (check.cellType == 1) return; // Check is a food cell
 
     if (gameServer.collisionHandler.canEat(this, check)) {

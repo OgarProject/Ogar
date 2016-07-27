@@ -7,14 +7,11 @@ function Food() {
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.shouldSendUpdate = false;
-    
+
     // Set by GameServer or gamemode (Experimental), a list where it's contained to remove itself on death
     this.insertedList;
 
-    if (this.gameServer.config.foodMassGrow &&
-        this.gameServer.config.foodMassGrowPossiblity > Math.floor(Math.random() * 101)) {
-        this.grow();
-    }
+    if (this.gameServer.config.foodMassGrow) this.grow();
 }
 
 module.exports = Food;
@@ -31,6 +28,7 @@ Food.prototype.getSquareSize = function() {
 // Main Functions
 
 Food.prototype.grow = function() {
+    var time = Math.random() + 1 - this.gameServer.config.foodMassGrowPossibility / 100 * this.gameServer.config.foodMassTimeout * 1000 >> 0;
     setTimeout(function() {
         this.mass++; // food mass increased, we need to recalculate its size and squareSize, and send update to client side
         this.size = Math.ceil(Math.sqrt(100 * this.mass));
@@ -40,7 +38,7 @@ Food.prototype.grow = function() {
         if (this.mass < this.gameServer.config.foodMassLimit) {
             this.grow();
         }
-    }.bind(this), this.gameServer.config.foodMassTimeout * 1000);
+    }.bind(this), time);
 };
 
 Food.prototype.sendUpdate = function() {

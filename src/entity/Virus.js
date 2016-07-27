@@ -39,7 +39,7 @@ Virus.prototype.onConsume = function(consumer) {
         var splitMass = consumer.mass / splitAmount;
 
         // Split the cells
-        for (var i = 0; i < splitAmount - 1; i++) {
+        for (var i = 0; i < Math.min(splitAmount, numSplits); i++) {
             var angle = Math.random() * 6.28;
             if (consumer.mass <= 10) break; // add in any case
 
@@ -48,19 +48,21 @@ Virus.prototype.onConsume = function(consumer) {
     } else {
         // Too large cell - split it, also with larger cells
         // Begin calculating split masses
+        var beginMass = consumer.mass;
         var splitMass = consumer.mass * Math.pow(numSplits, -0.27) / 2;
         while (true) {
             if (numSplits <= 0 || splitMass < 48) break;
             var angle = Math.random() * 6.28;
             this.gameServer.nodeHandler.createPlayerCell(client, consumer, angle, splitMass);
-            splitMass *= Math.pow(numSplits, -0.2) / 2;
+            splitMass *= Math.pow(numSplits, -0.27) / 2;
             numSplits--;
         }
 
         // Fill with small cells if possible
+        splitMass = Math.min(Math.log(beginMass) * 3 >> 0, 34);
         for (var i = 0; i < numSplits; i++) {
             var angle = Math.random() * 6.28;
-            this.gameServer.nodeHandler.createPlayerCell(client, consumer, angle, 34);
+            this.gameServer.nodeHandler.createPlayerCell(client, consumer, angle, splitMass);
         }
     }
 
@@ -73,9 +75,13 @@ Virus.prototype.eat = function() {
     // Maximum amount of viruses
     if (this.gameServer.nodesVirus.length >= this.gameServer.config.virusMaxAmount) return;
 
-    // Virus will eat ejected cells no matter the size of it
-    for (var i = 0; i < this.gameServer.nodesEjected.length; i++) {
-        var node = this.gameServer.nodesEjected[i];
+    // Virus eats ejected cells
+    var nearby = this.gameServer.quadTree.query(this.getRange(), function(node) {
+        return node.cellType == 3;
+    });
+
+    for (var i = 0; i < nearby.length; i++) {
+        var node = nearby[i];
         if (!node) continue;
 
         var dist = this.position.sqDistanceTo(node.position);

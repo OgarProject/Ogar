@@ -37,17 +37,15 @@ Rectangle.prototype.split = function() {
     // Split into 4 equally shaped rectangles
     var w2 = this.w / 2,
         h2 = this.h / 2,
-        w = this.w * 2,
-        h = this.h * 2,
         x = this.x,
         y = this.y;
-    
+
     var ret = [];
     ret[0] = this;
-    ret[1] = new Rectangle(x, y, w2, h2);         // top-left
-    ret[2] = new Rectangle(x + w, y, w2, h2);     // top-right
-    ret[3] = new Rectangle(x, y + h, w2, h2);     // bottom-left
-    ret[4] = new Rectangle(x + w, y + h, w2, h2); // bottom-right
+    ret[1] = new Rectangle(x - w2, y - h2, w2, h2); // top-left
+    ret[2] = new Rectangle(x + w2, y - h2, w2, h2); // top-right
+    ret[3] = new Rectangle(x - w2, y + h2, w2, h2); // bottom-left
+    ret[4] = new Rectangle(x + w2, y + h2, w2, h2); // bottom-right
     
     return ret;
 };
@@ -56,10 +54,10 @@ Rectangle.prototype.intersects = function(b) {
     var xa = this.x - this.w, ya = this.y - this.h, wa = this.w * 2, ha = this.h * 2,
         xb = b.x - b.w, yb = b.y - b.h, wb = b.w * 2, hb = b.h * 2;
 
-    return xa < xb + wb
-        && xa + wa > xb
-        && ya < yb + hb
-        && ya + ha > yb;
+    return xa <= xb + wb
+        && xa + wa >= xb
+        && ya <= yb + hb
+        && ya + ha >= yb;
 };
 
 Rectangle.prototype.intersectsPoint = function(b) {
