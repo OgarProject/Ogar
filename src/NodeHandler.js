@@ -2,6 +2,8 @@ var Entity = require('./entity');
 var Vector = require('./modules/Vector');
 
 function NodeHandler(gameServer, collisionHandler) {
+    this.toUpdate = [];
+    this.toUpdateNodes = [];
     this.gameServer = gameServer;
     this.collisionHandler = collisionHandler;
 }
@@ -24,17 +26,11 @@ NodeHandler.prototype.update = function() {
     var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod / 40);
 
     // First update client's cells
-    for (var i = 0; i < this.gameServer.clients.length; i++) {
-        var client = this.gameServer.clients[i];
+    while (this.toUpdate.length > 0) {
+        var client = this.toUpdate[0];
+        this.toUpdate.shift();
         if (!client) continue;
-
-        // We need to go deeper
-        client = client.playerTracker;
-
-        var rem = time - client.cellUpdateTime;
-        if (rem < 25) continue;
-
-        client.cellUpdateTime = time;
+        if (client.fullyDisconnected) continue;
 
         // Merge override check
         if (client.cells.length <= 1)
@@ -50,7 +46,7 @@ NodeHandler.prototype.update = function() {
         var thisDecay;
         if (this.gameServer.config.serverTeamingAllowed == 0) {
             // Anti-teaming is on
-            var teamMult = (client.massDecayMult - 1) / 2222 + 1; // Calculate anti-teaming multiplier for decay
+            var teamMult = (client.massDecayMult - 1) / 3333 + 1; // Calculate anti-teaming multiplier for decay
             thisDecay = 1 - (1 - massDecay * (1 / teamMult)); // Apply anti-teaming multiplier
         } else {
             // Anti-teaming is off
@@ -61,6 +57,7 @@ NodeHandler.prototype.update = function() {
         for (var j = 0; j < sorted.length; j++) {
             var cell = sorted[j];
             if (!cell) continue;
+            if (cell.eaten) continue;
 
             // Move engine
             cell.moveEngineTick();
@@ -90,21 +87,34 @@ NodeHandler.prototype.update = function() {
             // Mass decay
             if (cell.mass >= this.gameServer.config.playerMinMassDecay)
                 cell.mass *= thisDecay;
+
+            this.gameServer.quadTree.update(cell);
         }
+
+        // Continue bind
+        setTimeout(function() {
+            if (this.fullyDisconnected) return;
+            this.gameServer.nodeHandler.toUpdate.push(this);
+        }.bind(client), 25);
     }
 
     // Client cells have been finished, now go the other cells
-    for (var i = 0; i < this.gameServer.nonPlayerNodes.length; i++) {
-        var node = this.gameServer.nonPlayerNodes[i];
+    while (this.toUpdateNodes.length > 0) {
+        var node = this.toUpdateNodes[0];
+        this.toUpdateNodes.shift();
         if (!node) continue;
-
-        var rem = time - node.updateTime;
-        if (rem < 25) continue;
-
-        node.updateTime = time;
+        if (node.eaten) continue;
 
         node.moveEngineTick();
         node.eat();
+
+        this.gameServer.quadTree.update(node);
+
+        // Continue bind
+        setTimeout(function() {
+            if (this.eaten) return;
+            this.gameServer.nodeHandler.toUpdateNodes.push(this);
+        }.bind(node), 25);
     }
 
     // Record time to update
@@ -156,14 +166,19 @@ NodeHandler.prototype.getRandomPosition = function() {
 NodeHandler.prototype.getRandomSpawn = function() {
     // Find a random pellet
     var pellet;
-    while (true) {
-        var randomIndex = Math.ceil(Math.random() * this.gameServer.nodesFood.length);
-        var node = this.gameServer.nodesFood[randomIndex];
-        if (!node) continue;
-        if (node.inRange) continue;
-
-        pellet = node;
-        break;
+    if (this.gameServer.nodesFood.length > 0) {
+        while (true) {
+            var randomIndex = Math.floor(Math.random() * this.gameServer.nodesFood.length);
+            var node = this.gameServer.nodesFood[randomIndex];
+            if (!node) continue;
+            if (node.eaten) continue;
+    
+            pellet = node;
+            break;
+        }
+    } else {
+        // No food nodes - generate random position
+        return this.getRandomPosition();
     }
 
     // Generate random angle and distance
@@ -252,18 +267,15 @@ NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
 };
 
 NodeHandler.prototype.canEjectMass = function(client) {
-    if (typeof client.lastEject == undefined ||
-        this.gameServer.time - client.lastEject >= this.gameServer.config.ejectMassCooldown) {
+    if (this.gameServer.time - client.lastEject >= this.gameServer.config.ejectMassCooldown) {
         client.lastEject = this.gameServer.time;
         return true;
-    } else
-        return false;
+    } else return false;
 };
 
 NodeHandler.prototype.ejectMass = function(client) {
-    // Need to fix this
-    //if (!this.canEjectMass(client))
-        //return;
+    if (!this.canEjectMass(client)) return;
+
     for (var i = 0; i < client.cells.length; i++) {
         var cell = client.cells[i];
         if (!cell) continue;
