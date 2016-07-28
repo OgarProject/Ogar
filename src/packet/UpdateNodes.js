@@ -1,6 +1,8 @@
 ﻿// Import
 var BinaryWriter = require("./BinaryWriter");
+var Logger = require('../modules/Logger');
 
+var sharedWriter = new BinaryWriter(128*1024); // for about 25000 cells per client
 
 function UpdateNodes(playerTracker, addNodes, updNodes, eatNodes, delNodes) {
     this.playerTracker = playerTracker;
@@ -15,7 +17,8 @@ module.exports = UpdateNodes;
 UpdateNodes.prototype.build = function (protocol) {
     if (!protocol) return null;
     
-    var writer = new BinaryWriter();
+    var writer = sharedWriter;
+    writer.reset();
     writer.writeUInt8(0x10);                                // Packet ID
     this.writeEatItems(writer);
     

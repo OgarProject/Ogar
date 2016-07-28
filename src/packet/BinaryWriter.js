@@ -7,101 +7,83 @@
  * License: Apache License, Version 2.0
  */
 
-function BinaryWriter() {
-    this._writers = [];
+function BinaryWriter(size) {
+    if (!size || size <= 0) {
+        size = Buffer.poolSize / 2;
+    }
+    this._buffer = new Buffer(size);
     this._length = 0;
 }
 
 module.exports = BinaryWriter;
 
 BinaryWriter.prototype.writeUInt8 = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeUInt8(value, offset, true);
-    });
-    this._length += 1;
+    checkAlloc(this, 1);
+    this._buffer[this._length++] = value;
 };
 
 BinaryWriter.prototype.writeInt8 = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeInt8(value, offset, true);
-    });
-    this._length += 1;
+    checkAlloc(this, 1);
+    this._buffer[this._length++] = value;
 };
 
 BinaryWriter.prototype.writeUInt16 = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeUInt16LE(value, offset, true);
-    });
-    this._length += 2;
+    checkAlloc(this, 2);
+    this._buffer[this._length++] = value;
+    this._buffer[this._length++] = value >> 8;
 };
 
 BinaryWriter.prototype.writeInt16 = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeInt16LE(value, offset, true);
-    });
-    this._length += 2;
+    checkAlloc(this, 2);
+    this._buffer[this._length++] = value;
+    this._buffer[this._length++] = value >> 8;
 };
 
 BinaryWriter.prototype.writeUInt32 = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeUInt32LE(value, offset, true);
-    });
-    this._length += 4;
+    checkAlloc(this, 4);
+    this._buffer[this._length++] = value;
+    this._buffer[this._length++] = value >> 8;
+    this._buffer[this._length++] = value >> 16;
+    this._buffer[this._length++] = value >> 24;
 };
 
 BinaryWriter.prototype.writeInt32 = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeInt32LE(value, offset, true);
-    });
-    this._length += 4;
+    checkAlloc(this, 4);
+    this._buffer[this._length++] = value;
+    this._buffer[this._length++] = value >> 8;
+    this._buffer[this._length++] = value >> 16;
+    this._buffer[this._length++] = value >> 24;
 };
 
 BinaryWriter.prototype.writeFloat = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeFloatLE(value, offset, true);
-    });
+    checkAlloc(this, 4);
+    this._buffer.writeFloatLE(value, this._length, true);
     this._length += 4;
 };
 
 BinaryWriter.prototype.writeDouble = function (value) {
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.writeDoubleLE(value, offset, true);
-    });
+    checkAlloc(this, 8);
+    this._buffer.writeDoubleLE(value, this._length, true);
     this._length += 8;
 };
 
 BinaryWriter.prototype.writeBytes = function (data) {
-    var length = data.length;
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        data.copy(buffer, offset, 0, length);
-    });
-    this._length += length;
+    checkAlloc(this, data.length);
+    data.copy(this._buffer, this._length, 0, data.length);
+    this._length += data.length;
 };
 
 BinaryWriter.prototype.writeStringUtf8 = function (value) {
     var length = Buffer.byteLength(value, 'utf8')
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.write(value, offset, 'utf8');
-    });
+    checkAlloc(this, length);
+    this._buffer.write(value, this._length, 'utf8');
     this._length += length;
 };
 
 BinaryWriter.prototype.writeStringUnicode = function (value) {
     var length = Buffer.byteLength(value, 'ucs2')
-    var offset = this._length;
-    this._writers.push(function (buffer) {
-        buffer.write(value, offset, 'ucs2');
-    });
+    checkAlloc(this, length);
+    this._buffer.write(value, this._length, 'ucs2');
     this._length += length;
 };
 
@@ -115,10 +97,28 @@ BinaryWriter.prototype.writeStringZeroUnicode = function (value) {
     this.writeUInt16(0);
 };
 
+BinaryWriter.prototype.getLength = function () {
+    return this._length;
+};
+
+BinaryWriter.prototype.reset = function () {
+    this._length = 0;
+};
+
 BinaryWriter.prototype.toBuffer = function () {
-    var buffer = new Buffer(this._length);
-    for (var i = 0; i < this._writers.length; i++) {
-        this._writers[i](buffer);
+    return this._buffer.slice(0, this._length);
+};
+
+function checkAlloc(writer, size) {
+    var needed = writer._length + size;
+    if (writer._buffer.length >= needed)
+        return;
+    var chunk = Math.max(Buffer.poolSize / 2, 1024);
+    var chunkCount = (needed / chunk) >>> 0;
+    if ((needed % chunk) > 0) {
+        chunkCount += 1;
     }
-    return buffer;
+    var buffer = new Buffer(chunkCount * chunk);
+    writer._buffer.copy(buffer, 0, 0, writer._length);
+    writer._buffer = buffer;
 };
