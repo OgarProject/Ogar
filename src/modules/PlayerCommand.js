@@ -115,6 +115,14 @@ var playerCommands = {
         this.playerTracker.userRole = UserRoleEnum.GUEST;
         this.playerTracker.userAuth = null;
         this.writeLine("Logout done");
+    },
+    shutdown: function (args) {
+        if (this.playerTracker.userRole != UserRoleEnum.ADMIN) {
+            this.writeLine("ERROR: access denied!");
+            return;
+        }
+        Logger.warn("SHUTDOWN REQUEST FROM " + this.playerTracker.socket.remoteAddress + " as " + this.playerTracker.userAuth);
+        process.exit(0);
     }
 };
 
