@@ -116,8 +116,8 @@ http://c0nsume.me/private4.php?ip=127.0.0.1:443 | 5 | vanilla style
 
 IP | Location | Game Mode | Web Site
 --- | --- | --- | ---
-bubble-wars.tk:443 | Netherlands | FFA | http://agar.io/?ip=bubble-wars.tk:443 (Test server)
-bubble-wars.tk:444 | Netherlands | FFA IM | http://agar.io/?ip=bubble-wars.tk:444 (Test server)
+bubble-wars.tk:4444 | France | FFA | http://agar.io/?ip=bubble-wars.tk:4444 (Test server)
+bubble-wars.tk:4445 | France | FFA IM | http://agar.io/?ip=bubble-wars.tk:4445 (Test server)
 vps.simonorj.com:24270 | Montreal | Instant Merge | https://redd.it/4mufge
 164.132.48.230:600 | France | FFA | http://c0nsume.me/private4.php?ip=164.132.48.230:600
 149.202.87.51:443 | Paris |	FFA	| http://agarlist.com/
