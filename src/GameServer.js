@@ -46,7 +46,7 @@ function GameServer() {
     this.commands; // Command handler
     
     // Main loop tick
-    this.startTime = +new Date;
+    this.startTime = Date.now();
     this.timeStamp = 0;
     this.updateTime = 0;
     this.updateTimeAvg = 0;
@@ -140,7 +140,7 @@ function GameServer() {
     this.loadBadWords();
     
     this.setBorder(this.config.borderWidth, this.config.borderHeight);
-    this.quadTree = new QuadNode(this.border, 16, 100);
+    this.quadTree = new QuadNode(this.border, 16, 32);
     
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
@@ -248,7 +248,7 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
     ws.isConnected = true;
     ws.remoteAddress = ws._socket.remoteAddress;
     ws.remotePort = ws._socket.remotePort;
-    ws.lastAliveTime = +new Date;
+    ws.lastAliveTime = Date.now();
     Logger.write("CONNECTED    " + ws.remoteAddress + ":" + ws.remotePort + ", origin: \"" + ws.upgradeReq.headers.origin + "\"");
     
     ws.playerTracker = new PlayerTracker(this, ws);
@@ -300,7 +300,7 @@ GameServer.prototype.onClientSocketClose = function (ws, code) {
     ws.isConnected = false;
     ws.sendPacket = function (data) { };
     ws.closeReason = { code: ws._closeCode, message: ws._closeMessage };
-    ws.closeTime = +new Date;
+    ws.closeTime = Date.now();
     Logger.write("DISCONNECTED " + ws.remoteAddress + ":" + ws.remotePort + ", code: " + ws._closeCode + ", reason: \"" + ws._closeMessage + "\", name: \"" + ws.playerTracker.getName() + "\"");
     
     // disconnected effect
@@ -317,6 +317,13 @@ GameServer.prototype.onClientSocketError = function (ws, error) {
 };
 
 GameServer.prototype.onClientSocketMessage = function (ws, message) {
+    if (message.length == 0) {
+        return;
+    }
+    if (message.length > 256) {
+        ws.close(1009, "Spam");
+        return;
+    }
     ws.packetHandler.handleMessage(message);
 };
 
@@ -492,7 +499,7 @@ GameServer.prototype.removeNode = function (node) {
 
 GameServer.prototype.updateClients = function () {
     // check minions
-    var dateTime = new Date;
+    var dateTime = Date.now();
     for (var i = 0; i < this.minionTest.length; ) {
         var playerTracker = this.minionTest[i];
         if (dateTime - playerTracker.connectedTime > this.config.serverMinionInterval) {
@@ -604,7 +611,7 @@ GameServer.prototype.timerLoop = function () {
     timeStep += 5;
     timeStep = Math.max(timeStep, 40);
     
-    var ts = new Date().getTime();
+    var ts = Date.now();
     var dt = ts - this.timeStamp;
     if (dt < timeStep - 5) {
         setTimeout(this.timerLoopBind, ((timeStep - 5) - dt) >> 0);
@@ -1746,7 +1753,7 @@ GameServer.prototype.getStats = function () {
         'alive': alivePlayers,
         'spectators': spectatePlayers,
         'update_time': this.updateTimeAvg.toFixed(3),
-        'uptime': Math.round((new Date().getTime() - this.startTime) / 1000 / 60),
+        'uptime': Math.round((Date.now() - this.startTime) / 1000 / 60),
         'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);

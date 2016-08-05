@@ -8,181 +8,68 @@ function PacketHandler(gameServer, socket) {
     this.protocol = 0;
     this.handshakeProtocol = null;
     this.handshakeKey = null;
-    this.lastChatTick = 0;
     this.lastJoinTick = 0;
-    this.lastMouseTick = 0;
+    this.lastChatTick = 0;
+    this.lastStatTick = 0;
+    this.lastWTick = 0;
+    this.lastQTick = 0;
+    this.lastSpaceTick = 0;
     
     this.pressQ = false;
     this.pressW = false;
     this.pressSpace = false;
-    this.lastStatTime = +new Date;
+    this.mouseData = null;
+
+    this.handler = {
+        254: this.handshake_onProtocol.bind(this),
+    };
 }
 
 module.exports = PacketHandler;
 
 PacketHandler.prototype.handleMessage = function (message) {
-    // Validation
-    if (message.length == 0) {
+    if (!this.handler.hasOwnProperty(message[0])) {
         return;
     }
-    if (message.length > 256) {
-        // anti-spamming
-        this.socket.close(1009, "Spam");
-        return;
-    }
-    if (this.handshakeProtocol == null || this.handshakeKey == null) {
-        this.handleHandshake(message);
-        return;
-    }
-    this.socket.lastAliveTime = +new Date;
-    
-    if (this.socket.playerTracker.isMinion && this.socket.playerTracker.spawnCounter >= 2) {
-        return;
-    }
-    
-    switch (message[0]) {
-        case 0:
-            if (this.lastJoinTick == this.gameServer.getTick()) {
-                break;
-            }
-            this.lastJoinTick = this.gameServer.getTick();
-            if (this.socket.playerTracker.cells.length > 0) {
-                break;
-            }
-            var reader = new BinaryReader(message);
-            reader.skipBytes(1);
-            var text = null;
-            if (this.protocol <= 5)
-                text = reader.readStringZeroUnicode();
-            else
-                text = reader.readStringZeroUtf8();
-            this.setNickname(text);
-            break;
-
-        case 1:
-            // Spectate mode
-            if (this.socket.playerTracker.cells.length <= 0) {
-                // Make sure client has no cells
-                this.socket.playerTracker.spectate = true;
-            }
-            break;
-        
-        case 16:
-            // Mouse
-            if (this.lastMouseTick == this.gameServer.getTick()) {
-                break;
-            }
-            this.lastMouseTick = this.gameServer.getTick();
-            
-            var client = this.socket.playerTracker;
-            if (message.length == 13) {
-                // protocol late 5, 6, 7
-                var reader = new BinaryReader(message);
-                reader.skipBytes(1);
-                client.mouse.x = reader.readInt32() - client.scrambleX;
-                client.mouse.y = reader.readInt32() - client.scrambleY;
-            } else if (message.length == 9) {
-                // early protocol 5
-                var reader = new BinaryReader(message);
-                reader.skipBytes(1);
-                client.mouse.x = reader.readInt16() - client.scrambleX;
-                client.mouse.y = reader.readInt16() - client.scrambleY;
-            } else if (message.length == 21) {
-                // protocol 4
-                var reader = new BinaryReader(message);
-                reader.skipBytes(1);
-                client.mouse.x = reader.readDouble() - client.scrambleX;
-                client.mouse.y = reader.readDouble() - client.scrambleY;
-                if (isNaN(client.mouse.x))
-                    client.mouse.x = client.centerPos.x;
-                if (isNaN(client.mouse.y))
-                    client.mouse.y = client.centerPos.y;
-            }
-            break;
-        
-        case 17:
-            // Space Press - Split cell
-            this.pressSpace = true;
-            break;
-        
-        case 18:
-            // Q Key Pressed
-            this.pressQ = true;
-            break;
-        
-        case 19:
-            // Q Key Released
-            break;
-        
-        case 21:
-            // W Press - Eject mass
-            this.pressW = true;
-            break;
-        
-        case 99:
-            // Chat
-            if (message.length < 3)             // first validation
-                break;
-            // chat anti-spam
-            // Just ignore if the time between two messages is smaller than 2 seconds
-            // The user should stop spamming for at least 2 seconds in order to send next chat message
-            var tick = this.gameServer.getTick();
-            var deltaTick = tick - this.lastChatTick;
-            this.lastChatTick = tick;
-            if (deltaTick < 40 * 2)
-                break;
-            
-            var flags = message[1];    // flags
-            var rvLength = (flags & 2 ? 4:0) + (flags & 4 ? 8:0) + (flags & 8 ? 16:0);
-            if (message.length < 3 + rvLength) // second validation
-                break;
-            
-            var reader = new BinaryReader(message);
-            reader.skipBytes(2 + rvLength);     // reserved
-            
-            var text = null;
-            if (this.protocol < 6)
-                text = reader.readStringZeroUnicode();
-            else
-                text = reader.readStringZeroUtf8();
-            this.gameServer.onChatMessage(this.socket.playerTracker, null, text);
-            break;
-        
-        case 254:
-            // Server stat
-            var time = +new Date;
-            var dt = time - this.lastStatTime;
-            this.lastStatTime = time;
-            if (dt < 1000) break;
-            this.socket.sendPacket(new Packet.ServerStat(this.socket.playerTracker));
-            break;
-        
-        default:
-            break;
-    }
+    this.handler[message[0]](message);
+    this.socket.lastAliveTime = Date.now();
 };
 
-PacketHandler.prototype.handleHandshake = function (message) {
-    if (message.length != 5) {
+PacketHandler.prototype.handshake_onProtocol = function (message) {
+    if (message.length !== 5) return;
+    this.handshakeProtocol = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
+    if (this.handshakeProtocol < 1 || this.handshakeProtocol > 8) {
+        this.socket.close(1002, "Not supported protocol");
         return;
     }
-    if (message[0] == 254 && this.handshakeProtocol == null) {
-        this.handshakeProtocol = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
-        if (this.handshakeProtocol < 1 || this.handshakeProtocol > 8) {
-            this.socket.close(1002, "Not supported protocol");
-        }
-    }
-    else if (message[0] == 255 && this.handshakeKey == null) {
-        this.handshakeKey = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
-        if (this.handshakeProtocol > 6 && this.handshakeKey != 0) {
-            this.socket.close(1002, "Not supported protocol");
-        }
-    }
-    if (this.handshakeProtocol == null || this.handshakeKey == null) {
-        return;
-    }
-    this.protocol = this.handshakeProtocol;
+    this.handler = {
+        255: this.handshake_onKey.bind(this),
+    };
+};
 
+PacketHandler.prototype.handshake_onKey = function (message) {
+    if (message.length !== 5) return;
+    this.handshakeKey = message[1] | (message[2] << 8) | (message[3] << 16) | (message[4] << 24);
+    if (this.handshakeProtocol > 6 && this.handshakeKey !== 0) {
+        this.socket.close(1002, "Not supported protocol");
+        return;
+    }
+    this.handshake_onCompleted(this.handshakeProtocol, this.handshakeKey);
+};
+
+PacketHandler.prototype.handshake_onCompleted = function (protocol, key) {
+    this.handler = {
+        0: this.message_onJoin.bind(this),
+        1: this.message_onSpectate.bind(this),
+        16: this.message_onMouse.bind(this),
+        17: this.message_onKeySpace.bind(this),
+        18: this.message_onKeyQ.bind(this),
+        //19: AFK
+        21: this.message_onKeyW.bind(this),
+        99: this.message_onChat.bind(this),
+        254: this.message_onStat.bind(this),
+    };
+    this.protocol = protocol;
     // Send handshake response
     this.socket.sendPacket(new Packet.ClearAll());
     this.socket.sendPacket(new Packet.SetBorder(this.socket.playerTracker, this.gameServer.border, this.gameServer.config.serverGamemode, "MultiOgar " + pjson.version));
@@ -196,6 +83,147 @@ PacketHandler.prototype.handleHandshake = function (message) {
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "This server's chat is disabled.");
     if (this.protocol < 4)
         this.gameServer.sendChatMessage(null, this.socket.playerTracker, "WARNING: Protocol " + this.protocol + " assumed as 4!");
+};
+
+
+PacketHandler.prototype.message_onJoin = function (message) {
+    var tick = this.gameServer.getTick();
+    var dt = tick - this.lastJoinTick;
+    this.lastJoinTick = tick;
+    if (dt < 25 || this.socket.playerTracker.cells.length !== 0) {
+        return;
+    }
+    var reader = new BinaryReader(message);
+    reader.skipBytes(1);
+    var text = null;
+    if (this.protocol < 6)
+        text = reader.readStringZeroUnicode();
+    else
+        text = reader.readStringZeroUtf8();
+    this.setNickname(text);
+};
+
+PacketHandler.prototype.message_onSpectate = function (message) {
+    if (message.length !== 1 || this.socket.playerTracker.cells.length !== 0) {
+        return;
+    }
+    this.socket.playerTracker.spectate = true;
+};
+
+PacketHandler.prototype.message_onMouse = function (message) {
+    if (message.length !== 13 && message.length !== 9 && message.length !== 21) {
+        return;
+    }
+    this.mouseData = message;
+};
+
+PacketHandler.prototype.message_onKeySpace = function (message) {
+    if (message.length !== 1) return;
+    var tick = this.gameServer.getTick();
+    var dt = tick - this.lastSpaceTick;
+    if (dt < this.gameServer.config.ejectCooldown) {
+        return;
+    }
+    this.lastSpaceTick = tick;
+    this.pressSpace = true;
+};
+
+PacketHandler.prototype.message_onKeyQ = function (message) {
+    if (message.length !== 1) return;
+    var tick = this.gameServer.getTick();
+    var dt = tick - this.lastQTick;
+    if (dt < this.gameServer.config.ejectCooldown) {
+        return;
+    }
+    this.lastQTick = tick;
+    this.pressQ = true;
+};
+
+PacketHandler.prototype.message_onKeyW = function (message) {
+    if (message.length !== 1) return;
+    var tick = this.gameServer.getTick();
+    var dt = tick - this.lastWTick;
+    if (dt < this.gameServer.config.ejectCooldown) {
+        return;
+    }
+    this.lastWTick = tick;
+    this.pressW = true;
+};
+
+PacketHandler.prototype.message_onChat = function (message) {
+    if (message.length < 3) return;
+    var tick = this.gameServer.getTick();
+    var dt = tick - this.lastChatTick;
+    this.lastChatTick = tick;
+    if (dt < 25 * 2) {
+        return;
+    }
+    
+    var flags = message[1];    // flags
+    var rvLength = (flags & 2 ? 4:0) + (flags & 4 ? 8:0) + (flags & 8 ? 16:0);
+    if (message.length < 3 + rvLength) // second validation
+        return;
+    
+    var reader = new BinaryReader(message);
+    reader.skipBytes(2 + rvLength);     // reserved
+    var text = null;
+    if (this.protocol < 6)
+        text = reader.readStringZeroUnicode();
+    else
+        text = reader.readStringZeroUtf8();
+    this.gameServer.onChatMessage(this.socket.playerTracker, null, text);
+};
+
+PacketHandler.prototype.message_onStat = function (message) {
+    if (message.length !== 1) return;
+    var tick = this.gameServer.getTick();
+    var dt = tick - this.lastStatTick;
+    this.lastStatTick = tick;
+    if (dt < 25) {
+        return;
+    }
+    this.socket.sendPacket(new Packet.ServerStat(this.socket.playerTracker));
+};
+
+PacketHandler.prototype.processMouse = function () {
+    if (this.mouseData == null) return;
+    var client = this.socket.playerTracker;
+    var reader = new BinaryReader(this.mouseData);
+    reader.skipBytes(1);
+    if (this.mouseData.length === 13) {
+        // protocol late 5, 6, 7
+        client.mouse.x = reader.readInt32() - client.scrambleX;
+        client.mouse.y = reader.readInt32() - client.scrambleY;
+    } else if (this.mouseData.length === 9) {
+        // early protocol 5
+        client.mouse.x = reader.readInt16() - client.scrambleX;
+        client.mouse.y = reader.readInt16() - client.scrambleY;
+    } else if (this.mouseData.length === 21) {
+        // protocol 4
+        var x = reader.readDouble() - client.scrambleX;
+        var y = reader.readDouble() - client.scrambleY;
+        if (!isNaN(x) && !isNaN(y)) {
+            client.mouse.x = x;
+            client.mouse.y = y;
+        }
+    }
+    this.mouseData = null;
+};
+
+PacketHandler.prototype.process = function () {
+    if (this.pressSpace) { // Split cell
+        this.socket.playerTracker.pressSpace();
+        this.pressSpace = false;
+    }
+    if (this.pressW) { // Eject mass
+        this.socket.playerTracker.pressW();
+        this.pressW = false;
+    }
+    if (this.pressQ) { // Q Press
+        this.socket.playerTracker.pressQ();
+        this.pressQ = false;
+    }
+    this.processMouse();
 };
 
 PacketHandler.prototype.setNickname = function (text) {

@@ -58,7 +58,7 @@ function PlayerTracker(gameServer, socket) {
     this.scrambleY = 0;
     this.scrambleId = 0;
     
-    this.connectedTime = new Date;
+    this.connectedTime = Date.now();
     this.isMinion = false;
     this.spawnCounter = 0;
     this.isMuted = false;
@@ -249,7 +249,7 @@ PlayerTracker.prototype.checkConnection = function () {
     // Handle disconnection
     if (!this.socket.isConnected) {
         // wait for playerDisconnectTime
-        var time = +new Date;
+        var time = Date.now();
         var dt = (time - this.socket.closeTime) / 1000;
         if (this.cells.length == 0 || dt >= this.gameServer.config.playerDisconnectTime) {
             // Remove all client cells
@@ -271,7 +271,7 @@ PlayerTracker.prototype.checkConnection = function () {
     }
     // Check timeout
     if (!this.isCloseRequested && this.gameServer.config.serverTimeout) {
-        var time = +new Date;
+        var time = Date.now();
         var dt = (time - this.socket.lastAliveTime) / 1000;
         if (dt >= this.gameServer.config.serverTimeout) {
             this.socket.close(1000, "Connection timeout");
@@ -281,21 +281,7 @@ PlayerTracker.prototype.checkConnection = function () {
 };
 
 PlayerTracker.prototype.updateTick = function () {
-    if (this.socket.packetHandler.pressSpace) { // Split cell
-        this.pressSpace();
-        this.socket.packetHandler.pressSpace = false;
-    }
-    
-    if (this.socket.packetHandler.pressW) { // Eject mass
-        this.pressW();
-        this.socket.packetHandler.pressW = false;
-    }
-    
-    if (this.socket.packetHandler.pressQ) { // Q Press
-        this.pressQ();
-        this.socket.packetHandler.pressQ = false;
-    }
-    
+    this.socket.packetHandler.process();
     if (this.spectate) {
         if (this.freeRoam || this.getSpectateTarget() == null) {
             // free roam
