@@ -106,7 +106,7 @@ BinaryWriter.prototype.reset = function () {
 };
 
 BinaryWriter.prototype.toBuffer = function () {
-    return this._buffer.slice(0, this._length);
+    return Buffer.concat([this._buffer.slice(0, this._length)]);
 };
 
 function checkAlloc(writer, size) {
