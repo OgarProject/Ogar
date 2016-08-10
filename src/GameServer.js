@@ -47,6 +47,7 @@ function GameServer() {
     
     // Main loop tick
     this.startTime = Date.now();
+    this.stepDateTime = 0;
     this.timeStamp = 0;
     this.updateTime = 0;
     this.updateTimeAvg = 0;
@@ -75,6 +76,7 @@ function GameServer() {
         serverBots: 0,              // Number of player bots to spawn
         serverViewBaseX: 1920,      // Base client screen resolution. Used to calculate view area. Warning: high values may cause lag
         serverViewBaseY: 1080,      // min value is 1920x1080
+        serverMinScale: 0.15,       // Min scale for player (low value leads to lags due to large visible area)
         serverSpectatorScale: 0.4,  // Scale (field of view) used for free roam spectators (low value leads to lags, vanilla=0.4, old vanilla=0.25)
         serverStatsPort: 88,        // Port for stats server. Having a negative number will disable the stats server.
         serverStatsUpdate: 60,      // Update interval of server stats in seconds
@@ -140,7 +142,7 @@ function GameServer() {
     this.loadBadWords();
     
     this.setBorder(this.config.borderWidth, this.config.borderHeight);
-    this.quadTree = new QuadNode(this.border, 16, 32);
+    this.quadTree = new QuadNode(this.border, 64, 32);
     
     // Gamemodes
     this.gameMode = Gamemode.get(this.config.serverGamemode);
@@ -175,7 +177,7 @@ GameServer.prototype.start = function () {
     var wsOptions = {
         server: this.httpServer, 
         perMessageDeflate: false,
-        maxPayload: 1024
+        maxPayload: 4096
     };
     this.wsServer = new WebSocket.Server(wsOptions);
     this.wsServer.on('error', this.onServerSocketError.bind(this));
@@ -499,10 +501,9 @@ GameServer.prototype.removeNode = function (node) {
 
 GameServer.prototype.updateClients = function () {
     // check minions
-    var dateTime = Date.now();
     for (var i = 0; i < this.minionTest.length; ) {
         var playerTracker = this.minionTest[i];
-        if (dateTime - playerTracker.connectedTime > this.config.serverMinionInterval) {
+        if (this.stepDateTime - playerTracker.connectedTime > this.config.serverMinionInterval) {
             this.minionTest.splice(i, 1);
         } else {
             i++;
@@ -607,9 +608,7 @@ GameServer.prototype.sendChatMessage = function (from, to, message) {
 };
 
 GameServer.prototype.timerLoop = function () {
-    var timeStep = this.updateTimeAvg >> 0;
-    timeStep += 5;
-    timeStep = Math.max(timeStep, 40);
+    var timeStep = 40;
     
     var ts = Date.now();
     var dt = ts - this.timeStamp;
@@ -626,9 +625,9 @@ GameServer.prototype.timerLoop = function () {
         setTimeout(this.timerLoopBind, 0);
         return;
     }
-    if (dt > 400) {
+    if (dt > 120) {
         // too high lag => resynchronize
-        this.timeStamp = ts - 40;
+        this.timeStamp = ts-timeStep;
     }
     // update average
     this.updateTimeAvg += 0.5 * (this.updateTime - this.updateTimeAvg);
@@ -643,6 +642,7 @@ GameServer.prototype.timerLoop = function () {
 };
 
 GameServer.prototype.mainLoop = function () {
+    this.stepDateTime = Date.now();
     var tStart = process.hrtime();
     
     // Loop main functions
@@ -955,7 +955,7 @@ GameServer.prototype.updateMoveEngine = function () {
             cell1.updateRemerge(this);
             cell1.moveUser(this.border);
             cell1.move(this.border);
-            
+
             // check size limit
             if (checkSize && cell1.getSize() > this.config.playerMaxSize && cell1.getAge(tick) >= 15) {
                 if (client.cells.length >= this.config.playerMaxCells) {
@@ -1018,15 +1018,14 @@ GameServer.prototype.updateMoveEngine = function () {
     }
     
     // resolve rigid body collisions
-    for (var z = 0; z < 2; z++) { // loop for better rigid body resolution quality (slow)
+    ////for (var z = 0; z < 2; z++) { // loop for better rigid body resolution quality (slow)
         for (var k = 0; k < rigidCollisions.length; k++) {
             var c = rigidCollisions[k];
             var manifold = this.checkCellCollision(c.cell1, c.cell2);
             if (manifold == null) continue;
             this.resolveRigidCollision(manifold, this.border);
-            // position changed! don't forgot to update quad-tree
         }
-    }
+    ////}
     // Update quad tree
     for (var k = 0; k < rigidCollisions.length; k++) {
         var c = rigidCollisions[k];
@@ -1753,7 +1752,7 @@ GameServer.prototype.getStats = function () {
         'alive': alivePlayers,
         'spectators': spectatePlayers,
         'update_time': this.updateTimeAvg.toFixed(3),
-        'uptime': Math.round((Date.now() - this.startTime) / 1000 / 60),
+        'uptime': Math.round((this.stepDateTime - this.startTime) / 1000 / 60),
         'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);

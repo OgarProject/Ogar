@@ -32,7 +32,7 @@ PacketHandler.prototype.handleMessage = function (message) {
         return;
     }
     this.handler[message[0]](message);
-    this.socket.lastAliveTime = Date.now();
+    this.socket.lastAliveTime = this.gameServer.stepDateTime;
 };
 
 PacketHandler.prototype.handshake_onProtocol = function (message) {

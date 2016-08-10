@@ -23,6 +23,7 @@ function PlayerTracker(gameServer, socket) {
     this.mergeOverride = false; // Triggered by console command
     this._score = 0; // Needed for leaderboard
     this._scale = 1;
+    this._scaleF = 1;
     this.isMassChanged = true;
     this.borderCounter = 0;
     
@@ -58,13 +59,14 @@ function PlayerTracker(gameServer, socket) {
     this.scrambleY = 0;
     this.scrambleId = 0;
     
-    this.connectedTime = Date.now();
+    this.connectedTime = 0;
     this.isMinion = false;
     this.spawnCounter = 0;
     this.isMuted = false;
     
     // Gamemode function
     if (gameServer) {
+        this.connectedTime = gameServer.stepDateTime;
         this.centerPos.x = gameServer.border.centerx;
         this.centerPos.y = gameServer.border.centery;
         // Player id
@@ -249,8 +251,7 @@ PlayerTracker.prototype.checkConnection = function () {
     // Handle disconnection
     if (!this.socket.isConnected) {
         // wait for playerDisconnectTime
-        var time = Date.now();
-        var dt = (time - this.socket.closeTime) / 1000;
+        var dt = (this.gameServer.stepDateTime - this.socket.closeTime) / 1000;
         if (this.cells.length == 0 || dt >= this.gameServer.config.playerDisconnectTime) {
             // Remove all client cells
             var cells = this.cells;
@@ -271,8 +272,7 @@ PlayerTracker.prototype.checkConnection = function () {
     }
     // Check timeout
     if (!this.isCloseRequested && this.gameServer.config.serverTimeout) {
-        var time = Date.now();
-        var dt = (time - this.socket.lastAliveTime) / 1000;
+        var dt = (this.gameServer.stepDateTime - this.socket.lastAliveTime) / 1000;
         if (dt >= this.gameServer.config.serverTimeout) {
             this.socket.close(1000, "Connection timeout");
             this.isCloseRequested = true;
@@ -416,7 +416,11 @@ PlayerTracker.prototype.updateCenterInGame = function () { // Get center of cell
         count++;
     }
     if (count == 0) return;
-    this.setCenterPos(cx / count, cy / count);
+    cx /= count;
+    cy /= count;
+    cx = (this.centerPos.x + cx) / 2;
+    cy = (this.centerPos.y + cy) / 2;
+    this.setCenterPos(cx, cy);
 };
 
 PlayerTracker.prototype.updateCenterFreeRoam = function () {
@@ -442,8 +446,12 @@ PlayerTracker.prototype.updateCenterFreeRoam = function () {
 
 PlayerTracker.prototype.updateViewBox = function () {
     var scale = this.getScale();
-    var width = (this.gameServer.config.serverViewBaseX + 100) / scale;
-    var height = (this.gameServer.config.serverViewBaseY + 100) / scale;
+    scale = Math.max(scale, this.gameServer.config.serverMinScale);
+    this._scaleF += 0.1 * (scale - this._scaleF);
+    if (isNaN(this._scaleF))
+        this._scaleF = 1;
+    var width = (this.gameServer.config.serverViewBaseX + 100) / this._scaleF;
+    var height = (this.gameServer.config.serverViewBaseY + 100) / this._scaleF;
     var halfWidth = width / 2;
     var halfHeight = height / 2;
     this.viewBox = {
