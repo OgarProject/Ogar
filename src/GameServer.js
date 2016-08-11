@@ -422,43 +422,39 @@ GameServer.prototype.getRandomColor = function () {
 };
 
 GameServer.prototype.updateNodeQuad = function (node) {
-    var quadItem = node.quadItem;
-    if (quadItem == null) {
+    var item = node.quadItem;
+    if (item == null) {
         throw new TypeError("GameServer.updateNodeQuad: quadItem is null!");
     }
+    var x = node.position.x;
+    var y = node.position.y;
+    var size = node.getSize();
     // check for change
-    if (node.position.x == quadItem.x &&
-        node.position.y == quadItem.y &&
-        node.getSize() == quadItem.size) {
-        // no change
+    if (item.x === x && item.y === y && item.size === size) {
         return;
     }
-    // update quadTree
-    quadItem.x = node.position.x;
-    quadItem.y = node.position.y;
-    quadItem.size = node.getSize();
-    quadItem.bound = {
-        minx: node.quadItem.x - node.quadItem.size,
-        miny: node.quadItem.y - node.quadItem.size,
-        maxx: node.quadItem.x + node.quadItem.size,
-        maxy: node.quadItem.y + node.quadItem.size
-    };
-    this.quadTree.update(quadItem);
+    // update quad tree
+    item.x = x;
+    item.y = y;
+    item.size = size;
+    item.bound.minx = x - size;
+    item.bound.miny = y - size;
+    item.bound.maxx = x + size;
+    item.bound.maxy = y + size;
+    this.quadTree.update(item);
 };
 
 
 GameServer.prototype.addNode = function (node) {
+    var x = node.position.x;
+    var y = node.position.y;
+    var size = node.getSize();
     node.quadItem = {
         cell: node,
-        x: node.position.x,
-        y: node.position.y,
-        size: node.getSize()
-    };
-    node.quadItem.bound = {
-        minx: node.quadItem.x - node.quadItem.size,
-        miny: node.quadItem.y - node.quadItem.size,
-        maxx: node.quadItem.x + node.quadItem.size,
-        maxy: node.quadItem.y + node.quadItem.size
+        x: x,
+        y: y,
+        size: size,
+        bound: { minx: x-size, miny: y-size, maxx: x+size, maxy: y+size }
     };
     this.quadTree.insert(node.quadItem);
     
