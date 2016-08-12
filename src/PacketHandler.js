@@ -114,7 +114,7 @@ PacketHandler.prototype.message_onMouse = function (message) {
     if (message.length !== 13 && message.length !== 9 && message.length !== 21) {
         return;
     }
-    this.mouseData = message;
+    this.mouseData = Buffer.concat([message]);
 };
 
 PacketHandler.prototype.message_onKeySpace = function (message) {

@@ -1,5 +1,4 @@
 ﻿// Library imports
-var WebSocket = require('ws');
 var http = require('http');
 var fs = require("fs");
 var os = require('os');
@@ -64,6 +63,7 @@ function GameServer() {
         logFileVerbosity: 5,        // File log level
         
         serverTimeout: 300,         // Seconds to keep connection alive for non-responding client
+        serverWsModule: 'ws',       // WebSocket module: 'ws' or 'uws' (install npm package before using uws)
         serverMaxConnections: 64,   // Maximum number of connections to the server. (0 for no limit)
         serverIpLimit: 4,           // Maximum number of connections from the same IP (0 for no limit)
         serverMinionIgnoreTime: 30, // minion detection disable time on server startup [seconds]
@@ -83,7 +83,7 @@ function GameServer() {
         serverScrambleLevel: 2,     // Toggles scrambling of coordinates. 0 = No scrambling, 1 = lightweight scrambling. 2 = full scrambling (also known as scramble minimap); 3 - high scrambling (no border)
         serverMaxLB: 10,            // Controls the maximum players displayed on the leaderboard.
         serverChat: 1,              // Set to 1 to allow chat; 0 to disable chat.
-        serverChatAscii: 1,          // Set to 1 to disable non-ANSI letters in the chat (english only mode)
+        serverChatAscii: 1,         // Set to 1 to disable non-ANSI letters in the chat (english only mode)
         
         serverName: 'MultiOgar #1', // Server name
         serverWelcome1: 'Welcome to MultiOgar server!',      // First server welcome message
@@ -179,6 +179,25 @@ GameServer.prototype.start = function () {
         perMessageDeflate: false,
         maxPayload: 4096
     };
+    Logger.info("WebSocket: " + this.config.serverWsModule);
+    WebSocket = require(this.config.serverWsModule);
+    // Custom prototype functions^M
+    WebSocket.prototype.sendPacket = function (packet) {
+        if (packet == null) return;
+        if (this.readyState == WebSocket.OPEN) {
+            if (this._socket.writable != null && !this._socket.writable) {
+                return;
+            }
+            var buffer = packet.build(this.playerTracker.socket.packetHandler.protocol);
+            if (buffer != null) {
+                this.send(buffer, { binary: true });
+            }
+        } else {
+            this.readyState = WebSocket.CLOSED;
+            this.emit('close');
+        }
+    };
+    
     this.wsServer = new WebSocket.Server(wsOptions);
     this.wsServer.on('error', this.onServerSocketError.bind(this));
     this.wsServer.on('connection', this.onClientSocketOpen.bind(this));
@@ -293,7 +312,9 @@ GameServer.prototype.onClientSocketOpen = function (ws) {
 };
 
 GameServer.prototype.onClientSocketClose = function (ws, code) {
-    ws._socket.destroy();
+    if (ws._socket.destroy != null && typeof ws._socket.destroy == 'function') {
+        ws._socket.destroy();
+    }
     if (this.socketCount < 1) {
         Logger.error("GameServer.onClientSocketClose: socketCount=" + this.socketCount);
     } else {
@@ -1752,23 +1773,6 @@ GameServer.prototype.getStats = function () {
         'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);
-};
-
-// Custom prototype functions
-WebSocket.prototype.sendPacket = function (packet) {
-    if (packet == null) return;
-    if (this.readyState == WebSocket.OPEN) {
-        if (!this._socket.writable) {
-            return;
-        }
-        var buffer = packet.build(this.playerTracker.socket.packetHandler.protocol);
-        if (buffer != null) {
-            this.send(buffer, { binary: true });
-        }
-    } else {
-        this.readyState = WebSocket.CLOSED;
-        this.emit('close');
-    }
 };
 
 // Ping the server tracker.
