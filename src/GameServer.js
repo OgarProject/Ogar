@@ -830,8 +830,8 @@ GameServer.prototype.resolveRigidCollision = function (manifold, border) {
     var invd = 1 / d;
     
     // normal
-    var nx = manifold.dx * invd;
-    var ny = manifold.dy * invd;
+    var nx = ~~manifold.dx * invd;
+    var ny = ~~manifold.dy * invd;
     
     // body penetration distance
     var penetration = manifold.r - d;
@@ -1233,8 +1233,8 @@ GameServer.prototype.splitCells = function (client) {
     var splitCells = 0; // How many cells have been split
     for (var i = 0; i < cellToSplit.length; i++) {
         var cell = cellToSplit[i];
-        var dx = client.mouse.x - cell.position.x;
-        var dy = client.mouse.y - cell.position.y;
+        var dx = ~~(client.mouse.x - cell.position.x);
+        var dy = ~~(client.mouse.y - cell.position.y);
         var dl = dx * dx + dy * dy;
         if (dl < 1) {
             dx = 1;

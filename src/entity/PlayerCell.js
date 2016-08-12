@@ -61,8 +61,8 @@ PlayerCell.prototype.moveUser = function (border) {
     if (isNaN(x) || isNaN(y)) {
         return;
     }
-    var dx = x - this.position.x;
-    var dy = y - this.position.y;
+    var dx = ~~(x - this.position.x);
+    var dy = ~~(y - this.position.y);
     var squared = dx * dx + dy * dy;
     if (squared < 1) return;
     
