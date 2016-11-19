@@ -49,7 +49,11 @@ PluginHandler.prototype.startPlugins = function() {
 PluginHandler.prototype.executeCommand = function(name, split) {
     var command = this.commands.list[name];
     if (typeof command != 'undefined') {
-        command.f(this.gameServer, split);
+        try {
+            command.f(this.gameServer, split);
+        } catch (e) {
+            console.log("[Error] Error while executing command " + name + ": " + e);
+        }
     } else {
         console.log("[Console] Invalid command " + name + "! Type help for all commands.");
     }
