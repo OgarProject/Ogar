@@ -78,7 +78,7 @@ UpdateNodes.prototype.build = function() {
             if (node.getName() != null && node.getName() != "") {
                 buffer.setStringUnicode(node.getName());                        // Node's name
             }
-            buffer.setUint8(0);                                                 // Node name terminator
+            buffer.setUint16(0);                                                // Node name terminator
         }
     }
     buffer.setUint32(0);                                                        // Update nodes end
