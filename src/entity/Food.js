@@ -28,7 +28,8 @@ Food.prototype.getSquareSize = function() {
 // Main Functions
 
 Food.prototype.grow = function() {
-    var time = Math.random() + 1 - this.gameServer.config.foodMassGrowPossibility / 100 * this.gameServer.config.foodMassTimeout * 1000 >> 0;
+    var time = (Math.random() + 1 - this.gameServer.config.foodMassGrowPossibility / 100) * this.gameServer.config.foodMassTimeout * 1000 >> 0;
+
     setTimeout(function() {
         this.mass++; // food mass increased, we need to recalculate its size and squareSize, and send update to client side
         this.size = Math.ceil(Math.sqrt(100 * this.mass));
