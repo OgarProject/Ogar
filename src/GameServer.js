@@ -9,7 +9,6 @@ var Packet = require('./packet');
 var PlayerTracker = require('./PlayerTracker');
 var PacketHandler = require('./PacketHandler');
 var Entity = require('./entity');
-var Gamemode = require('./gamemodes');
 var BotLoader = require('./ai/BotLoader');
 var Logger = require('./modules/log');
 var CollisionHandler = require('./CollisionHandler');
@@ -18,6 +17,11 @@ var PlayerHandler = require('./PlayerHandler');
 var Vector = require('./modules/Vector');
 var Rectangle = require('./modules/Rectangle');
 var QuadTree = require('./modules/QuadTree');
+var PluginHandler = require('./PluginHandler');
+
+function getTime(a) {
+    return a[0] * 1000 + a[1] / 1000000;
+}
 
 // GameServer implementation
 function GameServer() {
@@ -31,11 +35,7 @@ function GameServer() {
     this.collisionHandler = new CollisionHandler(this);
     this.nodeHandler = new NodeHandler(this, this.collisionHandler);
     this.playerHandler = new PlayerHandler(this);
-
-    // Tick handling & statistics
-    this.tick = 0; // 1 ms
-    this.ticksNodeUpdate = 0;
-    this.ticksMapUpdate = 0;
+    this.pluginHandler = new PluginHandler(this);
 
     // Nodes
     this.lastNodeId = 1;
@@ -49,16 +49,11 @@ function GameServer() {
     this.leaderboard = [];
     this.largestClient; // Required for spectators
 
+    this.updateLoopBind = null;
+    this.updateProcessingBind = null;
+
     this.bots = new BotLoader(this);
     this.log = new Logger();
-    this.commands; // Command handler
-
-    // Main loop tick
-    this.time = +new Date;
-    this.startTime = this.time;
-    this.fullTick = 0;
-    this.tickMain = 0; // 50 ms ticks
-    this.tickSpawn = 0; // Used with spawning food
 
     // Config
     this.config = { // Border - Right: X increases, Down: Y increases (as of 2015-05-20)
@@ -122,8 +117,16 @@ function GameServer() {
     // Parse config
     this.loadConfig();
 
+    // Load options
+    this.pluginHandler.readOptions();
+
+    // Start plugins
+    this.pluginHandler.loadPlugins();
+    this.pluginHandler.startPlugins();
+    console.log("[Game] Loaded " + this.pluginHandler.loadedPlugins.length + " plugin(s)");
+
     // Gamemodes
-    this.gameMode = Gamemode.get(this.config.serverGamemode);
+    this.gameMode = this.pluginHandler.gamemodes.retrieveGamemode(this.config.serverGamemode);
 }
 
 module.exports = GameServer;
@@ -146,8 +149,18 @@ GameServer.prototype.start = function() {
         // Spawn starting food
         this.nodeHandler.addFood(this.config.foodStartAmount);
 
-        // Start main loop
-        setTimeout(this.mainLoop.bind(this), 1);
+        // Setup ticking
+        this.time = new Date();
+        this.startTime = this.time;
+        this.internalClock = 0;
+        this.lastUpdate = -40;
+        this.tickLB = 0; // 40 ms ticks, 4 - update leaderboard
+        this.updateLog = { };
+
+        // Start loop
+        this.updateLoopBind = this.updateLoop.bind(this);
+        this.updateProcessingBind = this.update.bind(this);
+        this.updateLoop();
 
         // Done
         console.log("[Game] Listening on port " + this.config.serverPort);
@@ -196,12 +209,12 @@ GameServer.prototype.start = function() {
         // AGAINST YOU. THIS SECTION OF CODE WAS ADDED ON JULY 9, 2015 AT THE REQUEST
         // OF THE AGAR.IO DEVELOPERS.
         var origin = ws.upgradeReq.headers.origin;
-        if (origin != 'http://agar.io' &&
+        if ((origin != 'http://agar.io' &&
             origin != 'https://agar.io' &&
             origin != 'http://localhost' &&
             origin != 'https://localhost' &&
             origin != 'http://127.0.0.1' &&
-            origin != 'https://127.0.0.1') {
+            origin != 'https://127.0.0.1') && this.gameServer.config.serverDiscardForeignClients >= 1) {
 
             ws.close();
             return;
@@ -218,16 +231,12 @@ GameServer.prototype.start = function() {
                 var cell = this.socket.playerTracker.cells[i];
                 if (!cell) continue;
 
-                cell.move = function() {
-                    return;
-                }; // Clear function so that the cell cant move
+                cell.move = function() { return; }; // Clear function so that the cell cant move
                 //this.server.removeNode(cell);
             }
 
-            client.disconnect = this.server.config.playerDisconnectTime * 20;
-            this.socket.sendPacket = function() {
-                return;
-            }; // Clear function so no packets are sent
+            client.disconnect = this.server.config.playerDisconnectTime * 25;
+            this.socket.sendPacket = function() { return; }; // Clear function so no packets are sent
         }
 
         ws.remoteAddress = ws._socket.remoteAddress;
@@ -245,7 +254,6 @@ GameServer.prototype.start = function() {
         ws.on('error', close.bind(bindObject));
         ws.on('close', close.bind(bindObject));
         this.clients.push(ws);
-        this.playerHandler.addClient(ws);
     }
 
     this.startStatsServer(this.config.serverStatsPort);
@@ -305,7 +313,7 @@ GameServer.prototype.getRandomColor = function() {
 
 GameServer.prototype.addNode = function(node) {
     this.nodes.push(node);
-    if (node.cellType != 0) this.nonPlayerNodes.push(node);
+    if (node.cellType != 0 && node.cellType != 1) this.nonPlayerNodes.push(node);
 
     // Adds to the owning player's screen excluding ejected cells
     if (node.owner && node.cellType != 3) {
@@ -317,8 +325,6 @@ GameServer.prototype.addNode = function(node) {
     // Special on-add actions
     node.onAdd(this);
     this.quadTree.add(node);
-
-    if (node.cellType != 0) this.nodeHandler.toUpdateNodes.push(node);
 
     // Add to visible nodes
     for (var i = 0; i < this.clients.length; i++) {
@@ -339,10 +345,10 @@ GameServer.prototype.removeNode = function(node) {
     if (node.cellType != 0) {
         // Remove from non-player node list
         index = this.nonPlayerNodes.indexOf(node);
-        if (index != -1) {
-            this.nonPlayerNodes.splice(index, 1);
-        }
+        if (index != -1) this.nonPlayerNodes.splice(index, 1);
     }
+
+    this.nodeHandler.movingNodes.remove(node);
 
     // Special on-remove actions
     node.eaten = true;
@@ -359,59 +365,108 @@ GameServer.prototype.removeNode = function(node) {
     }
 };
 
-GameServer.prototype.mainLoop = function() {
-    setTimeout(this.mainLoop.bind(this), 1);
+GameServer.prototype.updateTime = function() {
+    var now = new Date();
+    var change = now - this.time;
+    this.internalClock += change;
+    this.updateLog['update-time-change'] = change;
+    this.time = now;
+};
 
-    if (!this.run) return;
+GameServer.prototype.updateLoop = function() {
+    // Time regulation
+    this.updateTime();
 
-    // Timer
-    var local = new Date();
-    this.passedTicks = local - this.time;
-    this.tick += this.passedTicks;
-    this.time = local;
+    var left = 40 - (this.internalClock - this.lastUpdate);
+    this.updateLog['loop-remaining-ticks'] = left;
 
-    if (this.passedTicks <= 0) return; // Skip update
+    if (left <= -200) {
+        // Desync, log the skip
+        if (this.updateLog['loop-skipped-updates']) this.updateLog['loop-skipped-updates'] += 5;
+        else this.updateLog['loop-skipped-updates'] = 5;
 
-    // Update the handlers
-    this.nodeHandler.update();
-    this.playerHandler.update();
+        this.lastUpdate += 200;
 
-    // TODO: Cleanup this
-    if (this.tick >= 25) {
-        this.fullTick++;
+        this.queueUpdate(40);
+        return;
+    }
 
-        if (this.fullTick >= 2) {
-            // Update cells/leaderboard loop
-            this.gameMode.onTick(this);
-            this.tickMain++;
-            if (this.tickMain >= 4) { // 250 milliseconds
-                // Update leaderboard with the gamemode's method
-                this.leaderboard = [];
-                this.gameMode.updateLB(this);
+    if (left == 1) {
+        // Queue update before everything next tick
+        process.nextTick(this.updateProcessingBind);
 
-                if (!this.gameMode.specByLeaderboard && this.clients.length > 0) {
-                    // Get client with largest score if gamemode doesn't have a leaderboard
-                    var clients = this.clients.valueOf();
+        var nextUpdate = 40 - (this.internalClock - this.lastUpdate + 40);
+        this.queueUpdate(nextUpdate);
+        return;
+    } else if (left <= 0) {
+        // Immediate update
+        this.update();
 
-                    // Use sort function
-                    clients.sort(function(a, b) {
-                        return b.playerTracker.getScore(true) - a.playerTracker.getScore(true);
-                    });
-                    this.largestClient = clients[0].playerTracker;
-                } else this.largestClient = this.gameMode.rankOne;
+        this.updateTime();
 
-                this.tickMain = 0; // Reset
-            }
-            this.fullTick = 0; // Reset
-        }
-
-        // Debug
-        //console.log(this.tick - 25);
-
-        // Reset
-        this.tick = 0;
+        // Make the lag moments as smooth as possible
+        var a = this.internalClock - this.lastUpdate;
+        var nextUpdate = 40 - a + 40;
+        this.queueUpdate(nextUpdate);
+    } else {
+        // Do nothing and just queue another update
+        var nextUpdate = 39 - (this.internalClock - this.lastUpdate);
+        if (nextUpdate < 0) console.log(nextUpdate + " c");
+        this.queueUpdate(nextUpdate);
     }
 };
+
+GameServer.prototype.queueUpdate = function(ticks) {
+    this.updateLog['loop-sleep'] = ticks;
+    setTimeout(this.updateLoopBind, ticks);
+}
+
+GameServer.prototype.update = function() {
+    var ts = process.hrtime();
+    this.tickLB++;
+
+    var hr1s = process.hrtime();
+    if (this.run) this.nodeHandler.update();
+    var hr1e = process.hrtime(hr1s),
+
+        hr2s = process.hrtime();
+    this.playerHandler.update();
+    var hr2e = process.hrtime(hr2s),
+
+        hr3s = process.hrtime();
+    this.gameMode.onTick(this);
+    var hr3e = process.hrtime(hr3s);
+
+    var hr4s = process.hrtime();
+    if (this.run && this.tickLB == 5) this.updateLeaderboard();
+    var hr4e = process.hrtime(hr4s);
+
+    this.lastUpdate += 40;
+    this.updateLog['loop-cl-update'] = getTime(hr1e);
+    this.updateLog['loop-pl-update'] = getTime(hr2e);
+    this.updateLog['loop-gm-update'] = getTime(hr3e);
+    this.updateLog['loop-lb-update'] = getTime(hr4e);
+    var te = process.hrtime(ts);
+    this.updateLog['loop-E0-time'] = getTime(te);
+}
+
+GameServer.prototype.updateLeaderboard = function() {
+    // Update leaderboard with the gamemode's method
+    this.leaderboard = [];
+    this.gameMode.updateLB(this);
+
+    if (!this.gameMode.specByLeaderboard && this.clients.length > 0) {
+        // Get client with largest score if gamemode doesn't have a leaderboard
+        var clients = this.clients.slice(0);
+
+        // Use sort function
+        clients.sort(function(a, b) {
+            return b.playerTracker.getScore(true) - a.playerTracker.getScore(true);
+        });
+        this.largestClient = clients[0].playerTracker;
+    } else this.largestClient = this.gameMode.rankOne;
+    this.tickLB = 0;
+}
 
 GameServer.prototype.spawnPlayer = function(player, pos, mass) {
     if (mass == null) { // Get starting mass
@@ -421,7 +476,7 @@ GameServer.prototype.spawnPlayer = function(player, pos, mass) {
     if (pos == null) { // Get random pos
         pos = this.nodeHandler.getRandomSpawn();
     }
-    
+
     // Reset player's lose multiplier for sake of playability
     player.massLossMult = 0;
 
@@ -491,7 +546,7 @@ GameServer.prototype.getStats = function() {
         'spectators': this.clients.length - players,
         'max_players': this.config.serverMaxConnections,
         'gamemode': this.gameMode.name,
-        'uptime': Math.round((new Date().getTime() - this.startTime)/1000/60)+" m",
+        'uptime': Math.round((new Date().getTime() - this.startTime) / 1000 / 60) + " m",
         'start_time': this.startTime
     };
     this.stats = JSON.stringify(s);
@@ -515,7 +570,7 @@ WebSocket.prototype.sendPacket = function(packet) {
     //if (this.readyState == WebSocket.OPEN && (this._socket.bufferSize == 0) && packet.build) {
     if (this.readyState == WebSocket.OPEN && packet.build) {
         var buf = packet.build();
-        this.send(getBuf(buf), { binary: true });
+        this.send(buf, { binary: true });
     } else if (!packet.build) {
         // Do nothing
     } else {
@@ -525,7 +580,6 @@ WebSocket.prototype.sendPacket = function(packet) {
     }
 };
 
-// Still not widely used but will be
 Array.prototype.remove = function(item) {
     var index = this.indexOf(item);
     if (index > -1) this.splice(index, 1);
