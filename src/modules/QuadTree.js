@@ -21,7 +21,7 @@ QuadTree.prototype.add = function(item, split) {
         // handle arrays
         for (var i = 0; i < item.length; i++) this.add(item[i], split);
     } else {
-        if (!this.range.intersectsPoint(item.position)) return false;
+        if (!this.range.intersects(item.getRange())) return false;
         if (item.__quad) return false;
 
         if (this.branches.length > 0) {
@@ -47,7 +47,7 @@ QuadTree.prototype.remove = function(item, merge) {
 
     if (item instanceof Array) {
         // handle arrays
-        for (var i = 0; i < item.length; i++) this.add(item[i], merge);
+        for (var i = 0; i < item.length; i++) this.remove(item[i], merge);
     } else {
         if (!item.__quad) return;
 
@@ -66,7 +66,7 @@ QuadTree.prototype.update = function(item) {
 
 QuadTree.prototype.split = function() {
     if (this.branches.length > 0) return;
-    if (this.nodes.length < this.maxNodes || this.level >= this.maxLevel) return;
+    if (this.nodes.length < this.maxNodes || this.level >= this.maxLevel - 1) return;
 
     var split = this.range.split();
 
@@ -77,18 +77,13 @@ QuadTree.prototype.split = function() {
 
     for (var i = 0; i < this.nodes.length; i++) {
         var node = this.nodes[i];
-        if (!node) continue;
-        if (_1.add(node)) continue;
-        if (_2.add(node)) continue;
-        if (_3.add(node)) continue;
-        if (_4.add(node)) continue;
+        if (split[1].intersects(node.getRange())) { _1.nodes.push(node); node.__quad = _1; continue; }
+        if (split[2].intersects(node.getRange())) { _2.nodes.push(node); node.__quad = _2; continue; }
+        if (split[3].intersects(node.getRange())) { _3.nodes.push(node); node.__quad = _3; continue; }
+        if (split[4].intersects(node.getRange())) { _4.nodes.push(node); node.__quad = _4; continue; }
     }
-
-    this.branches.push(_1);
-    this.branches.push(_2);
-    this.branches.push(_3);
-    this.branches.push(_4);
-    this.nodes = [];
+    this.clear();
+    this.branches = [_1, _2, _3, _4];
 };
 
 QuadTree.prototype.merge = function() {
@@ -103,9 +98,23 @@ QuadTree.prototype.merge = function() {
 QuadTree.prototype.getNodes = function() {
     if (this.branches.length > 0) {
         var a = [];
-        for (var i = 0; i < this.branches.length; i++) a = a.concat(this.branches[i].getNodes());
+        a = a.concat(this.branches[0].getNodes());
+        a = a.concat(this.branches[1].getNodes());
+        a = a.concat(this.branches[2].getNodes());
+        a = a.concat(this.branches[3].getNodes());
         return a;
     } else return this.nodes.slice(0);
+};
+
+QuadTree.prototype.getBranches = function() {
+    if (this.branches.length > 0) {
+        var a = 1;
+        a += this.branches[1].getBranches();
+        a += this.branches[1].getBranches();
+        a += this.branches[1].getBranches();
+        a += this.branches[1].getBranches();
+        return a;
+    } else return 1;
 };
 
 QuadTree.prototype.clear = function() {
@@ -120,7 +129,10 @@ QuadTree.prototype.query = function(range, predicate) {
     var items = [];
     var givenPredicate = predicate instanceof Function;
     if (this.branches.length > 0) {
-        for (var i = 0; i < this.branches.length; i++) items = items.concat(this.branches[i].query(range, predicate));
+        items = items.concat(this.branches[0].query(range, predicate));
+        items = items.concat(this.branches[1].query(range, predicate));
+        items = items.concat(this.branches[2].query(range, predicate));
+        items = items.concat(this.branches[3].query(range, predicate));
     } else {
         for (var i = 0; i < this.nodes.length; i++) {
             var node = this.nodes[i];
