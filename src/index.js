@@ -119,11 +119,5 @@ function parseCommands(str) {
     // Process the first string value
     var first = split[0].toLowerCase();
 
-    // Get command function
-    var execute = gameServer.commands[first];
-    if (typeof execute != 'undefined') {
-        execute(gameServer, split);
-    } else {
-        console.log("[Console] Invalid Command!");
-    }
+    gameServer.pluginHandler.executeCommand(first, split);
 }
