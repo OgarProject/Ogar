@@ -214,7 +214,7 @@ GameServer.prototype.start = function() {
             origin != 'http://localhost' &&
             origin != 'https://localhost' &&
             origin != 'http://127.0.0.1' &&
-            origin != 'https://127.0.0.1') && this.gameServer.config.serverDiscardForeignClients >= 1) {
+            origin != 'https://127.0.0.1') && this.config.serverDiscardForeignClients >= 1) {
 
             ws.close();
             return;
