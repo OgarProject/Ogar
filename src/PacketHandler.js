@@ -15,48 +15,20 @@ function PacketHandler(gameServer, socket) {
 module.exports = PacketHandler;
 
 PacketHandler.prototype.handleMessage = function(message) {
-    function stobuf(buf) {
-        var length = buf.length;
-        var arrayBuf = new ArrayBuffer(length);
-        var view = new Uint8Array(arrayBuf);
-
-        for (var i = 0; i < length; i++) {
-            view[i] = buf[i];
-        }
-
-        return view.buffer;
-    }
-
     // Discard empty messages
-    if (message.length == 0) {
-        return;
-    }
-
-    var buffer = stobuf(message);
-    var view = new DataView(buffer);
-    var packetId = view.getUint8(0, true);
+    if (message.length == 0) return;
+    var packetId = message.readUInt8(0, true);
 
     switch (packetId) {
         case 0:
             // Set Nickname
             if (this.protocolVersion == 5) {
                 // Check for invalid packets
-                if ((view.byteLength + 1) % 2 == 1) {
-                    break;
-                }
-                var nick = "";
-                var maxLen = this.gameServer.config.playerMaxNickLength * 2; // 2 bytes per char
-                for (var i = 1; i < view.byteLength && i <= maxLen; i += 2) {
-                    var charCode = view.getUint16(i, true);
-                    if (charCode == 0) {
-                        break;
-                    }
-    
-                    nick += String.fromCharCode(charCode);
-                }
-                this.setNickname(nick);
+                if ((message.length + 1) % 2 == 1) break;
+                var name = message.slice(1, message.length - 1).toString('ucs2').substr(0, this.gameServer.config.playerMaxNickLength);
+                this.setNickname(name);
             } else {
-                var name = message.slice(1, message.length - 1).toString().substr(0, this.gameServer.config.playerMaxNickLength);
+                var name = message.slice(1, message.length - 1).toString('utf-8').substr(0, this.gameServer.config.playerMaxNickLength);
                 this.setNickname(name);
             }
             break;
@@ -68,11 +40,21 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             break;
         case 16:
+            var client = this.socket.playerTracker;
             // Set Target
-            if (view.byteLength == 13) {
-                var client = this.socket.playerTracker;
-                client.mouse.x = view.getInt32(1, true) - client.scrambleX;
-                client.mouse.y = view.getInt32(5, true) - client.scrambleY;
+            switch (message.length) {
+                case 13:
+                    client.mouse.x = message.readInt32LE(1, true) - client.scrambleX;
+                    client.mouse.y = message.readInt32LE(5, true) - client.scrambleY;
+                    break;
+                case 9:
+                    client.mouse.x = message.readInt16LE(1, true) - client.scrambleX;
+                    client.mouse.y = message.readInt16LE(3, true) - client.scrambleY;
+                    break;
+                case 21:
+                    client.mouse.x = message.readDoubleLE(1, true) - client.scrambleX;
+                    client.mouse.y = message.readDoubleLE(9, true) - client.scrambleY;
+                    break;
             }
             break;
         case 17:
@@ -92,8 +74,8 @@ PacketHandler.prototype.handleMessage = function(message) {
             break;
         case 254:
             // Connection Start
-            if (view.byteLength == 5) {
-                this.protocolVersion = view.getUint32(1, true);
+            if (message.length == 5) {
+                this.protocolVersion = message.readUInt32LE(1, true);
                 // Send on connection packets
                 this.socket.sendPacket(new Packet.ClearNodes(this.protocolVersion));
                 var c = this.gameServer.config;
@@ -106,11 +88,11 @@ PacketHandler.prototype.handleMessage = function(message) {
             }
             break;
         case 255:
-            if (view.byteLength == 5) {
+            if (message.length == 5) {
                 // Set client's center pos to middle of server
                 var borders = this.gameServer.rangeBorders(),
                     playerTracker = this.socket.playerTracker;
-                
+
                 playerTracker.centerPos = new Vector(borders.x, borders.y);
                 playerTracker.sendPosPacket(1.5 / (Math.sqrt(200) / Math.log(200)));
             }
@@ -122,10 +104,10 @@ PacketHandler.prototype.handleMessage = function(message) {
 
 PacketHandler.prototype.setNickname = function(newNick) {
     var client = this.socket.playerTracker;
+    // Set name (changing name while playing is accepted)
+    client.setName(newNick);
+
     if (client.cells.length < 1) {
-        // Set name first
-        client.setName(newNick);
-        
         // Clear client's nodes
         this.socket.sendPacket(new Packet.ClearNodes());
 
