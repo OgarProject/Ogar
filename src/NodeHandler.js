@@ -1,18 +1,31 @@
 var Entity = require('./entity');
 var Vector = require('./modules/Vector');
 
+function getTime(a) {
+    return a[0] * 1000 + a[1] / 1000000;
+}
+
 function NodeHandler(gameServer, collisionHandler) {
-    this.toUpdate = [];
-    this.toUpdateNodes = [];
     this.gameServer = gameServer;
     this.collisionHandler = collisionHandler;
+
+    this.movingNodes = [];
 }
 
 module.exports = NodeHandler;
 
 NodeHandler.prototype.update = function() {
     // Start recording time needed to update nodes
-    var time = new Date();
+    var tStart = process.hrtime();
+    var tCs = tStart,
+        tCCS = 0,
+        tCES = 0,
+        tCUS = {
+            move: 0,
+            eat: 0,
+            recombine: 0,
+            decay: 0
+        };
 
     // Spawning food & viruses
     var foodSpawn = Math.min(this.gameServer.config.foodMaxAmount - this.gameServer.nodesFood.length,
@@ -23,24 +36,20 @@ NodeHandler.prototype.update = function() {
     this.addViruses(virusSpawn);
 
     // Preset mass decay
-    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod / 40);
+    var massDecay = 1 - (this.gameServer.config.playerMassDecayRate * this.gameServer.gameMode.decayMod / 25);
 
     // First update client's cells
-    while (this.toUpdate.length > 0) {
-        var client = this.toUpdate[0];
-        this.toUpdate.shift();
+    var len = this.gameServer.clients.length;
+    for (var i = 0; i < len; i++) {
+        var client = this.gameServer.clients[i];
         if (!client) continue;
         if (client.fullyDisconnected) continue;
+
+        client = client.playerTracker;
 
         // Merge override check
         if (client.cells.length <= 1)
             client.mergeOverride = false;
-
-        // Add cells and sort them
-        var sorted = client.cells.slice(0);
-        sorted.sort(function(a, b) {
-            return b.mass - a.mass;
-        });
 
         // Precalculate decay multiplier
         var thisDecay;
@@ -53,72 +62,110 @@ NodeHandler.prototype.update = function() {
             thisDecay = massDecay;
         }
 
+        var tCEs = process.hrtime();
+
         // Update the cells
-        for (var j = 0; j < sorted.length; j++) {
-            var cell = sorted[j];
+        var lenc = client.cells.length;
+        for (var j = 0; j < lenc; j++) {
+            var cell = client.cells[j];
             if (!cell) continue;
             if (cell.eaten) continue;
 
+            var t1s = process.hrtime();
+
             // Move engine
-            cell.moveEngineTick();
+            cell.move();
             this.gameServer.gameMode.onCellMove(cell, this.gameServer);
 
-            // Collide if required
-            for (var k = 0; k < sorted.length; k++) {
-                if (!sorted[k]) continue;
-
-                if ((sorted[k].collisionRestoreTicks > 0 || cell.collisionRestoreTicks > 0) ||
-                    (sorted[k].shouldRecombine && cell.shouldRecombine)) continue;
-
-                this.collisionHandler.pushApart(cell, sorted[k]);
-            }
+            var t1e = process.hrtime(t1s),
+                t2s = process.hrtime();
 
             // Collision restoring
-            if (cell.collisionRestoreTicks > 0) cell.collisionRestoreTicks -= 0.5;
+            if (cell.collisionRestoreTicks > 0) cell.collisionRestoreTicks--;
 
             // Eating
             cell.eat();
 
+            var t2e = process.hrtime(t2s),
+                t3s = process.hrtime();
+
             // Recombining
-            if (sorted.length > 1) cell.recombineTicks += 0.04;
+            if (client.cells.length > 1) cell.recombineTicks += 0.04;
             else cell.recombineTicks = 0;
             cell.calcMergeTime(this.gameServer.config.playerRecombineTime);
+
+            var t3e = process.hrtime(t3s),
+                t4s = process.hrtime();
 
             // Mass decay
             if (cell.mass >= this.gameServer.config.playerMinMassDecay)
                 cell.mass *= thisDecay;
 
+            var t4e = process.hrtime(t4s);
+            tCUS.move += getTime(t1e);
+            tCUS.eat += getTime(t2e);
+            tCUS.recombine += getTime(t3e);
+            tCUS.decay += getTime(t4e);
+        }
+        var tCEe = process.hrtime(tCEs);
+        tCES += getTime(tCEe);
+
+        var tCCs = process.hrtime();
+
+        // Collision with own cells
+        lenc = client.cells.length;
+        for (var j = 0; j < lenc; j++) {
+            var cell = client.cells[j];
+            if (!cell) continue;
+            if (cell.eaten) continue;
+
+            // Collide if required
+            if (this.gameServer.config.playerRecombineTime > 0 && cell.collisionRestoreTicks == 0) {
+                for (var k = j; k < lenc; k++) {
+                    if (!client.cells[k]) continue;
+                    if (client.cells[k].eaten) continue;
+                    if ((client.cells[k].shouldRecombine && cell.shouldRecombine) ||
+                        client.mergeOverride || client.cells[k].collisionRestoreTicks > 0) continue;
+
+                    this.collisionHandler.pushApart(cell, client.cells[k]);
+                }
+            }
+
+            // Check for border passage, bounce physics on
+            cell.borderCheck(true);
             this.gameServer.quadTree.update(cell);
         }
-
-        // Continue bind
-        setTimeout(function() {
-            if (this.fullyDisconnected) return;
-            this.gameServer.nodeHandler.toUpdate.push(this);
-        }.bind(client), 25);
+        var tCCe = process.hrtime(tCCs);
+        tCCS += getTime(tCCe);
     }
+    var tCe = process.hrtime(tCs),
+        tC3s = process.hrtime();
 
-    // Client cells have been finished, now go the other cells
-    while (this.toUpdateNodes.length > 0) {
-        var node = this.toUpdateNodes[0];
-        this.toUpdateNodes.shift();
+    // Move the cells that need to move
+    len = this.movingNodes.length;
+    for (var i = 0; i < len; i++) {
+        var node = this.movingNodes[i];
         if (!node) continue;
-        if (node.eaten) continue;
 
         node.moveEngineTick();
-        node.eat();
+        if (node.cellType != 0) node.move();
 
-        this.gameServer.quadTree.update(node);
-
-        // Continue bind
-        setTimeout(function() {
-            if (this.eaten) return;
-            this.gameServer.nodeHandler.toUpdateNodes.push(this);
-        }.bind(node), 25);
+        // Remove from moving nodes if moving slowly
+        if (node.moveEngine.distanceSq() < 2) {
+            this.movingNodes.remove(node);
+            if (node.cellType == 3) node.isMoving = false;
+        }
     }
 
-    // Record time to update
-    this.gameServer.ticksNodeUpdate = new Date() - time;
+    var tEnd = process.hrtime(tStart),
+        tC3e = process.hrtime(tC3s);
+
+    this.gameServer.updateLog['cl-et-update'] = tCES;
+    this.gameServer.updateLog['cl-et-update-info'] = tCUS;
+    this.gameServer.updateLog['cl-cl-update'] = tCCS;
+    this.gameServer.updateLog['cl-mv-update'] = getTime(tC3e);
+    this.gameServer.updateLog['cl-at-moving'] = this.movingNodes.length;
+    this.gameServer.updateLog['cl-e1-update'] = getTime(tEnd);
 };
 
 NodeHandler.prototype.addFood = function(n) {
@@ -172,7 +219,7 @@ NodeHandler.prototype.getRandomSpawn = function() {
             var node = this.gameServer.nodesFood[randomIndex];
             if (!node) continue;
             if (node.eaten) continue;
-    
+
             pellet = node;
             break;
         }
@@ -211,6 +258,9 @@ NodeHandler.prototype.shootVirus = function(parent) {
         Math.cos(parent.shootAngle) * 115
     );
 
+    // Add to moving node list
+    this.movingNodes.push(newVirus);
+
     // Add to cell list
     this.gameServer.addNode(newVirus);
 };
@@ -226,7 +276,6 @@ NodeHandler.prototype.splitCells = function(client) {
 
         if (this.createPlayerCell(client, cell, angle, cell.mass / 2) == true) splitCells++;
     }
-    if (splitCells > 0) client.applyTeaming(1, 2); // Account anti-teaming
 };
 
 NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
@@ -256,8 +305,11 @@ NodeHandler.prototype.createPlayerCell = function(client, parent, angle, mass) {
     );
 
     // Cells won't collide immediately
-    newCell.collisionRestoreTicks = 12;
-    parent.collisionRestoreTicks = 12;
+    newCell.collisionRestoreTicks = 15;
+    parent.collisionRestoreTicks = 15;
+
+    // Add to moving node list
+    this.movingNodes.push(newCell);
 
     parent.mass -= mass; // Remove mass from parent cell
 
@@ -312,6 +364,9 @@ NodeHandler.prototype.ejectMass = function(client) {
             Math.cos(angle) * this.gameServer.config.ejectSpeed
         );
         ejected.setColor(cell.getColor());
+
+        // Add to moving node list
+        this.movingNodes.push(ejected);
 
         this.gameServer.nodesEjected.push(ejected);
         this.gameServer.addNode(ejected);

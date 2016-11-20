@@ -39,8 +39,16 @@ UpdateNodes.prototype.build = function() {
 
         if (node.nodeId == 0) continue; // Error!
         buffer.setUint32(node.nodeId ^ this.scrambleID);                        // Node ID
-        buffer.setInt32(node.position.x + this.scrambleX);                      // Node's X pos
-        buffer.setInt32(node.position.y + this.scrambleY);                      // Node's Y pos
+        switch (this.protocolVersion) {
+            case 4:
+                buffer.setInt16(node.position.x + this.scrambleX);              // Node's X pos
+                buffer.setInt16(node.position.y + this.scrambleY);              // Node's Y pos
+                break;
+            default:
+                buffer.setInt32(node.position.x + this.scrambleX);              // Node's X pos
+                buffer.setInt32(node.position.y + this.scrambleY);              // Node's Y pos
+                break;
+        }
         buffer.setUint16(node.getSize());                                       // Node size
 
         var flags = 0;
@@ -78,7 +86,7 @@ UpdateNodes.prototype.build = function() {
             if (node.getName() != null && node.getName() != "") {
                 buffer.setStringUnicode(node.getName());                        // Node's name
             }
-            buffer.setUint8(0);                                                 // Node name terminator
+            buffer.setUint16(0);                                                // Node name terminator
         }
     }
     buffer.setUint32(0);                                                        // Update nodes end

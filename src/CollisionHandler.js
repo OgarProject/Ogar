@@ -1,6 +1,6 @@
 function CollisionHandler(gameServer) {
     // Can make config values for these
-    this.baseEatingDistanceDivisor = 3;
+    this.baseEatingDistanceMultiplier = 0.5;
     this.baseEatingMassRequired = 1.3;
     this.gameServer = gameServer;
 }
@@ -10,26 +10,42 @@ module.exports = CollisionHandler;
 CollisionHandler.prototype.pushApart = function(cell, check) {
     if (cell.nodeId == check.nodeId) return; // Can't collide with self
 
+    // Square collision check
+    if (!cell.getRange().intersects(check.getRange())) return false;
+
     var cartesian = cell.position.clone().sub(check.position);
+    var cSz = cell.getSize(),
+        chSz = check.getSize();
+    var distance = cartesian.distance();
+    var maxDist = cSz + chSz;
+    var move = maxDist - distance;
 
-    var dist = cartesian.distance();
-    var angle = cartesian.angle();
-    var maxDist = cell.getSize() + check.getSize();
+    if (move > 0) {
+        var move1 = move * ((maxDist / cSz) * 0.25),
+            move2 = move * ((maxDist / chSz) * 0.25);
 
-    if (dist < maxDist) {
-        // Push cell apart
-        var mult = Math.sqrt(check.mass / cell.mass) / 2;
-        var outward = (maxDist - dist) * mult;
-
-        // Resolve jittering
-        outward = Math.min(outward, maxDist - dist);
-
-        cell.position.add(
-            Math.sin(angle) * outward,
-            Math.cos(angle) * outward
-        );
+        cell.position.add(cartesian.addDistance(move1 - distance));
+        check.position.add(cartesian.negate().addDistance(move2 - move1));
         return true;
     } else return false;
+};
+
+CollisionHandler.prototype.pushEjectedApart = function(cell, check) {
+    if (cell.nodeId == check.nodeId) return; // Can't collide with self
+
+    var cartesian = cell.position.clone().sub(check.position);
+    var distance = cartesian.distance();
+    var maxDist = cell.getSize() + check.getSize();
+    var move = maxDist - distance + 1;
+
+    if (move > 0) {
+        cell.position.add(cartesian.addDistance(move * 0.5 - distance));
+        check.position.add(cartesian.negate());
+        if (!check.isMoving) {
+            check.isMoving = true;
+            this.gameServer.nodeHandler.movingNodes.push(check);
+        }
+    }
 };
 
 CollisionHandler.prototype.canEat = function(cell, check) {
@@ -40,7 +56,13 @@ CollisionHandler.prototype.canEat = function(cell, check) {
     if (cell.nodeId == check.nodeId) return false;
 
     // Cannot eat/be eaten while in range of someone else
-    if (check.inRange || cell.inRange) return false;
+    if (check.eaten || check.inRange || cell.eaten || cell.inRange) return false;
+
+    // First check eating distance
+    var dist = cell.position.sqDistanceTo(check.position);
+    var minDist = cell.getSquareSize() - check.getSquareSize() * this.baseEatingDistanceMultiplier;
+
+    if (dist > minDist) return false;
 
     var multiplier = this.baseEatingMassRequired;
 
@@ -49,7 +71,7 @@ CollisionHandler.prototype.canEat = function(cell, check) {
         if (cell.owner.pID == check.owner.pID) {
             // Check recombine if merge override wasn't triggered
             if (!cell.owner.mergeOverride)
-                if (!cell.shouldRecombine || !check.shouldRecombine) return false;
+                if (!cell.shouldRecombine || !check.shouldRecombine || cell.collisionRestoreTicks > 0) return false;
 
             // Can eat own cells with any mass
             multiplier = 1.0;
@@ -57,14 +79,8 @@ CollisionHandler.prototype.canEat = function(cell, check) {
             if (this.gameServer.gameMode.haveTeams &&
                 cell.owner.team == check.owner.team) return false; // Same team cells can't eat each other
         }
-    }
+    } else if (check.cellType == 1) multiplier = 0;
 
-    // Too small to eat
-    if (check.mass * multiplier > cell.mass) return false;
-
-    // Lastly, check eating distance
-    var dist = cell.position.sqDistanceTo(check.position);
-    var minDist = cell.getSquareSize() - check.getSquareSize() / this.baseEatingDistanceDivisor;
-
-    return dist < minDist;
+    // Last, check eating mass
+    return check.mass * multiplier <= cell.mass;
 };

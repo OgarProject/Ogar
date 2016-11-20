@@ -14,6 +14,7 @@ function Cell(nodeId, owner, position, mass, gameServer) {
     this.position;
     if (position) this.position = new Vector(position.x, position.y);
     this.mass = mass; // Starting mass of the cell
+    this.__mass = null;
     this.cellType = -1; // 0 = Player Cell, 1 = Food, 2 = Virus, 3 = Ejected Mass
     this.spiked = 0; // If 1, then this cell has spikes around it
 
@@ -46,13 +47,15 @@ Cell.prototype.getColor = function() {
 };
 
 Cell.prototype.getSize = function() {
+    if (this.mass == this.__smass) return this.__size;
     // Calculates radius based on cell mass
-    return Math.ceil(Math.sqrt(100 * this.mass));
+    return this.__size = Math.sqrt(100 * this.mass) >> 0;
 };
 
 Cell.prototype.getSquareSize = function() {
+    if (this.mass == this.__Smass) return this.__sqSize;
     // R * R
-    return (100 * this.mass) >> 0;
+    return this.__sqSize = (100 * this.mass >> 0);
 };
 
 Cell.prototype.addMass = function(n) {
@@ -74,16 +77,12 @@ Cell.prototype.getRange = function() {
 
 Cell.prototype.moveEngineTick = function(config) {
     if (!this.gameServer) return;
-    var toMove = this.moveEngine.clone().scale(0.5);
-    this.position.sub(toMove);
+    this.position.sub(this.moveEngine);
 
-    // Decreasing twice as slower
-    this.moveEngine.scale(0.935);
+    this.moveEngine.scale(0.89);
 
     // Check for border passage
     this.borderCheck(true);
-
-    this.move();
 };
 
 Cell.prototype.borderCheck = function(flipMoving) {

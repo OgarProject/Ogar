@@ -56,34 +56,27 @@ FFA.prototype.onPlayerSpawn = function(gameServer, player) {
 };
 
 FFA.prototype.updateLB = function(gameServer) {
-    var lb = gameServer.leaderboard;
-    // Loop through all clients
-    for (var i = 0; i < gameServer.clients.length; i++) {
-        if (typeof gameServer.clients[i] == "undefined") {
-            continue;
-        }
+    var leaderboard = [];
 
-        var player = gameServer.clients[i].playerTracker;
-        if (player.disconnect > -1) continue; // Don't add disconnected players to list
-        var playerScore = player.getScore(true);
-        if (player.cells.length <= 0) {
-            continue;
-        }
+    // First off remove disconenected or spectating players
+    var players = [];
+    gameServer.clients.forEach(function(player) {
+        if (!player) return;
+        if (player.playerTracker.cells.length <= 0) return;
+        if (player.playerTracker.disconnect > 0) return;
+        players.push(player.playerTracker);
+    });
 
-        if (lb.length == 0) {
-            // Initial player
-            lb.push(player);
-            continue;
-        } else if (lb.length < gameServer.config.serverMaxLB) {
-            this.leaderboardAddSort(player, lb);
-        } else {
-            // 10 in leaderboard already
-            if (playerScore > lb[gameServer.config.serverMaxLB - 1].getScore(false)) {
-                lb.pop();
-                this.leaderboardAddSort(player, lb);
-            }
+    players.sort(function(a, b) {
+        try {
+            return b.getScore(true) - a.getScore(true);
+        } catch (e) {
+            return 0;
         }
-    }
+    });
 
-    this.rankOne = lb[0];
-}
+    leaderboard = players.slice(0, gameServer.config.serverMaxLB);
+
+    this.rankOne = leaderboard[0];
+    gameServer.leaderboard = leaderboard;
+};

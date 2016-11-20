@@ -31,59 +31,49 @@ PlayerCell.prototype.calcMergeTime = function(base) {
 // Movement
 
 PlayerCell.prototype.getSpeed = function() {
-    var base = this.gameServer.config.playerSpeed;
-    var speed = 100 / Math.pow(this.getSize(), 0.32) / 50;
-    
-    return base * speed;
+    return this.gameServer.config.playerSpeed * 1.6 / Math.pow(this.getSize(), 0.32);
 };
 
 PlayerCell.prototype.getSplittingSpeed = function() {
-    var base = this.gameServer.config.playerSpeed;
-    var speed = 3.5 / Math.pow(this.getSize(), 0.0122);
-
-    return base * speed;
+    return this.gameServer.config.playerSpeed * 2.6 * Math.pow(this.getSize(), 0.0122);
 };
 
 PlayerCell.prototype.move = function() {
     // Get angle to mouse
     var cartesian = this.position.clone().sub(this.owner.mouse);
-    var angle = cartesian.angle();
+    var distance = cartesian.distance(),
+        speed = this.getSpeed();
 
-    var speed = Math.min(this.getSpeed(), cartesian.distance()) / 2; // Twice as slower
-    
-    if (isNaN(angle) || speed == 0) return;
+    if (isNaN(distance) || speed <= 0) return;
 
     // Move cell
-    this.position.sub(
-        Math.sin(angle) * speed,
-        Math.cos(angle) * speed
-    );
+    this.position.sub(cartesian.addDistance(Math.min(distance, speed) - distance));
 };
-// Collision is now handled by NodeHandler
-
-// Override
 
 PlayerCell.prototype.eat = function() {
-    for (var i = 0; i < this.owner.visibleNodes.length; i++) {
-        var node = this.owner.visibleNodes[i];
-        if (!node) continue;
+    var nearby = this.gameServer.quadTree.query(this.getRange());
 
-        if (this.gameServer.collisionHandler.canEat(this, node)) {
-            // Eat node
-            node.inRange = true;
-            node.onConsume(this, this.gameServer);
-            node.setKiller(this);
-            this.gameServer.removeNode(node);
+    var i = nearby.length;
+    while (--i > -1) {
+        var check = nearby[i];
+        if (!check) continue;
+        if (check.eaten) continue;
+
+        if (this.gameServer.collisionHandler.canEat(this, check)) {
+            check.eaten = true;
+            check.onConsume(this);
+            check.setKiller(this);
+            this.gameServer.removeNode(check);
         }
     }
 };
 
-PlayerCell.prototype.onConsume = function(consumer, gameServer) {
+PlayerCell.prototype.onConsume = function(consumer) {
     // Add an inefficiency for eating other players' cells
-    var factor = ( consumer.owner === this.owner ? 1 : gameServer.config.playerMassAbsorbed );
+    var factor = ( consumer.owner === this.owner ? 1 : this.gameServer.config.playerMassAbsorbed );
     // Anti-bot measure
-    factor = (consumer.mass >= 625 && this.mass <= 17 && gameServer.config.playerBotGrowEnabled <= 0) ? 0 : factor;
-    
+    factor = (consumer.mass >= 625 && this.mass <= 17 && this.gameServer.config.playerBotGrowEnabled <= 0) ? 0 : factor;
+
     // Apply anti-teaming
     if (consumer.owner.pID != this.owner.pID) {
         consumer.owner.applyTeaming(this.mass, 1);

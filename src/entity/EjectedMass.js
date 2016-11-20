@@ -7,6 +7,7 @@ function EjectedMass() {
     this.size = Math.ceil(Math.sqrt(100 * this.mass));
     this.squareSize = (100 * this.mass) >> 0; // not being decayed -> calculate one time
     this.addedAntiTeam = false; // Not to affect anti-teaming two times
+    this.isMoving = true;
 }
 
 module.exports = EjectedMass;
@@ -57,10 +58,15 @@ EjectedMass.prototype.onConsume = function(consumer, gameServer) {
 
 EjectedMass.prototype.move = function() {
     // Collide with other ejected cells
-    for (var i = 0; i < this.gameServer.nodesEjected.length; i++) {
-        var node = this.gameServer.nodesEjected[i];
+    var nearby = this.gameServer.quadTree.query(this.getRange(), function(node) {
+        return node.cellType == 3 || node.cellType == 2;
+    });
+
+    for (var i = 0; i < nearby.length; i++) {
+        var node = nearby[i];
         if (!node) continue;
-        
-        this.gameServer.collisionHandler.pushApart(this, node);
+
+        if (node.cellType == 2) node.eat(this);
+        else this.gameServer.collisionHandler.pushEjectedApart(this, node);
     }
 };

@@ -2,6 +2,10 @@ var Packet = require('./packet');
 var Vector = require('./modules/Vector');
 var Rectangle = require('./modules/Rectangle');
 
+function getTime(a) {
+    return a[0] * 1000 + a[1] / 1000000;
+}
+
 function PlayerTracker(gameServer, socket) {
     this.pID = -1;
     this.disconnect = -1; // Disconnection
@@ -178,7 +182,8 @@ PlayerTracker.prototype.update = function() {
         }
 
         this.visibleNodes = newNodes;
-        this.tickViewBox = 5;
+        if (this.spectate) this.tickViewBox = 2;
+        else this.tickViewBox = 5;
     } else {
         this.tickViewBox--;
     }
@@ -203,19 +208,14 @@ PlayerTracker.prototype.update = function() {
     this.nodeAdditionQueue = []; // Reset addition queue
 
     // Update leaderboard
-    if (this.tickLeaderboard <= 0) {
+    if (this.gameServer.tickLB == 5)
         this.socket.sendPacket(new Packet.UpdateLeaderboard(
             this.gameServer.leaderboard,
             this.gameServer.gameMode.packetLB,
             this.socket.packetHandler.protocolVersion,
             this.pID
         ));
-        this.tickLeaderboard = 10; // 20 ticks = 1 second
-    } else {
-        this.tickLeaderboard--;
-    }
 
-    // TODO: Map obfuscation doesn't work, fix it
     var box = this.getBox().getBounds();
 
     if (this.cells.length == 0 && this.gameServer.config.serverScrambleMinimaps >= 1) {
@@ -229,10 +229,10 @@ PlayerTracker.prototype.update = function() {
     } else {
         // Send a border packet to fake the map size
         this.socket.sendPacket(new Packet.SetBorder(
-            Math.max(box.left + this.scrambleX, this.gameServer.config.borderLeft + this.scrambleX),
-            Math.min(box.right + this.scrambleX, this.gameServer.config.borderRight + this.scrambleX),
-            Math.max(box.top + this.scrambleY, this.gameServer.config.borderTop + this.scrambleY),
-            Math.min(box.bottom + this.scrambleY, this.gameServer.config.borderBottom + this.scrambleY)
+            Math.min(box.left + this.scrambleX, this.gameServer.config.borderLeft + this.scrambleX),
+            Math.max(box.right + this.scrambleX, this.gameServer.config.borderRight + this.scrambleX),
+            Math.min(box.top + this.scrambleY, this.gameServer.config.borderTop + this.scrambleY),
+            Math.max(box.bottom + this.scrambleY, this.gameServer.config.borderBottom + this.scrambleY)
         ));
     }
 
@@ -253,6 +253,7 @@ PlayerTracker.prototype.update = function() {
             }
 
             this.fullyDisconnected = true;
+            this.gameServer.clients.remove(this.socket);
         }
     }
 };
@@ -325,6 +326,7 @@ PlayerTracker.prototype.updateCenter = function() { // Get center of cells
 };
 
 PlayerTracker.prototype.viewReset = function() {
+    var ts = process.hrtime();
     if (this.spectate) {
         // Spectate mode
         return this.getSpectateNodes();
@@ -337,6 +339,7 @@ PlayerTracker.prototype.viewReset = function() {
     var box = this.getBox();
     var newVisible = this.calcVisibleNodes(box);
 
+    this.gameServer.playerHandler.tPFOV += getTime(process.hrtime(ts));
     return newVisible;
 };
 
@@ -363,7 +366,7 @@ PlayerTracker.prototype.moveInFreeRoam = function() {
 
     var dist = this.centerPos.distanceTo(this.mouse);
     var angle = this.centerPos.angleTo(this.mouse);
-    var speed = Math.min(dist / 10, 30); // Not to break laws of universe by going faster than light speed
+    var speed = Math.min(dist / 3, 80); // Not to break laws of universe by going faster than light speed
 
     this.centerPos.sub(
         Math.sin(angle) * speed,
