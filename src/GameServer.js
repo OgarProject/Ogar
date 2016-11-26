@@ -68,6 +68,8 @@ function GameServer() {
         serverLogLevel: 1, // Logging level of the server. 0 = No logs, 1 = Logs the console, 2 = Logs console and ip connections
         serverTeamingAllowed: 1, // Toggles anti-teaming. 0 = Anti-team enabled, 1 = Anti-team disabled
         serverMaxLB: 10, //	Controls the maximum players displayed on the leaderboard.
+        serverDiscardForeignClients: 0, // Discards connections from foreign domains. Only agar.io is accepted. Default is 1.
+        serverRestartInterval: 0, // serverRestartInterval: In minutes, full server restarting interval. Set to 0 or below to disable. Default is 0.
         scrambleCoords: 1, // Toggles scrambling of coordinates. 0 = No scrambling, 1 = scrambling. Default is 1.
         scrambleMinimaps: 1, // Toggles scrambling of borders to render maps unusable. 0 = No scrambling, 1 = scrambling. Default is 1.rray
         scrambleIDs: 1,
@@ -161,6 +163,12 @@ GameServer.prototype.start = function() {
         this.updateLoopBind = this.updateLoop.bind(this);
         this.updateProcessingBind = this.update.bind(this);
         this.updateLoop();
+
+        // Queue restart
+        if (this.config.serverRestartInterval > 0) {
+            console.log("[Game] Restart scheduled for " + this.config.serverRestartInterval + " minutes");
+            this.restartHandle(this.config.serverRestartInterval * 60000);
+        }
 
         // Done
         console.log("[Game] Listening on port " + this.config.serverPort);
