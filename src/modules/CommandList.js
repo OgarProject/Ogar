@@ -14,6 +14,43 @@ var fillChar = function(data, char, fieldLength, rTL) {
     return result;
 };
 
+function getTime(t) {
+    t /= 1000;
+    if (t <= 1) return "right now";
+    else if (t < 120) return "in " + t + " seconds";
+    else {
+        var minutes = Math.round(t / 60),
+            minCeil = Math.ceil(t / 60),
+            minFloor = Math.floor(t / 60);
+
+        if (minutes == minCeil) return "in a little under " + minutes + " minutes";
+        else return "in a little over " + minutes + " minutes";
+    }
+}
+
+function getTicks(i, d) {
+    var t = d ? d : "s";
+    var m = isNaN(parseFloat(i)) ? 1 : parseFloat(i);
+    switch (t) {
+        case "d":
+            return m * 86400000;
+            break;
+        case "h":
+            return m * 3600000;
+            break;
+        case "m":
+            return m * 60000;
+            break;
+        default:
+            return m * 1000;
+            break;
+    }
+}
+
+function getDate(d) {
+    return d.toISOString().replace(/T/, ' ').replace(/\..+/, '');
+}
+
 function Commands() {
     this.list = {
         help: {
@@ -178,11 +215,92 @@ function Commands() {
             f: function(gameServer, split) {
                 console.log("[Console] Closing server...");
                 gameServer.socketServer.close();
-                process.exit(1);
+                gameServer.shutdownHandle();
             },
             name: "exit",
-            desc: "Stops the server.",
+            desc: "Gracefully stops the server.",
             vars: ""
+        },
+        quit: {
+            f: function(gameServer, split) {
+                gameServer.pluginHandler.executeCommand("exit", split);
+            },
+            name: "quit",
+            desc: "Alias for exit",
+            vars: ""
+        },
+        shutdown: {
+            f: function(gameServer, split) {
+                gameServer.pluginHandler.executeCommand("exit", split);
+            },
+            name: "shutdown",
+            desc: "Alias for exit",
+            vars: ""
+        },
+        restart: {
+            f: function(gameServer, split) {
+                if (split[1] == "schedule" || split[1] == "at" || split[1] == "when" || split[1] == "time" || split[1] == "set") {
+                    if (gameServer.restartAt) {
+                        console.log("[Restart] Restart scheduled at " + getDate(gameServer.restartScheduled));
+                        console.log("[Restart] Restart will happen at " + getDate(gameServer.restartAt));
+                        var remaining = (gameServer.restartAt - Date.now());
+                        console.log("[Restart] Restart will happen " + getTime(remaining));
+                    } else {
+                        console.log("[Console] Restart not scheduled");
+                    }
+                } else if (split[1] == "abort" || split[1] == "stop" || split[1] == "reset") {
+                    if (!gameServer.restartId) {
+                        console.log("[Restart] Restart not scheduled");
+                        return;
+                    }
+                    clearTimeout(gameServer.restartId);
+                    console.log("[Restart] Restart has been stopped");
+                } else if (split[1] == "delay" || split[1] == "increase") {
+                    if (!gameServer.restartId) {
+                        console.log("[Restart] Restart not scheduled");
+                        return;
+                    }
+
+                    var newRemaining = (gameServer.restartAt - Date.now()) + getTicks(split[2], split[3]);
+                    if (newRemaining < 1000) newRemaining = 1000;
+                    clearTimeout(gameServer.restartId);
+                    gameServer.restartHandle(newRemaining);
+                    console.log("[Console] Restart delayed and will happen " + getTime(newRemaining));
+                } else if (split[1] == "help" || split[1] == "?") {
+                    console.log("[Restart] Restart command is versatile and accepts many arguments.\n");
+                    console.log(" Uses:");
+                    console.log(" restart schedule");
+                    console.log(" Shows if a restart is scheduled and time to restart if it is.");
+                    console.log(" Aliases: at, when, time, set\n");
+                    console.log(" restart abort");
+                    console.log(" Aborts restarting, if any.");
+                    console.log(" Aliases: stop, reset\n");
+                    console.log(" restart delay [interval] [s/m/h/d]");
+                    console.log(" Delays restarting for specified period, if any. Negative intervals will decrease the restart time. Unspecified interval will immediately stop the server.");
+                    console.log(" Aliases: increase\n");
+                    console.log(" restart <timeout> [s/m/h/d]");
+                    console.log(" Starts a restart.");
+                } else if (!isNaN(parseFloat(split[1])) || split.length == 1) {
+                    if (gameServer.restartId) {
+                        console.log("[Restart] Restart already scheduled");
+                        return;
+                    }
+                    var a = getTicks(split[1], split[2]);
+                    gameServer.restartHandle(a);
+                    console.log("[Restart] Restart scheduled for " + getTime(a) + "!");
+                } else console.log("[Restart] Couldn't parse command. Type in \"restart help\" for details.");
+            },
+            name: "restart",
+            desc: "Restarts the server without memory leaking.",
+            vars: "[timeout/help] [s/m/h/d]"
+        },
+        reset: {
+            f: function(gameServer, split) {
+                gameServer.pluginHandler.executeCommand("exit", split);
+            },
+            name: "reset",
+            desc: "Alias for restart",
+            vars: "[timeout]"
         },
         food: {
             f: function(gameServer, split) {
@@ -198,9 +316,7 @@ function Commands() {
                     return;
                 }
 
-                if (isNaN(mass)) {
-                    mass = gameServer.config.foodStartMass;
-                }
+                if (isNaN(mass)) mass = gameServer.config.foodStartMass;
 
                 // Spawn
                 var f = new Entity.Food(gameServer.getNextNodeId(), null, pos, mass, gameServer);
@@ -311,33 +427,6 @@ function Commands() {
             name: "killall",
             desc: "Removes all players from the game.",
             vars: ""
-        },
-        map: {
-            f: function(gameServer, split) {
-                var id = parseInt(split[1]);
-                if (isNaN(id)) {
-                    console.log("[Console] Please specify a valid player ID!");
-                    return;
-                }
-
-                for (var i in gameServer.clients) {
-                    if (gameServer.clients[i].playerTracker.pID == id) {
-                        var client = gameServer.clients[i].playerTracker;
-                        if (!client) return;
-                        console.log("Bot brain\nInput neurons: " + client.inputNeurons);
-                        console.log("Hidden neurons: " + client.hiddenNeurons);
-                        console.log("Output neurons: " + client.outputNeurons);
-                        console.log("Hidden neuron triggering value: " + client.hiddenNeuronTriggering);
-                        console.log("\nOutput neuron triggering value: " + client.hiddenNeuronTriggering);
-
-                        return;
-                    }
-                }
-                console.log("[Console] Could not find bot with ID + " + id + "!");
-            },
-            name: "map",
-            desc: "Prints out a bot's neural network.",
-            vars: "<id>"
         },
         mass: {
             f: function(gameServer, split) {

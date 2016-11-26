@@ -8,6 +8,10 @@ function Log() {
 
 module.exports = Log;
 
+function getDate() {
+    return '{' + new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '') + '} ';
+}
+
 Log.prototype.setup = function(gameServer) {
     if (!fs.existsSync('./logs')) {
         // Make log folder
@@ -33,14 +37,13 @@ Log.prototype.setup = function(gameServer) {
                 flags: 'w'
             });
 
-            console.log = function(d) { //
-                console_log.write(util.format(d) + EOL);
+            console.log = function(d) {
+                console_log.write(getDate() + util.format(d) + EOL);
                 process.stdout.write(util.format(d) + EOL);
             };
 
-            //
             this.onCommand = function(command) {
-                console_log.write(">" + command + EOL);
+                console_log.write(getDate() + "> " + command + EOL);
             };
         case 0:
             // Prevent crashes
