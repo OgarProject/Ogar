@@ -280,9 +280,7 @@ function Commands() {
                     console.log(" Aliases: increase\n");
                     console.log(" restart <timeout> [s/m/h/d]");
                     console.log(" Starts a restart.");
-                } else if (isNaN(parseFloat(split[1]))) {
-                    console.log("[Restart] Couldn't parse command. Type in \"restart help\" for details.");
-                } else {
+                } else if (!isNaN(parseFloat(split[1])) || split.length == 1) {
                     if (gameServer.restartId) {
                         console.log("[Restart] Restart already scheduled");
                         return;
@@ -290,7 +288,7 @@ function Commands() {
                     var a = getTicks(split[1], split[2]);
                     gameServer.restartHandle(a);
                     console.log("[Restart] Restart scheduled for " + getTime(a) + "!");
-                }
+                } else console.log("[Restart] Couldn't parse command. Type in \"restart help\" for details.");
             },
             name: "restart",
             desc: "Restarts the server without memory leaking.",
