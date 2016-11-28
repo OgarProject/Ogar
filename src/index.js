@@ -37,7 +37,7 @@ function startServer() {
                                    gameServer.socketServer.close();
                                    gameServer.httpServer.close();
                                    gameServer = null;
-                                   global.gc(); // Force garbage collection
+                                   if (global.gc) global.gc(); // Force garbage collection
                                    process.stdout.write("\u001b[2J\u001b[0;0H"); // Clear the console
                                    startServer();
                                }, timeout);
