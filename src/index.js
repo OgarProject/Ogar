@@ -1,7 +1,7 @@
 // Imports
 var Commands = require('./modules/CommandList');
 var GameServer = require('./GameServer');
-
+var AsyncConsole = require('asyncconsole');
 // Init variables
 var showConsole = true;
 // Start message
@@ -46,21 +46,13 @@ function startServer() {
 
 // Initialize the server console
 if (showConsole) {
-    var readline = require('readline');
-    var in_ = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-    setTimeout(prompt, 200);
+    var input = new AsyncConsole('> ',function(command) {
+        parseCommands(str);
+    })
 }
 
 // Console functions
-function prompt() {
-    in_.question("> ", function(str) {
-        parseCommands(str);
-        setTimeout(prompt, 20);
-    });
-}
+
 
 function parseCommands(str) {
     // Log the string
