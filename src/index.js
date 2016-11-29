@@ -46,9 +46,11 @@ function startServer() {
 
 // Initialize the server console
 if (showConsole) {
+    setTimeout(function() {
     var input = new AsyncConsole('> ',function(command) {
         parseCommands(command);
     })
+    },1000)
 }
 
 // Console functions
