@@ -47,7 +47,7 @@ function startServer() {
 // Initialize the server console
 if (showConsole) {
     var input = new AsyncConsole('> ',function(command) {
-        parseCommands(str);
+        parseCommands(command);
     })
 }
 
