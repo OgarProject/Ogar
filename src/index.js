@@ -50,7 +50,7 @@ if (showConsole) {
     var input = new AsyncConsole('> ',function(command) {
         parseCommands(command);
     })
-    },1000)
+    },500)
 }
 
 // Console functions
