@@ -1,5 +1,6 @@
 @echo off
 npm install
+npm install vector2-node
 echo.
 echo.
 echo Successfully installed all dependecies!
