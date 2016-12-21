@@ -53,7 +53,7 @@ Id   | Name
 12   | Zombie Mode
 13   | Team Z
 14   | Team X
-20   | Rainbow FFA - Hint: Use with "setAcid(true)"
+21   | Rainbow FFA - Hint: Use with "setAcid(true)"
 
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
