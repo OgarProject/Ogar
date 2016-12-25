@@ -58,6 +58,8 @@ Id   | Name
 ## Console Commands
 The current available console commands are listed here. Command names are not case sensitive, but player names are.
 
+ - Help
+   * See the command list on the console
  - Addbot [Number]
    * Adds [Number] of bots to the server. If an amount is not specified, 1 bot will be added.
  - Board [String 1] [String 2] [String 3] ...
