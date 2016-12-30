@@ -6,13 +6,6 @@ function GamemodeList(gameServer) {
         '1': require('./Teams'),
         '2': require('./Experimental'),
         '3': require('./Rainbow'),
-
-        '10': require('./Tournament'),
-        '11': require('./HungerGames'),
-        '12': require('./Zombie'),
-
-        '21': require('./TeamX'),
-        '22': require('./TeamZ')
     };
 }
 
