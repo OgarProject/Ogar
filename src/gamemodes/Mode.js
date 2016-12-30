@@ -21,10 +21,6 @@ Mode.prototype.onTick = function(gameServer) {
     // Called on every game tick 
 };
 
-Mode.prototype.onChange = function(gameServer) {
-    // Called when someone changes the gamemode via console commands
-};
-
 Mode.prototype.onPlayerInit = function(player) {
     // Called after a player object is constructed
 };
