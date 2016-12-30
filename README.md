@@ -50,8 +50,6 @@ Id   | Name
 2    | Experimental (As of 6/13/15)
 10   | Tournament
 11   | Hunger Games
-12   | Zombie Mode
-14   | Team X
 20   | Rainbow FFA - Hint: Use with "setAcid(true)"
 
 ## Console Commands
@@ -73,8 +71,6 @@ The current available console commands are listed here. Command names are not ca
    * Closes the server.
  - Food [X position] [Y position] [Mass]
    * Spawns a food cell at those coordinates. If a mass value is not specified, then the server will default to "foodStartMass" in the config.
- - Gamemode [Id]
-   * Changes the gamemode of the server. Warning - This can cause problems.
  - Help
    * Shows List Of Commands
  - Kick [Player ID]
