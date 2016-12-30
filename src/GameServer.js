@@ -109,6 +109,7 @@ function GameServer() {
         playerMaxNickLength: 15, // Maximum nick length
         playerSpeed: 30, // Player base speed
         playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
+        lastManStanding: 0, // If 0, no gamemode will enter a lastManStanding. Change to 1 if you want LastManStanding
         };
     // Parse config
     this.loadConfig();
