@@ -109,13 +109,7 @@ function GameServer() {
         playerMaxNickLength: 15, // Maximum nick length
         playerSpeed: 30, // Player base speed
         playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
-        tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
-        tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
-        tourneyEndTime: 30, // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
-        tourneyTimeLimit: 20, // Time limit of the game, in minutes.
-        tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
-        tourneyAutoFillPlayers: 1, // The timer for filling the server with bots will not count down unless there is this amount of real players
-    };
+        };
     // Parse config
     this.loadConfig();
 
