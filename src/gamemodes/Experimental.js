@@ -73,11 +73,6 @@ Experimental.prototype.onTick = function(gameServer) {
     this.spawnMotherCell(gameServer);
 };
 
-Experimental.prototype.onChange = function(gameServer) {
-    // Remove all mother cells
-    for (var i in this.nodesMother) gameServer.removeNode(this.nodesMother[i]);
-    Virus.prototype.feed = VirusFeed;
-};
 
 // New cell type
 

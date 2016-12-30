@@ -89,7 +89,7 @@ function GameServer() {
         foodMassTimeout: 120, // The amount of interval for a food to grow its mass (in seconds)
         virusMinAmount: 10, // Minimum amount of viruses on the map.
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
-        virusStartMass: 100, // Starting virus size (In mass)
+        virusStartMass: 110, // Starting virus size (In mass)
         virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
         ejectMass: 13, // Mass of ejected cells
         ejectMassCooldown: 100, // Time until a player can eject mass again
@@ -109,13 +109,8 @@ function GameServer() {
         playerMaxNickLength: 15, // Maximum nick length
         playerSpeed: 30, // Player base speed
         playerDisconnectTime: 60, // The amount of seconds it takes for a player cell to be removed after disconnection (If set to -1, cells are never removed)
-        tourneyMaxPlayers: 12, // Maximum amount of participants for tournament style game modes
-        tourneyPrepTime: 10, // Amount of ticks to wait after all players are ready (1 tick = 1000 ms)
-        tourneyEndTime: 30, // Amount of ticks to wait after a player wins (1 tick = 1000 ms)
-        tourneyTimeLimit: 20, // Time limit of the game, in minutes.
-        tourneyAutoFill: 0, // If set to a value higher than 0, the tournament match will automatically fill up with bots after this amount of seconds
-        tourneyAutoFillPlayers: 1, // The timer for filling the server with bots will not count down unless there is this amount of real players
-    };
+        lastManStanding: 0, // If 0, no gamemode will enter a lastManStanding. Change to 1 if you want LastManStanding
+        };
     // Parse config
     this.loadConfig();
 
