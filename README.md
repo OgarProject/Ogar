@@ -1,14 +1,8 @@
 # Ogar
 A fully functional open source Agar.io server implementation, written in Node.js. Ogar is designed to be used with the latest Agar.io client.
 
-### Official Website
-The official website for the Ogar Project is [ogarproject.com](http://ogarproject.com). You can register on our forums to chat with other Ogar users, get support, advertise your server, and more.
-
 ### Purchased Ogar?
-If you've purchased a copy of Ogar, you've probably been ripped off. [This post on our website explains why.](http://ogarproject.com/threads/psa-if-you-purchased-ogar-youve-been-ripped-off.6/)
-
-## Obtaining and Using
-If you are on Windows, you can download the latest binary build of Ogar [from this page](http://dl.ogarproject.com/). The binary is the easiest way to get started running an Ogar server. If you'd like to tinker with the source code, you can follow the instructions below (and slightly modify them) to run the source on Windows.
+If you've purchased a copy of Ogar, you've probably been ripped off. Ogar is a free service to the community
 
 As Ogar is written in Node.js, you must have Node.js, its "ws" and "vector2-node" modules installed to use it (unless you are using the Windows binary). You can usually download Node using your distribution's package manager (for *nix-like systems), or from [the Node website](http://nodejs.org). To install the "ws" module that is required, you can:
 - for Windows, run `Install Dependecies.bat` located in the folder where this file is.
