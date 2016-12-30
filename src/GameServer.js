@@ -89,7 +89,7 @@ function GameServer() {
         foodMassTimeout: 120, // The amount of interval for a food to grow its mass (in seconds)
         virusMinAmount: 10, // Minimum amount of viruses on the map.
         virusMaxAmount: 50, // Maximum amount of viruses on the map. If this amount is reached, then ejected cells will pass through viruses.
-        virusStartMass: 100, // Starting virus size (In mass)
+        virusStartMass: 110, // Starting virus size (In mass)
         virusFeedAmount: 7, // Amount of times you need to feed a virus to shoot it
         ejectMass: 13, // Mass of ejected cells
         ejectMassCooldown: 100, // Time until a player can eject mass again
