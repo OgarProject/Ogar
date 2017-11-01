@@ -74,8 +74,9 @@ BinaryReader.prototype.readDouble = function () {
 };
 
 BinaryReader.prototype.readBytes = function (length) {
-    return this._buffer.slice(this._offset, this._offset + length);
+    var value = this._buffer.slice(this._offset, this._offset + length);
     this._offset += length;
+    return value;
 };
 
 BinaryReader.prototype.skipBytes = function (length) {
