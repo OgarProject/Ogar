@@ -1,7 +1,7 @@
 function CollisionHandler(gameServer) {
     // Can make config values for these
     this.baseEatingDistanceMultiplier = 0.5;
-    this.baseEatingMassRequired = 1.3;
+    this.baseEatingMassRequired = 0.8;
     this.gameServer = gameServer;
 }
 
