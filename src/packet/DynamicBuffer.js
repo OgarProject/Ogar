@@ -1,4 +1,4 @@
-var tempBuf = new Buffer(8);
+var tempBuf = new Buffer.alloc(8);
 
 function DynamicBuffer(littleEndian) {
     this.littleEndian = littleEndian ? true : false;
